@@ -13,6 +13,24 @@ designs around one meanwhile, the walk-through says so on the screen concerned.
 and has not been re-opened; open it before acting on it. `openapi:` lines are the COMMITTED document
 (`git show a2918af:packages/contract/openapi.json`).
 
+## For the platform session, in the order it needs them
+
+| When | Finding | What is asked | Rich's |
+|---|---|---|---|
+| **Before sitting 6** (the `app` origin) | **FE-2** | Say whether the front-end's server may replay the person's session to `getMe`, or strip the cookie at the edge | a platform decision |
+| **Before sitting 7** (agent sessions) | **FE-1** | An *intake* session with no project, platform-paid, on one model a setting names | **approved in principle**; the spec words are drafted for him to read |
+| | **FE-23** | `AgentSession.spentUsd`, so each conversation can show what it cost | a field |
+| **A spec action, now** | **FE-24** | Staging is UBC's real staging world (its IdP, Canvas, the academic API), and its consequences: the output read sandbox-only, the rehearsal's meaning, the PIA's scope, the laptop's stand-in | **stated by Rich**; the wording waits on question 2 |
+| **Sittings 10–11** (mock, console, guides) | **FE-3** | The sandbox's pretend people, with their sign-in details, as a read (Rich: *show the logins*) | — |
+| | **FE-5** | The question an agent raises names what it asked about; or, at least, the canonical body is published | — |
+| | **FE-17** | A browser refused at `/auth/*` is shown a page, not JSON | — |
+| | **FE-18** | `@manifest/contract` consumable from a sibling repository: `dist/*.d.ts` whole, and the guides caught up | — |
+| **Plans of their own** | **FE-4** | Notice a running app that died, with an Incident. **The most consequential item here**; we watch meanwhile | — |
+| | **FE-6**, **FE-25** | The three clocks' drafts and an owner's *"I've sent it"*; an owner's *"please sign this off"* | — |
+| | **FE-7** | Events after a cursor | — |
+| | **FE-19**, **FE-20**, **FE-21**, **FE-22** | Toolkits' know-how served like knowledge packs; Canvas and the academic API; Qdrant in a blueprint; the rule for course material | — |
+| | FE-8 to FE-16 | Smaller, each with its own options | — |
+
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
 the point where a finding is cheap.
 

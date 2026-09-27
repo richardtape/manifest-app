@@ -114,6 +114,6 @@ Checked against the contract in the working tree and the enablement plan. The re
 | F8 | Nothing is editable | **Mostly closed**: `createCommit`, `setAppSecret`, `updateProject`. **Audience still is not**: it goes through the administrators' queue under §24, and no operation exists. |
 | F9 | Nothing reaches a person who is not looking | **Stands, and it is ours.** Our server subscribes to the stream and decides whom to tell. |
 | F10 | `Token.capabilities` is an open array on read | **Stands.** |
-| F11 | Two of three slug refusals have no fixture | **Stands** in the mock. |
+| F11 | Two of three slug refusals have no fixture | **Partly closed**: the contract now carries a real `SLUG_RESERVED` example; the mock still answers neither it nor `SLUG_INVALID`. |
 | F12 | An authenticated preview has nothing behind it | **Stands, and is sharper than it looked** (surprise 4). |
 | F13 | No conversation object | **Ours by design.** Sitting 7 gives us `AgentSession.via`, and `madeThrough.tokenName` already exists, so a thread can be keyed to its token's name. |
