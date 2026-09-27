@@ -437,7 +437,7 @@ token), and the operations named in the table.
 
 *Drafted 2026-09-27. Rich decided how pretend people sign in (show the logins), that staging is UBC's real
 staging world, that its registration is reviewed with a wait, and that staging CWLs belong to real people
-(FE-24). The laptop's staging (FE-24, question 2) is still open.*
+(FE-24). On the laptop, staging keeps the fake sign-in, as a stated difference from UBC.*
 
 **Trying to:** see the thing they asked for, as a student would and as they will.
 

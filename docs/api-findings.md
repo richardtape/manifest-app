@@ -20,7 +20,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Before sitting 6** (the `app` origin) | **FE-2** | Say whether the front-end's server may replay the person's session to `getMe`, or strip the cookie at the edge | a platform decision |
 | **Before sitting 7** (agent sessions) | **FE-1** | An *intake* session with no project, platform-paid, on one model a setting names | **approved in principle**; the spec words are drafted for him to read |
 | | **FE-23** | `AgentSession.spentUsd`, so each conversation can show what it cost | a field |
-| **A spec action, now** | **FE-24** | Staging is UBC's real staging world (its IdP, Canvas, the academic API), and its consequences: the output read sandbox-only, the rehearsal's meaning, the PIA's scope, the laptop's stand-in | **stated by Rich**; the wording waits on question 2 |
+| **A spec action, now** | **FE-24** | Staging is UBC's real staging world (its IdP, Canvas, the academic API), and its consequences: the output read sandbox-only, the rehearsal's meaning, the PIA's scope; on the laptop, the fake sign-in | **stated by Rich**; all three questions answered |
 | **Sittings 10–11** (mock, console, guides) | **FE-3** | The sandbox's pretend people, with their sign-in details, as a read (Rich: *show the logins*) | — |
 | | **FE-5** | The question an agent raises names what it asked about; or, at least, the canonical body is published | — |
 | | **FE-17** | A browser refused at `/auth/*` is shown a page, not JSON | — |
@@ -486,9 +486,8 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
 
      The platform has no object for it: `IamRegistration` is production's alone ✓ (its `entityId` is
      production's), and D19's generated package does not exist (**FE-6**).
-  2. **On the laptop, is staging the fake IdP**, stated as a divergence, or absent? *Recommended: the fake IdP,
-     named in §21's honest divergences.* C1 forbids a laptop that needs UBC's network, and a staging that works
-     offline is what lets the loop be demonstrated at all.
+  2. ~~On the laptop, is staging the fake IdP?~~ **ANSWERED by Rich, 2026-09-27: yes.** On the laptop, staging
+     uses the fake sign-in, stated in §21's honest divergences. C1 forbids a laptop that needs UBC's network.
   3. ~~Who signs in to staging?~~ **ANSWERED by Rich, 2026-09-27:** *"Folks can get a staging cwl. It's
      separate and distinct from their production CWL. There's no "test" accounts. Only accounts associated with a
      real person, like production."*
