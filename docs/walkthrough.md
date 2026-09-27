@@ -10,6 +10,10 @@ then the code.*
   and every state is one of `20-states.md`'s five.** Where a moment quotes the prototype, the quotation is
   verbatim; where it changes it, it says why.
 
+**The prototype's words are a starting point, not a script** (Rich, 2026-09-27: *"Don't take the design mocks as
+absolutes. We can change the wording as necessary to what would be best. I'm not fixed on anything."*). The
+design system's rules bind; its example sentences do not.
+
 ## The person, and the task
 
 **An instructor.** They teach a seminar, and are not a developer. They meet Manifest perhaps six times a year and
@@ -68,11 +72,21 @@ and what changing course would cost.*
   - *Rejected:* keeping both, which asks a faculty member to choose between two ways of doing one thing before
     they know the difference.
   - *Changing course* is one screen, and *New*'s design already exists.
-- **D3. The app starts from the blueprint's skeleton alone, not the proof-app starter.** `createProject` omits
-  `starter`.
-  - The agent writes the app from the knowledge pack, on a base that already signs people in with CWL. A
-    note-taking app to be torn down first would only be noise in the agent's context and in the history.
-  - *Changing course* is one field.
+- **D3. The blueprint, and any starter, are chosen by an agent from what the person described** (Rich,
+  2026-09-27: *"The app should start from the most appropriate blueprint. Sure we may not have many now but we will
+  have more in the future. And we will have an agent whose job it is to determine, based on what the faculty member
+  has filled in, which blueprint to use."*).
+  - Today the choice is trivial: one blueprint, `node-ts-mongo@1`, with one starter, the note-taking proof app.
+  - The step exists from the start, so a second blueprint is a catalogue entry rather than a redesign. When no
+    starter fits, the app starts from the blueprint's skeleton (`starter` omitted).
+  - The person never picks a template (C3). The choice shows only as what the app *can do*, in words: *"Students
+    sign in with CWL · Keeps what they write · Can ask an AI model, on a budget"* (the blueprint's `provides`).
+  - *This supersedes this document's first D3* (the skeleton, always).
+- **D5. *We*, everywhere** (Rich, 2026-09-27). The product has one voice, the plan included. The prototype's
+  *"Here's what I'd build"* becomes *"Here's what we'd build"*. Many agents do the work (see *The agents*, below),
+  and the person never has to keep track of which one is speaking.
+- **D6. The agreed plan is committed into the app as `docs/plan.md`** (Rich, 2026-09-27). It is the agreement,
+  versioned with the code it describes, and readable by any agent that ever works on the app.
 - **D4. The person never sees a delegated token on the main road.** The browser mints one per conversation and
   hands it to our server. The prototype's *Agents* screen becomes *let an agent of your own in*, the
   bring-your-own-agent path (§1 of the spec).
@@ -133,9 +147,10 @@ the left.
   - Heading *"Your apps"*.
   - *"Nothing yet. Tell us what your course needs, and we'll build it."*
   - **[Describe what you need]**
-  - One quiet line under it, in `caption`: *"Making an app takes an afternoon. Letting students in takes a few
-    weeks of UBC paperwork, which we start for you on day one."* Spec §13 wants the lead time known before
-    anyone needs it. This is the earliest honest moment, and it says who owns the weeks.
+  - One quiet line under it, in `caption`: *"Making an app takes an afternoon. Letting your students in takes a
+    little longer, while we move it through the steps that keep the app, and their data, safe and secure."*
+    - This is Rich's wording, 2026-09-27, replacing *"UBC paperwork"*.
+    - Spec §13 wants the lead time known before anyone needs it, and this is the earliest honest moment.
 
 **Fed by:** `listProjects` answering `[]`. **For an administrator**, `listProjects` answers every project on the
 platform, so *Your apps* keeps only those whose `owner.id` is theirs. It **cannot** see the ones they were added
@@ -161,17 +176,30 @@ again in a minute."* **[Try again]**.
 **After [Carry on]**, the button's area becomes a **working** row: a breathing dot and *"Reading it"*. There is
 no spinner.
 
+**Then, usually, a few questions** (the *understanding* agent, `agents.md`). Only the ones whose answers would
+change what gets built, three at most, each with a short answer field, or choices where the answers are few:
+
+- *"A few questions, so we build the right thing."*
+- e.g. *"Can a student change a response after posting it?"* · *"Should a TA see everything you see?"* · *"Does
+  each week open on a set date, or all at once?"*
+- **[Carry on]**, and beside it, *"Skip these — use your best guess"*. Skipped questions become the plan's
+  *"Things we assumed"* (moment 5), so a guess is always shown, never hidden.
+
+A second round is allowed when an answer opens a new question. A third is not: the plan (moment 5) is where
+anything left gets corrected.
+
 **Fed by:**
 - **The words are ours.** They become the first message of a conversation our server creates now, which is not
   yet tied to a project.
 - **The understanding is FE-1's intake session.**
   1. The browser starts one, in the person's own session.
   2. It hands the key to our server.
-  3. Our server asks the platform's one intake model a single structured question. The answer schema is ours:
-     - a one-sentence restatement;
-     - three names, each with a candidate address;
-     - a guess at the two audience answers, with the words it guessed from;
-     - anything the blueprint cannot do.
+  3. Our server runs the intake agents (`agents.md`) on the platform's one intake model, each answering a
+     structured schema of ours:
+     - **understanding**: its follow-up questions, then a one-sentence restatement, a guess at the two audience
+       answers with the words it guessed from, and anything no blueprint can do;
+     - **naming**: three names, each address checked with `checkSlug` before it is offered;
+     - **blueprint**: which blueprint and starter, from `listBlueprints` (`provides`, `starters`).
   - The blueprint's abilities come from `getBlueprint` (`provides`), and the key is ended as soon as the answer
     arrives.
   - Every platform model call whose answer is shown is structured output (the platform's own rule, D5 plan
@@ -267,7 +295,7 @@ no spinner.
 **Trying to:** check that what will be built is what they meant, before anything is built.
 
 **They see:** the prototype's *Draft*, with the name at the top now that there is one.
-- *"Here's what we'd build"*: **we**, not the prototype's *I* (open question 1, below).
+- *"Here's what we'd build"*: **we**, not the prototype's *I* (D5).
 - *"Read it as a description of the finished thing, not as instructions. Anything wrong, say so in a sentence."*
 - **Five rows**: *What students see · What you see · What it keeps · Who gets in · AI*. The prototype's worked
   example is the model to write to.
@@ -288,8 +316,8 @@ no spinner.
   3. `getKnowledgePack` and `getTree`, then one structured completion whose schema is ours: the five rows, the
      assumptions, the two questions.
 - **The plan is ours**: stored in the conversation, versioned per correction. When they say yes, it is also
-  **committed into the app as `docs/plan.md`** (open question 2), so any agent that ever works on the app reads
-  what was agreed.
+  **committed into the app as `docs/plan.md`** (D6), so any agent that ever works on the app reads what was
+  agreed.
 
 **If it goes wrong:**
 - **The month's allowance is used up** (`AGENT_BUDGET_EXHAUSTED`; `getAgentBudget`'s `remainingUsd` is 0). This
@@ -310,9 +338,4 @@ ticking when it has finished.
 
 ## Open questions for Rich (part A)
 
-1. **Who is speaking?** The prototype's plan says *"Here's what I'd build"* (the agent as *I*), while every other
-   screen says *we* (Manifest). One voice for the whole product, or the agent as its own *I* inside a
-   conversation? **Recommended: *we* everywhere.** A faculty member should not have to model two parties, one of
-   which is software that can be wrong.
-2. **Commit the agreed plan into the app** (`docs/plan.md`)? **Recommended: yes.** It is the agreement, versioned
-   with the code it describes. A bring-your-own agent reads it too, and it costs one file in the first commit.
+*Both answered 2026-09-27: **we** everywhere (D5); **commit the plan** (D6).*

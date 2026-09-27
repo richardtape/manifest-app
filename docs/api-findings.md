@@ -32,7 +32,12 @@ the point where a finding is cheap.
     something we'll need to set as part of our options at the platform level). So I approve of that spec
     change."***
 - **What we would call:** a model, before any project exists, paid for by the platform, on a model the platform
-  names.
+  names. **Several intake agents share it** (Rich, 2026-09-27):
+  - one that understands the description and asks follow-up questions until it really does;
+  - one that suggests names;
+  - one that chooses the blueprint and starter.
+
+  So intake is **a short conversation of several calls, not one**, and the bound must allow for that.
 - **What is missing:**
   - `startAgentSession` is `POST /v1/projects/{projectId}/agent-sessions`, a project's operation (plan Task 10).
   - Its models are D17's for the *project's* classification (plan Decision 23).
@@ -50,8 +55,8 @@ the point where a finding is cheap.
     must be one D17 allows for §7's default classification, `internal`, so a description a person types never
     goes somewhere their app could not.
   - **Paid from a platform budget, with a per-person bound**, so one person cannot spend the platform's intake
-    budget. A small cap and a short life per key (say $0.10 and 15 minutes), and a number of keys per person
-    per day (say 20), all platform settings. Running out is a refusal with its own code, whose words the
+    budget. A small cap and a short life per key (say $0.25 and 30 minutes, enough for a few rounds of follow-up
+    questions), and a number of keys per person per day (say 10), all platform settings. Running out is a refusal with its own code, whose words the
     front-end can show: *"Describing new apps is paused for today."*
   - **Confined like every key**: `allowed_routes`' three, and no capability on the control plane (§20).
   - **§5 is unchanged.** The front-end still owns the ideation, meaning the prompt, the conversation and what it
@@ -336,6 +341,67 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
   - `authoring.md` still says text only;
   - nineteen operations are explained in no guide, among them the person's side of a pending action and member
     management.
+
+### FE-19 — A toolkit's know-how has no home in the API
+
+- **Screen and moment:** *Watching it get built* (moment 6), whenever the lead agent calls a specialist: CWL,
+  Canvas, the academic API, encryption at rest, RAG over Qdrant, and more (Rich, 2026-09-27: *"just like we have
+  a toolkit/library for CWL integration, we have quite a few other toolkits which help us integrate with other ubc
+  systems"*).
+- **What we would call:** *"how does an app use toolkit X, and what must it declare to do so?"*, versioned with
+  the toolkit.
+- **What is missing:** D25 serves one knowledge pack per BLUEPRINT (`getKnowledgePack`). CWL's know-how lives
+  inside `node-ts-mongo@1`'s pack because that blueprint wires it. There is no toolkit catalogue and no per-toolkit
+  pack.
+- **Why it matters:** each specialist's knowledge must match what the platform will let an app declare, reach
+  and be given. That is the platform's to state, exactly as D25 argues for blueprints. A bring-your-own agent
+  needs the same knowledge.
+- **Options:**
+  - **(a) Recommended:** toolkits as a catalogue beside blueprints, each with a knowledge pack, the manifest
+    fields it needs, and the blueprints it works with. D30's descriptor argument, applied to a second axis.
+  - (b) The front-end keeps its own copy of each toolkit's know-how. It drifts, and is invisible to anyone else's
+    agent.
+
+### FE-20 — Nothing for Canvas, the academic API, or any UBC system beyond CWL
+
+- **What is missing:**
+  - `manifest.yaml`'s `integrations` is **reserved: `maxItems: 0`** ✓ (`ManifestYaml.integrations`, *"Reserved
+    (§15): must be empty"*).
+  - Today an app can reach an outside API only by `egress.allow` naming its host, plus an app secret holding
+    whatever credential it needs.
+  - There is no LTI, no Canvas course an app belongs to, and no institutional credential brokered by the
+    platform.
+- **Why it matters:** *"connect to Canvas"* is among the first things a faculty member will ask for. Today the
+  honest answer is *"we can't yet"*.
+
+### FE-21 — A RAG app needs a blueprint that offers Qdrant
+
+- **What exists:** Qdrant is in the platform's service catalogue ✓
+  (`packages/control-plane/src/services/catalogue.ts:55`, `SERVICE_CATALOGUE: Record<'mongo' | 'qdrant', …>`).
+  `default-embed` (nomic-embed-text) is in the model catalogue ✓.
+- **What is missing:** `node-ts-mongo@1` provides `services: [mongo]` only ✓
+  (`blueprints/node-ts-mongo/blueprint.yaml:40`). A RAG app declaring `qdrant` would be refused by the blueprint's
+  compatibility check.
+- **Options:**
+  - (a) Extend the blueprint to offer Qdrant, additively.
+  - (b) A second blueprint for retrieval-backed apps, which is what D3's blueprint-choosing agent would then
+    choose between.
+
+### FE-22 — Course material: where it lives, and which model may read it
+
+- **Screen and moment:** a domain specialist working while the app is being made (*"generate questions from my
+  readings"*, Rich's *both, kept separate*), and an app whose students do the same at run time.
+- **What is missing:**
+  - **While the app is being made**, the material is the front-end's to hold. The platform says nothing about
+    which models may read *course material* rather than *app data*. D17 classifies an APP's data
+    (`data.classification`), and an agent session's models follow the project's classification (plan Decision
+    23). A reading pack with students' names in it goes wherever the session's models go.
+  - **At run time**, material committed into the app is bounded at 2 MiB per file (sitting 3) and scanned for
+    secrets. Material uploaded by students is the app's own data, under its classification.
+- **Why it matters:** faculty will paste in whatever they have, and FIPPA is why D17 exists.
+- **Options:**
+  - (a) The platform states the rule for material given to an agent session: it is governed by the project's
+    classification, and the front-end asks before sending anything that looks personal.
 
 ---
 
