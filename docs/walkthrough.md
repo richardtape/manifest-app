@@ -361,7 +361,7 @@ in the visual companion's `moment6-layout.html`, kept under `.superpowers/` and 
   | *Checking it holds together* | the dry run: `createCommit` with `dryRun`, and its spec validation |
   | *Building it* | `build.started`, then `build.succeeded` |
   | *Putting it on your draft address* | `deploy` to sandbox; `instance.provisioning`, then `starting`, then `healthy` |
-  | *Checking it answers* | `listInstances`, `getInstanceOutput` (see below for what this can and cannot prove) |
+  | *Checking it answers* | `listInstances`, `getInstanceOutput`, **on the draft address only** (FE-24: staging serves real people, so its output is not the agent's to read) |
 
 - **One plain line under the current step** saying what we are doing now: *"Writing the page students post on."*
   It is written by the lead, as structured output, never raw model text.
@@ -443,7 +443,7 @@ staging world (FE-24). The trying-out half waits on FE-24's questions.*
 | Address | World | Who can sign in |
 |---|---|---|
 | **Your draft** (sandbox) | **Pretend.** A fake sign-in, and (later) a fake Canvas and a fake academic API | Pretend people: agents and instructors, freely |
-| **For trying out** (staging) | **UBC's real staging world**: IAM's staging sign-in, Canvas's and the academic API's staging instances | UBC staging accounts (FE-24, question 3) |
+| **For trying out** (staging) | **UBC's real staging world**: IAM's staging sign-in, Canvas's and the academic API's staging instances | **Real people, with a staging CWL**: separate from their everyday CWL; there are no test accounts (FE-24) |
 | **For your students** (production) | **Real** | Your students, with their CWL |
 
 **They see** the Preview screen (rail: *Preview*), rebuilt around what is true:
@@ -460,8 +460,12 @@ staging world (FE-24). The trying-out half waits on FE-24's questions.*
   with a wait: FE-24, answered by Rich), the card is **waiting on someone**:
   - *"Trying out uses UBC's real staging sign-in, so UBC's identity team registers it first. That usually takes
     <n> weeks. We asked on 18 September."*
-  - The words about who signs in there wait on FE-24, question 3.
   - Meanwhile: *"Your draft is ready to try now."*
+  - **Once registered**: *"Sign in with your staging CWL. It's a separate account from your everyday CWL, for
+    trying things before they're real. [How to get one]"*
+    - There are no pretend people here: everyone who signs in to staging is a real person with a staging CWL
+      (Rich, FE-24). So a TA, a colleague, or a few students who have one can try it too.
+  - A staging CWL is UBC's to issue, so *How to get one* links to UBC's own page. We do not know its address yet.
 - **On *For your students***: *"Not live yet. This is the address your students will use."* Then **[See what
   going live needs]** (moment 11).
 - **On the right, the two facts** for the chosen address: *serving right now* and *the last attempt* (`TwoFacts`).

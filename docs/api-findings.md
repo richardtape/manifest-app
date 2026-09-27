@@ -467,8 +467,26 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
   2. **On the laptop, is staging the fake IdP**, stated as a divergence, or absent? *Recommended: the fake IdP,
      named in §21's honest divergences.* C1 forbids a laptop that needs UBC's network, and a staging that works
      offline is what lets the loop be demonstrated at all.
-  3. **Who signs in to staging?** UBC staging accounts: the person's own staging identity, or test accounts IAM
-     issues. And what does a student's staging account look like?
+  3. ~~Who signs in to staging?~~ **ANSWERED by Rich, 2026-09-27:** *"Folks can get a staging cwl. It's
+     separate and distinct from their production CWL. There's no "test" accounts. Only accounts associated with a
+     real person, like production."*
+- **The consequence the spec is built against: staging then serves REAL PEOPLE**, and three things rest on it not
+  doing so.
+  - **§14's recent-output read.** It is allowed in sandbox and staging *because* ✓ *"Sandbox and staging serve
+    the Manifest IdP's test users and never a real person"* (spec §14, line 1531). Enablement sitting 2 built it
+    on exactly that reasoning: production is refused `403 INSTANCE_OUTPUT_PRODUCTION` ✓
+    (`packages/control-plane/src/api/routes/instances.ts:189`), and staging is not.
+    - Under FE-24 a staging app's output can carry real people's names and emails.
+    - Our agent reads it (walk-through moment 6), and so do its models, which are chosen by the project's data
+      classification.
+    - **Recommended: the output read becomes sandbox-only**, and staging is refused like production. That moves
+      *"Checking it answers"* entirely to the draft address, where it belongs anyway.
+  - **D6's reason for staging's attribute release, and the harvesting argument in D16**, both assume test users.
+  - **The privacy assessment's scope.** Does a PIA cover an app's staging use by real people with staging CWLs,
+    or does staging need its own cover? A question for the Privacy Office, through Rich.
+- **For the walk-through:** the instructor, a TA, or a colleague tries the trying-out address with their own
+  staging CWL, and so can a few real students who have one. **How a person gets a staging CWL** is UBC's process,
+  and the card links to it.
 - **The drafted spec words wait on the answers above**, and are then Rich's to read before the platform session
   applies them.
 
