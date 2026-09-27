@@ -336,7 +336,18 @@ ticking when it has finished.
 
 ## 6. Watching it get built
 
-*The prototype does not draw this. The substance below is agreed; the layout is still to be settled with Rich.*
+*The prototype does not draw this. The substance and the layout are agreed (Rich, 2026-09-27); the mockups are
+in the visual companion's `moment6-layout.html`, kept under `.superpowers/` and not committed.*
+
+**The layout is C: talking on the left, the work on the right** (Rich, 2026-09-27: *"C is the way forward"*).
+- **Left: the conversation.** Their words and ours, questions as *needs you* cards, and the message box at the
+  bottom. A conversation outlives one round of work: an earlier round collapses into the thread as one line
+  (*"Built and put on your draft address · 18 Sep, 9:12 · What changed"*).
+- **Right: the work**, which stays in view however long the conversation grows. The state chip, the steps with
+  the line under the current one, the permission to leave, then the draft address, then **[Stop]**.
+- *Rejected:* **A**, the work as the page with dialogue inline, where the dialogue gets lost between the steps
+  once there is more than one round. **B**, a chat thread with the steps as one block in it, where the steps
+  scroll away as the conversation grows.
 
 **Trying to:** see that it is really being made, answer anything only they can, and know they can leave.
 
@@ -378,8 +389,38 @@ So the step's words stop at what is true: *"It started and answered."* **Never *
 **Fed by:** our conversation (ours), the project's stream (our server's subscription, with the conversation's
 token), and the operations named in the table.
 
-**If it goes wrong:** *(to draft next: a build that fails three times; the month running out mid-build; the
-stream dropping; a question nobody answers for a day.)*
+**If it goes wrong:**
+- **A build fails.** The lead reads `getBuildLog`, the *explaining* agent says why in a sentence, and the lead
+  fixes it and builds again.
+  - The step shows it happening: *"Building it (second try)"*, with the reason as its note (*"A piece it depends
+    on was missing"*).
+  - **After three tries it stops and asks**, as *needs you*: *"We couldn't get it to build after three tries.
+    Nothing is broken: your draft address still has the last version that worked."* (or *"…is still empty"*).
+    **[Try a different way]** · **[Stop here]**.
+  - The platform's own words are behind *"The exact words, for whoever you ask for help"*.
+- **It builds, but never answers on the draft address** (the instance `failed`; an Incident, `listIncidents`).
+  - The same three tries, fed by the Incident and `getInstanceOutput`.
+  - **The two facts** are on the right while it happens: *serving right now* (the draft address's last good
+    version, or nothing) beside *the last attempt*.
+- **The piece of work reaches its own limit.** A session is capped at $2 so that a looping agent burns its own
+  cap (D8). LiteLLM answers `429 budget_exceeded`, and `getAgentBudget` says the month still has room.
+  - That is a **checkpoint, not a failure**: *"This piece of work has used what we allow in one go. Carry on?
+    It can use up to $2 more of the $10 you have this month."* **[Carry on]** · **[Stop here]**.
+  - Carrying on starts a new agent session. We **never** start one without asking, which would defeat the cap.
+- **The month's allowance runs out mid-way** (`429 budget_exceeded`, and `getAgentBudget` says the month is
+  spent). **Needs you**, with what is true: *"Your AI allowance for this month is used up, part-way through.
+  What's done is kept: the pages are written, and the build stopped before it began. It comes back on 1
+  October."*
+- **The connection drops.** The work runs on our server, never in the page.
+  - The page says *"Reconnecting…"* quietly and picks up where it was.
+  - Our server's own subscription to the project's stream reconnects and is replayed. The replay is only 50
+    events (**FE-7**), so it also re-reads the build and the environment to be sure.
+- **A question nobody answers.** Most questions carry our default (*"We've built it so only you can"*) and the
+  work goes on around them. A question the work cannot go past pauses the conversation: *"Paused, waiting for
+  you."* After a day we email once. It never *"gives up"* on its own, because nothing it did is at risk by
+  waiting.
+- **The conversation's token lapses** (seven days). The next time the person opens it, the browser mints a new
+  one. Nothing is shown.
 
 **They wait:** minutes, **working**, and they may leave.
 
