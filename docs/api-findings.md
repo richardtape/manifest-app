@@ -1,0 +1,347 @@
+# What the faculty front-end needs from the platform
+
+*For Rich to carry to the platform session. Started 2026-09-27, the front-end's first session, against `manifest`
+commit `a2918af` with sitting 5 of the front-end enablement plan uncommitted in its working tree (contract 1.4.0: 56
+operations committed, 57 in the working tree).*
+
+**Each finding has the same shape:** the screen and moment where it bites, what we would call there, what is
+missing, and why it matters to the person. It ends with the options, our recommendation, and **when**: which
+remaining sitting could take it, if any. An **API gap is a finding, never a workaround.** Where the front-end
+designs around one meanwhile, the walk-through says so on the screen concerned.
+
+**Evidence.** A cite marked **✓** was read in this session. An unmarked cite comes from a read-only research pass
+and has not been re-opened; open it before acting on it. `openapi:` lines are the COMMITTED document
+(`git show a2918af:packages/contract/openapi.json`).
+
+**Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
+the point where a finding is cheap.
+
+---
+
+## Needed before a remaining sitting is built
+
+### FE-1 — A model before a project exists ⏰ *before sitting 7* — **APPROVED BY RICH IN PRINCIPLE, 2026-09-27**
+
+- **Screen and moment:** *Describe* (walk-through moments 3–4). A faculty member writes what they need in a
+  paragraph. The agent answers with what it understood and a few names to choose from; they pick one or edit it.
+  Only AFTER that, and the two audience questions, is the project created.
+- **Decided by Rich, 2026-09-27**, in two steps:
+  - First: *"us 'understanding' the project is going to need AI, but that can come out of the user's AI budget."*
+  - Then, superseding the budget half: ***"I guess the 'understanding what the user asked for, proposing names,
+    etc.' can be considered a platform cost. That will always be the same model for all users (and that's
+    something we'll need to set as part of our options at the platform level). So I approve of that spec
+    change."***
+- **What we would call:** a model, before any project exists, paid for by the platform, on a model the platform
+  names.
+- **What is missing:**
+  - `startAgentSession` is `POST /v1/projects/{projectId}/agent-sessions`, a project's operation (plan Task 10).
+  - Its models are D17's for the *project's* classification (plan Decision 23).
+  - D2 says an agent key is *"issued for one agent session… charged to the person the agent works for"*, and
+    §10's key table has no platform-paid row ✓ (spec §4 D2, §10).
+- **Why it matters:** without it, the first thing a faculty member does (*say what you need*) has no model. The
+  only alternative forces a project (an address, a repository, three environments) into existence before they
+  have agreed to anything.
+- **The shape we recommend**, for the platform session to confirm against its own code:
+  - **An *intake* session: a model key with no project, paid by the platform.** Started only from an
+    interactive session, because a token belongs to one project and could not hold it. The browser hands the key
+    to the front-end's server, exactly as it hands over a token. The key is answered once and never stored.
+  - **One model, named by a platform setting** (an administrator's, like the model catalogue). It is not chosen
+    per request and not derived from a classification, because there is no manifest yet. The setting's model
+    must be one D17 allows for §7's default classification, `internal`, so a description a person types never
+    goes somewhere their app could not.
+  - **Paid from a platform budget, with a per-person bound**, so one person cannot spend the platform's intake
+    budget. A small cap and a short life per key (say $0.10 and 15 minutes), and a number of keys per person
+    per day (say 20), all platform settings. Running out is a refusal with its own code, whose words the
+    front-end can show: *"Describing new apps is paused for today."*
+  - **Confined like every key**: `allowed_routes`' three, and no capability on the control plane (§20).
+  - **§5 is unchanged.** The front-end still owns the ideation, meaning the prompt, the conversation and what it
+    does with the answer. The platform only supplies and pays for the model, as it does for an agent session.
+- **The spec action, drafted for Rich to read before it is applied** (the platform session applies it; this
+  repository never edits the spec):
+  - **D2**: after *"…charged to the person the agent works for."*, add: *"One exception is paid by the platform:
+    before a project exists, a person's interactive session may start an **intake session**, whose key calls
+    one model an administrator names, to understand what the person described. It is bounded per person by the
+    platform, and no project, token or app budget is involved (§10)."*
+  - **§10's key table**: a fourth row, **Intake key**.
+    - *Scope:* one person, no project.
+    - *Lifetime:* a short `duration` TTL; revoked when ended; never outlives the session that started it.
+    - *Budget source:* the platform's intake budget, with a per-key hard cap and a per-person daily number of
+      keys, all platform settings.
+  - **§10**: a paragraph after *"An agent outside a sandbox is issued its key through the API (Phase 2)"*,
+    saying:
+    - it is started by an interactive session only, and answered once;
+    - its model is the one platform setting, which must be allowed for `internal` under D17;
+    - it is charged to the platform, and its spend is readable by administrators (§26);
+    - starting one publishes no project event, since there is no project, but is audited against the person.
+  - **§20's credential table**: the agent-key paragraph (*"An agent key (§10) is neither class"*) names intake
+    keys too.
+- **When:** sitting 7 builds agent sessions. Folding the intake session in there costs a nullable `project_id`
+  (or its own small table), one route, and the settings. After sitting 7 it is a plan of its own.
+
+### FE-2 — Who is the front-end's server working for? ⏰ *before sitting 6*
+
+- **Screen and moment:** every screen. Our server (7105) stores conversations and runs the agent. It must know
+  which person a browser request comes from, so that a person reads only their own projects' conversations.
+- **What we would call:** something that answers *"who is this?"* for a request that reached 7105.
+- **What is missing:**
+  - **Every page request on `app.manifest.internal` already carries the person's session to 7105.**
+    `manifest_session` is set with `httpOnly: true`, `sameSite: 'lax'`, `path: '/'` ✓
+    (`packages/control-plane/src/api/routes/auth.ts:72-80`). The edge forwards everything outside `/v1/*` and
+    `/auth/*` to 7105 (plan Decision 19; the console's site does exactly this ✓, `infra/caddy/Caddyfile:63-106`).
+  - So the one way our server can learn who it serves is to **replay that cookie to `GET /v1/me`**. That makes
+    our server hold a credential that can do anything the person can: a server sets its own `Origin`, so CSRF
+    does not stop it.
+  - The plan's *Building a front-end* says *"two credentials, two places"* (plan Task 14). That understates it:
+    the session reaches our server whether we want it or not.
+- **Why it matters:** it is a security property of the whole product, and it is invisible unless someone says it.
+- **Options:**
+  - **(a) Recommended:** the platform **sanctions** the replay to `GET /v1/me` in *Building a front-end*, and
+    says what the front-end's server must never do with the cookie: use it for anything but `getMe`, log it,
+    or keep it.
+  - (b) The edge strips `manifest_session` from requests it sends to 7105. The front-end's server then learns
+    the person only from a token the browser hands it, which needs a *"who minted this token"* read (`Token` has
+    no minter field).
+  - (c) A narrower credential: the control plane issues the front-end's server a signed, short-lived identity
+    assertion.
+- **When:** sitting 6 builds the `app` origin and its edge site, which is where (b) would live. Sitting 11 writes
+  the guide that (a) needs.
+
+### FE-3 — Trying an app out means signing in as a pretend person, and nothing says which ⏰ *before sitting 11*
+
+- **Screen and moment:** *Seeing it* (moment 7), the emotional payload of the product. The person opens their
+  draft or trying-out address.
+- **What we would call:** something that tells the person how to sign in to their own app before launch: the
+  pretend people they can be (*a student*, *an instructor*) and how.
+- **What is missing:**
+  - Under D6, sandbox and staging are signed in by the Manifest IdP, which *"never authenticates a real user"* ✓
+    (spec §4 D6, §9). No operation lists the test identities, and no guide mentions them ✓ (`grep -rn "test
+    user" docs/api/` finds nothing).
+  - On the laptop the same local IdP signs people in to Manifest too, so the instructor's own session carries
+    straight into their app. That is why the prototype's *"You are signed in as yourself"* looks true. **At UBC
+    it is false**: Manifest's own sign-in is real CWL there, and the app's is the Manifest IdP asking for a test
+    account.
+  - **A pilot with even five real students is a full production launch.**
+- **Why it matters:** the moment the idea becomes a real thing is the moment the person meets a login page they
+  cannot get through.
+- **Options:**
+  - **(a) Recommended:** a read of the pretend people an app's sandbox and staging accept: a name, a role in
+    words, and how to sign in as them. They are not secrets, since they authenticate nobody real. The guide
+    says the rest.
+  - (b) The Manifest IdP offers *"continue as a pretend student"* with no password, for sandbox and staging only.
+  - (c) Only the guide says it, and the front-end hard-codes the test users. It drifts at UBC.
+- **When:** sitting 11's *Building a front-end* at the least. (a) is a small read, and could land in sitting 10
+  beside the console and mock work.
+
+---
+
+## The week-eight fear
+
+### FE-4 — Nothing notices a running app that has died
+
+- **Screen and moment:** *Week eight, it breaks* (moment 19); *Your apps* and the project page every time
+  anyone looks.
+- **What we would call:** an event, an Incident, or an instance state that says the live app stopped answering.
+- **What is missing:**
+  - A running app's health is read only inside a deploy: the ONE caller of `driver.status` is
+    `releases/release.ts:1185` ✓.
+  - An Incident is captured only when a deploy fails: the ONE caller of `captureIncident` is
+    `releases/release.ts:881` ✓.
+  - App containers run with `RestartPolicy: { Name: 'no' }` ✓ (`runtime/docker/hardening.ts:32`), commented
+    *"a crash becomes `failed` and an Event, not a loop"*. But nothing turns the crash into either.
+  - So an app that crashes in week eight still reads `healthy` everywhere, while students get the edge's 502.
+    §14's per-app metrics (request count, error rate, p95, memory, AI spend: *"Sufficient for a faculty
+    dashboard"* ✓, spec §14) are neither built nor in the plan.
+  - The reconciler that would notice is Phase 4 (D10).
+- **Why it matters:** the design system's reason for existing is this person's fear of *"week eight during an
+  assessment, in front of two hundred people"*. Today the platform would tell them everything is fine.
+- **Options:**
+  - **(a) Recommended:** a small watcher, before Phase 4's reconciler. It reads each serving instance's status
+    on a timer, marks a dead one `failed`, and captures an Incident with its last output. That is the Incident
+    path the deploy already has.
+  - (b) The front-end's server probes each live address and notices the edge's 502. It is outside the platform,
+    it cannot see why, and it cannot read production output.
+  - (c) The design says plainly that Manifest cannot tell yet.
+- **When:** not in the enablement plan. Its own plan, and the most consequential item here.
+
+---
+
+## The rest, most consequential first
+
+### FE-5 — A question an agent raises does not say what it is asking
+
+- **Screen and moment:** the question an agent raises (the prototype's *Queue*); *Your apps*' needs-you band.
+- **What is missing:**
+  - `PendingAction.summary` is the ROUTE's summary (*"add a member to this project"*) ✓
+    (`tokens/pending.ts:57`, `api/contract/route.ts:225`).
+  - The body is never stored, only `bodySha256`, described as *"SHA-256 of the canonical request body, so a
+    client can match its own"* ✓. The canonical form is not published.
+- **Why it matters:** a person asked *"may it add a member?"* cannot see *who*. Asked *"may it put this live?"*,
+  they cannot see *which version*.
+- **Options:**
+  - **(a) Recommended:** the question carries the specific object: for a member, who and what role; for a
+    deploy, which release and which environment. Taken from the request, and never a secret.
+  - (b) Publish the canonical form, so a front-end whose own agent asked can show and prove what it asked.
+    That helps only the agent the front-end runs.
+- **When:** not in the plan. (b) is a sentence in the guide (sitting 11).
+
+### FE-6 — The owner cannot start the two long clocks, and the drafts D19 promises do not exist
+
+- **Screen and moment:** *Before your students can use it* (moment 10), from week one; *Going live* (moment 11).
+- **What we would call:** *Draft the request* (a registration package for UBC IAM) and *Fill in what we know* (a
+  privacy assessment draft). Then *"I've sent it"*, so the clock starts.
+- **What is missing:**
+  - No operation generates either document ✓: the contract's launch schemas are `IamRegistration`,
+    `PrivacyAssessment`, `LaunchRecords` and the two *record* requests.
+  - `recordIamRegistration` and `recordPrivacyAssessment` need `launch:record`, an administrator's and a
+    person's-only capability (`projects/authz.ts:62-75`).
+  - The owner has no write on this page at all. `LaunchReadinessItem.state` is `met · unmet · not_built`, with
+    nothing for *"submitted, waiting"* (rationale F3).
+- **Why it matters:** spec §13: *"A faculty member should never discover the existence of a PIA on the day they
+  wanted to launch."* The page can show the clock and cannot start it.
+- **Options:**
+  - **(a) Recommended:** the two generated drafts (D19, §9), read by the owner.
+  - (b) An owner's *"sent on <date>, reference <x>"* that moves a record to `submitted`, so waiting shows as
+    waiting.
+- **When:** not in the plan. D19 is Phase 2 by §17.
+
+### FE-7 — The event stream remembers 50 events
+
+- **Screen and moment:**
+  - *Coming back after three weeks* (moment 16): *"what happened since you were last here"*.
+  - Our server's notifications (rationale F9, which is ours by design): if our server was down, it cannot catch
+    up.
+- **What is missing:** the replay is the last 50 events, with no cursor, and there is no REST read of events
+  (openapi:3172).
+- **Options:**
+  - **(a) Recommended:** a cursor, *events after id X*, on the stream's replay or as a paged read. D23.2 keeps the
+    stream the source.
+- **When:** not in the plan.
+
+### FE-8 — Build progress has nothing a faculty member can read (rationale F1, still standing)
+
+- **Screen and moment:** *Watching it get built* (moment 6).
+- **What is missing:** `LogFrame.text` is raw builder output, and the only build events are
+  `build.started · succeeded · failed` ✓. `build.failed`'s sentence is *"… could not be built. Its build log says
+  why."*
+- **Meanwhile:** our agent's model can read `getBuildLog` and say what went wrong in words. That is a
+  translation, and it is paid for from the person's budget.
+- **Options:**
+  - (a) A handful of build-stage events: *dependencies installed*, *checked for security problems*, *stored*.
+    The scan window's ten silent seconds (RUNBOOK) is one of them.
+
+### FE-9 — Launch sentences are written for developers (rationale F2, still standing, and not in the plan's list)
+
+- **What is missing:** `LaunchReadinessItem.why` cites spec sections, decision numbers, *"image digest"*, *"Phase
+  2"* and entity ids ✓ (`launch/readiness.ts:204, 268, 354, 590`). `owner` is free text.
+- **Meanwhile:** the front-end writes its own sentence for every item `id` × `state`. That drifts the day an item
+  is added.
+- **Options:**
+  - (a) A faculty-legible sentence beside `why`, under the same contract events already keep (`humanMessage`).
+
+### FE-10 — *Your apps* costs one read per app, several times over
+
+- **What is missing:** `listProjects` takes no parameters ✓. A card needs `getProject?expand=environments`,
+  `getLaunchReadiness`, `listPendingActions` and `listIncidents` for each app. For an administrator
+  `listProjects` answers every project on the platform ✓ (its schema description).
+- **Options:**
+  - (a) `?expand=environments` on `listProjects`, which D23.1 permits *"where round-trips genuinely hurt"*.
+  - (b) A cross-project read of pending actions for the caller.
+  - (c) `?member=me` for an administrator's own list.
+
+### FE-11 — Removing a colleague does not stop their agent
+
+- **What is missing:**
+  - A token outlives its minter's membership ✓ (ORIENTATION §3, *"A token therefore outlives its minter's
+    membership"*).
+  - Only the minter may revoke it (`api/routes/tokens.ts:303-311`), and `Token` has no minter field.
+- **Why it matters:** an owner removes a TA in week five, and the TA's agent keeps working on the app for up to a
+  year.
+- **Options:**
+  - (a) Removing a member revokes their tokens on that project.
+  - (b) An owner may revoke any token on their project, and `Token` names its minter.
+
+### FE-12 — `Project.owner` is the creator for ever
+
+- **What is missing:** set at creation (`projects/repository.ts:81`), never updated, and there is no `owners[]`.
+  After a hand-over the most-read line on the project names the wrong person.
+
+### FE-13 — What is serving and what the last attempt did: still two reads, and a refused deploy leaves nothing
+
+- **What exists:** `listInstances` marks `serving` ✓, newest first, so the last attempt is its first entry.
+- **What is missing:** a deploy refused before an instance exists (a secret not set; the launch gate) leaves no
+  row anywhere. The person's *"what you tried last"* then has nothing to show.
+- **Options:**
+  - (a) `Environment.lastAttempt`, as the rationale's F6 proposed.
+
+### FE-14 — An app's AI spend, its quota, and how many people used it
+
+- **What is missing:**
+  - Per-project AI spend has no read. The fleet says *"Not yet"*, and the plan gives it to the admin console
+    (plan's *What this plan does not build*).
+  - `Project` has no quota field, although `RELEASE_AI_BUDGET_MISSING` tells the owner to ask for more.
+  - There are no request counts (§14's metrics).
+- **Why it matters:** *"Can ask an AI model, on a budget"* is a chip on the create screen. The owner cannot see
+  the budget.
+
+### FE-15 — The audience cannot be changed (rationale F8's remainder)
+
+- §24: upward is an administrator's approval, downward immediate; neither has an operation. The plan names it as
+  not built.
+- The create screen has to say so at the moment of choosing.
+
+### FE-16 — Smaller
+
+- **`Token.capabilities` is an open array on read** (rationale F10) while capabilities keep arriving
+  (`output:read`, `agent:session`). The front-end renders an unknown one as *"something we can't describe yet"*.
+- **Step-up's residuals** (F4):
+  - the capability being re-proved is only in the human `message`;
+  - `Me` has no *stepped-up until*;
+  - `deploy` and `setAppSecret` declare `STEP_UP_REQUIRED`, though only their production cases raise it.
+- **Event sentences name the slug, not the name** (`release.ts`, `build.ts`), after sitting 5 gives projects
+  names.
+- **A spent session cap and a spent month are both LiteLLM `429 budget_exceeded`**, told apart only by the
+  message (plan Task 9's measurements). The front-end must read `getAgentBudget` to know which to say.
+- **`manifest-mock` is stateless and answers no `SLUG_INVALID` or `SLUG_RESERVED`** (rationale F11). A flow
+  cannot be developed against it, and the hardest copy has no fixture.
+- **No course-restricted access and no LTI.** `integrations` is reserved (`maxItems: 0`), `auth.audience` is
+  reserved, and `frame-ancestors 'self'` also keeps an app out of a Canvas page. The front-end can only say
+  *"post the link"*.
+
+### FE-17 — A refused sign-in shows the person raw JSON
+
+- **Screen and moment:** *Sign in* (moment 1), when the platform refuses an assertion: unbound, expired, or for
+  the wrong person on a step-up.
+- **What is missing:** the SAML callback is the platform's page, and a refusal *"maps to 401 with an envelope"*
+  ✓ (the comment beside `samlSp.validate` in `packages/control-plane/src/api/routes/auth.ts`). The browser
+  arrived there by the IdP's auto-submitting form, so what it answers is what the person sees.
+- **Options:**
+  - (a) A browser arriving at `/auth/*` is answered a short page, or redirected to the origin's `/` with a code
+    the front-end renders. The JSON stays for a non-browser caller.
+
+### FE-18 — `@manifest/contract` as a package another repository consumes
+
+The research pass, confirmed in part by the console's own `package.json` ✓ (it consumes the package as
+`workspace:*`, inside the monorepo, where none of this bites):
+
+- **Its runtime is `dist/index.js`, which git ignores.** A sibling that links it must build it first.
+- **Its `dist/*.d.ts` are broken**: `schema.d.ts` is never copied into `dist/`. A consumer takes the types from
+  `src/`, which needs `moduleResolution: bundler` (or `nodenext`).
+- **`src/errors.ts` uses constructor parameter properties**, which `erasableSyntaxOnly` refuses. Recent
+  `create-vite` templates turn that flag on.
+- **The version did not move when an operation was added** (1.4.0 before and after `updateProject`). The plan
+  says so on purpose (*"it stays numbered 1.4.0 through this plan while it grows"*). A consumer therefore cannot
+  tell two 1.4.0s apart except by the commit.
+- **Guides lag the contract** (sitting 11 is the fix):
+  - `agents.md` still says reading an app's output is *"not available yet"* ✓;
+  - `authoring.md` still says text only;
+  - nineteen operations are explained in no guide, among them the person's side of a pending action and member
+    management.
+
+---
+
+## Not a gap: decisions that are Rich's
+
+- **The building agent's model on the laptop is `qwen3.5:4b`**, a 4B-parameter model ✓ (`infra/models.txt`;
+  `infra/litellm/config.yaml` maps all four chat names to it). Spec §21 already says offline agent quality will
+  be poor. Whether the front-end is developed and demonstrated against it, or against a larger model behind the
+  same LiteLLM (which keeps D2, D8 and D17 intact), is Rich's call. It is not a finding.
