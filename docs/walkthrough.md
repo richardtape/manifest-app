@@ -431,6 +431,55 @@ token), and the operations named in the table.
 
 **They wait:** minutes, **working**, and they may leave.
 
+## 7. Seeing it
+
+*Drafted 2026-09-27. Rich decided how pretend people sign in (show the logins) and that staging is UBC's real
+staging world (FE-24). The trying-out half waits on FE-24's questions.*
+
+**Trying to:** see the thing they asked for, as a student would and as they will.
+
+**The three addresses mean three different worlds** (Rich, 2026-09-27):
+
+| Address | World | Who can sign in |
+|---|---|---|
+| **Your draft** (sandbox) | **Pretend.** A fake sign-in, and (later) a fake Canvas and a fake academic API | Pretend people: agents and instructors, freely |
+| **For trying out** (staging) | **UBC's real staging world**: IAM's staging sign-in, Canvas's and the academic API's staging instances | UBC staging accounts (FE-24, question 3) |
+| **For your students** (production) | **Real** | Your students, with their CWL |
+
+**They see** the Preview screen (rail: *Preview*), rebuilt around what is true:
+- **A switcher across the top**: *Your draft · Trying out · For your students* (`SegmentedControl`). Each shows its
+  address in mono and **[Open it in a new tab]**. It opens in a tab and never in a frame, because apps refuse to
+  be framed by another origin (`frame-ancestors 'self'`, the rationale's F12).
+- **On *Your draft***: a *Try it as* card, one row per pretend person, each with its sign-in details and a copy
+  button:
+  - *"A student · sign in as `student`, password `student`"*
+  - *"An instructor · sign in as `instructor`, password `instructor`"*
+  - One sentence says what the draft is: *"Your draft is a practice copy. Everyone in it is pretend, and so is
+    anything they post."*
+- **On *Trying out***: the same address and button, and how to sign in, pending FE-24.
+- **On *For your students***: *"Not live yet. This is the address your students will use."* Then **[See what
+  going live needs]** (moment 11).
+- **On the right, the two facts** for the chosen address: *serving right now* and *the last attempt* (`TwoFacts`).
+- **Under them**: *"Not right? Tell us what to change."* **[Ask for a change]** opens the conversation (moment 8).
+
+**Fed by:**
+- `listEnvironments` (each `hostname`, `url`, `instance`); `listInstances` (`serving`, newest first);
+  `listIncidents` for a failed last attempt.
+- **The pretend people: FE-3.** Until the platform publishes them, they come from our own configuration, and on
+  the laptop that is the local IdP's `student` and `instructor`. The configuration is marked, so it cannot pass
+  for the platform's answer.
+
+**If it goes wrong / quirks:**
+- **On the laptop, Manifest's own sign-in and the draft's are the same local IdP**, so opening the draft signs the
+  person straight in as whoever they signed in to Manifest as. The *Try it as* card says so on the laptop only:
+  *"If it opens as you, use Sign out inside the app, then sign in as the student."*
+  - At UBC this does not happen: Manifest's sign-in is real CWL and the draft's is the fake one.
+- **Nothing is on the draft address yet**: *"Nothing there yet. It appears when the first build is done."*
+- **The draft's last attempt failed**: the two facts show it, and *[What went wrong]* opens the conversation that
+  was working on it.
+
+**They wait:** nothing. A tab opens.
+
 ---
 
 ## Open questions for Rich (part A)

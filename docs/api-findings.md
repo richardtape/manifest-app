@@ -111,7 +111,13 @@ the point where a finding is cheap.
 - **When:** sitting 6 builds the `app` origin and its edge site, which is where (b) would live. Sitting 11 writes
   the guide that (a) needs.
 
-### FE-3 — Trying an app out means signing in as a pretend person, and nothing says which ⏰ *before sitting 11*
+### FE-3 — Trying an app out on its draft address means signing in as a pretend person, and nothing says which ⏰ *before sitting 11*
+
+> **Decided by Rich, 2026-09-27: show the test logins** (option (a) below, passwords included, because they
+> authenticate nobody real). **And its scope is the SANDBOX only.** Rich: *"in the sandbox we will use the fake
+> IdP, but in staging, we'll actually be connecting to the real Staging IdP from UBC's Identity and Access
+> Management team."* That is a spec change, **FE-24**. This finding describes today's platform, where staging is
+> on the Manifest IdP too.
 
 - **Screen and moment:** *Seeing it* (moment 7), the emotional payload of the product. The person opens their
   draft or trying-out address.
@@ -424,6 +430,34 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
     It is answered by `listAgentSessions`, cached like the month.
 - **When:** sitting 7 builds `AgentSession` and `listAgentSessions`. One field there; a change to a published
   representation after.
+
+### FE-24 — Staging is UBC's real staging world, not the fake one — **a spec action, stated by Rich 2026-09-27**
+
+- **Rich, 2026-09-27:** *"in the sandbox we will use the fake IdP, but in staging, we'll actually be connecting to
+  the real Staging IdP from UBC's Identity and Access Management team. The sandbox is where the agents and
+  instructors can log in freely with fake users, but the staging environment has a real connection to real
+  (staging) services at the university. Same with Canvas and Academic API etc. Sandbox will be a fake
+  environment, staging will be a real staging environment, and production (of course) will be real."*
+- **What the approved spec says today** ✓, and what the platform is built to:
+  - **D6**: *"The Manifest IdP… serves **sandbox and staging** with test users."*
+  - **§9's table**: sandbox and staging share a column, with automatic registration in seconds.
+  - **D21**: a rehearsal against UBC's staging IdP is a launch-readiness item, *"not part of the daily build loop.
+    … Staging on the Manifest IdP keeps iteration frictionless"*.
+- **What the change touches:**
+  - D6; §9's identity table and *Sandbox and staging: SP auto-provisioning*; D21 and §13's checklist (the
+    rehearsal item); §8's injection of `SAML_*` for staging;
+  - §21 (*Honest divergences*): the laptop cannot reach UBC's staging IdP offline (C1), so laptop staging needs a
+    stated stand-in;
+  - §15's `integrations` (Canvas, the academic API): sandbox fakes, staging's real staging instances.
+- **Questions only Rich or UBC IAM can answer, which the walk-through waits on:**
+  1. **Is an app's registration with UBC's staging IdP a request IAM reviews, with a lead time,** or can
+     Manifest make it itself? If it is reviewed, the *trying-out* address waits on people, and it becomes a third
+     clock beside the IAM registration and the privacy assessment.
+  2. **On the laptop, is staging the fake IdP**, stated as a divergence, or absent?
+  3. **Who signs in to staging?** UBC staging accounts: the person's own staging identity, or test accounts IAM
+     issues. And what does a student's staging account look like?
+- **The drafted spec words wait on the answers above**, and are then Rich's to read before the platform session
+  applies them.
 
 ---
 
