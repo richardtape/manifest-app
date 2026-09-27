@@ -500,10 +500,9 @@ staging world (FE-24). The trying-out half waits on FE-24's questions.*
   - The message box of an open conversation continues **that** one.
   - One conversation is one piece of work (the prototype's *Conversations* screen), so a change asked six weeks
     later has its own history, and its own line of spend.
-- **One conversation works on an app at a time; the others wait in line**, and say so. The top of the waiting
-  one reads **waiting on someone**: *"Waiting for 'Word count' to finish. It starts by itself."* Its message box
-  still takes messages.
-  - This is proposed, and is the one decision in this moment.
+- **One conversation works on an app at a time; the others wait in line**, and say so (decided, Rich
+  2026-09-27). The top of the waiting one reads **waiting on someone**: *"Waiting for 'Word count' to finish. It
+  starts by itself."* Its message box still takes messages.
   - The reason: an app has one draft address (§23: one sandbox per project), and two conversations writing to it
     at once would each find `main` moved under them (`409 SOURCE_CONFLICT`: the platform never merges). Each
     would then redo its work, and pay twice.
