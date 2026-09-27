@@ -13,23 +13,20 @@ designs around one meanwhile, the walk-through says so on the screen concerned.
 and has not been re-opened; open it before acting on it. `openapi:` lines are the COMMITTED document
 (`git show a2918af:packages/contract/openapi.json`).
 
-## For the platform session, in the order it needs them
+## For the platform session, in the order it needs them — decided by Rich, 2026-09-27
 
-| When | Finding | What is asked | Rich's |
+| When | Finding | What is asked | Rich decided |
 |---|---|---|---|
-| **Before sitting 6** (the `app` origin) | **FE-2** | Say whether the front-end's server may replay the person's session to `getMe`, or strip the cookie at the edge | a platform decision |
-| **Before sitting 7** (agent sessions) | **FE-1** | An *intake* session with no project, platform-paid, on one model a setting names | **approved in principle**; the spec words are drafted for him to read |
-| | **FE-23** | `AgentSession.spentUsd`, so each conversation can show what it cost | a field |
-| **A spec action, now** | **FE-24** | Staging is UBC's real staging world (its IdP, Canvas, the academic API), and its consequences: the output read sandbox-only, the rehearsal's meaning, the PIA's scope; on the laptop, the fake sign-in | **stated by Rich**; all three questions answered |
-| **Sittings 10–11** (mock, console, guides) | **FE-3** | The sandbox's pretend people, with their sign-in details, as a read (Rich: *show the logins*) | — |
-| | **FE-5** | The question an agent raises names what it asked about; or, at least, the canonical body is published | — |
-| | **FE-17** | A browser refused at `/auth/*` is shown a page, not JSON | — |
-| | **FE-18** | `@manifest/contract` consumable from a sibling repository: `dist/*.d.ts` whole, and the guides caught up | — |
-| **Plans of their own** | **FE-4** | Notice a running app that died, with an Incident. **The most consequential item here**; we watch meanwhile | — |
-| | **FE-6**, **FE-25** | The three clocks' drafts and an owner's *"I've sent it"*; an owner's *"please sign this off"* | — |
-| | **FE-7** | Events after a cursor | — |
-| | **FE-19**, **FE-20**, **FE-21**, **FE-22** | Toolkits' know-how served like knowledge packs; Canvas and the academic API; Qdrant in a blueprint; the rule for course material | — |
-| | FE-8 to FE-16 | Smaller, each with its own options | — |
+| **Sitting 6, and the guide in 11** | **FE-2** | The front-end's server may replay the session cookie it receives to `GET /v1/me`, to learn who it serves, and for nothing else | **(a) Allow the replay**, and write the rule down in *Building a front-end* |
+| **Sitting 7** | **FE-1** | An *intake* session with no project, platform-paid, on one model an administrator names | **Approved in principle; into sitting 7.** The spec words go to Rich to read before they are applied |
+| | **FE-23** | `AgentSession.spentUsd` | **Into sitting 7** |
+| **A decision to plan** | *the model* | A capable model behind the same LiteLLM, beside `qwen3.5:4b`, which stays the offline floor | **Add a capable model option**; the provider is UBC's call |
+| **Spec now; code in sitting 10** | **FE-24** | Staging is UBC's real staging world (IdP, Canvas, academic API). On the laptop, staging keeps the fake sign-in. Recent output becomes sandbox-only | **Spec words now**, for Rich to read; `getInstanceOutput` refuses staging **in sitting 10** |
+| **Sittings 10–11** | **FE-17**, **FE-18**, **FE-5** (its guide sentence) | A page, not JSON, for a browser refused at `/auth/*`; `@manifest/contract` consumable from a sibling repository; the canonical body hash published | **Fold these three in** |
+| **After the enablement plan, first** | **FE-6**, **FE-25** | The launch path: the three clocks' drafts and state, the staging registration as a tracked object, and an owner's *"please sign this off"* | **The first of the front-end's asks** |
+| **Then** | **FE-19**–**FE-22**, **FE-7**, **FE-3** | Toolkits, integrations, Qdrant, course material; events after a cursor; the sandbox's pretend people (with FE-24's plan) | ordered after the launch path |
+| **Phase 4, as specified** | **FE-4** | Noticing a live app that died | **Phase 4's reconciler (D10)**; the front-end watches meanwhile |
+| **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
 the point where a finding is cheap.
@@ -198,7 +195,8 @@ the point where a finding is cheap.
   minute, emails the owners when it stops answering, and offers *Start it again* (a fresh `deploy` of the same
   release, with step-up). It cannot say why, cannot see an app that answers wrongly, and watches only while it
   runs. **It is a stop-gap, and FE-4 stays the platform's top item** (walk-through moment 19).
-- **When:** not in the enablement plan. Its own plan, and the most consequential item here.
+- **When — decided by Rich, 2026-09-27: Phase 4, as specified** (D10's reconciler). The front-end's watch is
+  the stop-gap until then, for longer than recommended. This is still the most consequential item here.
 
 ---
 
