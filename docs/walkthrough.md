@@ -748,6 +748,183 @@ little that staging has not. FE-24 carries the question. Until then, the row sta
 
 ---
 
-## Open questions for Rich (part A)
+# C. Running it
 
-*Both answered 2026-09-27: **we** everywhere (D5); **commit the plan** (D6).*
+## 16. Coming back after three weeks
+
+**Trying to:** check it is fine, and whether anything needs them, without remembering how any of this works.
+
+**They see** *Your apps*, now with an app on it. One card per app:
+- **The name and who it is for**: *"Reading responses · one class, all arriving at once"*.
+- **The students' fact first**, because that is the one they fear for: *"For your students · answering · the
+  version from 18 September"*. Then the draft and trying-out addresses, smaller.
+- **A needs-you band across the top of the page, only when something does**, naming the app and the thing:
+  *"Reading responses: we have a question for you."* Sources:
+  - a question in one of our conversations (ours);
+  - a question an agent of their own asked (`listPendingActions`, per app: **FE-10**);
+  - a launch item that is theirs.
+- **"Since you were last here"**, at most five lines, newest first: *"Signed off by <name>, 23 Sep · <TA> was
+  added, 25 Sep · Went live, 26 Sep."* **[Everything]** opens the app's history.
+
+**Fed by:**
+- `listProjects`, then one `getProject?expand=environments`, `listInstances` and `getLaunchReadiness` per app
+  (**FE-10**).
+- **The history is ours: what our server saw on each project's stream, kept as it arrived.** This is the one
+  record we keep of platform events. The platform replays only the last 50 and keeps no readable history
+  (**FE-7**). Anything that happened while our server was not listening is missing, and the page says so rather
+  than implying completeness: *"From 18 September."*
+
+**A standing read-only token per project** (our decision; the plan's *Building a front-end* expects it):
+- minted in the browser when the project is made: `project:read` and `output:read`, named *"Keeping watch"*;
+- our server's subscription, history and emails (F9) all run on it;
+- archive revokes it (moment 20), and restore mints a new one.
+- *Rejected:* subscribing only while a conversation's token lives, which leaves an app that is quietly live
+  watched by nobody.
+
+**If it goes wrong:** the reads fail. *"We can't reach Manifest just now. Nothing of yours has changed."*
+
+**They wait:** a second.
+
+## 17. A change after launch
+
+**Trying to:** change a live app without breaking it for 200 people.
+
+**They see:** moments 8, 6 and 9, unchanged: a conversation, the work, the draft, then the trying-out address.
+Then one more step, and one sentence decides how long it takes.
+- **Before building**, the conversation says which kind of change this is, from the dry run:
+  - **Most changes**: *"Once you've tried it, this can go straight to your students."*
+  - **A change to something reviewed at launch**: *"This change needs an administrator's look before it reaches
+    your students, because it changes <what it keeps / who it learns about / what it can reach / which AI it
+    asks / how much room it gets / how sensitive its data is / what it's built on>."* That is §7's seven
+    sensitive fields, in words. Moment 13's wait follows.
+  - **A new detail about the people who sign in** (a new CWL attribute): also *"…and UBC's identity team must
+    agree to share it first. That takes weeks."* That is a change request to the production registration: a
+    clock again (moment 10).
+- **Then** **[Let your students have this version]**, with step-up (moment 14's card and flow). The students'
+  address keeps the old version until the new one answers: the two facts, throughout.
+
+**Fed by:**
+- `createCommit`'s dry run: `spec.sensitiveDiff`.
+- `getLaunchReadiness` after launch: `launched`, `reescalated`, `sensitiveFields`, and the self-serve
+  `admin-approval`.
+- `deploy` to production, with step-up.
+
+**If it goes wrong:** as moments 9 and 14. **The students' version is never taken away by a change that fails**
+(§13: *"Deploying a release never takes down the one it replaces"*), and every screen says so.
+
+**They wait:** minutes, or days when it re-escalates.
+
+## 18. Adding a TA
+
+**Trying to:** let a TA help, and understand what that lets the TA do.
+
+**They see** *People*:
+- *"Who can change Reading responses"* · *"Students aren't on this list. They get in once it's live."*
+- **The list**: each person's name, email and CWL login, and **Owner** or **Helper** (`collaborator`).
+- **Add someone**: one field, *"Their CWL login or email"*, and the role.
+  - *"Helper: can change the app and try it. Only an owner can let students have a new version, change who's on
+    this list, or switch it off."* That is §13's roles, in words.
+- **Adding asks them to sign in once more** (moment 14's card), since changing who can get in is one of those
+  things.
+
+**Fed by:**
+- `listMembers`.
+- `addMember` `{ cwlLogin | email, role }`. The sign-in name or the email typed is sent as `cwlLogin` or `email`
+  by its shape (an `@` makes it an email).
+- `403 STEP_UP_REQUIRED`, then step-up; `member.added` / `member.removed` on the stream.
+- `removeMember`, with step-up.
+
+**If it goes wrong:**
+- **`MEMBER_USER_NOT_FOUND`**: *"We don't know anyone by that name yet. They need to sign in to Manifest once:
+  send them `app.manifest.internal`, then try again."* Inviting someone who has never signed in is deliberately
+  not built.
+- **`MEMBER_USER_AMBIGUOUS`**: *"Two people share that email. Use their CWL login instead."*
+- **`PROJECT_LAST_OWNER`** when removing: *"Someone has to own it. Make someone else an owner first."*
+- **Removing a TA whose agent is still working**:
+  - The platform keeps their token alive (**FE-11**). But the tokens our server holds are ours to stop using, so
+    removing someone **ends their conversations here** and discards their tokens.
+  - The page says what is true: *"<TA>'s work on this app has stopped here. Anything they run elsewhere keeps
+    its access until it expires."*
+
+**They wait:** seconds, plus the sign-in.
+
+## 19. Week eight: it breaks
+
+**Trying to:** make it work again, now, in front of 200 people. **This is the moment the design system exists
+for.**
+
+**Three different breaks, and the platform sees only two of them:**
+
+| What broke | Does the platform notice? | What they read |
+|---|---|---|
+| **A change that failed to go live** | Yes: `instance.failed`, an Incident, and the old version still serving | *"Nobody has lost anything. <address> is still answering with the version from before."* This is the prototype's *Incident* screen, with its **[Give this to your agent]**. |
+| **The live app fell over on its own** | **No (FE-4).** Nothing watches a running app; it still reads `healthy` | *(the open question below)* |
+| **It works, but does the wrong thing** (a student reports it) | No, and it shouldn't | a conversation: moment 17 |
+
+**The failed change** (the one the platform sees):
+- **The email first** (ours, from the watcher token's stream): *"Reading responses: a change didn't go live.
+  Nobody has lost anything; your students still have the version from before."*
+- Then the Incident screen, in words: *"It started, then went quiet."* The exact words go behind *"for whoever
+  you ask for help"*.
+- **[Give this to your agent]** starts a conversation seeded with `Incident.prompt`, the platform's own repair
+  request. The rest is moment 17.
+- **Production's own output is never readable** (§14). The Incident's `logTail` is the only window, redacted, and
+  the agent reads it.
+
+**The app that fell over**: see the open question below.
+
+**Fed by:** `incident.opened` and `instance.failed` on the stream; `listIncidents` (`prompt`, `exitReason`,
+`logTail`, `diffSinceHealthy`); `listInstances`.
+
+**They wait:** as moment 17, while the old version keeps answering.
+
+## 20. End of term
+
+**Trying to:** stop it for the summer without losing what students wrote, and have it back in September. Or
+clear away an app that never went live.
+
+**They see**, on the project's Overview, under **For your students**, a quiet **[Switch it off]**:
+- *"Your students' address will show 'This app has been switched off by its owner.' Everything is kept: its code,
+  what students wrote, its settings. Switch it back on whenever you like."*
+- Owner only. It asks them to sign in once more.
+- **Then, switched off**: the app's card on *Your apps* reads **not yet**: *"Switched off, 12 December"*, with
+  **[Switch it back on]**.
+- **Switching it back on** (no second sign-in: bringing an app back takes nothing from anyone):
+  - *"It's back, but not running yet. [Start it for your students] puts the version from last term back, with
+    everything they wrote."*
+  - That button is two deploys under the hood: the trying-out address first, then the students'. Production
+    takes only what staging serves, and the second deploy asks for the sign-in again.
+  - The watcher token is minted again. **The staging and production registrations may have lapsed over the
+    summer**, and the checklist says so if they have.
+- **An app that never went live** also offers **[Delete it]**: *"Everything goes: its code, its addresses, what
+  anyone wrote in it. This can't be undone. Its name becomes free."* Owner only, with the sign-in.
+- **An app that has been live cannot be deleted**, and says why: *"Apps that have been live are kept, because
+  UBC's rules decide when students' data is removed."*
+
+**Fed by:**
+- **Sitting 8**: `archiveProject` (person-only, step-up; synchronous) and `restoreProject`, with `Project.state`
+  and `archivedAt`. The switched-off address answers the platform's `410` page.
+- **Sitting 9**: `deleteProject`, and `409 PROJECT_LAUNCHED_NOT_DELETABLE`.
+- `deploy` twice to bring it back (the research pass's G18: restore starts nothing).
+
+**If it goes wrong:**
+- **Switching off fails part-way** (`500 PROJECT_TEARDOWN_INCOMPLETE`): *"It's switched off, but we didn't finish
+  tidying up. Nothing is lost, and we'll finish by ourselves."* The platform finishes it at its next boot, and a
+  retry finishes it now.
+- **Anything done to a switched-off app** (`409 PROJECT_ARCHIVED`): *"Reading responses is switched off. Switch
+  it back on first."*
+
+**They wait:** seconds.
+
+**Not built, and asked for by this moment:** a copy of what students wrote, before delete or at the end of term
+(the research pass's G19); and *"the same app, empty, for next year's class"* (D32's fork, Phase 2, absent).
+Both belong in the platform's list, not here.
+
+---
+
+## Open questions for Rich
+
+*Part A's two were answered 2026-09-27: **we** everywhere (D5); **commit the plan** (D6).*
+
+1. **Moment 19: the live app that fell over on its own (FE-4).** The platform does not notice. What does the
+   product do until it does?
