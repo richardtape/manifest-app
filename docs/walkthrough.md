@@ -334,6 +334,55 @@ anything left gets corrected.
 **They wait:** tens of seconds, **working**: *"Reading how apps like this are built" · "Writing the plan"*, each
 ticking when it has finished.
 
+## 6. Watching it get built
+
+*The prototype does not draw this. The substance below is agreed; the layout is still to be settled with Rich.*
+
+**Trying to:** see that it is really being made, answer anything only they can, and know they can leave.
+
+**They see** (decided, Rich 2026-09-27: *steps, plus a line now*):
+- **The steps are the backbone**, in plain words (`LiveSteps`). Each ticks only when it has actually finished,
+  backed by a real signal:
+
+  | Step | Ticks on |
+  |---|---|
+  | *Writing the pages* | our lead's commits (`createCommit`; `repository.committed`) |
+  | *Checking it holds together* | the dry run: `createCommit` with `dryRun`, and its spec validation |
+  | *Building it* | `build.started`, then `build.succeeded` |
+  | *Putting it on your draft address* | `deploy` to sandbox; `instance.provisioning`, then `starting`, then `healthy` |
+  | *Checking it answers* | `listInstances`, `getInstanceOutput` (see below for what this can and cannot prove) |
+
+- **One plain line under the current step** saying what we are doing now: *"Writing the page students post on."*
+  It is written by the lead, as structured output, never raw model text.
+- **Each finished step has a disclosure: what changed**, in words (*"Two pages, and the rule about who sees
+  what"*), built from the lead's own account of its commit. Behind it, *"The exact changes, for whoever you ask
+  for help"* lists the files, which is machine text on purpose (`InverseSurface`).
+- **Questions come inline**: a *needs you* card with an answer field. *"It is waiting, not failing."*
+- **A fix it made on its own is one sentence**: *"The first build didn't take. We fixed a missing piece and built
+  it again."* The raw words sit behind the disclosure.
+- **Permission to leave**: *"A few minutes. You can leave. We'll email you when it's ready, or if it needs
+  you."* The email is ours (F9, below).
+- **They can add a message at any time** (*"also add a word count"*). The lead reads it at its next step, and
+  the line under the current step says so: *"Got it, after this build."*
+- **[Stop]**: *"Nothing is lost. Your draft address keeps whatever was last put there."* This ends the agent
+  session (`endAgentSession`). The token lives on with the conversation, so it can be resumed.
+
+**What *"Checking it answers"* can and cannot prove.** The lead can see that the app started and answered, and
+read what it printed. **It cannot sign in to the app as a pretend student and post a response**:
+- the app is behind CWL;
+- nothing tells the lead which pretend people exist, or how to sign in as one (**FE-3**);
+- it has no browser.
+
+So the step's words stop at what is true: *"It started and answered."* **Never *"It works"*.**
+
+**Fed by:** our conversation (ours), the project's stream (our server's subscription, with the conversation's
+token), and the operations named in the table.
+
+**If it goes wrong:** *(to draft next: a build that fails three times; the month running out mid-build; the
+stream dropping; a question nobody answers for a day.)*
+
+**They wait:** minutes, **working**, and they may leave.
+
 ---
 
 ## Open questions for Rich (part A)

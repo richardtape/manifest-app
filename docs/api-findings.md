@@ -126,8 +126,12 @@ the point where a finding is cheap.
     it is false**: Manifest's own sign-in is real CWL there, and the app's is the Manifest IdP asking for a test
     account.
   - **A pilot with even five real students is a full production launch.**
-- **Why it matters:** the moment the idea becomes a real thing is the moment the person meets a login page they
-  cannot get through.
+- **Why it matters:**
+  - The moment the idea becomes a real thing is the moment the person meets a login page they cannot get through.
+  - **The agent cannot try its own app either.** It has no pretend person to be and no browser, so it can prove
+    only that the app started and answered (`getInstanceOutput`), never that a student can use it (walk-through
+    moment 6). A read of the pretend people, with a way to sign in as one that a program can follow, would let
+    the lead check its own work before the person looks.
 - **Options:**
   - **(a) Recommended:** a read of the pretend people an app's sandbox and staging accept: a name, a role in
     words, and how to sign in as them. They are not secrets, since they authenticate nobody real. The guide
