@@ -490,6 +490,22 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
 - **The drafted spec words wait on the answers above**, and are then Rich's to read before the platform session
   applies them.
 
+### FE-25 — Nobody is told that an app is waiting for an administrator's sign-off
+
+- **Screen and moment:** *Waiting on an administrator* (walk-through moment 13).
+- **What we would call:** *"please look at this"*, so the person has a date to count from, and an administrator
+  has a queue entry.
+- **What is missing:**
+  - Approval starts from the administrator's side (`createApprovalPreview`).
+  - Nothing records that an owner wants one: a refused production deploy writes no event and no request (the
+    research pass; admin console design A3).
+  - `getApproval` answers only once decided.
+- **Why it matters:** *"Name the owner of every wait"* (`10-language.md`). This wait has an owner who does not
+  know it is theirs.
+- **Options:**
+  - (a) An owner's request for sign-off on the release serving staging: an event on the stream, and a row in
+    §26's queue. It is D31's queue *"of things blocked on a human"*, fed from the side that is blocked.
+
 ---
 
 ## Not a gap: decisions that are Rich's

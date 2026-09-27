@@ -605,6 +605,149 @@ once there is a date to count from.
 
 ---
 
+# B. Going live
+
+## 11. The checklist, in our words
+
+**Trying to:** find out what stands between this app and their students, and who has each piece.
+
+**They see** *Going live* (rail), the prototype's *"Letting your students in"*, rebuilt on three clocks:
+- **Heading:** *"Letting your students in"*. *"Going live isn't a button. Most of it takes minutes, but three
+  things are answered by other people and take weeks. That's why this page exists from day one."*
+- **The version that would go live**, stated once, at the top: *"What goes live is the version on your
+  trying-out address: the one from 18 September, 3:12pm."* Production deploys only what staging serves
+  (`RELEASE_NOT_STAGED`), so this is a fact, not a choice. Changing it is moment 9.
+- **Three clocks** (moment 10's cards).
+- ***"Short jobs, for the end"*** (*"minutes each, and not worth doing early"*), one row per checklist item, each
+  with its state as one of the five, its owner in words, and one plain sentence:
+
+| Item (`id`) | Our words | Owner, in words |
+|---|---|---|
+| `scans` | met: *"Checked for security problems. Nothing needs fixing, and we check again on every build."* | *done for you* |
+| `rehearsal` | *"A dry run on the live setup: we put it up with nobody watching, check it answers and signs someone in, then take it down."* | *you start it; minutes* (moment 12) |
+| `load-rehearsal` | only for *a large course* or *anyone at all*: *"A test with everyone at once. We pretend to be your whole class arriving together."* | *us, in minutes* |
+| `admin-approval` | *"A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off."* | *a Manifest administrator* (moment 13) |
+| `domain` | met: *"Its address is `reading-responses.manifest.apps.ltic.ubc.ca`, yours for good."* | *done for you* |
+| `code-review` | shown last, set apart, **not yet**: *"Nobody reviews the code itself yet. What keeps it safe is how it runs: it can only reach what it asks for, and only its own data."* | *nobody yet* |
+
+**Fed by:**
+- `getLaunchReadiness`: `items[]` with `id`, `state`, `blocking` and `owner`; `ready`; `candidateReleaseId`.
+  **Every sentence is ours, keyed on `id` × `state` (FE-9)**, because `why` is written for developers.
+- An `id` we do not know is shown as *"Something new on the list: <title>"* rather than hidden. The enum grows
+  (spec D23.8).
+- The clocks: moment 10. `getLaunchRecords` for the two records the platform keeps.
+
+**If it goes wrong:** there is no failure here, only states. The two that need words:
+- **An item is `unmet` and owned by the person**: **needs you**, with the one action.
+- **`scans` unmet**: *"Something it depends on has a known security problem with a fix available. We'll update it
+  in a conversation: [Fix it]."* This starts one, fed by the build's `scan`.
+
+**They wait:** nothing on this page. It is a map.
+
+## 12. The dry run on the live setup
+
+**Trying to:** tick the one short job that is theirs.
+
+**They see:** on its row, **[Run the dry run]**. Then a small **working** row: *"Putting it up with nobody
+watching… signing someone in… taking it down."* It ends **steady**: *"Done. It answered and signed someone in on
+the live setup."* Or it ends **needs you**, with what failed in a sentence and *[Fix it]*, which starts a
+conversation.
+
+**Fed by:** `runRehearsal`, which is session-only (a person's act), then `rehearsal.completed` on the stream, and
+the item's state after.
+
+**Under FE-24 this changes meaning.** It was built to prove the sign-in's shape before launch day, because
+staging used the fake IdP. If staging signs in through UBC's real staging IdP every day, the rehearsal proves
+little that staging has not. FE-24 carries the question. Until then, the row stays, in the words above.
+
+**They wait:** minutes, **working**. They may leave.
+
+## 13. Waiting on an administrator
+
+**Trying to:** get the sign-off, without knowing who gives it.
+
+**They see:** the `admin-approval` row, **waiting on someone**:
+- *"A Manifest administrator looks at this next."*
+- A one-line reason it exists: *"so nobody's app reaches students with something it shouldn't have."*
+- *"asked 21 September · waiting 2 days"*, once there is a date to count from.
+- When decided: **steady**, *"Signed off by <decidedByName>, 23 September."* Or **needs you**, *"Not signed off:
+  '<their reason>'"*, in the person's own words behind the system's one left rule. **[Talk it through]** starts
+  a conversation seeded with the reason.
+
+**Fed by:**
+- `getApproval` for the candidate release (`decision`, `decidedByName`, `decidedAt`, `reason`), and
+  `release.approved` / `release.approval_rejected` on the stream, which our server turns into an email.
+- **There is nothing for *asked* (FE-25).** No operation says *"please look at this"*, and a refused production
+  deploy records nothing. So there is no date to count from, and no administrator is told.
+- Meanwhile the row says so and offers the next best thing: *"Nobody is told automatically yet. [Ask them]"*,
+  which opens an email to the platform team. It is not a record we keep.
+
+**They wait:** days, **waiting on someone**, still.
+
+## 14. Putting it live
+
+**Trying to:** let their students in. This is the one moment that asks them to prove it is them.
+
+**They see:**
+- **When every blocking item is met** (`ready`), the page's top gains the one primary action: **[Let your
+  students in]**. Under it: *"The version from 18 September goes to `reading-responses.manifest.apps.ltic.ubc.ca`.
+  Your trying-out address stays as it is."*
+- **Pressing it, the first time in ten minutes**, is answered `403 STEP_UP_REQUIRED`. We show the step-up card
+  in place, not a new page:
+  - *"Sign in once more"* · *"We're not doubting you. We're making it useless for anyone who finds your laptop
+    open."*
+  - *"We ask this for anything that reaches your students or changes who can get in."* That sentence is the
+    rule, with no list: the list is longer than four now, and it is still learnable.
+  - **[Sign in again]**, which goes to `/auth/step-up?returnTo=<this page>`, then CWL, which asks for the password
+    even though they are signed in, then back.
+- **Back on the page**: *"You're signed in again. [Let your students in]"*. The platform never replays the
+  request (the console's `stepUpUrl` says why: *they press the button again, which is the point*). We remember
+  what they were doing, so this is the same button in the same place, and one press.
+- **Then the four stations** (moment 9's `Timeline`). It ends with the moment the product is for: *"Reading
+  responses is live."* And the address, in mono, large.
+
+**Fed by:**
+- `deploy` to the production environment, from the session. It is synchronous, up to about 90 seconds (D23.9's
+  exception).
+- `403 STEP_UP_REQUIRED`, then `GET /auth/step-up`.
+- `project.launched` on the stream, and `Project.launchedAt`.
+
+**If it goes wrong:**
+- **Refused on the checklist** (`409 RELEASE_PRODUCTION_GATE_UNAVAILABLE`, carrying the checklist): the page
+  shows the checklist it already shows, with the changed row lit. It cannot happen if we only offer the button
+  when `ready`, but a race can.
+- **`RELEASE_NOT_STAGED`**: the trying-out address changed while they were here. *"The version on your trying-out
+  address changed a moment ago. Go live with the new one?"*
+- **It never answers**: the two facts. *"Nothing reached your students. The address shows nothing yet, not a
+  broken app."* **[What went wrong]**.
+- **The step-up sign-in is refused, or is someone else**: the platform's own page (FE-17), then back on ours
+  signed in as before, with nothing changed.
+
+**They wait:** under 90 seconds, **working**.
+
+## 15. Handing over the address
+
+**Trying to:** tell 200 students where to go, and be sure they will get in.
+
+**They see**, on the project's Overview, now led by **For your students**:
+- The address, large, in mono, with **[Copy]**.
+- *"Students sign in with their CWL."*
+- A message they can paste into Canvas or an email, pre-written and editable: *"This week's reading responses
+  go here: <address>. Sign in with your CWL. You'll see everyone else's once you've posted your own."* The last
+  sentence comes from the agreed plan (D6).
+- **The honest line about who can get in**: *"Anyone with a CWL can sign in, not only your class. It only shows
+  each student their own work until they post."* No course-restricted sign-in exists (FE-20).
+- **The two facts, now for students**: *"Serving right now: the version from 18 September"* and *"Last attempt:
+  the same"*, **steady**.
+
+**Fed by:** `getEnvironment` (production `url`), the plan (ours), and `listInstances`.
+
+**If it goes wrong:** week eight (moment 19).
+
+**They wait:** nothing.
+
+---
+
 ## Open questions for Rich (part A)
 
 *Both answered 2026-09-27: **we** everywhere (D5); **commit the plan** (D6).*
