@@ -199,7 +199,12 @@ the point where a finding is cheap.
     That helps only the agent the front-end runs.
 - **When:** not in the plan. (b) is a sentence in the guide (sitting 11).
 
-### FE-6 — The owner cannot start the two long clocks, and the drafts D19 promises do not exist
+### FE-6 — The owner cannot start the long clocks, and the drafts D19 promises do not exist
+
+> **Three clocks, not two, since FE-24** (Rich, 2026-09-27): **the staging registration** with UBC IAM (reviewed,
+> with a wait, and needed before the trying-out address signs anyone in), the **production registration**, and
+> the **privacy assessment**. All three need the same things from the platform: a generated draft, an owner's
+> *"I've sent it"*, and a state that can say *waiting*.
 
 - **Screen and moment:** *Before your students can use it* (moment 10), from week one; *Going live* (moment 11).
 - **What we would call:** *Draft the request* (a registration package for UBC IAM) and *Fill in what we know* (a
@@ -450,10 +455,18 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
     stated stand-in;
   - §15's `integrations` (Canvas, the academic API): sandbox fakes, staging's real staging instances.
 - **Questions only Rich or UBC IAM can answer, which the walk-through waits on:**
-  1. **Is an app's registration with UBC's staging IdP a request IAM reviews, with a lead time,** or can
-     Manifest make it itself? If it is reviewed, the *trying-out* address waits on people, and it becomes a third
-     clock beside the IAM registration and the privacy assessment.
-  2. **On the laptop, is staging the fake IdP**, stated as a divergence, or absent?
+  1. ~~Is an app's registration with UBC's staging IdP a request IAM reviews, with a lead time?~~ **ANSWERED by
+     Rich, 2026-09-27: IAM reviews it, with a wait.** So:
+     - the *trying-out* address signs nobody in until IAM has registered it for staging;
+     - **it is a third clock**, beside the production registration and the privacy assessment, and the earliest
+       of the three;
+     - most trying happens on the draft address meanwhile.
+
+     The platform has no object for it: `IamRegistration` is production's alone ✓ (its `entityId` is
+     production's), and D19's generated package does not exist (**FE-6**).
+  2. **On the laptop, is staging the fake IdP**, stated as a divergence, or absent? *Recommended: the fake IdP,
+     named in §21's honest divergences.* C1 forbids a laptop that needs UBC's network, and a staging that works
+     offline is what lets the loop be demonstrated at all.
   3. **Who signs in to staging?** UBC staging accounts: the person's own staging identity, or test accounts IAM
      issues. And what does a student's staging account look like?
 - **The drafted spec words wait on the answers above**, and are then Rich's to read before the platform session

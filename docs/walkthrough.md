@@ -50,7 +50,7 @@ A. MAKING IT (week −3)                B. GOING LIVE (week −1)          C. RU
  7 Seeing it, as pretend people       Throughout: the month's AI allowance running out; the connection
  8 Asking for a change                dropping mid-build; an outside agent asking for something only a
  9 "This one's good" → trying-out     person may do.
-10 The two long clocks, started early
+10 The three long clocks, started early
 ```
 
 **Outline approved by Rich, 2026-09-27** (*"that outline looks about right"*).
@@ -456,7 +456,12 @@ staging world (FE-24). The trying-out half waits on FE-24's questions.*
   - *"An instructor · sign in as `instructor`, password `instructor`"*
   - One sentence says what the draft is: *"Your draft is a practice copy. Everyone in it is pretend, and so is
     anything they post."*
-- **On *Trying out***: the same address and button, and how to sign in, pending FE-24.
+- **On *Trying out***: the same address and button. **Until UBC IAM has registered it for staging** (a review,
+  with a wait: FE-24, answered by Rich), the card is **waiting on someone**:
+  - *"Trying out uses UBC's real staging sign-in, so UBC's identity team registers it first. That usually takes
+    <n> weeks. We asked on 18 September."*
+  - The words about who signs in there wait on FE-24, question 3.
+  - Meanwhile: *"Your draft is ready to try now."*
 - **On *For your students***: *"Not live yet. This is the address your students will use."* Then **[See what
   going live needs]** (moment 11).
 - **On the right, the two facts** for the chosen address: *serving right now* and *the last attempt* (`TwoFacts`).
