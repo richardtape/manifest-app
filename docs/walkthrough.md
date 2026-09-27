@@ -81,17 +81,17 @@ and what changing course would cost.*
     starter fits, the app starts from the blueprint's skeleton (`starter` omitted).
   - The person never picks a template (C3). The choice shows only as what the app *can do*, in words: *"Students
     sign in with CWL · Keeps what they write · Can ask an AI model, on a budget"* (the blueprint's `provides`).
-  - *This supersedes this document's first D3* (the skeleton, always).
-- **D5. *We*, everywhere** (Rich, 2026-09-27). The product has one voice, the plan included. The prototype's
-  *"Here's what I'd build"* becomes *"Here's what we'd build"*. Many agents do the work (see *The agents*, below),
-  and the person never has to keep track of which one is speaking.
-- **D6. The agreed plan is committed into the app as `docs/plan.md`** (Rich, 2026-09-27). It is the agreement,
-  versioned with the code it describes, and readable by any agent that ever works on the app.
+  - *This supersedes this walk-through's first draft*, which always started from the skeleton.
 - **D4. The person never sees a delegated token on the main road.** The browser mints one per conversation and
   hands it to our server. The prototype's *Agents* screen becomes *let an agent of your own in*, the
   bring-your-own-agent path (§1 of the spec).
   - *Rejected:* showing the key. A secret shown once is a moment of real anxiety, spent for nothing when our own
     server is the one that needs it.
+- **D5. *We*, everywhere** (Rich, 2026-09-27). The product has one voice, the plan included. The prototype's
+  *"Here's what I'd build"* becomes *"Here's what we'd build"*. Many agents do the work (see *The agents*, below),
+  and the person never has to keep track of which one is speaking.
+- **D6. The agreed plan is committed into the app as `docs/plan.md`** (Rich, 2026-09-27). It is the agreement,
+  versioned with the code it describes, and readable by any agent that ever works on the app.
 
 ---
 
@@ -128,7 +128,7 @@ the left.
   not where they were going. Nothing to say; it is a signed-in person arriving home.
 - **The sign-in is refused** (a bad or unbound assertion). The platform answers its callback with a JSON error
   body, on a page that is the platform's, not ours. **A person sees raw JSON** (auth.ts's own comment ✓: *"maps to
-  401 with an envelope"*). A finding to add to the list. Meanwhile, nothing we can change.
+  401 with an envelope"*). That is **FE-17**. Meanwhile, nothing we can change.
 - **Twelve hours later, mid-task, the session ends.** Every call answers `401`. We show: *"You've been signed out.
   It happens after twelve hours. Sign in again and you'll come straight back here."* **Nothing the agent is doing
   stops**, because it holds its own token, and the sentence says so when a conversation is running: *"Your agent
@@ -254,8 +254,9 @@ anything left gets corrected.
 - `checkSlug` as the address is typed, and before each suggestion is shown. The answer is always `200`;
   `reasons[]` carries the platform's own `message`, shown as it is (`FormField`'s rule).
 - **[Make it]**, in order, all in the person's browser session:
-  1. **`createProject`** `{ slug, name, blueprint: 'node-ts-mongo@1', audience: { scale, burst, justification } }`,
-     with one `Idempotency-Key` per press, reused on a retry. It answers `CreatedProject`: three environments,
+  1. **`createProject`** `{ slug, name, blueprint, starter?, audience: { scale, burst, justification } }`, with
+     the blueprint and starter the *blueprint* agent chose (D3; today `node-ts-mongo@1`), and one
+     `Idempotency-Key` per press, reused on a retry. It answers `CreatedProject`: three environments,
      none deployed, and the spec validated.
   2. **`mintToken`** for our server, one per conversation:
      - named *"Building — <conversation's title>"*, so `madeThrough.tokenName` and `AgentSession.via` name the
@@ -263,9 +264,10 @@ anything left gets corrected.
      - `project:read`, `source:write`, `secret:write`, `build:create`, `release:create`, `release:deploy`,
        `output:read`, `agent:session`;
      - seven days.
-  3. **The token goes to our server** over our own endpoint. The conversation is now tied to the project.
-     - Our server subscribes to the project's stream with it, and never keeps the token beyond the
-       conversation's life.
+  3. **`mintToken` again**, for the app's standing *Keeping watch* token (`project:read`, `output:read`: moment
+     16), which carries our server's subscription, history and emails for as long as the app exists.
+  4. **Both tokens go to our server** over our own endpoint. The conversation is now tied to the project.
+     - The conversation's token is never kept beyond the conversation's life.
 - **What the person sees happen** is three lines ticking on the stream's replay, which are real events:
   - `project.created` → *"Reading responses is yours."*
   - `repository.seeded` → *"A starting point with CWL sign-in is in place."*
@@ -301,7 +303,7 @@ anything left gets corrected.
   example is the model to write to.
 - **Who gets in** is honest about what the platform can do: *"Anyone with a CWL can sign in. We can't limit it to
   your class yet, so it only shows each student their own work until they post."* There is no course-restricted
-  sign-in (**FE-16**), and the plan must never promise one.
+  sign-in (**FE-20**), and the plan must never promise one.
 - *"Things we assumed"* (three at most), and ***"Two things only you know"***: each with a short answer field, so
   the answer is typed where the question is.
 - **Right card:** *"Say yes and this happens"* · *"We build it on your draft address, and you watch. You can
@@ -372,7 +374,7 @@ in the visual companion's `moment6-layout.html`, kept under `.superpowers/` and 
 - **A fix it made on its own is one sentence**: *"The first build didn't take. We fixed a missing piece and built
   it again."* The raw words sit behind the disclosure.
 - **Permission to leave**: *"A few minutes. You can leave. We'll email you when it's ready, or if it needs
-  you."* The email is ours (F9, below).
+  you."* The email is ours by design (the rationale's F9): our server's watch, moment 16.
 - **They can add a message at any time** (*"also add a word count"*). The lead reads it at its next step, and
   the line under the current step says so: *"Got it, after this build."*
 - **What it has cost, always visible** (Rich, 2026-09-27: *always visible*, chosen over *only when it matters*
@@ -433,8 +435,9 @@ token), and the operations named in the table.
 
 ## 7. Seeing it
 
-*Drafted 2026-09-27. Rich decided how pretend people sign in (show the logins) and that staging is UBC's real
-staging world (FE-24). The trying-out half waits on FE-24's questions.*
+*Drafted 2026-09-27. Rich decided how pretend people sign in (show the logins), that staging is UBC's real
+staging world, that its registration is reviewed with a wait, and that staging CWLs belong to real people
+(FE-24). The laptop's staging (FE-24, question 2) is still open.*
 
 **Trying to:** see the thing they asked for, as a student would and as they will.
 
@@ -696,8 +699,8 @@ little that staging has not. FE-24 carries the question. Until then, the row sta
   in place, not a new page:
   - *"Sign in once more"* · *"We're not doubting you. We're making it useless for anyone who finds your laptop
     open."*
-  - *"We ask this for anything that reaches your students or changes who can get in."* That sentence is the
-    rule, with no list: the list is longer than four now, and it is still learnable.
+  - *"We ask this before anything that reaches your students, changes who can work on your app, or switches it
+    off."* That sentence is the rule, with no list: the list is longer than four now, and it is still learnable.
   - **[Sign in again]**, which goes to `/auth/step-up?returnTo=<this page>`, then CWL, which asks for the password
     even though they are signed in, then back.
 - **Back on the page**: *"You're signed in again. [Let your students in]"*. The platform never replays the
@@ -824,8 +827,8 @@ Then one more step, and one sentence decides how long it takes.
 - **Add someone**: one field, *"Their CWL login or email"*, and the role.
   - *"Helper: can change the app and try it. Only an owner can let students have a new version, change who's on
     this list, or switch it off."* That is §13's roles, in words.
-- **Adding asks them to sign in once more** (moment 14's card), since changing who can get in is one of those
-  things.
+- **Adding asks them to sign in once more** (moment 14's card), since changing who can work on the app is one of
+  those things.
 
 **Fed by:**
 - `listMembers`.
@@ -858,7 +861,7 @@ for.**
 | What broke | Does the platform notice? | What they read |
 |---|---|---|
 | **A change that failed to go live** | Yes: `instance.failed`, an Incident, and the old version still serving | *"Nobody has lost anything. <address> is still answering with the version from before."* This is the prototype's *Incident* screen, with its **[Give this to your agent]**. |
-| **The live app fell over on its own** | **No (FE-4).** Nothing watches a running app; it still reads `healthy` | *(the open question below)* |
+| **The live app fell over on its own** | **No (FE-4).** Nothing watches a running app; it still reads `healthy` | we watch, tell, and offer a restart (below) |
 | **It works, but does the wrong thing** (a student reports it) | No, and it shouldn't | a conversation: moment 17 |
 
 **The failed change** (the one the platform sees):
