@@ -16,6 +16,7 @@ project from the platform (`../manifest`, spec §5), and consumes its API throug
 | [`walkthrough.md`](./walkthrough.md) | **The design**: one instructor, one app, from sign-in to the end of term |
 | [`api-findings.md`](./api-findings.md) | Every gap in the platform's API, numbered `FE-n`, for Rich to carry to the platform session |
 | [`agents.md`](./agents.md) | The agents that do the work: who calls whom, what each is given, who pays |
+| [`2026-09-27-to-the-platform-session.md`](./2026-09-27-to-the-platform-session.md) | What Rich carried to the platform session on 2026-09-27: his decisions on the findings, and when each is wanted |
 | [`2026-09-27-reading-note.md`](./2026-09-27-reading-note.md) | What the first session read, and what surprised it |
 | [`research/`](./research) | The first session's read-only research: a digest of the contract, and an inventory of the prototype and components |
 
