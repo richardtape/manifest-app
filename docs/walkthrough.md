@@ -871,7 +871,32 @@ for.**
 - **Production's own output is never readable** (§14). The Incident's `logTail` is the only window, redacted, and
   the agent reads it.
 
-**The app that fell over**: see the open question below.
+**The app that fell over** (decided, Rich 2026-09-27: *we watch, tell, and offer a restart*, until the platform
+notices for itself: **FE-4**):
+- **Our server watches every live app's students' address**:
+  - one request a minute, through the edge, as a student's browser would arrive;
+  - a CWL app answers with its sign-in redirect, which counts as answering;
+  - the edge's `502`, `503` or `504`, or no answer, **twice in a row**, counts as down.
+  - Sandbox and staging are not watched this way: the agent sees those.
+- **Then, within about two minutes of it falling over:**
+  - **the email**, to every owner: *"Your students can't reach Reading responses, since 10:03. We can see that,
+    not why. Starting it again usually fixes it: [Start it again]"*;
+  - **needs you**, on *Your apps* and the project's Overview, with the same words and button.
+- **[Start it again]** puts the same version back up: a fresh `deploy` of the release production was serving,
+  from the session, with moment 14's sign-in. A redeploy interrupts nobody (P4c).
+  - **If the trying-out address has moved on to a newer version**, the platform refuses the old one
+    (`RELEASE_NOT_STAGED`: production takes only what trying-out serves). We say so and let them choose:
+    *"Your trying-out address has a newer version. Start that one instead, or put last week's back on
+    trying-out first?"*
+- **When it answers again:** *"Answering again since 10:07. It was down for 4 minutes."* **[What happened?]**
+  starts a conversation. It can read nothing from production's own output (§14), and there is no Incident,
+  because the platform never saw it fall. **We say so plainly in that conversation.**
+- **What this cannot do**, stated on the screen that explains it:
+  - it cannot say why;
+  - it cannot see an app that answers but answers wrongly;
+  - it watches only while our server runs.
+
+  That is why FE-4 stays the platform's.
 
 **Fed by:** `incident.opened` and `instance.failed` on the stream; `listIncidents` (`prompt`, `exitReason`,
 `logTail`, `diffSinceHealthy`); `listInstances`.
@@ -922,9 +947,38 @@ Both belong in the platform's list, not here.
 
 ---
 
+# Throughout
+
+**The month's AI allowance.** It is visible on every conversation (moment 6), as *"$0.40 so far · $9.60 left this
+month"*. The piece-of-work cap is a checkpoint, and the month running out is **needs you** with its reset date
+(moment 6). Intake costs the person nothing (D1).
+
+**The connection dropping.** Nothing runs in the page: the agent, the watching and the emails are our server's.
+The page reconnects quietly and re-reads what it shows. The only place a person could lose anything is a message
+typed but not sent, and the message box keeps it.
+
+**Signed out after twelve hours.** Moment 1: *"You've been signed out. It happens after twelve hours. Sign in again
+and you'll come straight back here."* Their agent keeps working.
+
+**An agent of their own.** For the few who run one (spec §1, *Bring your own agent*):
+- ***Agents***, in the project's rail, lists every agent with access:
+  - **ours**, one per conversation and one *Keeping watch*, not revocable here: they end with their
+    conversation, or with the app;
+  - **theirs**, minted on this screen: the prototype's *Agents* screen, with its secret shown once.
+- **Their agent is held to the same four limits**, and when it asks for one of them, a question appears for a
+  person: the prototype's *Queue* screen, reached from the needs-you band.
+- **The question says what it can**: *"Your agent '<token's name>' asked to add a member to this project."*
+  - The platform does not store WHO it wanted to add (**FE-5**), so the card says that too: *"It didn't say
+    who. If you're not sure, say no."*
+  - Yes buys **one** try at that one request (the prototype's words stand).
+- **Ours never asks.** Going live, changing who can get in and switching it off are the person's own buttons in
+  this product. They are never a question from our agent.
+
+---
+
 ## Open questions for Rich
 
 *Part A's two were answered 2026-09-27: **we** everywhere (D5); **commit the plan** (D6).*
 
-1. **Moment 19: the live app that fell over on its own (FE-4).** The platform does not notice. What does the
-   product do until it does?
+1. ~~Moment 19: the live app that fell over on its own (FE-4).~~ **Answered 2026-09-27: we watch, tell, and offer
+   a restart**, until the platform notices for itself.

@@ -176,6 +176,10 @@ the point where a finding is cheap.
   - (b) The front-end's server probes each live address and notices the edge's 502. It is outside the platform,
     it cannot see why, and it cannot read production output.
   - (c) The design says plainly that Manifest cannot tell yet.
+- **Meanwhile (decided by Rich, 2026-09-27): (b), with a restart.** Our server watches every live address once a
+  minute, emails the owners when it stops answering, and offers *Start it again* (a fresh `deploy` of the same
+  release, with step-up). It cannot say why, cannot see an app that answers wrongly, and watches only while it
+  runs. **It is a stop-gap, and FE-4 stays the platform's top item** (walk-through moment 19).
 - **When:** not in the enablement plan. Its own plan, and the most consequential item here.
 
 ---
