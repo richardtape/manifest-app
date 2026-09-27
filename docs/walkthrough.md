@@ -375,6 +375,13 @@ in the visual companion's `moment6-layout.html`, kept under `.superpowers/` and 
   you."* The email is ours (F9, below).
 - **They can add a message at any time** (*"also add a word count"*). The lead reads it at its next step, and
   the line under the current step says so: *"Got it, after this build."*
+- **What it has cost, always visible** (Rich, 2026-09-27: *always visible*, chosen over *only when it matters*
+  and *never money*):
+  - a small line at the foot of the work panel: *"$0.40 so far · $9.60 left this month"*;
+  - the month's figure is `getAgentBudget`;
+  - **the conversation's own figure has no source yet (FE-23)**. Until it has one, the line shows the month's
+    figure alone: *"$9.60 left this month"*.
+  - Intake (moments 3–4) is the platform's cost, and shows nothing.
 - **[Stop]**: *"Nothing is lost. Your draft address keeps whatever was last put there."* This ends the agent
   session (`endAgentSession`). The token lives on with the conversation, so it can be resumed.
 

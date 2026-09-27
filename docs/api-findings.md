@@ -407,6 +407,24 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
   - (a) The platform states the rule for material given to an agent session: it is governed by the project's
     classification, and the front-end asks before sending anything that looks personal.
 
+### FE-23 — What one piece of work has cost ⏰ *before sitting 7*
+
+- **Screen and moment:** every conversation, always (walk-through moment 6). Rich chose, 2026-09-27, that
+  faculty see the allowance as money, *always visible*: *"$0.40 so far · $9.60 left this month"*.
+- **What we would call:** the spend of each agent session, which our server sums per conversation.
+- **What is missing:**
+  - `getAgentBudget` answers the MONTH (plan Decision 24).
+  - The plan's *What this plan does not build* names it outright: *"A session's own spend — getAgentBudget
+    answers the month; per-session spend is LiteLLM's `/key/info`, one call per session, and no screen needs it
+    yet."* **This screen needs it.**
+  - Differencing the month before and after is wrong whenever two conversations run at once.
+- **Options:**
+  - **(a) Recommended:** `AgentSession.spentUsd`, `number | null` with the month's rule (never `0` when LiteLLM
+    does not answer), read from LiteLLM's `/key/info` by the alias the plan already derives (`mf-agent-<id>`).
+    It is answered by `listAgentSessions`, cached like the month.
+- **When:** sitting 7 builds `AgentSession` and `listAgentSessions`. One field there; a change to a published
+  representation after.
+
 ---
 
 ## Not a gap: decisions that are Rich's
