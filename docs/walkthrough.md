@@ -489,6 +489,121 @@ staging world (FE-24). The trying-out half waits on FE-24's questions.*
 
 **They wait:** nothing. A tab opens.
 
+## 8. Asking for a change
+
+**Trying to:** change something they have seen: *"also show a word count"*, *"let TAs see everything"*.
+
+**They see:**
+- **Where they ask:**
+  - *"Ask for a change"* on the Preview screen, or on the project's Overview, starts **a new conversation**,
+    titled from what they asked (*"Word count"*).
+  - The message box of an open conversation continues **that** one.
+  - One conversation is one piece of work (the prototype's *Conversations* screen), so a change asked six weeks
+    later has its own history, and its own line of spend.
+- **One conversation works on an app at a time; the others wait in line**, and say so. The top of the waiting
+  one reads **waiting on someone**: *"Waiting for 'Word count' to finish. It starts by itself."* Its message box
+  still takes messages.
+  - This is proposed, and is the one decision in this moment.
+  - The reason: an app has one draft address (§23: one sandbox per project), and two conversations writing to it
+    at once would each find `main` moved under them (`409 SOURCE_CONFLICT`: the platform never merges). Each
+    would then redo its work, and pay twice.
+- **Then moment 6**, in layout C: the work on the right, the conversation on the left.
+
+**Fed by:** ours, meaning the conversation and the queue. **`mintToken`** runs in the browser, once per new
+conversation, named after it. Then moment 6's operations.
+
+**If it goes wrong:**
+- **Someone pushed to the app's code outside Manifest** (driver 2, GitHub). The lead's commit is refused
+  `409 SOURCE_CONFLICT`. It re-reads the tree and redoes the change; the person sees nothing unless it happens
+  three times.
+- **The change touches something reviewed at launch** (the dry run's `spec.sensitiveDiff`: a new place it keeps
+  things, a new sign-in detail, AI). Before launch it changes nothing. After launch it matters (moment 17), and
+  the conversation says so before building: *"This change will need an administrator's look before it reaches
+  your students."*
+
+**They wait:** as moment 6.
+
+## 9. "This one's good" — putting a version on the trying-out address
+
+**Trying to:** say *"this version, not whatever comes next"*, and put it where real people, with staging CWLs, can
+try it.
+
+**They see:**
+- **When a round of work finishes, the work panel ends with:**
+  - *"Ready on your draft address."*
+  - **[Try it]**, which opens moment 7;
+  - **[Put this version on trying-out]**.
+- **The Preview screen's draft tab has the same button**, beside the two facts.
+- **Pressing it asks once, in words:** *"Put the version from today, 3:12pm on the trying-out address? The one
+  there now keeps answering until this one proves it can."* **[Put it there]**
+- **Then Deploy's run of stations** (`Timeline`): *Waiting its turn · Making room · Starting up · Answering*.
+  Under 90 seconds, **working**.
+  - The prototype's Deploy screen, with its words kept where they are true.
+  - A version is only ever *"the version from <when>"*, never a digest.
+- **While UBC's identity team has not yet registered it for staging** (FE-24), the stations end honestly:
+  *"It's on the trying-out address. Nobody can sign in there until UBC's identity team has registered it. We
+  asked on 18 September."*
+
+**Fed by:**
+- **The release the draft address is serving**, from `listInstances` on the sandbox (`serving`), then its
+  `releaseId`.
+- **`deploy`** to the staging environment, from the **person's session**, so the record says who chose this
+  version. The same release, never a rebuild (§13: *"Promotion never rebuilds"*).
+- The stations tick on `instance.provisioning`, `sso.registered`, `instance.starting`, `instance.healthy`.
+- **This matters later:** production deploys only the release serving staging (`RELEASE_NOT_STAGED`). So this is
+  the step that chooses what goes live.
+
+**If it goes wrong:**
+- **It never answers.** The two facts: *"Serving right now: the version from 18 September. Last attempt: didn't
+  start, 2 minutes ago. Nobody lost anything."* **[What went wrong]** starts a conversation fed by the Incident.
+- **A secret it needs has no value for staging** (`RELEASE_SECRET_NOT_SET`). **Needs you**: *"It needs <the
+  secret's plain name> before it can start there."* It opens a field to set it (`setAppSecret`, staging, from the
+  session).
+
+**They wait:** under 90 seconds, **working**; and, for the sign-in, the staging clock (moment 10).
+
+## 10. The three long clocks, started early
+
+**Trying to:** nothing. They did not know these existed. The design's job is that they never discover them on
+launch day (spec §13).
+
+**Three clocks** (Rich, FE-24), each answered by people outside Manifest, each taking weeks:
+
+| Clock | Needed for | Answered by |
+|---|---|---|
+| **Staging registration** | anyone signing in on the trying-out address | UBC's identity team |
+| **Production registration** | your students signing in | UBC's identity team |
+| **Privacy assessment** | going live at all | UBC's Privacy Office |
+
+**They see**, the moment the first draft is built (the attributes it signs people in with are known then):
+- **On the project's Overview and on *Your apps*, one band**, not a list: *"Before your students can use it."*
+  *"Three things other people answer, each taking weeks. Starting them now is the whole trick."* **[Start them]**
+- ***Going live*** (moment 11) has the full page, the prototype's *"Letting your students in"*, now with three
+  clock cards (`ClockItem`).
+  - Each card shows its owner, a still, hatched bar reading *"Nothing counting yet · Takes weeks"*, and one
+    action.
+  - The first to start is staging, because it gates the trying-out address.
+
+**Fed by: nothing yet, and the screen says so (FE-6).**
+- The actions the cards promise have no operation: *Draft the request*, *Fill in what we know*, and *"I've sent
+  it"* for all three.
+- The platform records only the PRODUCTION registration and the assessment, and **an administrator records
+  them** (`recordIamRegistration`, `recordPrivacyAssessment`), after UBC has answered.
+- `getLaunchRecords` reads those two records' state and `updatedAt`, which is enough to show *waiting since*
+  once an administrator has written *submitted*.
+- **Meanwhile each card says the true thing, and offers the most useful thing left** (`10-language.md`,
+  *Honesty*): *"Manifest can't start this one for you yet. The Manifest team does it by hand: [Ask them to start
+  it]."*
+  - That opens an email to the platform team, with the app's name and address in it.
+  - It is **not** a record the front-end keeps: a second record of launch state, beside the platform's, is the
+    drift this design exists to avoid.
+
+**If it goes wrong:** nothing breaks. The band is **not yet**, then **waiting on someone**, and never **needs
+you** until the person is actually needed (a question from IAM, which reaches Manifest as nothing today).
+
+**They wait:** weeks, **waiting on someone**, completely still, with *"asked 18 September · waiting 12 days"*
+once there is a date to count from.
+
 ---
 
 ## Open questions for Rich (part A)
