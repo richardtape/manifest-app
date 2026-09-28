@@ -1,0 +1,282 @@
+import { z } from 'zod/v4'
+import type { CwlBrief } from '../agents/cwl.js'
+import { ModelError } from '../model/client.js'
+import type { Members } from '../platform/members.js'
+import { CommitRefused, PlatformRefusal } from '../platform/refusal.js'
+import type { Change, Source } from '../platform/source.js'
+import { defineTool, type MoveResult, type ToolDef } from '../runtime/tool.js'
+import type { Guards } from './guards.js'
+
+/**
+ * THE LEAD'S FIVE MOVES (F3 Decision 2), as runtime tools over the round's context, which the
+ * model never sees. Every write is a commit, dry-run first by `source.commit`. Each move is
+ * guarded before it runs (Task 6), and a refusal the lead can answer is its next reason.
+ */
+export interface RoundContext {
+  token: string
+  projectId: string
+  personId: string
+  source: Source
+  members: Members
+  guards: Guards
+  /** The commit the next change is made on. */
+  base: { get(): string; set(sha: string): void }
+  /** The tree's paths, as the round last knew them: for the commit guard. */
+  paths(): string[]
+  /** `package.json` as the round last knew it: for the commit guard (FE-32). */
+  packageJson(): unknown
+  /** A commit landed: the round learns what it changed, so `paths()` and `packageJson()` follow. */
+  wrote(changes: Change[]): void
+  /** The files a read answered, kept for the lead's view, newest first (Decision 3). */
+  keep(files: { path: string; content: string }[]): void
+  /** Records the question. A default answers at once; none, or a secret, pauses the run. */
+  question(
+    ask: string,
+    fallback: string | null,
+    secret: boolean,
+  ): { id: string; answeredWith: string | null }
+  askCwl(brief: CwlBrief): Promise<{ changes: Change[]; summary: string }>
+  /** Their description, their messages, their answers: whose emails staff may be (Decision 13). */
+  theirWords(): string[]
+}
+
+/** One change of a commit: a whole file written, or one deleted. */
+export const CHANGE = z.discriminatedUnion('op', [
+  z.object({
+    op: z.literal('write'),
+    path: z.string().min(1).max(1024),
+    content: z.string(),
+  }),
+  z.object({ op: z.literal('delete'), path: z.string().min(1).max(1024) }),
+])
+
+const LINE = z.string().min(1).max(120)
+const ACCOUNT = z.string().min(1).max(200)
+
+const UNREADABLE = {
+  'too-large': 'too large to read',
+  'not-text': 'not text',
+  'not-a-file': 'not a file',
+  'not-found': 'there is no such file',
+} as const
+
+/** What the lead can put right itself, each in a few words; anything else is thrown. */
+const ANSWERABLE: Record<string, string> = {
+  SOURCE_SECRET_DETECTED: 'a value shaped like a secret is in a file or the message',
+  SOURCE_PATH_CONFLICT:
+    'a path is written twice, or where a directory or another file is',
+  SOURCE_PATH_NOT_FOUND: 'a file it deletes is not there',
+  SOURCE_PATH_ESCAPE: "a path leaves the app's files",
+  SOURCE_NOTHING_TO_COMMIT: 'these changes leave every file as it was',
+  REQUEST_INVALID: 'a path or a change is not allowed',
+  REQUEST_BODY_TOO_LARGE: 'too much in one commit: split it',
+}
+
+/** The files the CWL specialist is shown: the blueprint's sign-in, and where the app mounts it (M6). */
+const SIGN_IN_FILES = [
+  'auth/ubcshib.js',
+  'auth/attributes.js',
+  'server.js',
+  'manifest.yaml',
+]
+
+/** Every staff email a change writes into config/staff.json, for the staff guard. */
+function staffEmails(changes: Change[]): string[] {
+  const staff = changes.find((c) => c.op === 'write' && c.path === 'config/staff.json')
+  if (staff === undefined || staff.op !== 'write') return []
+  try {
+    const emails = (JSON.parse(staff.content) as { emails?: unknown }).emails
+    return Array.isArray(emails) ? emails.map(String) : ['(not a list)']
+  } catch {
+    return ['(not JSON)']
+  }
+}
+
+const read = defineTool({
+  kind: 'read',
+  describe:
+    "read { paths }: read up to 20 of the app's files, by their path in the tree. Never guess a path.",
+  input: z.object({ paths: z.array(z.string().min(1).max(1024)).min(1).max(20) }),
+  async run({ paths }, context: RoundContext) {
+    const base = context.base.get()
+    const readable: { path: string; content: string }[] = []
+    const lines: string[] = []
+    for (const path of paths) {
+      const file = await context.source.file(context.token, context.projectId, path, base)
+      if ('content' in file) readable.push({ path, content: file.content })
+      else lines.push(`${path}: ${UNREADABLE[file.unreadable]}`)
+    }
+    context.keep(readable)
+    const heading = `Read ${readable.map((f) => f.path).join(', ') || 'nothing'}.`
+    const body = readable.map((f) => `--- ${f.path}\n${f.content}`)
+    return { report: [heading, ...lines, ...body].join('\n') }
+  },
+})
+
+const commit = defineTool({
+  kind: 'commit',
+  describe:
+    'commit { message, changes, line, account }: write or delete files as one commit, on the files as they are now.',
+  input: z.object({
+    message: z.string().min(1).max(200),
+    changes: z.array(CHANGE).min(1).max(40),
+    line: LINE,
+    account: ACCOUNT,
+  }),
+  guard: ({ changes, line, account }, context: RoundContext) =>
+    context.guards.commit(changes, { paths: context.paths() }, context.packageJson()) ??
+    context.guards.words(line) ??
+    context.guards.words(account) ??
+    context.guards.staff(staffEmails(changes), context.theirWords()),
+  async run({ message, changes }, context: RoundContext): Promise<MoveResult> {
+    try {
+      const made = await context.source.commit(context.token, context.projectId, {
+        baseCommit: context.base.get(),
+        message,
+        changes,
+      })
+      context.base.set(made.commitSha)
+      context.wrote(changes)
+      const changed = made.changed.map((c) => `${c.status} ${c.path}`).join(', ')
+      const notes = made.warnings.map(
+        (w) => `${w.code} (${w.path})${w.hint ? `: ${w.hint}` : ''}`,
+      )
+      return {
+        report: [
+          `Committed ${made.commitSha.slice(0, 7)}: ${changed}.`,
+          ...(notes.length > 0
+            ? ['The platform notes, which stop nothing:', ...notes]
+            : []),
+        ].join('\n'),
+      }
+    } catch (error) {
+      if (error instanceof CommitRefused)
+        return {
+          report: [
+            `The platform refused this commit, and nothing was written (${error.code}):`,
+            ...error.details.map(
+              (d) => `- ${d.path}: ${d.code}${d.hint ? `. ${d.hint}` : ''}`,
+            ),
+          ].join('\n'),
+          refused: error.code,
+        }
+      if (error instanceof PlatformRefusal && ANSWERABLE[error.code] !== undefined)
+        return {
+          report: `The platform refused this commit, and nothing was written (${error.code}): ${ANSWERABLE[error.code]}.`,
+          refused: error.code,
+        }
+      // SOURCE_CONFLICT is the round's to count (Decision 7), and anything else its to say.
+      throw error
+    }
+  },
+})
+
+const askCwl = defineTool({
+  kind: 'ask_cwl',
+  describe:
+    'ask_cwl { brief }: ask the sign-in specialist to set up who gets in and who is staff; it proposes changes for you to commit.',
+  input: z.object({
+    brief: z.object({
+      whoGetsIn: z.string().min(1).max(500),
+      youSee: z.string().min(1).max(500),
+      studentsSee: z.string().min(1).max(500),
+      namedEmails: z.array(z.string().max(254)).max(20),
+    }),
+  }),
+  guard: ({ brief }, context: RoundContext) =>
+    context.guards.staff(brief.namedEmails, context.theirWords()),
+  async run({ brief }, context: RoundContext): Promise<MoveResult> {
+    const instructor = await context.members.instructor(
+      context.token,
+      context.projectId,
+      context.personId,
+    )
+    if (instructor === undefined)
+      return {
+        report:
+          "We could not find the instructor among the app's people, so the specialist was not asked.",
+        refused: 'INSTRUCTOR_NOT_FOUND',
+      }
+    const base = context.base.get()
+    const files: { path: string; content: string }[] = []
+    for (const path of SIGN_IN_FILES) {
+      const file = await context.source.file(context.token, context.projectId, path, base)
+      if ('content' in file) files.push({ path, content: file.content })
+    }
+    let proposed: { changes: Change[]; summary: string }
+    try {
+      proposed = await context.askCwl({
+        plan: {
+          whoGetsIn: brief.whoGetsIn,
+          youSee: brief.youSee,
+          studentsSee: brief.studentsSee,
+        },
+        staff: { instructorPuid: instructor.puid, emails: brief.namedEmails },
+        files,
+      })
+    } catch (error) {
+      if (error instanceof ModelError && error.code === 'MODEL_ANSWER_INVALID')
+        return {
+          report:
+            'The sign-in specialist could not propose a change that held. Ask it again, or write it yourself.',
+          refused: 'CWL_ANSWER_INVALID',
+        }
+      if (error instanceof ModelError)
+        return {
+          report: 'The model could not be asked.',
+          stop: { kind: 'refused', error },
+        }
+      throw error
+    }
+    return {
+      report: [
+        'The sign-in specialist proposes these changes. They are NOT committed: commit them yourself if they are right.',
+        proposed.summary,
+        ...proposed.changes.map((c) =>
+          c.op === 'write' ? `--- ${c.path}\n${c.content}` : `--- delete ${c.path}`,
+        ),
+      ].join('\n'),
+    }
+  },
+})
+
+const askPerson = defineTool({
+  kind: 'ask_person',
+  describe:
+    'ask_person { ask, default, secret }: ask the person something only they can answer, with a default when there is a sensible one; secret for a value that must never be shown.',
+  input: z.object({
+    ask: z.string().min(1).max(300),
+    default: z.string().max(300).nullable(),
+    secret: z.boolean(),
+  }),
+  guard: ({ ask, default: fallback }, context: RoundContext) =>
+    context.guards.words(ask) ??
+    (fallback === null ? null : context.guards.words(fallback)),
+  async run(
+    { ask, default: fallback, secret },
+    context: RoundContext,
+  ): Promise<MoveResult> {
+    const question = context.question(ask, fallback, secret)
+    if (question.answeredWith === null)
+      return {
+        report: `We asked: "${ask}", and wait for their answer.`,
+        stop: { kind: 'paused', questionId: question.id },
+      }
+    return {
+      report: `We asked: "${ask}", and went on with: "${question.answeredWith}". They can change it.`,
+    }
+  },
+})
+
+const done = defineTool({
+  kind: 'done',
+  describe: 'done { line }: the pages are written.',
+  input: z.object({ line: LINE }),
+  guard: ({ line }, context: RoundContext) => context.guards.words(line),
+  run: async ({ line }) => ({ report: 'Done.', stop: { kind: 'done', line } }),
+})
+
+export const leadMoves = [read, commit, askCwl, askPerson, done] as unknown as ToolDef<
+  RoundContext,
+  never
+>[]

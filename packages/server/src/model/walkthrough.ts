@@ -94,12 +94,92 @@ function plan(user: string): unknown {
     : PLAN
 }
 
+/**
+ * F3's LEAD, as mock mode plays it (F3 Task 7): it reads the entry, writes one page, and is done.
+ * It follows its own last move, which the view says ("Your last move (read): …"); in any step
+ * but the pages, it is done at once.
+ */
+const WEEKS_PAGE = [
+  '<!doctype html>',
+  '<meta charset="utf-8" />',
+  '<title>Reading responses</title>',
+  '<h1>This week’s reading</h1>',
+  '<p>Post your response, then read everyone else’s.</p>',
+  '',
+].join('\n')
+
+function lead(user: string): unknown {
+  const last = /Your last move \((\w+)\)/.exec(user)?.[1]
+  if (!/The step: Writing the pages/.test(user) || last === 'commit' || last === 'done')
+    return { move: { kind: 'done', line: 'The pages are written.' } }
+  if (last === 'read')
+    return {
+      move: {
+        kind: 'commit',
+        message: 'The page students post on',
+        changes: [{ op: 'write', path: 'public/weeks.html', content: WEEKS_PAGE }],
+        line: 'Writing the page students post on.',
+        account: 'One page listing the weeks',
+      },
+    }
+  return { move: { kind: 'read', paths: ['server.js'] } }
+}
+
+/** F3's CWL specialist in mock mode: staff exactly as briefed, and the check in front of the instructor's pages. */
+function cwl(user: string): unknown {
+  const staff = JSON.parse(/^Staff: (\{.*\})$/m.exec(user)?.[1] ?? '{}') as {
+    instructorPuid?: string
+    emails?: string[]
+  }
+  return {
+    changes: [
+      {
+        op: 'write',
+        path: 'config/staff.json',
+        content: `${JSON.stringify({ puids: [staff.instructorPuid], emails: staff.emails ?? [] }, null, 2)}\n`,
+      },
+      {
+        op: 'write',
+        path: 'auth/staff.js',
+        content: [
+          "import { readFileSync } from 'node:fs'",
+          '',
+          "const staff = JSON.parse(readFileSync(new URL('../config/staff.json', import.meta.url), 'utf8'))",
+          '',
+          'export function staffOnly(req, res, next) {',
+          '  const user = req.user?.user',
+          '  const isStaff =',
+          '    staff.puids.includes(user?.ubcEduCwlPuid) ||',
+          "    staff.emails.includes(String(user?.mail ?? '').toLowerCase())",
+          "  return isStaff ? next() : res.status(403).send('Only the instructor can see this page.')",
+          '}',
+          '',
+        ].join('\n'),
+      },
+    ],
+    summary:
+      "Staff are the instructor and the people they named, kept in config/staff.json; auth/staff.js lets only them reach the instructor's pages.",
+  }
+}
+
+/** F3's explaining agent in mock mode: one plain sentence, whatever failed. */
+function explaining(): unknown {
+  return {
+    note: 'A piece it depends on was missing',
+    sentence:
+      'We asked for a piece the app does not have yet, so it could not be put together.',
+  }
+}
+
 export function walkthroughModel(): Model {
   const answers: Record<string, (user: string) => unknown> = {
     understanding,
     naming,
     blueprint,
     plan,
+    lead,
+    cwl,
+    explaining,
   }
   return {
     complete(agent, schema, messages: Message[], check) {

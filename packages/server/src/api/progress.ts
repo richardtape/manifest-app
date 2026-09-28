@@ -109,6 +109,9 @@ export interface Allowance {
 }
 
 /** What each step is; the page words it (words.ts holds every sentence). */
+/** F3 Decision 5: moment 6's five steps, each ticking on its own signal. */
+export type BuildStep = 'pages' | 'holds' | 'build' | 'draft' | 'answers'
+
 export type StepKey =
   | 'understanding'
   | 'naming'
