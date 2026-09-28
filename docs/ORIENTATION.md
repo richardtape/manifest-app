@@ -43,9 +43,9 @@ says which plan is current. This file states where things stand and the rules. I
   - **F3 must draw `paused` and `failed`** (its *Stop*) on every screen that can meet them, each problem with its
     reference. The Describe screen's fallback shows neither today (a deferred Minor of F2's).
 - **The machine** *(2026-09-28)*:
-  - **the control plane running on 7100** (PID 85028), started by the platform session at 9a's close from Rich's
-    `.env`. Its boot line reads `"capableModel":"registered"`. The database was truncated, so the F2 walk's
-    projects are gone, and anyone signed in must sign in again. The platform's 9b will say before it stops it;
+  - **the control plane on 7100 is being stopped** by the platform's sitting 9b (session `manifest-b1`, 2026-09-28),
+    which truncates as it tests. It starts the control plane again at its close, with the capable model's fallback,
+    and messages us. Nothing of ours was on it;
   - **our server on 7105 in mock mode**, switched for the Minors' walk. The platform's `make doctor` asks it
     `/api/__doctor`, in either mode (20 checks, 0 failed, with it up). To go back to the edge: stop its whole
     process tree, then `pnpm dev`;
