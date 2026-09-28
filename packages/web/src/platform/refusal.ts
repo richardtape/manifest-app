@@ -24,5 +24,11 @@ export function refusalOf(error: unknown): Refusal {
   }
   // `fetch` rejects with a TypeError when nothing answers: a closed port, no network.
   if (error instanceof TypeError) return { kind: 'unreachable' }
+  // And with a DOMException when our deadline passes (api.ts, READ_TIMEOUT_MS).
+  if (
+    error instanceof DOMException &&
+    (error.name === 'TimeoutError' || error.name === 'AbortError')
+  )
+    return { kind: 'unreachable' }
   return { kind: 'refused', code: 'UNEXPECTED', status: 0 }
 }

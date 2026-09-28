@@ -1,5 +1,6 @@
 import { ManifestApiError, type ErrorEnvelope } from '@manifest/contract'
 import { createMockServer, fixtures } from '@manifest/mock'
+import { createServer } from 'node:http'
 import { describe, expect, it } from 'vitest'
 import { createPlatform } from './api.js'
 import { refusalOf } from './refusal.js'
@@ -84,6 +85,23 @@ describe('refusalOf: by kind and code, never by message', () => {
       const error = await thrown(() => createPlatform({ origin }).getMe())
       expect(refusalOf(error)).toEqual({ kind: 'signed-out' })
     })
+  })
+
+  it('a platform that accepts and never answers is unreachable, in time (review #3)', async () => {
+    const hanging = createServer(() => undefined)
+    await new Promise<void>((resolve) => hanging.listen(0, '127.0.0.1', resolve))
+    const { port } = hanging.address() as { port: number }
+    try {
+      const started = Date.now()
+      const error = await thrown(() =>
+        createPlatform({ origin: `http://127.0.0.1:${port}`, timeoutMs: 200 }).getMe(),
+      )
+      expect(refusalOf(error)).toEqual({ kind: 'unreachable' })
+      expect(Date.now() - started).toBeLessThan(2000)
+    } finally {
+      hanging.closeAllConnections()
+      await new Promise((resolve) => hanging.close(resolve))
+    }
   })
 
   it('a closed port is unreachable', async () => {

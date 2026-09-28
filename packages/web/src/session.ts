@@ -15,8 +15,10 @@ export type Session =
   | { state: 'signed-out' }
   /** WAS signed in on this page, then a read answered 401. */
   | { state: 'expired'; me: Schemas['Me'] }
-  /** No answer we can use: nothing reached, or a refusal we do not know. */
+  /** No answer: nothing reached, or our deadline passed (Review Focus 2). */
   | { state: 'unreachable' }
+  /** An answer we do not name (Review Focus 5): its code, for the console. */
+  | { state: 'refused'; code: string; status: number }
 
 export function useSession(platform: Platform): {
   session: Session
@@ -30,13 +32,15 @@ export function useSession(platform: Platform): {
     let live = true
     platform.getMe().then(
       (me) => live && setSession({ state: 'signed-in', me }),
-      (error: unknown) =>
-        live &&
+      (error: unknown) => {
+        if (!live) return
+        const refusal = refusalOf(error)
         setSession(
-          refusalOf(error).kind === 'signed-out'
-            ? { state: 'signed-out' }
-            : { state: 'unreachable' },
-        ),
+          refusal.kind === 'refused'
+            ? { state: 'refused', code: refusal.code, status: refusal.status }
+            : { state: refusal.kind },
+        )
+      },
     )
     return () => {
       live = false

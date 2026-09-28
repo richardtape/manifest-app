@@ -1,10 +1,11 @@
 import { Button, Card, SideNav } from '@manifest-app/ui'
-import { useEffect, useState, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { signInHref, signOut } from './auth.js'
 import type { Platform } from './platform/api.js'
 import { linkTo, navigate, useRoute } from './router.js'
 import { Profile } from './screens/profile.js'
 import { SignIn } from './screens/sign-in.js'
+import { TroubleNotice } from './screens/trouble.js'
 import { YourApps } from './screens/your-apps/your-apps.js'
 import { useSession } from './session.js'
 import { words } from './words.js'
@@ -18,6 +19,18 @@ export function App({ platform }: { platform: Platform }) {
   const { session, retry, expire } = useSession(platform)
   const { route, here } = useRoute()
   const [signOutFailed, setSignOutFailed] = useState(false)
+
+  // FOCUS FOLLOWS AN IN-APP NAVIGATION TO THE PAGE (the final review): otherwise it stays on
+  // the rail's link, or falls to <body> when the link it was on goes. Not on first load,
+  // where the browser's own place is right.
+  const arrived = useRef(false)
+  useEffect(() => {
+    if (!arrived.current) {
+      arrived.current = true
+      return
+    }
+    document.getElementById('main')?.focus()
+  }, [here])
 
   // Each page names its tab, so a person with several open, or a screen reader, can tell
   // them apart.
@@ -34,10 +47,17 @@ export function App({ platform }: { platform: Platform }) {
 
   if (session.state === 'loading') return null
   if (session.state === 'signed-out') return <SignIn returnTo={here} />
-  if (session.state === 'unreachable')
+  if (session.state === 'unreachable' || session.state === 'refused')
     return (
       <main className="app-alone">
-        <Unreachable onRetry={retry} />
+        <TroubleNotice
+          trouble={
+            session.state === 'refused'
+              ? { kind: 'refused', code: session.code, status: session.status }
+              : { kind: 'unreachable' }
+          }
+          onRetry={retry}
+        />
       </main>
     )
 
@@ -137,19 +157,6 @@ export function App({ platform }: { platform: Platform }) {
         ) : null}
         {page}
       </main>
-    </div>
-  )
-}
-
-function Unreachable({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div role="alert">
-      <Card>
-        <p className="body-lead">{words.unreachable.body}</p>
-        <Button kind="secondary" onClick={onRetry}>
-          {words.unreachable.button}
-        </Button>
-      </Card>
     </div>
   )
 }

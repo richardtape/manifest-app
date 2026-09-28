@@ -162,6 +162,14 @@ describe('/v1 and /auth are never ours to answer', () => {
     expect(JSON.parse(first)).toMatchObject({ type: 'project.created' })
   })
 
+  it('in mock mode, with the mock down, /v1 is an empty 502, as the edge answers (review #2)', async () => {
+    const { base, webSaw } = await serve(mock('http://127.0.0.1:1'))
+    const response = await fetch(`${base}/v1/me`, { headers: SESSION })
+    expect(response.status).toBe(502)
+    expect(await response.text()).toBe('')
+    expect(webSaw).toEqual([])
+  })
+
   it('in edge mode they are 404, and never reach the app', async () => {
     const { base, webSaw } = await serve(edge(await mockPlatform()))
     expect((await fetch(`${base}/v1/me`)).status).toBe(404)

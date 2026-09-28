@@ -173,6 +173,20 @@ describe('a session that ends while the page is open (Review Focus 1)', () => {
   })
 })
 
+describe('the platform refuses who we are, for a reason we do not name (Review Focus 5)', () => {
+  it('says something went wrong on our side, not that it cannot be reached', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    render(
+      <App
+        platform={platform({ getMe: () => Promise.reject(refused(500, 'INTERNAL')) })}
+      />,
+    )
+    expect(await screen.findByText(words.refused.body)).toBeTruthy()
+    expect(screen.queryByText(words.unreachable.body)).toBeNull()
+    vi.restoreAllMocks()
+  })
+})
+
 describe('the platform cannot be reached (Review Focus 2)', () => {
   it('says so, and Try again asks again', async () => {
     let calls = 0
@@ -350,7 +364,9 @@ describe('Your apps cannot be read (Review Focus 2)', () => {
     expect(reads).toBe(2)
   })
 
-  it('a refusal it does not know is the same words, never the platform’s (Review Focus 5)', async () => {
+  it('a refusal it does not know is our generic words, with its code in the console and never on the page (Review Focus 5)', async () => {
+    const warned: unknown[][] = []
+    vi.spyOn(console, 'warn').mockImplementation((...args) => void warned.push(args))
     render(
       <App
         platform={{
@@ -359,8 +375,12 @@ describe('Your apps cannot be read (Review Focus 2)', () => {
         }}
       />,
     )
-    expect(await screen.findByText(words.unreachable.body)).toBeTruthy()
+    expect(await screen.findByText(words.refused.body)).toBeTruthy()
+    expect(screen.queryByText(words.unreachable.body)).toBeNull()
+    expect(screen.getByRole('button', { name: words.refused.button })).toBeTruthy()
     expect(document.body.textContent).not.toContain('INTERNAL')
+    expect(warned.flat().join(' ')).toMatch(/INTERNAL.*500|500.*INTERNAL/)
+    vi.restoreAllMocks()
   })
 })
 
@@ -423,5 +443,18 @@ describe('the person’s profile (Rich’s click-through)', () => {
     expect(within(main).getByRole('button', { name: words.signOut.button })).toBeTruthy()
     await waitFor(() => expect(document.title).toBe(words.profile.title))
     expect(machineryIn(wordsOnScreen())).toEqual([])
+  })
+})
+
+describe('focus follows an in-app navigation to the page (review, accessibility)', () => {
+  it('lands on the page after a link, and is left alone on first load', async () => {
+    render(<App platform={mockPlatform()} />)
+    const name = await screen.findByRole('link', { name: 'Mock course app' })
+    expect(document.activeElement).toBe(document.body)
+    await act(async () => {
+      fireEvent.click(name)
+    })
+    await screen.findByText(words.notFound.appPageNext)
+    expect(document.activeElement).toBe(document.getElementById('main'))
   })
 })

@@ -43,6 +43,11 @@ export const words = {
     body: "We can't reach Manifest just now. Nothing of yours has changed.",
     button: 'Try again',
   },
+  /** Review Focus 5: a refusal we do not name. Its code goes to the console, never here. */
+  refused: {
+    body: 'Something went wrong on our side. Nothing of yours has changed.',
+    button: 'Try again',
+  },
   signOut: {
     title: 'Sign out',
     button: 'Sign out',

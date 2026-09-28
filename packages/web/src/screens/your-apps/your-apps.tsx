@@ -4,11 +4,14 @@ import { Fragment, useCallback, useEffect, useState } from 'react'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
+import { TroubleNotice, type Trouble } from '../trouble.js'
 import { words } from '../../words.js'
 import { appCard, mine, releasesToRead, type Address, type AppCard } from './model.js'
 
 type Loaded =
-  { state: 'loading' } | { state: 'unreachable' } | { state: 'ready'; cards: AppCard[] }
+  | { state: 'loading' }
+  | { state: 'trouble'; trouble: Trouble }
+  | { state: 'ready'; cards: AppCard[] }
 
 /**
  * THE READS BEHIND *YOUR APPS*. `listProjects`, then one `getProject?expand=environments`
@@ -50,8 +53,9 @@ export function YourApps({
         if (!live) return
         // A session that ended mid-page is the shell's to say (Review Focus 1). Anything else
         // is our words, never the platform's (Review Focus 2 and 5).
-        if (refusalOf(error).kind === 'signed-out') expire()
-        else setLoaded({ state: 'unreachable' })
+        const refusal = refusalOf(error)
+        if (refusal.kind === 'signed-out') expire()
+        else setLoaded({ state: 'trouble', trouble: refusal })
       },
     )
     return () => {
@@ -68,15 +72,8 @@ export function YourApps({
   return (
     <>
       <h1 className="page-title">{words.shell.yourApps}</h1>
-      {loaded.state === 'unreachable' ? (
-        <div role="alert">
-          <Card>
-            <p className="body-lead">{words.unreachable.body}</p>
-            <Button kind="secondary" onClick={retry}>
-              {words.unreachable.button}
-            </Button>
-          </Card>
-        </div>
+      {loaded.state === 'trouble' ? (
+        <TroubleNotice trouble={loaded.trouble} onRetry={retry} />
       ) : null}
       {loaded.state === 'ready' && loaded.cards.length === 0 ? (
         <div className="your-apps__empty">

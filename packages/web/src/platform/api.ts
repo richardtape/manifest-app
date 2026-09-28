@@ -21,8 +21,24 @@ export interface Platform {
   getRelease(releaseId: string): Promise<Schemas['Release']>
 }
 
-export function createPlatform(options: { origin: string; session?: string }): Platform {
-  const client = createManifestClient(options)
+/** A read that has not answered by now is unreachable: never a page left blank (review #3). */
+export const READ_TIMEOUT_MS = 15_000
+
+export function createPlatform(options: {
+  origin: string
+  session?: string
+  timeoutMs?: number
+}): Platform {
+  const timeoutMs = options.timeoutMs ?? READ_TIMEOUT_MS
+  const client = createManifestClient({
+    origin: options.origin,
+    ...(options.session === undefined ? {} : { session: options.session }),
+    // Every call has a deadline. A platform that takes the connection and never answers
+    // (the edge has no response timeout of its own) becomes a TimeoutError, which
+    // refusalOf reads as unreachable.
+    fetch: (request) =>
+      globalThis.fetch(request, { signal: AbortSignal.timeout(timeoutMs) }),
+  })
   return {
     async getMe() {
       return unwrap(await client.GET('/v1/me'), 'getMe')

@@ -48,16 +48,26 @@ export function buildServer(config: Config, web: WebHandler): FastifyInstance {
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to
   // manifest-mock, untouched.
   if (config.mode === 'mock') {
+    // With the mock down, answer as the edge does with the control plane down: an EMPTY 502,
+    // which the page reads as "can't reach" (M7). Left to itself, the proxy answered 500 with
+    // its own message, `connect ECONNREFUSED …`, which the page read as a refusal (review #2).
+    const replyOptions = {
+      onError: (reply: { code(status: number): { send(): unknown } }) => {
+        void reply.code(502).send()
+      },
+    }
     app.register(proxy, {
       upstream: config.platformOrigin,
       prefix: '/v1',
       rewritePrefix: '/v1',
       websocket: true,
+      replyOptions,
     })
     app.register(proxy, {
       upstream: config.platformOrigin,
       prefix: '/auth',
       rewritePrefix: '/auth',
+      replyOptions,
     })
   }
 
