@@ -1,0 +1,177 @@
+/* The app's own layout, in the design system's tokens (reference/tokens.css). The
+   components' styles are the vendored bundle.css; nothing here restyles a component. */
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--surface-page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--brand);
+}
+a:hover {
+  color: var(--brand-hover);
+}
+
+/* FOCUS IS VISIBLE ON EVERY FOCUSABLE THING (accessibility is a legal requirement).
+   bundle.css declares it for buttons and fields but not for links, the rail's among them;
+   on the rail, a brand ring would vanish against the brand, so it is white there. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+.mf-rail :focus-visible {
+  outline-color: var(--nav-ink);
+}
+
+/* Signed in: the rail, and the page beside it. */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+.app-rail {
+  display: flex;
+}
+.app-main {
+  flex-grow: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.app-main .page-title,
+.app-main .body-lead {
+  margin: 0;
+}
+.app-main .mf-card .body-lead {
+  margin: 0 0 var(--space-4);
+}
+
+/* Nothing to show beside a rail: the platform could not be reached before we knew who. */
+.app-alone {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--space-12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-alone .body-lead {
+  margin: 0 0 var(--space-4);
+}
+
+/* Moment 1: the one screen with no rail. A full-height brand panel, then the form. */
+.signin {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-card);
+}
+.signin__brand {
+  width: 620px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: var(--space-12) 56px;
+  background: var(--brand);
+  color: var(--brand-on);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+.signin__mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.signin__sq {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--brand-on);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.signin__name {
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.signin__bar {
+  width: 1px;
+  height: 14px;
+  background: var(--nav-rule);
+}
+.signin__org {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nav-ink-muted);
+}
+.signin__hero {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.signin__hero .hero {
+  margin: 0;
+  max-width: 13ch;
+}
+.signin__lead {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--nav-ink-muted);
+  max-width: 40ch;
+}
+.signin__ticks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.signin__ticks li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 14px;
+  color: var(--nav-ink-muted);
+}
+.signin__form {
+  flex-grow: 1;
+  box-sizing: border-box;
+  padding: var(--space-12) 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-5);
+  max-width: 560px;
+}
+.signin__form .moment,
+.signin__form p {
+  margin: 0;
+}
+.signin__muted {
+  color: var(--ink-muted);
+}
+.signin__cwl {
+  height: 48px;
+  width: 100%;
+}
+.signin__note {
+  display: flex;
+  gap: 11px;
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-secondary);
+}

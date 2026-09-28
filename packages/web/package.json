@@ -4,6 +4,7 @@
   "type": "module",
   "description": "The faculty front-end's single-page app. Only src/platform/ calls the platform (Decision 3).",
   "scripts": {
+    "build": "vite build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
