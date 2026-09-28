@@ -119,8 +119,8 @@ export function registerEvents(
       })
       const heartbeat = setInterval(() => response.write(': keep-alive\n\n'), heartbeatMs)
       open.add(response)
-      // The RESPONSE's close, which is the connection going: the request's fires as soon as
-      // its (empty) body is read.
+      // The connection going. (The request's `close` fires at the same moment, measured on
+      // Node 24.12, when a client aborts a stream.)
       response.on('close', () => {
         unsubscribe()
         clearInterval(heartbeat)
