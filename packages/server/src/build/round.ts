@@ -1270,7 +1270,15 @@ export function createRounds(deps: RoundDeps): Rounds {
     stop(conversation) {
       const live = lives.get(conversation.id)
       if (live?.running) {
+        // AT ONCE (Review Focus 4): the person sees it stopped, and its session spends no
+        // more. Whatever is in flight finishes, and is never acted on: the runner and every
+        // step check Stop after each answer and each platform call.
+        if (live.stopped) return
         live.stopped = true
+        live.run.status = 'stopped'
+        store.saveRun(live.run)
+        publish(live)
+        void endSession(live)
         wake(live)
         return
       }

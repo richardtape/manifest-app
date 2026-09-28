@@ -1,19 +1,29 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import proxy from '@fastify/http-proxy'
 import Fastify, { type FastifyInstance } from 'fastify'
+import { registerBuild } from './api/build.js'
 import { registerConversations } from './api/conversations.js'
 import { createHub, registerEvents, type Hub } from './api/events.js'
 import { registerIntake } from './api/intake.js'
 import { registerPlan } from './api/plan.js'
 import { registerProblems } from './api/problems.js'
 import { registerProject } from './api/project.js'
-import { createWork } from './api/work.js'
+import { createWork, Refused } from './api/work.js'
+import { createRounds, type RoundDeps, type Rounds } from './build/round.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
-import { notAvailable, openAiCompatible, type Model } from './model/client.js'
+import {
+  notAvailable,
+  openAiCompatible,
+  type Answered,
+  type Model,
+} from './model/client.js'
 import { walkthroughModel } from './model/walkthrough.js'
 import { platformAgentSessions, type AgentSessions } from './platform/agent-sessions.js'
 import { platformAuthoring, type Authoring } from './platform/authoring.js'
+import { platformBuilds } from './platform/builds.js'
+import { platformInstances } from './platform/instances.js'
+import { platformMembers } from './platform/members.js'
 import { createIntakeKeys, type IntakeKeys } from './platform/intake.js'
 import {
   createConversationTokens,
@@ -21,7 +31,17 @@ import {
   type ConversationTokens,
   type Projects,
 } from './platform/project.js'
+import { platformReleases } from './platform/releases.js'
+import { platformSecrets } from './platform/secrets.js'
+import { platformSource } from './platform/source.js'
+import { platformStream } from './platform/stream.js'
+import { storeTrace } from './runtime/trace.js'
 import type { Conversation, Store } from './store/db.js'
+
+/** The rounds of work over this server's own store, hub, work and tokens (F3 Task 9). */
+export type RoundsOf = (
+  base: Pick<RoundDeps, 'store' | 'hub' | 'work' | 'tokens'>,
+) => Rounds
 
 /** Whatever serves the app: Vite's middlewares while we develop (main.ts). */
 export type WebHandler = (request: IncomingMessage, response: ServerResponse) => void
@@ -66,6 +86,7 @@ export function buildServer(
     sessions = platformAgentSessions(config.platformOrigin),
     authoring = platformAuthoring(config.platformOrigin),
     planModel = planModelFor(config),
+    rounds: roundsOf,
   }: {
     store: Store
     hub?: Hub
@@ -84,6 +105,8 @@ export function buildServer(
     authoring?: Authoring
     /** The plan's model, on an agent session's key (Task 9). */
     planModel?: (key: string) => Model
+    /** F3: the rounds of work; by default over the platform, on each mode's model. */
+    rounds?: RoundsOf
   },
 ): FastifyInstance {
   const app = Fastify({
@@ -121,6 +144,28 @@ export function buildServer(
   registerEvents(app, { config, store, hub, heartbeatMs })
   // One piece of work per conversation at a time, whichever route began it.
   const work = createWork(hub, store)
+  const rounds = (
+    roundsOf ??
+    ((base) =>
+      createRounds({
+        ...base,
+        sessions,
+        projects,
+        source: platformSource(config.platformOrigin),
+        builds: platformBuilds(config.platformOrigin),
+        releases: platformReleases(config.platformOrigin),
+        instances: platformInstances(config.platformOrigin),
+        secrets: platformSecrets(config.platformOrigin),
+        members: platformMembers(config.platformOrigin),
+        stream: platformStream(config.platformOrigin),
+        trace: storeTrace(store),
+        now: () => new Date(),
+        modelFor: roundModelFor(config),
+      }))
+  )({ store, hub, work, tokens })
+  // A RESTART (Review Focus 3): a round that was working, or waiting on a question, lost its
+  // key and its token with the last process. Marked before this server can listen.
+  rounds.interruptedOnBoot()
   registerIntake(app, { config, store, work, intakeModel, intakeKeys })
   registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
   registerPlan(app, {
@@ -132,7 +177,9 @@ export function buildServer(
     projects,
     authoring,
     planModel,
+    rounds,
   })
+  registerBuild(app, { config, store, work, tokens, rounds })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to
@@ -162,6 +209,40 @@ export function buildServer(
   }
 
   return app
+}
+
+/**
+ * EACH MODE'S MODEL FOR A ROUND (F3 Task 8): the one a session lists, on our own gateway alone
+ * (F2 Task 6: a key is never sent to a URL the platform did not give us, nor to one it did that
+ * is not ours), hearing each answer. Against the mock, which has no model, the walk-through's
+ * answers, heard as answered by what was asked.
+ */
+export function roundModelFor(config: Config): RoundDeps['modelFor'] {
+  const trimmed = (url: string) => url.replace(/\/+$/, '')
+  if (config.mode === 'mock') {
+    const walkthrough = walkthroughModel()
+    return (session, onAnswer) => ({
+      async complete(agent, schema, messages, check) {
+        const answer = await walkthrough.complete(agent, schema, messages, check)
+        onAnswer({
+          model: session.model,
+          fallback: false,
+          usage: null,
+        } satisfies Answered)
+        return answer
+      },
+    })
+  }
+  return (session, onAnswer) => {
+    if (trimmed(session.baseUrl) !== trimmed(config.modelGateway))
+      throw new Refused('MODEL_GATEWAY_REFUSED')
+    return openAiCompatible({
+      baseUrl: config.modelGateway,
+      key: session.key,
+      model: session.model,
+      onAnswer,
+    })
+  }
 }
 
 /**

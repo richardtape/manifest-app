@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply } from 'fastify'
 import { planMarkdown, writePlan } from '../agents/plan.js'
+import type { Rounds } from '../build/round.js'
 import type { Config } from '../config.js'
 import { ModelError, type Model } from '../model/client.js'
 import type { AgentSessions } from '../platform/agent-sessions.js'
@@ -86,6 +87,7 @@ export function registerPlan(
     projects,
     authoring,
     planModel,
+    rounds,
   }: {
     config: Config
     store: Store
@@ -96,6 +98,8 @@ export function registerPlan(
     authoring: Authoring
     /** The plan's model, on an agent session's key and our own gateway. */
     planModel: (key: string) => Model
+    /** F3 Decision 11: the round starts itself once the plan is committed. */
+    rounds: Rounds
   },
 ): void {
   const check = guard(config)
@@ -278,7 +282,10 @@ export function registerPlan(
           commitSha: committed.commitSha,
           sent: committed.sent,
         })
-        return 'agreed'
+        // F3 Decision 11: agreed, and round 1 starts at once, on our server. A page closed
+        // right after Yes still gets its build. The round holds its own claim (Task 9).
+        rounds.start(work.moveTo(conversation, 'agreed'), token)
+        return undefined
       })
       return reply.code(202).send()
     },

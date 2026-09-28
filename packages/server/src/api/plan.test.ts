@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildServer } from '../app.js'
+import type { Rounds } from '../build/round.js'
 import type { Config } from '../config.js'
 import { ModelError, type Model } from '../model/client.js'
 import { scripted } from '../model/scripted.js'
@@ -155,6 +156,21 @@ async function setUp(
   const tokens = createConversationTokens()
   const platformFakes = fakes(options)
   const keys: string[] = []
+  // F3 Decision 11: agree starts round 1. The round is Task 8's, tested there; here, what it was handed.
+  const roundsStarted: { conversationId: string; state: string; token: string }[] = []
+  const rounds: Rounds = {
+    start: (conversation, token) =>
+      void roundsStarted.push({
+        conversationId: conversation.id,
+        state: conversation.state,
+        token,
+      }),
+    carryOn: () => undefined,
+    message: () => undefined,
+    answer: () => 'unknown',
+    stop: () => undefined,
+    interruptedOnBoot: () => undefined,
+  }
   const config: Config = {
     mode: 'edge',
     port: 7105,
@@ -174,12 +190,13 @@ async function setUp(
       keys.push(key)
       return model
     },
+    rounds: () => rounds,
   })
   cleanups.push(
     () => app.close(),
     () => store.close(),
   )
-  return { app, store, hub, tokens, file: where, keys, ...platformFakes }
+  return { app, store, hub, tokens, file: where, keys, roundsStarted, ...platformFakes }
 }
 
 type Setup = Awaited<ReturnType<typeof setUp>>
@@ -556,6 +573,10 @@ describe('the plan corrected, and agreed', () => {
       { kind: 'step', step: 'agreeing', state: 'done' },
     ])
     expect(answer.state?.conversation.state).toBe('agreed')
+    // Decision 11: agreed, and round 1 is started at once, with the conversation's token.
+    expect(s.roundsStarted).toEqual([
+      { conversationId: conversation.id, state: 'agreed', token: TOKEN },
+    ])
     const commits = s.named('commitPlan')
     expect(commits).toHaveLength(1)
     const [token, projectId, base, markdown] = commits[0] as string[]

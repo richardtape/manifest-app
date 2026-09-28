@@ -54,7 +54,11 @@ const refuse = (reply: FastifyReply, status: number, code: string) =>
   reply.code(status).send({ error: { code } })
 
 export function createWork(hub: Hub, store: Store): Work {
-  const working = new Set<string>()
+  /**
+   * EACH RUN'S OWN CLAIM, released by that run alone (F3 Task 9): agree's run starts round 1
+   * from inside itself (Decision 11), and its end must never free the round's claim.
+   */
+  const working = new Map<string, symbol>()
   const step = (id: string, key: StepKey | null, state: 'now' | 'done' | 'halted') => {
     if (key !== null) hub.publish(id, { kind: 'step', step: key, state })
   }
@@ -79,7 +83,8 @@ export function createWork(hub: Hub, store: Store): Work {
       return conversation
     },
     run(conversation, first, work) {
-      working.add(conversation.id)
+      const claim = Symbol(conversation.id)
+      working.set(conversation.id, claim)
       let current = first
       step(conversation.id, current, 'now')
       const next = (key: StepKey) => {
@@ -109,7 +114,9 @@ export function createWork(hub: Hub, store: Store): Work {
             })
           },
         )
-        .finally(() => working.delete(conversation.id))
+        .finally(() => {
+          if (working.get(conversation.id) === claim) working.delete(conversation.id)
+        })
     },
   }
 }

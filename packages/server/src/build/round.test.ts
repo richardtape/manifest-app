@@ -150,8 +150,13 @@ function scriptedModel(script: Script, fallback: (agent: string, n: number) => b
         async () => {
           const index = next.get(agent) ?? 0
           next.set(agent, index + 1)
-          const answer = (script[agent] ?? [])[index]
-          if (answer === undefined) return new Promise(() => undefined)
+          const scriptedAnswer = (script[agent] ?? [])[index]
+          if (scriptedAnswer === undefined) return new Promise(() => undefined)
+          // A function is an answer the test holds until it says.
+          const answer =
+            typeof scriptedAnswer === 'function'
+              ? await (scriptedAnswer as () => Promise<unknown>)()
+              : scriptedAnswer
           if (answer instanceof Error) throw answer
           onAnswer({
             model: fallback(agent, index)
@@ -854,6 +859,26 @@ describe('Stop (Review Focus 4)', () => {
     h.rounds.stop(conversation)
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(h.ended).toEqual(['session-1'])
+  })
+
+  it('pressed while the lead thinks: stopped at once, its session ended at once, and the move it then answers never runs', async () => {
+    const thinking = held<unknown>()
+    const { h, id, conversation } = await startedRound({
+      script: { lead: [read('server.js'), () => thinking.promise] },
+    })
+    await until(
+      () => h.model.calls.filter((c) => c.agent === 'lead').length === 2,
+      () => h.did,
+    )
+    h.rounds.stop(conversation)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    expect(viewOf(h, id)?.status).toBe('stopped')
+    expect(h.ended).toEqual(['session-1'])
+    thinking.resolve(commit())
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(h.attempts).toEqual([])
+    expect(viewOf(h, id)?.status).toBe('stopped')
+    expect(stateOf(h, id)).toBe('building')
   })
 
   it('pressed while deploy is in flight: the run is still stopped when deploy answers, and nothing after it runs', async () => {
