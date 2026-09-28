@@ -29,7 +29,7 @@ export interface SideNavProps {
   style?: CSSProperties
   /**
    * OURS, NOT THE REFERENCE'S (Rich's click-through, F1 sitting 5): below 900px the rail is
-   * icons only (fixes.css). Each label is wrapped so CSS can hide it while it stays the link's
+   * icons only (components.css). Each label is wrapped so CSS can hide it while it stays the link's
    * accessible name, and a `title` names it to a pointer. Without it, the markup is the
    * reference's (parity.test.tsx).
    */

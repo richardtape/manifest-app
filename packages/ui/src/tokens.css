@@ -1,4 +1,7 @@
-/* GENERATED from tokens.json — do not edit. Regenerate with build-tokens-css.mjs. */
+/* OURS SINCE F1 SITTING 5 (Rich: "fix it at source"). It began as manifest's tokens.css at
+   3c38199, which manifest generates from its tokens.json with build-tokens-css.mjs. That
+   generator is not ours: EDIT THIS FILE, and never regenerate it from manifest's copy, which
+   would drop every change made here. */
 
 :root,
 [data-theme='light'] {

@@ -9,7 +9,7 @@ import { SideNav } from './index.js'
  * is in the reference, so parity.test.tsx cannot hold them; it still holds that without
  * them the markup is the reference's, byte for byte.
  *
- * - `collapsible`: below 900px the rail is icons only (ui's fixes.css). Each label is wrapped
+ * - `collapsible`: below 900px the rail is icons only (ui's components.css). Each label is wrapped
  *   so it can be hidden while staying the link's accessible name, and a `title` names it to a
  *   pointer.
  * - `userHref`: the person is a link, with an icon, to their profile. Collapsed, it is the

@@ -272,7 +272,7 @@
 }
 
 /* NARROW WINDOWS (Rich's click-through: below about 750px there was a horizontal scrollbar).
-   The rail folds to icons below 900px (ui's fixes.css), the page's margins shrink, and Sign in
+   The rail folds to icons below 900px (ui's components.css), the page's margins shrink, and Sign in
    stacks its brand panel above its form. */
 @media (max-width: 899px) {
   .app-main {
