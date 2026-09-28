@@ -12,14 +12,15 @@ const WEB = fileURLToPath(new URL('../../web/', import.meta.url))
 const config = readConfig(process.env)
 
 // The app is asked for only once we listen, which is after Vite exists: the closure reads
-// `vite` then, and Vite needs our HTTP server first, for its HMR socket.
+// `vite` then, and Vite needs our HTTP server first, for its HMR socket (`server.ws`, which
+// Vite 8 names in place of the deprecated `server.hmr`).
 const app = buildServer(config, (request, response) =>
   vite.middlewares(request, response),
 )
 const vite = await createVite({
   root: WEB,
   appType: 'spa',
-  server: { middlewareMode: true, hmr: { server: app.server } },
+  server: { middlewareMode: true, ws: { server: app.server } },
 })
 
 try {

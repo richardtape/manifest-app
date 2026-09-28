@@ -27,7 +27,7 @@ export default defineConfig({
     // Vite refuses a Host it does not know, and the edge PRESERVES the app's hostname.
     allowedHosts: ['app.manifest.internal'],
     ...(EDGE
-      ? { hmr: { protocol: 'wss', host: 'app.manifest.internal', clientPort: 443 } }
+      ? { ws: { protocol: 'wss', host: 'app.manifest.internal', clientPort: 443 } }
       : {}),
   },
 })

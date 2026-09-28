@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Our server on 7105: the app, /api/*, and in mock mode the proxy to manifest-mock. It learns who it serves from GET /v1/me and nothing else (FE-2).",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/main.ts",
+    "dev": "tsx watch --clear-screen=false --exclude '../web/**' src/main.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
