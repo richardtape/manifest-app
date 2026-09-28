@@ -4,46 +4,40 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, after F2's sitting 6 and the marker on 7105)*:
+**Where things stand** *(2026-09-28, F2 executed)*:
 - The faculty experience is designed moment by moment and **approved by Rich**
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
   ([`api-findings.md`](./api-findings.md), [`2026-09-27-to-the-platform-session.md`](./2026-09-27-to-the-platform-session.md)).
 - **F1 is executed** (2026-09-27), in [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md):
   sign-in, the shell, *Your apps*, and a profile.
-- **F2 is built and accepted, but for Rich's click**, in
-  [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md). All six sittings are done
-  (2026-09-27/28). Moments 3–5:
+- **F2 is executed** (2026-09-28), in [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
+  Moments 3–5:
   - describe it; at most three questions a round, two rounds;
   - name it, with every address checked;
   - *Make it* in the person's session, the conversation's token handed to our server;
   - the plan, written on the person's agent session, corrected in a sentence, agreed, and committed into the app
     as `docs/plan.md`.
-  - **Against the mock:** `scripts/check-describing.sh`, 17/17.
-  - **Against the real platform:** walked whole in headless Chrome at `https://app.manifest.internal`, signed in
-    as the IdP's test user (Rich's permission, that user only). A real `docs/plan.md` was committed.
-  - **The whole-branch review's 2 Critical and 8 Important are fixed**, and so are four defects only the real
-    platform showed. The sitting 6 entry has them, and **the laptop model's words, verbatim**: the shape always
-    right, what it says weak.
-  - **Owed:**
-    - **Rich's clicked half**: open `https://app.manifest.internal/new`, sign in as `instructor`, and click
-      moments 3–5. **It now waits for sitting 9a**, because the control plane is stopped (the machine, below).
-    - then the close-out that marks F2 executed.
-  - **For Rich to decide:**
-    - nine Minors deferred by the review (the plan's sitting 6 entry, and the ledger);
-    - FE-31.
+  - The acceptance passed three ways: against the mock (`scripts/check-describing.sh`, 17/17), walked whole on
+    the real platform in headless Chrome, and **clicked by Rich** (*"it looks great"*).
+  - **The laptop model's plans** (sitting 6's entry, verbatim): the shape always right, what it says weak. The
+    capable model is for that.
+  - **For Rich to decide:** nine Minors deferred by the review (the plan's sitting 6 entry, and the ledger), and
+    FE-31.
 - **The capable model is being built**: the platform's sitting 9a, which Rich started on 2026-09-28.
-  - **Predicted by the platform session:** the name is `default-chat-large`, at `max_classification` internal,
-    and nothing in the contract moves. Our plan agent then takes `MANIFEST_APP_PLAN_MODEL=default-chat-large`.
-  - **Rich chose `openai/gpt-6-luna`.** LiteLLM prices it only from the list it downloads when it starts with the
-    network on. Its bundled offline list stops at gpt-5.6.
-    - Started offline, it cannot price the model, so the platform refuses to register `default-chat-large` and
-      writes an operator line instead. Our plan agent would then have no model.
+  - **Rich chose `openai/gpt-6-luna`**, with `openai/gpt-6-sol` if that does not work. The platform's ruling:
+    one setting, `MANIFEST_CAPABLE_MODEL`, and moving to sol is a one-line change and a restart.
+  - **The logical name is `default-chat-large`** (predicted), at `max_classification` internal, whichever model
+    is behind it. Our plan agent then takes `MANIFEST_APP_PLAN_MODEL=default-chat-large`. Nothing in the contract
+    is predicted to move.
+  - **LiteLLM must start with the network on.** Its bundled offline price list has no gpt-6 model at all, so
+    after an offline start the platform refuses to register `default-chat-large` and writes an operator line.
+    Our agents would then have no capable model.
   - **The platform session will message us** (`manifest-app-b0`) when 9a lands: the commit, the model name, and
     what moved in the contract.
-- **Next: F3 (building it)**, to be written once F2 is executed **and 9a has landed**. Do not start F3 before the
-  platform session's message.
-- **The machine** *(2026-09-28, after the marker)*:
+- **Next: F3 (building it)**, to be written **once 9a has landed**. Do not start it before the platform session's
+  message. Then re-read `openapi.json`, re-run `pnpm typecheck`, and write F3 from what 9a actually built.
+- **The machine** *(2026-09-28)*:
   - **the control plane on 7100 is stopped**, by the platform session for 9a, with Rich's word. Its first Vitest
     run truncates the database, so **the F2 walk's projects are gone**. Bring the control plane back only per
     manifest's RUNBOOK, after 9a, and ask Rich first;

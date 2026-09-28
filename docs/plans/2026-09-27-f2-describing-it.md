@@ -47,7 +47,7 @@ import it (Task 2).
 | 3 | 4, 5 | The model client; the three intake agents, tested against a scripted model | **done 2026-09-27.** A client that takes only structured answers; the three agents, with checks after parsing ruled on from M3; `/intake`, `/names` and `/blueprint`, with the intake carried in the state frame. 300 tests |
 | 4 | 6, 7 | The intake adapter; the *Describe* and *Name it* screens and their components | **done 2026-09-27.** The adapters on the contract as it landed; the intake key handed over; *Describe it* and *Name it*, walked in headless Chrome against the mock, where two defects were found and fixed. 395 tests |
 | 5 | 8, 9 | Making the project and handing over its tokens; the plan, corrected and agreed, committed as `docs/plan.md` | **done 2026-09-27.** *Make it* in the person's session, the token checked and held in memory; *Making it*'s three lines; the plan on an agent session, corrected, agreed and committed; Review Focus 4 and 5 pinned. Walked in headless Chrome against the mock, moments 3–5 whole. 503 tests. Six words proposed for Rich |
-| 6 | 10 | **The acceptance**: against the mock with a scripted model; against the real platform where sittings 7 and 10 have landed. **Alone, and last** | **done 2026-09-28, but for Rich's clicked half.** The mock half 17/17 (`scripts/check-describing.sh`). The real platform walked whole in headless Chrome (signed in as the IdP's test user, at Rich's word), and `docs/plan.md` committed for real. The whole-branch review's 2 Critical and 8 Important fixed, and four defects found only on the real platform fixed. 524 tests. **Rich's click is owed** |
+| 6 | 10 | **The acceptance**: against the mock with a scripted model; against the real platform where sittings 7 and 10 have landed. **Alone, and last** | **done 2026-09-28.** The mock half 17/17 (`scripts/check-describing.sh`). The real platform walked whole in headless Chrome (signed in as the IdP's test user, at Rich's word), and `docs/plan.md` committed for real. The whole-branch review's 2 Critical and 8 Important fixed, and four defects found only on the real platform fixed. 524 tests. **Rich clicked moments 3–5: *"it looks great"*. F2 is executed** |
 
 **Every sitting ends as F1's do:**
 1. the four gates, `pnpm test` twice;
@@ -1825,3 +1825,27 @@ clicked half (Task 10, step 2) is owed**.
 - **Gates:** `pnpm test` 526/526, lint 0, typecheck 0, format clean.
 - **Told the platform session** that its `frontend_is_ours` can ask `http://127.0.0.1:7105/api/__doctor` and
   match `manifest-app`.
+
+### 2026-09-28 — Rich's click: F2 is executed
+
+- **Rich clicked moments 3–5**, the half the acceptance owed him. His words: *"I've done the F2 stuff, it looks
+  great."* He reported no defect.
+- **F2 is executed.** Both halves of the acceptance have passed: the headless one, against the mock and the real
+  platform, and Rich's.
+- **Rich's decision on the capable model, the same day:** `openai/gpt-6-luna`. If that does not work,
+  `openai/gpt-6-sol` is the most capable model for now. `gpt-6-terra` was his mistake: it does not exist yet.
+  - We relayed it to the platform session, which is building the model as its sitting 9a.
+  - **Why it matters, as the platform session measured it:** LiteLLM's bundled offline price list has no gpt-6
+    model at all. `gpt-6-luna`, `-sol` and `-astra` are only in the list it downloads when it starts with the
+    network on. So after an offline start neither luna nor sol can answer, and a fallback to sol does not cover
+    that case.
+  - **The platform's ruling:** one setting, `MANIFEST_CAPABLE_MODEL=openai/gpt-6-luna`. Moving to sol is a
+    one-line change and a restart. The logical name, `default-chat-large`, stays the same, so our
+    `MANIFEST_APP_PLAN_MODEL` does not change either way.
+- **Gates at this close:**
+  - `pnpm test` twice: 526/526 each time;
+  - `pnpm lint` 0;
+  - `pnpm typecheck` 0, against manifest's working tree at `e4db66a`, while 9a is under way;
+  - `pnpm format:check` clean.
+- **Still for Rich:** the nine deferred Minors, FE-31, and carrying FE-26 to FE-31 to the platform session.
+- **Next: F3**, written once the platform session tells us 9a has landed.
