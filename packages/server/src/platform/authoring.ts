@@ -6,14 +6,18 @@ import { PLATFORM_TIMEOUT_MS, refusalFrom } from './refusal.js'
  * is small and deliberate: `docs/plan.md`, and nothing else. It proves F3's path on a
  * harmless file.
  */
+/** One `createCommit` as it was sent: kept, so a conversation can say what went (Task 10). */
+export type Sent = { dryRun: boolean; baseCommit: string; paths: string[] }
+
 export interface Authoring {
   tree(token: string, projectId: string): Promise<{ commitSha: string; paths: string[] }>
+  /** The commit, and every `createCommit` made on the way, in order. */
   commitPlan(
     token: string,
     projectId: string,
     baseCommit: string,
     markdown: string,
-  ): Promise<{ commitSha: string }>
+  ): Promise<{ commitSha: string; sent: Sent[] }>
 }
 
 const PLAN = 'docs/plan.md'
@@ -48,23 +52,32 @@ export function platformAuthoring(origin: string): Authoring {
     projectId: string,
     baseCommit: string,
     markdown: string,
+    sent: Sent[],
   ) {
-    const commit = async (dryRun: boolean) =>
-      unwrap(
+    const commit = async (dryRun: boolean) => {
+      const body = {
+        baseCommit,
+        message: MESSAGE,
+        changes: [{ op: 'write' as const, path: PLAN, content: markdown }],
+        ...(dryRun ? { dryRun: true } : {}),
+      }
+      // Recorded from the body itself, so the record is what went.
+      sent.push({
+        dryRun,
+        baseCommit: body.baseCommit,
+        paths: body.changes.map((c) => c.path),
+      })
+      return unwrap(
         await client(token).POST('/v1/projects/{projectId}/commits', {
           params: {
             path: { projectId },
             header: { 'Idempotency-Key': idempotencyKey() },
           },
-          body: {
-            baseCommit,
-            message: MESSAGE,
-            changes: [{ op: 'write', path: PLAN, content: markdown }],
-            ...(dryRun ? { dryRun: true } : {}),
-          },
+          body,
         }),
         'createCommit',
       )
+    }
     await commit(true)
     const made = await commit(false)
     return { commitSha: made.commitSha as string }
@@ -73,8 +86,9 @@ export function platformAuthoring(origin: string): Authoring {
   return {
     tree,
     async commitPlan(token, projectId, baseCommit, markdown) {
+      const sent: Sent[] = []
       try {
-        return await attempt(token, projectId, baseCommit, markdown)
+        return { ...(await attempt(token, projectId, baseCommit, markdown, sent)), sent }
       } catch (error) {
         const refusal = refusalFrom(error)
         if (refusal.code !== 'SOURCE_CONFLICT') throw refusal
@@ -82,7 +96,7 @@ export function platformAuthoring(origin: string): Authoring {
       // Someone moved main: read it again, and try once more from where it is now.
       const { commitSha } = await tree(token, projectId)
       try {
-        return await attempt(token, projectId, commitSha, markdown)
+        return { ...(await attempt(token, projectId, commitSha, markdown, sent)), sent }
       } catch (error) {
         throw refusalFrom(error)
       }

@@ -260,6 +260,7 @@ export function registerPlan(
           version: latest.version,
           answers,
           commitSha: committed.commitSha,
+          sent: committed.sent,
         })
         return 'agreed'
       })

@@ -67,7 +67,7 @@ function fakes(
     budget?: () => Promise<Awaited<ReturnType<AgentSessions['budget']>>>
     start?: () => Promise<Awaited<ReturnType<AgentSessions['start']>>>
     pack?: () => Promise<string>
-    commit?: () => Promise<{ commitSha: string }>
+    commit?: () => Promise<Awaited<ReturnType<Authoring['commitPlan']>>>
   } = {},
 ) {
   const calls: Call[] = []
@@ -120,7 +120,16 @@ function fakes(
     },
     commitPlan: (token, projectId, baseCommit, markdown) => {
       calls.push(['commitPlan', token, projectId, baseCommit, markdown])
-      return options.commit?.() ?? Promise.resolve({ commitSha: 'c'.repeat(40) })
+      return (
+        options.commit?.() ??
+        Promise.resolve({
+          commitSha: 'c'.repeat(40),
+          sent: [
+            { dryRun: true, baseCommit, paths: ['docs/plan.md'] },
+            { dryRun: false, baseCommit, paths: ['docs/plan.md'] },
+          ],
+        })
+      )
     },
   }
   const named = (name: string) =>
@@ -548,6 +557,19 @@ describe('the plan corrected, and agreed', () => {
     expect([token, projectId, base]).toEqual([TOKEN, PROJECT.id, 'a'.repeat(40)])
     expect(markdown).toContain('# Reading responses: the plan we agreed')
     expect(markdown).toContain('  It closes at the deadline.')
+    // What went to createCommit, as the conversation records it (Task 10, step 7).
+    const agreed = s.store
+      .listMessages(conversation.id)
+      .map((m) => m.body as { kind: string })
+      .find((body) => body.kind === 'agreed')
+    expect(agreed).toMatchObject({
+      version: 1,
+      commitSha: 'c'.repeat(40),
+      sent: [
+        { dryRun: true, baseCommit: 'a'.repeat(40), paths: ['docs/plan.md'] },
+        { dryRun: false, baseCommit: 'a'.repeat(40), paths: ['docs/plan.md'] },
+      ],
+    })
   })
 
   it('an answer to a question it never asked is 400 AGREE_INVALID, and nothing is committed', async () => {

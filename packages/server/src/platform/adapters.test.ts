@@ -292,6 +292,20 @@ describe('platformAuthoring: the plan’s first commit (Decision 9)', () => {
     },
   })
   const commits = (seen: Seen[]) => seen.filter((s) => s.url?.endsWith('/commits'))
+  /** What the platform received, call by call, read from the fake: never from the adapter. */
+  const received = (seen: Seen[]) =>
+    commits(seen).map((s) => {
+      const body = s.body as {
+        baseCommit: string
+        dryRun?: boolean
+        changes: { path: string }[]
+      }
+      return {
+        dryRun: body.dryRun === true,
+        baseCommit: body.baseCommit,
+        paths: body.changes.map((c) => c.path),
+      }
+    })
 
   it('tree answers the commit and its paths', async () => {
     const fake = await fakePlatform(() => TREE('a'.repeat(40)))
@@ -311,7 +325,7 @@ describe('platformAuthoring: the plan’s first commit (Decision 9)', () => {
       'a'.repeat(40),
       '# Reading responses\n',
     )
-    expect(answer).toEqual({ commitSha: 'c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00' })
+    expect(answer.commitSha).toBe('c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00')
     const [dry, real] = commits(fake.seen) as [Seen, Seen]
     const change = [
       { op: 'write', path: 'docs/plan.md', content: '# Reading responses\n' },
@@ -342,6 +356,22 @@ describe('platformAuthoring: the plan’s first commit (Decision 9)', () => {
       (s) => (s.body as { baseCommit: string }).baseCommit,
     )
     expect(bases).toEqual(['a'.repeat(40), 'b'.repeat(40), 'b'.repeat(40)])
+  })
+
+  it('answers what it sent, call by call, exactly as the platform received it (Task 10, step 7)', async () => {
+    const fake = await fakePlatform((seen, count) => {
+      if (seen.url?.endsWith('/tree')) return TREE('b'.repeat(40))
+      if (count === 1) return refusal(409, 'SOURCE_CONFLICT')
+      return COMMITTED((seen.body as { dryRun?: boolean }).dryRun === true)
+    })
+    const answer = await platformAuthoring(fake.origin).commitPlan(
+      TOKEN,
+      PROJECT,
+      'a'.repeat(40),
+      '# plan\n',
+    )
+    expect(answer.sent).toEqual(received(fake.seen))
+    expect(answer.sent.map((s) => s.dryRun)).toEqual([true, true, false])
   })
 
   it('a second conflict is SOURCE_CONFLICT, thrown', async () => {

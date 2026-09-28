@@ -2,6 +2,7 @@ import type { Chosen } from '../agents/blueprint.js'
 import { Plan } from '../agents/plan.js'
 import type { Named } from '../agents/naming.js'
 import type { Understood } from '../agents/understanding.js'
+import type { Sent } from '../platform/authoring.js'
 import type { Made } from '../platform/project.js'
 import type { Store } from '../store/db.js'
 import type { Intake, PlanView } from './progress.js'
@@ -22,12 +23,16 @@ export type Said =
   | { kind: 'project'; project: Made }
   /** Their sentence, correcting the plan whose version it follows (Task 9). */
   | { kind: 'correction'; text: string; after: number }
-  /** The plan agreed, with their answers, and the commit that put it in the app (Task 9). */
+  /**
+   * The plan agreed, with their answers, the commit that put it in the app, and every
+   * `createCommit` made on the way, as it was sent (Tasks 9 and 10).
+   */
   | {
       kind: 'agreed'
       version: number
       answers: Record<string, string>
       commitSha: string
+      sent: Sent[]
     }
 
 export const NOTHING_YET: Intake = {
