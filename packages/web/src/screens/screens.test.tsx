@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 import { ManifestApiError, type Schemas } from '@manifest/contract'
 import { fixtures } from '@manifest/mock'
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../app.js'
 import { signInHref } from '../auth.js'
@@ -70,7 +78,7 @@ describe('signed out (moment 1)', () => {
     expect(cwl.getAttribute('href')).toBe('/auth/login?returnTo=%2Fapps%3Ftab%3Dpeople')
     // The one screen with no rail.
     expect(screen.queryByRole('navigation')).toBeNull()
-    expect(document.title).toBe(words.signIn.tab)
+    await waitFor(() => expect(document.title).toBe(words.signIn.tab))
   })
 })
 
@@ -90,7 +98,7 @@ describe('signed in: the shell', () => {
     expect(rail.querySelector('.mf-rail__over')).toBeNull()
     expect(rail.querySelector('.mf-rail__who')?.textContent).toBe('Instructor One')
     expect(rail.querySelector('.mf-rail__out')?.textContent).toBe('Sign out')
-    expect(document.title).toBe(words.shell.yourApps)
+    await waitFor(() => expect(document.title).toBe(words.shell.yourApps))
   })
 
   it('a role from a newer contract is not an error (Review Focus 4)', async () => {
@@ -114,7 +122,7 @@ describe('signed in: the shell', () => {
       name: words.notFound.link,
     })
     expect(home.getAttribute('href')).toBe('/')
-    expect(document.title).toBe(words.shell.manifest)
+    await waitFor(() => expect(document.title).toBe(words.shell.manifest))
   })
 })
 

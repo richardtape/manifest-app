@@ -1379,6 +1379,15 @@ The contract's source was unchanged in manifest's working tree during the sittin
 - `pnpm format:check` clean;
 - `pnpm build`: ok.
 
+**A flaky test, found at the close-out and fixed.**
+- The close-out's own gate run failed one test: *signed out (moment 1)*, `expected 'Manifest' to be 'Sign in to
+  Manifest'`.
+- The title is set in an effect that runs after the render the test waits for, so the test read the loading
+  render's title. It failed **1 in 20** runs of the file.
+- The three title assertions now `waitFor` the title: **0 in 40** runs.
+- The control still bites: the sign-in page given the wrong title goes red.
+- The app was right. The test raced it.
+
 **For sitting 5, the acceptance:**
 - Task 8's expectation is amended: the card is *Mock course app*, and `mock-app` appears in its addresses.
 - The console shows a `404` for `/favicon.ico`; there is no icon yet.
