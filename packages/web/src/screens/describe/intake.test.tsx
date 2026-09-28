@@ -16,6 +16,7 @@ import { OurRefusal, type Ours, type StreamSource } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
+import { rememberMadeProject } from './memory.js'
 
 /**
  * MOMENTS 3 AND 4 (F2 Task 7), through the whole App: the platform, our API and the stream
@@ -49,6 +50,7 @@ const NOTHING_YET: Intake = {
   names: null,
   namesAsked: 0,
   blueprint: null,
+  project: null,
 }
 const Q = [
   {
@@ -113,16 +115,42 @@ class FakeSource implements StreamSource {
   }
 }
 
+/** What the platform made, as a counting fake keyed by Idempotency-Key: a replay answers the first. */
+const madeProject = (n: number, body: Schemas['CreateProjectRequest']) =>
+  ({
+    id: `22222222-2222-4222-8222-${String(n).padStart(12, '0')}`,
+    slug: body.slug,
+    name: body.name ?? body.slug,
+    blueprint: body.blueprint,
+  }) as Schemas['CreatedProject']
+
+/** One subscription to a project's stream: the test says each event, then that it is ready. */
+type Watch = {
+  projectId: string
+  onEvent: (event: { type: string }) => void
+  ready: () => void
+  fail: () => void
+  closed: boolean
+}
+
 /** A stage: the platform, our API and the stream, each recording what reached it. */
 function stage(
   options: {
     start?: () => Promise<Schemas['IntakeSessionStarted']>
     taken?: string[]
+    /** Before the counting fake answers: throw to refuse; `landed` says whether the create happened. */
+    create?: (n: number) => { landed: boolean; error: unknown } | undefined
+    mint?: (n: number) => unknown
   } = {},
 ) {
   const sources: FakeSource[] = []
   const calls: [string, ...unknown[]][] = []
   const taken = new Set(options.taken ?? [])
+  /** Projects made, by the key that made them: how many there really are. */
+  const projects = new Map<string, Schemas['CreatedProject']>()
+  const watches: Watch[] = []
+  let creates = 0
+  let mints = 0
   const platform: Platform = {
     getMe: () => Promise.resolve(ME),
     listProjects: () => Promise.resolve([]),
@@ -155,6 +183,44 @@ function stage(
       )
     },
     listBlueprints: () => Promise.resolve([BLUEPRINT]),
+    createProject: (body, key) => {
+      calls.push(['createProject', body, key])
+      creates++
+      const trouble = options.create?.(creates)
+      if (trouble?.landed !== false && !projects.has(key))
+        projects.set(key, madeProject(projects.size + 1, body))
+      if (trouble !== undefined) return Promise.reject(trouble.error)
+      return Promise.resolve(projects.get(key)!)
+    },
+    mintToken: (projectId, body, key) => {
+      calls.push(['mintToken', projectId, body, key])
+      mints++
+      const trouble = options.mint?.(mints)
+      if (trouble !== undefined) return Promise.reject(trouble)
+      return Promise.resolve({
+        token: { id: `t-${mints}` },
+        secret: `mft_test_${mints}`,
+      } as Schemas['MintedToken'])
+    },
+    watchProject: (projectId, onEvent) => {
+      calls.push(['watchProject', projectId])
+      let ready!: () => void
+      let fail!: () => void
+      const settled = new Promise<void>((resolve, reject) => {
+        ready = resolve
+        fail = () => reject(new Error('closed before ready'))
+      })
+      settled.catch(() => undefined)
+      const watch: Watch = {
+        projectId,
+        onEvent: onEvent as Watch['onEvent'],
+        ready,
+        fail,
+        closed: false,
+      }
+      watches.push(watch)
+      return { ready: settled, close: () => void (watch.closed = true) }
+    },
   }
   const record =
     (name: string) =>
@@ -172,6 +238,7 @@ function stage(
     intake: record('intake') as Ours['intake'],
     names: record('names') as Ours['names'],
     blueprint: record('blueprint') as Ours['blueprint'],
+    handProject: record('handProject') as Ours['handProject'],
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -193,7 +260,7 @@ function stage(
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))
-  return { platform, ours, say, state, called, sources }
+  return { platform, ours, say, state, called, sources, projects, watches }
 }
 
 const reports: Record<string, unknown>[] = []
@@ -638,7 +705,329 @@ describe('Name it (moment 4, before Make it)', () => {
       fireEvent.click(make)
     })
     expect(s.called('endIntakeSession')).toEqual([[STARTED.session.id]])
-    expect(screen.getByText(words.nameIt.makingNext)).toBeTruthy()
+    expect(screen.getByText(words.making.yours('Reading responses'))).toBeTruthy()
+  })
+})
+
+describe('Make it (moment 4’s end, F2 Task 8)', () => {
+  const EIGHT = [
+    'agent:session',
+    'build:create',
+    'output:read',
+    'project:read',
+    'release:create',
+    'release:deploy',
+    'secret:write',
+    'source:write',
+  ]
+  const CHOSEN = { blueprint: 'node-ts-mongo@1', starter: 'proof-app', why: 'x' }
+
+  async function readyToMake(s: ReturnType<typeof stage>, intake: Partial<Intake> = {}) {
+    await describeAndCarryOn(s)
+    s.state(
+      { state: 'naming' },
+      {
+        round: 1,
+        understood: UNDERSTOOD,
+        names: NAMES,
+        namesAsked: 1,
+        blueprint: CHOSEN,
+        ...intake,
+      },
+    )
+    fireEvent.click(await screen.findByLabelText(/Reading responses/))
+    return screen.getByRole('button', { name: words.nameIt.makeIt })
+  }
+  const press = (button: HTMLElement) =>
+    act(async () => {
+      fireEvent.click(button)
+    })
+  const referenceIn = (notice: HTMLElement) =>
+    /quote ([0-9A-F]{4}-[0-9A-F]{4})\./.exec(notice.textContent ?? '')?.[1]
+
+  it('in the person’s session: the project, with what they chose and the blueprint the agent chose; then the conversation’s token; then the handover', async () => {
+    const s = stage()
+    const make = await readyToMake(s)
+    fireEvent.change(screen.getByLabelText(words.nameIt.whyLabel), {
+      target: { value: 'Two hundred students post the night before.' },
+    })
+    await press(make)
+    await waitFor(() => expect(s.called('handProject')).toHaveLength(1))
+
+    const [[body, key]] = s.called('createProject') as [
+      [Schemas['CreateProjectRequest'], string],
+    ]
+    expect(body).toEqual({
+      slug: 'reading-responses',
+      name: 'Reading responses',
+      blueprint: 'node-ts-mongo@1',
+      starter: 'proof-app',
+      audience: {
+        scale: 'class',
+        burst: 'synchronised',
+        justification: 'Two hundred students post the night before.',
+      },
+    })
+    expect(key).toMatch(/^[0-9a-f-]{36}$/)
+    const project = [...s.projects.values()][0]!
+    const [[projectId, mint, mintKey]] = s.called('mintToken') as [
+      [string, Schemas['MintTokenRequest'], string],
+    ]
+    expect(projectId).toBe(project.id)
+    expect(mint.name).toBe('Building — First build')
+    expect([...mint.capabilities].sort()).toEqual(EIGHT)
+    expect(mint.expiresInDays).toBe(7)
+    expect(mintKey).not.toBe(key)
+    expect(s.called('handProject')).toEqual([
+      ['c-1', { projectId: project.id, token: 'mft_test_1' }],
+    ])
+    expect(s.called('endIntakeSession')).toEqual([[STARTED.session.id]])
+  })
+
+  it('a blueprint the agent never chose is the list’s first, from its skeleton; an empty why is not sent', async () => {
+    const s = stage()
+    await press(await readyToMake(s, { blueprint: null }))
+    await waitFor(() => expect(s.called('createProject')).toHaveLength(1))
+    const [[body]] = s.called('createProject') as [[Schemas['CreateProjectRequest']]]
+    expect(body.blueprint).toBe(BLUEPRINT.ref)
+    expect('starter' in body).toBe(false)
+    expect(body.audience).toEqual({ scale: 'class', burst: 'synchronised' })
+  })
+
+  it('Review Focus 4: a double press sends one Idempotency-Key, and makes one project and one token', async () => {
+    const s = stage()
+    const make = await readyToMake(s)
+    await act(async () => {
+      fireEvent.click(make)
+      fireEvent.click(make)
+    })
+    await waitFor(() => expect(s.called('handProject')).toHaveLength(1))
+    const keys = new Set(s.called('createProject').map((c) => c[1]))
+    expect(keys.size).toBe(1)
+    expect(s.projects.size).toBe(1)
+    expect(s.called('mintToken')).toHaveLength(1)
+  })
+
+  it('Review Focus 4: a create that landed but never answered is tried again with the same key, and answered, not repeated', async () => {
+    const s = stage({
+      create: (n) =>
+        n === 1 ? { landed: true, error: new TypeError('Failed to fetch') } : undefined,
+    })
+    await press(await readyToMake(s))
+    const notice = await screen.findByRole('alert')
+    expect(within(notice).getByText(words.making.couldntMake)).toBeTruthy()
+    const reference = referenceIn(notice)
+    expect(reports).toContainEqual(
+      expect.objectContaining({
+        reference,
+        code: 'UNREACHABLE',
+        operation: 'createProject',
+      }),
+    )
+    expect(s.called('mintToken')).toEqual([])
+    await press(within(notice).getByRole('button', { name: words.describe.tryAgain }))
+    await waitFor(() => expect(s.called('handProject')).toHaveLength(1))
+    const [first, second] = s.called('createProject')
+    expect(second![1]).toBe(first![1])
+    expect(s.projects.size).toBe(1)
+  })
+
+  it('Review Focus 4: made, but the token did not mint, twice: said, with Start building, which mints with a new key and hands over', async () => {
+    const s = stage({
+      mint: (n) =>
+        n <= 2 ? new ManifestApiError(500, undefined, 'mintToken') : undefined,
+    })
+    await press(await readyToMake(s))
+    const notice = await screen.findByRole('alert')
+    expect(
+      within(notice).getByText(words.making.madeNotStarted('Reading responses')),
+    ).toBeTruthy()
+    expect(reports).toContainEqual(
+      expect.objectContaining({
+        reference: referenceIn(notice),
+        operation: 'mintToken',
+        status: 500,
+      }),
+    )
+    expect(s.called('mintToken')).toHaveLength(2)
+    expect(s.called('handProject')).toEqual([])
+    await press(within(notice).getByRole('button', { name: words.making.startBuilding }))
+    await waitFor(() => expect(s.called('handProject')).toHaveLength(1))
+    const keys = s.called('mintToken').map((c) => c[2])
+    expect(new Set(keys).size).toBe(3)
+    expect(s.called('createProject')).toHaveLength(1)
+    expect(s.called('handProject')[0]![1]).toMatchObject({ token: 'mft_test_3' })
+  })
+
+  it('Start building that fails again says so again, with a new reference', async () => {
+    const s = stage({
+      mint: (n) =>
+        n <= 4 ? new ManifestApiError(500, undefined, 'mintToken') : undefined,
+    })
+    await press(await readyToMake(s))
+    const first = await screen.findByRole('alert')
+    const before = referenceIn(first)
+    // Each start of work tries its mint twice by itself.
+    await press(within(first).getByRole('button', { name: words.making.startBuilding }))
+    await waitFor(() => expect(s.called('mintToken')).toHaveLength(4))
+    const again = await screen.findByRole('alert')
+    expect(
+      within(again).getByText(words.making.madeNotStarted('Reading responses')),
+    ).toBeTruthy()
+    await waitFor(() => expect(referenceIn(again)).not.toBe(before))
+    await press(within(again).getByRole('button', { name: words.making.startBuilding }))
+    await waitFor(() => expect(s.called('handProject')).toHaveLength(1))
+  })
+
+  it('our server refusing the token: the same, and Start building mints again', async () => {
+    const s = stage()
+    const hand = s.ours.handProject
+    let refusals = 1
+    s.ours.handProject = (...args) =>
+      refusals-- > 0
+        ? Promise.reject(new OurRefusal('TOKEN_NOT_FOR_PROJECT', 400))
+        : hand(...args)
+    await press(await readyToMake(s))
+    const notice = await screen.findByRole('alert')
+    expect(
+      within(notice).getByText(words.making.madeNotStarted('Reading responses')),
+    ).toBeTruthy()
+    expect(s.called('mintToken')).toHaveLength(1)
+    await press(within(notice).getByRole('button', { name: words.making.startBuilding }))
+    await waitFor(() => expect(s.called('mintToken')).toHaveLength(2))
+    expect(s.called('createProject')).toHaveLength(1)
+  })
+
+  it.each([
+    ['SLUG_TAKEN', 'a project already has this name'],
+    ['SLUG_RESERVED', 'chem is UBC’s course subject code for Chemistry'],
+    ['SLUG_INVALID', 'an address is lower case letters, digits and hyphens'],
+  ])(
+    '%s at create time (a race): back to Name it, the platform’s words under the address, nothing minted',
+    async (code, message) => {
+      const s = stage({
+        create: (n) =>
+          n === 1
+            ? {
+                landed: false,
+                error: new ManifestApiError(
+                  409,
+                  { error: { code, message } } as never,
+                  'x',
+                ),
+              }
+            : undefined,
+      })
+      await press(await readyToMake(s))
+      const address = (await screen.findByLabelText(
+        words.nameIt.addressLabel,
+      )) as HTMLInputElement
+      expect(address.value).toBe('reading-responses')
+      expect(screen.getByText(message)).toBeTruthy()
+      expect(s.called('mintToken')).toEqual([])
+      // A new address is a new request, with its own key.
+      fireEvent.change(address, { target: { value: 'reading-responses-2' } })
+      await waitFor(
+        () =>
+          expect(
+            (
+              screen.getByRole('button', {
+                name: words.nameIt.makeIt,
+              }) as HTMLButtonElement
+            ).disabled,
+          ).toBe(false),
+        { timeout: 2000 },
+      )
+      await press(screen.getByRole('button', { name: words.nameIt.makeIt }))
+      await waitFor(() => expect(s.called('createProject')).toHaveLength(2))
+      const [first, second] = s.called('createProject')
+      expect(second![1]).not.toBe(first![1])
+      expect((second![0] as { slug: string }).slug).toBe('reading-responses-2')
+    },
+  )
+
+  it('no blueprint to be had: said, reported as the list it could not read, and nothing made', async () => {
+    const s = stage()
+    s.platform.listBlueprints = () =>
+      Promise.reject(new ManifestApiError(500, undefined, 'listBlueprints'))
+    await press(await readyToMake(s, { blueprint: null }))
+    const notice = await screen.findByRole('alert')
+    expect(within(notice).getByText(words.making.couldntMake)).toBeTruthy()
+    expect(reports).toContainEqual(
+      expect.objectContaining({
+        reference: referenceIn(notice),
+        operation: 'listBlueprints',
+        status: 500,
+      }),
+    )
+    expect(s.called('createProject')).toEqual([])
+  })
+
+  it('signed out at create time: the signed-out notice, and nothing made', async () => {
+    const s = stage({
+      create: () => ({
+        landed: false,
+        error: new ManifestApiError(401, undefined, 'createProject'),
+      }),
+    })
+    await press(await readyToMake(s))
+    expect(await screen.findByText(words.expired.body)).toBeTruthy()
+    expect(s.called('mintToken')).toEqual([])
+  })
+
+  it('a reload after the project was made, before the handover: it carries on by itself, minting and handing over, never making another', async () => {
+    const s = stage()
+    rememberMadeProject('c-1', { id: 'p-made', name: 'Reading responses' })
+    await describeAndCarryOn(s)
+    s.state(
+      { state: 'naming' },
+      {
+        round: 1,
+        understood: UNDERSTOOD,
+        names: NAMES,
+        namesAsked: 1,
+        blueprint: CHOSEN,
+      },
+    )
+    await waitFor(() =>
+      expect(s.called('handProject')).toEqual([
+        ['c-1', { projectId: 'p-made', token: 'mft_test_1' }],
+      ]),
+    )
+    expect(s.called('createProject')).toEqual([])
+  })
+
+  it('handed over (making): three lines, each ticking on its real event from the project’s stream, and the stream closed once its replay is done', async () => {
+    const s = stage()
+    await describeAndCarryOn(s)
+    const project = {
+      id: '22222222-2222-4222-8222-000000000001',
+      name: 'Reading responses',
+      slug: 'reading-responses',
+      blueprint: 'node-ts-mongo@1',
+    }
+    s.state(
+      { state: 'making', projectId: project.id },
+      { round: 1, understood: UNDERSTOOD, project },
+    )
+    await waitFor(() => expect(s.called('watchProject')).toEqual([[project.id]]))
+    const watch = s.watches[0]!
+    const line = (text: string) => screen.getByText(text).closest('li')!.className
+    const yours = words.making.yours('Reading responses')
+    expect(line(yours)).toContain('mf-step--now')
+    act(() => watch.onEvent({ type: 'project.created' }))
+    expect(line(yours)).toContain('mf-step--done')
+    expect(line(words.making.startingPoint)).toContain('mf-step--now')
+    act(() => {
+      watch.onEvent({ type: 'repository.seeded' })
+      watch.onEvent({ type: 'spec.validated' })
+    })
+    for (const text of [yours, words.making.startingPoint, words.making.addresses])
+      expect(line(text)).toContain('mf-step--done')
+    expect(watch.closed).toBe(false)
+    await act(async () => watch.ready())
+    expect(watch.closed).toBe(true)
+    expect(machineryIn(text())).toEqual([])
   })
 })
 

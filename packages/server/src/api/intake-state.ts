@@ -1,6 +1,7 @@
 import type { Chosen } from '../agents/blueprint.js'
 import type { Named } from '../agents/naming.js'
 import type { Understood } from '../agents/understanding.js'
+import type { Made } from '../platform/project.js'
 import type { Store } from '../store/db.js'
 import type { Intake } from './progress.js'
 
@@ -16,6 +17,8 @@ export type Said =
   | { kind: 'skip' }
   | { kind: 'names'; names: Named['names']; taken: string[] }
   | { kind: 'blueprint'; chosen: Chosen }
+  /** The project Make it made, as its token's `getProject` answered (Task 8). */
+  | { kind: 'project'; project: Made }
 
 export const NOTHING_YET: Intake = {
   round: null,
@@ -25,6 +28,7 @@ export const NOTHING_YET: Intake = {
   names: null,
   namesAsked: 0,
   blueprint: null,
+  project: null,
 }
 
 /** The intake so far, folded from the conversation's messages, oldest first. */
@@ -48,6 +52,9 @@ export function intakeOf(store: Store, conversationId: string): Intake {
         break
       case 'blueprint':
         intake = { ...intake, blueprint: said.chosen }
+        break
+      case 'project':
+        intake = { ...intake, project: said.project }
         break
       case 'skip':
         break

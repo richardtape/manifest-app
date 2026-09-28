@@ -17,6 +17,7 @@ const NOTHING_YET = {
   names: null,
   namesAsked: 0,
   blueprint: null,
+  project: null,
 }
 
 /**

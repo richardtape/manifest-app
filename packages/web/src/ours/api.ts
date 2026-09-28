@@ -135,6 +135,11 @@ export interface Ours {
   intake(id: string, body: IntakeBody): Promise<void>
   names(id: string, taken: string[]): Promise<void>
   blueprint(id: string, blueprints: Schemas['BlueprintList']): Promise<void>
+  /**
+   * MAKE IT'S HANDOVER (Task 8): the project made and the conversation's token minted, both
+   * in the person's session, for our server to check and hold in memory.
+   */
+  handProject(id: string, made: { projectId: string; token: string }): Promise<void>
   events(id: string): StreamSource
 }
 
@@ -159,6 +164,12 @@ export function createOurs(): Ours {
     },
     blueprint: async (id, blueprints) => {
       await call('POST', at(id, '/blueprint'), { blueprints })
+    },
+    handProject: async (id, made) => {
+      await call('POST', at(id, '/project'), {
+        projectId: made.projectId,
+        token: made.token,
+      })
     },
     events: conversationEvents,
   }

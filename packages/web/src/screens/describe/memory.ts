@@ -21,3 +21,41 @@ export function recallIntakeSession(conversationId: string): string | undefined 
     return undefined
   }
 }
+
+/**
+ * THE PROJECT MAKE IT MADE, until our server has its token (F2 Task 8). A reload between the
+ * two carries on from the project, minting and handing over, and never makes another, whose
+ * address would be the person's own and taken.
+ */
+const MADE = (conversationId: string) => `manifest-app.made.${conversationId}`
+
+export type MadeProject = { id: string; name: string }
+
+export function rememberMadeProject(conversationId: string, made: MadeProject): void {
+  try {
+    sessionStorage.setItem(MADE(conversationId), JSON.stringify(made))
+  } catch {
+    // Not kept: a reload then shows Name it again.
+  }
+}
+
+export function recallMadeProject(conversationId: string): MadeProject | undefined {
+  try {
+    const kept = JSON.parse(
+      sessionStorage.getItem(MADE(conversationId)) ?? 'null',
+    ) as unknown
+    if (typeof kept !== 'object' || kept === null) return undefined
+    const { id, name } = kept as Record<string, unknown>
+    return typeof id === 'string' && typeof name === 'string' ? { id, name } : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function forgetMadeProject(conversationId: string): void {
+  try {
+    sessionStorage.removeItem(MADE(conversationId))
+  } catch {
+    // Nothing to forget.
+  }
+}

@@ -173,6 +173,19 @@ export const words = {
     /** Until F2's Task 8 builds it. Rich's (2026-09-27). */
     makingNext: 'Making it arrives next.',
   },
+  /**
+   * MOMENT 4'S END, MAKING IT (F2 Task 8): three lines, each ticking on its real event from
+   * the project's stream, and what is said when making it goes wrong. The walk-through's.
+   */
+  making: {
+    yours: (name: string) => `${name} is yours.`,
+    startingPoint: 'A starting point with CWL sign-in is in place.',
+    addresses: 'Its three addresses are ready.',
+    couldntMake: "We couldn't make it just now. Nothing was made. Try again.",
+    madeNotStarted: (name: string) =>
+      `${name} is made, but we couldn't start work on it. Nothing is lost.`,
+    startBuilding: 'Start building',
+  },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
   reference: {
     line: (reference: string) => `If you contact support, quote ${reference}.`,

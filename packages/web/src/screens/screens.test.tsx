@@ -48,6 +48,9 @@ function platform(
     endIntakeSession: (answers.endIntakeSession ?? never) as Platform['endIntakeSession'],
     checkSlug: (answers.checkSlug ?? never) as Platform['checkSlug'],
     listBlueprints: (answers.listBlueprints ?? never) as Platform['listBlueprints'],
+    createProject: (answers.createProject ?? never) as Platform['createProject'],
+    mintToken: (answers.mintToken ?? never) as Platform['mintToken'],
+    watchProject: () => ({ ready: never(), close: () => undefined }),
   }
 }
 

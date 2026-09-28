@@ -63,6 +63,7 @@ const NOTHING_YET: Intake = {
   names: null,
   namesAsked: 0,
   blueprint: null,
+  project: null,
 }
 const state = (
   patch: Partial<Conversation> = {},

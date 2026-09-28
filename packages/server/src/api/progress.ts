@@ -65,6 +65,8 @@ export interface Intake {
   /** Rounds of names asked for: at most two (Review Focus 3). */
   namesAsked: number
   blueprint: { blueprint: string; starter: string | null; why: string } | null
+  /** What *Make it* made (F2 Task 8), as the platform answered it: null until then. */
+  project: { id: string; name: string; slug: string; blueprint: string } | null
 }
 
 /** What each step is; the page words it (words.ts holds every sentence). */

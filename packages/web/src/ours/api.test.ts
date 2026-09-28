@@ -133,6 +133,21 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
     ])
   })
 
+  it('handProject sends the project and the conversation’s token, and nothing else (Task 8)', async () => {
+    const fetch = answer(204)
+    vi.stubGlobal('fetch', fetch)
+    await createOurs().handProject('c-1', {
+      projectId: '22222222-2222-4222-8222-222222222222',
+      token: 'mft_x',
+    })
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect([url, init.method, JSON.parse(String(init.body))]).toEqual([
+      '/api/conversations/c-1/project',
+      'POST',
+      { projectId: '22222222-2222-4222-8222-222222222222', token: 'mft_x' },
+    ])
+  })
+
   it.each([
     [
       'intake',

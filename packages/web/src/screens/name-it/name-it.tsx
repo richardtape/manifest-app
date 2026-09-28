@@ -9,11 +9,20 @@ import {
   type FieldMessage,
 } from '@manifest-app/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import type { Ours } from '../../ours/api.js'
+import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
+import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
-import { recallIntakeSession } from '../describe/memory.js'
+import {
+  forgetMadeProject,
+  recallIntakeSession,
+  recallMadeProject,
+  rememberMadeProject,
+  type MadeProject,
+} from '../describe/memory.js'
+import { MakingSteps } from '../making/making.js'
+import { SupportReference } from '../reference.js'
 import {
   addressOf,
   needAnotherRound,
@@ -30,6 +39,26 @@ const SETTLE_MS = 400
 
 type Scale = 'solo' | 'class' | 'large_course' | 'public'
 type Burst = 'steady' | 'synchronised'
+
+/**
+ * THE CONVERSATION'S TOKEN (walk-through moment 4; sitting 1's M1): everything building
+ * needs, and nothing a delegated token may never hold. Seven days, named after the
+ * conversation, so `AgentSession.via` names the thread.
+ */
+const CAPABILITIES: Schemas['MintTokenRequest']['capabilities'] = [
+  'project:read',
+  'source:write',
+  'secret:write',
+  'build:create',
+  'release:create',
+  'release:deploy',
+  'output:read',
+  'agent:session',
+]
+const SLUG_REFUSALS = new Set(['SLUG_TAKEN', 'SLUG_RESERVED', 'SLUG_INVALID'])
+
+/** A problem Make it met, with its reference (Decision 11), and the one way on. */
+type MakeNotice = { words: string; reference: string; then: 'make' | 'start' }
 
 /** The platform's own words, as FormField shows them (never rewritten), or ours for a free one. */
 function messageFor(check: Schemas['SlugCheck']): FieldMessage {
@@ -63,6 +92,7 @@ export function NameIt({
   working,
   suggest,
   notice,
+  expire,
   onTaken,
   onBlueprints,
 }: {
@@ -74,6 +104,8 @@ export function NameIt({
   /** False when the intake is paused or failed: no names are asked for. */
   suggest: boolean
   notice?: ReactNode
+  /** The session has ended: the shell says so. */
+  expire: () => void
   onTaken: (taken: string[]) => void
   onBlueprints: (blueprints: Schemas['BlueprintList']) => void
 }) {
@@ -88,7 +120,20 @@ export function NameIt({
   const [scale, setScale] = useState<Scale | undefined>(understood?.audience.scale)
   const [burst, setBurst] = useState<Burst | undefined>(understood?.audience.burst)
   const [why, setWhy] = useState('')
-  const [made, setMade] = useState(false)
+  /** Making it: from the press until our server holds the token. */
+  const [making, setMaking] = useState(false)
+  /** The project, once made: from then on, Make it is never pressed again. */
+  const [made, setMade] = useState<MadeProject | undefined>(() => recallMadeProject(id))
+  const [makeNotice, setMakeNotice] = useState<MakeNotice>()
+  /** The platform's own words for the address, when the create found it gone (a race). */
+  const [slugRefused, setSlugRefused] = useState<{
+    slug: string
+    message: FieldMessage
+  }>()
+  /** One Idempotency-Key per press, reused on its retry: while the request is the same. */
+  const pressKey = useRef<{ key: string; body: string } | undefined>(undefined)
+  const busy = useRef(false)
+  const listed = useRef<Schemas['BlueprintList'] | undefined>(undefined)
   const taken = useRef<string[]>([])
   const nameField = useRef<HTMLDivElement>(null)
 
@@ -104,10 +149,13 @@ export function NameIt({
       void platform
         .listBlueprints()
         .then((list) => {
+          listed.current = list
           onBlueprints(list)
           return ours.blueprint(id, list)
         })
         .catch(() => undefined)
+    // Made before a reload, and never handed over: carry on from the project.
+    if (made !== undefined) void startWork(made)
     // Once per arrival: what it asks for comes back on the stream.
   }, [])
 
@@ -180,17 +228,201 @@ export function NameIt({
     }
   }, [slug, needsCheck])
   const checked = needsCheck && check?.slug === slug ? check : undefined
+  const refusedHere =
+    slugRefused !== undefined && slugRefused.slug === slug
+      ? slugRefused.message
+      : undefined
   const addressFree = needsCheck ? checked?.available === true : suggested !== undefined
   const ready =
-    chosenName !== '' && addressFree && scale !== undefined && burst !== undefined
+    chosenName !== '' &&
+    addressFree &&
+    refusedHere === undefined &&
+    scale !== undefined &&
+    burst !== undefined
 
-  const make = () => {
-    setMade(true)
+  /** Said, with its reference, and reported (Decision 11). */
+  const said = (
+    text: string,
+    then: MakeNotice['then'],
+    problem: { code: string; operation: string; status?: number | null },
+  ) => {
+    const { status, ...rest } = problem
+    setMakeNotice({
+      words: text,
+      then,
+      reference: reportProblem({
+        ...rest,
+        ...(status === null || status === undefined ? {} : { status }),
+      }),
+    })
+  }
+
+  /**
+   * THE CONVERSATION'S TOKEN, MINTED AND HANDED OVER. A mint takes its own key every time (a
+   * repeated key is TOKEN_ALREADY_MINTED, and the secret is never answered again), and is
+   * tried once more by itself. A handover refused is not minted again: that is the person's.
+   */
+  async function startWork(project: MadeProject) {
+    setMakeNotice(undefined)
+    setMaking(true)
+    let failure: { code: string; operation: string; status: number | null } | undefined
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let minted: Schemas['MintedToken']
+      try {
+        minted = await platform.mintToken(
+          project.id,
+          {
+            name: `Building — ${conversation.title}`.slice(0, 64),
+            capabilities: CAPABILITIES,
+            expiresInDays: 7,
+          },
+          crypto.randomUUID(),
+        )
+      } catch (error) {
+        const refusal = refusalOf(error)
+        if (refusal.kind === 'signed-out') return expire()
+        failure = {
+          code: refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE',
+          operation: 'mintToken',
+          status: refusal.kind === 'refused' ? refusal.status : null,
+        }
+        continue
+      }
+      try {
+        await ours.handProject(id, { projectId: project.id, token: minted.secret })
+        // Ours now: the conversation's state moves on, on the stream.
+        forgetMadeProject(id)
+        return
+      } catch (error) {
+        const ourRefusal =
+          error instanceof OurRefusal ? error : new OurRefusal('UNEXPECTED', null)
+        if (ourRefusal.status === 401) return expire()
+        failure = {
+          code: ourRefusal.code,
+          operation: 'handProject',
+          status: ourRefusal.status,
+        }
+        break
+      }
+    }
+    setMaking(false)
+    said(words.making.madeNotStarted(project.name), 'start', failure!)
+  }
+
+  /** The blueprint the agent chose, or the list's first when it never answered (D3). */
+  const blueprintToUse = async (): Promise<{
+    blueprint: string
+    starter: string | null
+  }> => {
+    if (intake.blueprint !== null) return intake.blueprint
+    const list = listed.current ?? (await platform.listBlueprints())
+    listed.current = list
+    const first = list[0]
+    if (first === undefined) throw new OurRefusal('NO_BLUEPRINT', null)
+    return { blueprint: first.ref, starter: null }
+  }
+
+  /** MAKE IT (walk-through moment 4), in the person's session: the project, then its token. */
+  const make = async () => {
+    if (busy.current || slug === undefined) return
+    busy.current = true
+    setMakeNotice(undefined)
+    setMaking(true)
     // Only the browser can end the intake session (sitting 1): it is over once they say.
     const session = recallIntakeSession(id)
     if (session !== undefined)
       void platform.endIntakeSession(session, crypto.randomUUID()).catch(() => undefined)
+    try {
+      let created: Schemas['CreatedProject']
+      let operation = 'listBlueprints'
+      try {
+        const chosen = await blueprintToUse()
+        operation = 'createProject'
+        const justification = why.trim()
+        const body: Schemas['CreateProjectRequest'] = {
+          slug,
+          name: chosenName,
+          blueprint: chosen.blueprint,
+          ...(chosen.starter === null ? {} : { starter: chosen.starter }),
+          audience: {
+            scale: scale!,
+            burst: burst!,
+            ...(justification === '' ? {} : { justification }),
+          },
+        }
+        const fingerprint = JSON.stringify(body)
+        if (pressKey.current?.body !== fingerprint)
+          pressKey.current = { key: crypto.randomUUID(), body: fingerprint }
+        created = await platform.createProject(body, pressKey.current.key)
+      } catch (error) {
+        setMaking(false)
+        if (error instanceof OurRefusal)
+          return said(words.making.couldntMake, 'make', { code: error.code, operation })
+        const refusal = refusalOf(error)
+        if (refusal.kind === 'signed-out') return expire()
+        const envelope = (
+          error as { envelope?: { error?: { message?: string; hint?: string } } }
+        ).envelope?.error
+        if (refusal.kind === 'refused' && SLUG_REFUSALS.has(refusal.code)) {
+          // The platform's own words about the address, as FormField shows them.
+          setSlugRefused({
+            slug,
+            message: {
+              tone: 'attention',
+              title: envelope?.message ?? slug,
+              ...(envelope?.hint === undefined ? {} : { body: envelope.hint }),
+            },
+          })
+          setChanging(true)
+          return
+        }
+        return said(words.making.couldntMake, 'make', {
+          code: refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE',
+          operation,
+          status: refusal.kind === 'refused' ? refusal.status : null,
+        })
+      }
+      const project = { id: created.id, name: created.name }
+      rememberMadeProject(id, project)
+      setMade(project)
+      await startWork(project)
+    } finally {
+      busy.current = false
+    }
   }
+
+  const makeNoticeCard =
+    makeNotice === undefined ? undefined : (
+      <div role="alert">
+        <Card tone="attention">
+          <p className="body-lead">{makeNotice.words}</p>
+          <SupportReference reference={makeNotice.reference} />
+          <div className="describe__actions">
+            {makeNotice.then === 'start' && made !== undefined ? (
+              <Button kind="primary" onClick={() => void startWork(made)}>
+                {words.making.startBuilding}
+              </Button>
+            ) : (
+              <Button kind="secondary" onClick={() => void make()}>
+                {words.describe.tryAgain}
+              </Button>
+            )}
+          </div>
+        </Card>
+      </div>
+    )
+
+  // MADE, OR BEING MADE: the three lines, and nothing to press but what the notice offers.
+  if (making || made !== undefined)
+    return (
+      <div className="making">
+        <h1 className="page-title">{made?.name ?? chosenName}</h1>
+        {makeNoticeCard}
+        {makeNotice === undefined ? (
+          <MakingSteps name={made?.name ?? chosenName} seen={new Set()} />
+        ) : null}
+      </div>
+    )
 
   const cannot = understood?.cannot ?? []
   const isWorking = (key: StepKey) => working.includes(key)
@@ -275,7 +507,11 @@ export function NameIt({
             mono
             value={slug ?? ''}
             onChange={(e) => setEdited(e.target.value)}
-            {...(checked !== undefined ? { message: messageFor(checked) } : {})}
+            {...(refusedHere !== undefined
+              ? { message: refusedHere }
+              : checked !== undefined
+                ? { message: messageFor(checked) }
+                : {})}
           />
         ) : null}
       </section>
@@ -325,17 +561,12 @@ export function NameIt({
       </Card>
       <p className="name-it__footer">{words.nameIt.footer}</p>
 
-      {made ? (
-        <p className="body-lead" role="status">
-          {words.nameIt.makingNext}
-        </p>
-      ) : (
-        <div>
-          <Button kind="primary" disabled={!ready} onClick={make}>
-            {words.nameIt.makeIt}
-          </Button>
-        </div>
-      )}
+      {makeNoticeCard}
+      <div>
+        <Button kind="primary" disabled={!ready} onClick={() => void make()}>
+          {words.nameIt.makeIt}
+        </Button>
+      </div>
     </div>
   )
 }

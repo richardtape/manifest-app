@@ -8,6 +8,7 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { navigate } from '../../router.js'
 import { words } from '../../words.js'
+import { Making } from '../making/making.js'
 import { NameIt } from '../name-it/name-it.js'
 import { SupportReference } from '../reference.js'
 import { rememberIntakeSession } from './memory.js'
@@ -296,6 +297,7 @@ export function Describing({
         working={view.steps.filter((s) => s.state === 'now').map((s) => s.step)}
         suggest={notice?.then !== 'naming' && !selfNamed.current}
         notice={noticeCard}
+        expire={expire}
         onTaken={(taken) => (lastTaken.current = taken)}
         onBlueprints={(list) => (blueprints.current = list)}
       />
@@ -325,6 +327,10 @@ export function Describing({
         }}
       />
     )
+
+  // Made, and its token ours: Making it's three lines (moment 4's end).
+  if (state === 'making' && intake?.project !== null && intake?.project !== undefined)
+    return <Making key={intake.project.id} platform={platform} project={intake.project} />
 
   if (state !== undefined && state !== 'describing')
     return <p className="body-lead">{words.nameIt.makingNext}</p>

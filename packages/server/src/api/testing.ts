@@ -26,7 +26,10 @@ export interface Seen {
   headers: IncomingHttpHeaders
 }
 
-export async function fakeControlPlane(): Promise<{
+/** What a test's control plane answers a path other than `/v1/me`: a status and a body. */
+export type Answer = (seen: Seen) => { status: number; body: unknown } | undefined
+
+export async function fakeControlPlane(answer?: Answer): Promise<{
   origin: string
   seen: Seen[]
   close: () => Promise<void>
@@ -37,6 +40,13 @@ export async function fakeControlPlane(): Promise<{
     const session = /manifest_session=([^;]+)/.exec(request.headers.cookie ?? '')?.[1]
     const person = session === undefined ? undefined : SESSIONS[session]
     response.setHeader('content-type', 'application/json')
+    const answered =
+      request.url === '/v1/me' ? undefined : answer?.(seen[seen.length - 1]!)
+    if (answered !== undefined) {
+      response.writeHead(answered.status)
+      response.end(answered.body === undefined ? '' : JSON.stringify(answered.body))
+      return
+    }
     if (request.url === '/v1/me' && person !== undefined) {
       response.writeHead(200)
       response.end(

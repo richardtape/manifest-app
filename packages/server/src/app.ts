@@ -5,10 +5,17 @@ import { registerConversations } from './api/conversations.js'
 import { createHub, registerEvents, type Hub } from './api/events.js'
 import { registerIntake } from './api/intake.js'
 import { registerProblems } from './api/problems.js'
+import { registerProject } from './api/project.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
 import { notAvailable, type Model } from './model/client.js'
 import { createIntakeKeys, type IntakeKeys } from './platform/intake.js'
+import {
+  createConversationTokens,
+  platformProjects,
+  type ConversationTokens,
+  type Projects,
+} from './platform/project.js'
 import type { Conversation, Store } from './store/db.js'
 
 /** Whatever serves the app: Vite's middlewares while we develop (main.ts). */
@@ -49,6 +56,8 @@ export function buildServer(
     heartbeatMs = 25_000,
     intakeModel = () => notAvailable,
     intakeKeys = createIntakeKeys(),
+    tokens = createConversationTokens(),
+    projects = platformProjects(config.platformOrigin),
   }: {
     store: Store
     hub?: Hub
@@ -57,6 +66,10 @@ export function buildServer(
     intakeModel?: (conversation: Conversation) => Model
     /** Where the handed-over intake keys are held, in memory only (Decision 1). */
     intakeKeys?: IntakeKeys
+    /** Each conversation's token, handed over at Make it: in memory only (Decision 1). */
+    tokens?: ConversationTokens
+    /** `getProject` with a conversation's token (Task 8). */
+    projects?: Projects
   },
 ): FastifyInstance {
   const app = Fastify({
@@ -88,6 +101,7 @@ export function buildServer(
   registerProblems(app, { config, store })
   registerEvents(app, { config, store, hub, heartbeatMs })
   registerIntake(app, { config, store, hub, intakeModel, intakeKeys })
+  registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to

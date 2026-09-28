@@ -1,4 +1,10 @@
-import { createManifestClient, unwrap, type Schemas } from '@manifest/contract'
+import {
+  createManifestClient,
+  subscribe,
+  unwrap,
+  type EventFrame,
+  type Schemas,
+} from '@manifest/contract'
 
 /**
  * THE ONE PLACE THE FRONT-END CALLS THE PLATFORM (Decision 3; the console's api.ts is the
@@ -33,6 +39,32 @@ export interface Platform {
   checkSlug(slug: string): Promise<Schemas['SlugCheck']>
   /** Moment 4: the blueprints, for the blueprint agent to choose from (D3). */
   listBlueprints(): Promise<Schemas['BlueprintList']>
+  /**
+   * MAKE IT (F2 Task 8), in the person's session: a delegated token cannot make a project
+   * (D24). One `Idempotency-Key` per press, reused on its retry, so a create that did land is
+   * answered and never repeated.
+   */
+  createProject(
+    body: Schemas['CreateProjectRequest'],
+    idempotencyKey: string,
+  ): Promise<Schemas['CreatedProject']>
+  /**
+   * The conversation's token, for our server (D4). Its secret is in this answer and nowhere
+   * else: a retry with the same key is `TOKEN_ALREADY_MINTED`, so each attempt takes its own.
+   */
+  mintToken(
+    projectId: string,
+    body: Schemas['MintTokenRequest'],
+    idempotencyKey: string,
+  ): Promise<Schemas['MintedToken']>
+  /**
+   * The project's event stream, for the seconds *Making it* shows (moment 4): each event of
+   * its replay, then `ready`. F3 owns the stream after. A browser subscribes with its cookie.
+   */
+  watchProject(
+    projectId: string,
+    onEvent: (event: EventFrame) => void,
+  ): { ready: Promise<void>; close(): void }
 }
 
 /** A read that has not answered by now is unreachable: never a page left blank (review #3). */
@@ -101,6 +133,38 @@ export function createPlatform(options: {
     },
     async listBlueprints() {
       return unwrap(await client.GET('/v1/blueprints'), 'listBlueprints')
+    },
+    async createProject(body, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/projects', {
+          params: { header: { 'Idempotency-Key': idempotencyKey } },
+          body,
+        }),
+        'createProject',
+      )
+    },
+    async mintToken(projectId, body, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/projects/{projectId}/tokens', {
+          params: {
+            path: { projectId },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+          body,
+        }),
+        'mintToken',
+      )
+    },
+    watchProject(projectId, onEvent) {
+      const subscription = subscribe({
+        origin: options.origin,
+        projectId,
+        ...(options.session === undefined ? {} : { session: options.session }),
+        onFrame: (frame) => {
+          if (frame.kind === 'event') onEvent(frame)
+        },
+      })
+      return { ready: subscription.ready, close: () => subscription.close() }
     },
   }
 }

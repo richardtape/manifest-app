@@ -137,6 +137,84 @@ describe('moments 3 and 4 (F2 Task 7), against manifest-mock', () => {
   })
 })
 
+describe('Make it (F2 Task 8), against manifest-mock', () => {
+  const REQUEST = {
+    slug: 'reading-responses',
+    name: 'Reading responses',
+    blueprint: 'node-ts-mongo@1',
+    audience: { scale: 'class' as const, burst: 'synchronised' as const },
+  }
+
+  it('createProject answers the project it made (the mock’s own, whatever is asked: M2)', async () => {
+    await withMock(async (origin) => {
+      const made = await platform(origin).createProject(REQUEST, 'make-0001')
+      expect(made.id).toBe(fixtures.PROJECT_ID)
+      expect(made.spec.valid).toBe(true)
+    })
+  })
+
+  it('mintToken answers the secret, once', async () => {
+    await withMock(async (origin) => {
+      const minted = await platform(origin).mintToken(
+        fixtures.PROJECT_ID,
+        {
+          name: 'Building — First build',
+          capabilities: ['project:read'],
+          expiresInDays: 7,
+        },
+        'mint-0001',
+      )
+      expect(minted.secret).toMatch(/^mft_/)
+    })
+  })
+
+  it('watchProject hands over the replay’s three creation events, in order, before it is ready', async () => {
+    await withMock(async (origin) => {
+      const types: string[] = []
+      const watch = platform(origin).watchProject(fixtures.PROJECT_ID, (event) =>
+        types.push(event.type),
+      )
+      await watch.ready
+      watch.close()
+      expect(types).toEqual(['project.created', 'repository.seeded', 'spec.validated'])
+    })
+  })
+
+  it('createProject and mintToken send the body and the Idempotency-Key they are given', async () => {
+    const seen: { url: string | undefined; key: string | undefined; body: unknown }[] = []
+    const server = createServer((request, response) => {
+      let text = ''
+      request.on('data', (chunk) => (text += chunk))
+      request.on('end', () => {
+        seen.push({
+          url: request.url,
+          key: request.headers['idempotency-key'] as string | undefined,
+          body: JSON.parse(text),
+        })
+        response.writeHead(500, { 'content-type': 'application/json' })
+        response.end(JSON.stringify({ error: { code: 'INTERNAL', message: 'x' } }))
+      })
+    })
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+    try {
+      await thrown(() => platform(origin).createProject(REQUEST, 'press-0001'))
+      const mint = {
+        name: 'Building — x',
+        capabilities: ['agent:session' as const],
+        expiresInDays: 7,
+      }
+      await thrown(() => platform(origin).mintToken('p-1', mint, 'mint-0002'))
+      expect(seen).toEqual([
+        { url: '/v1/projects', key: 'press-0001', body: REQUEST },
+        { url: '/v1/projects/p-1/tokens', key: 'mint-0002', body: mint },
+      ])
+    } finally {
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
+})
+
 describe('refusalOf: by kind and code, never by message', () => {
   it('a session-less read is signed-out', async () => {
     await withMock(async (origin) => {
