@@ -50,8 +50,8 @@ lands.
 |---|---|---|---|
 | 1 | 1 | **The measurements this plan rests on**. Throwaway code in the scratchpad; nothing committed but the findings. **Alone, and first** | **done 2026-09-27**: no Decision breaks; seven task details amended (*What executing this plan found*) |
 | 2 | 2, 3 | The workspace and its four gates; the design system's harness and the four components the slice needs | **done 2026-09-27**: 16/16 twice, four gates green; the plan's boundary regex fixed |
-| 3 | 4, 5 | One place that calls the platform; our server on 7105, with `/api/me` and the mock proxy | ← next |
-| 4 | 6, 7 | Sign-in, the shell, sign-out; *Your apps*, empty and with apps | |
+| 3 | 4, 5 | One place that calls the platform; our server on 7105, with `/api/me` and the mock proxy | **done 2026-09-27**: 47/47 twice, four gates green; FE-27 found, Task 7 amended |
+| 4 | 6, 7 | Sign-in, the shell, sign-out; *Your apps*, empty and with apps | ← next: **rule on Task 7's feed first** |
 | 5 | 8 | **The acceptance**: a headless check, and Rich clicking it. **Alone, and last** | |
 
 **Every sitting ends the same way:**
@@ -844,6 +844,25 @@ describe('an administrator’s list', () => {
       `getRelease` for each serving instance.
 
     That is **FE-10**'s N+1, accepted at pilot scale and named in a code comment citing FE-10.
+  - **Amended by sitting 3 (FE-27): rule on this before Step 1.** As fed above, the card cannot pass Task 8
+    against the mock.
+    - **The mock's `listInstances` answers the document's example for every environment.** It gives someone
+      else's `environmentId`, a *serving, healthy* instance on a release the fixtures do not have, and the same
+      for the sandbox and production.
+    - Its `getProject?expand=environments` is hand-written and consistent: sandbox `instance: null`, staging
+      healthy, production `null`.
+    - So production would read *"Answering"*, while Task 8 Step 3 expects *"For your students · Not live yet"*.
+    - **Recommended: feed every fact from `Environment.instance`.** The contract defines it as *"the instance the
+      hostname reaches (§6 Route). Null before any deploy"*, which is exactly what a student gets at that
+      address. Then `getRelease` for its date.
+      - F1's card then needs no `listInstances` at all. Its value is the *last attempt* (FE-13), and that
+        feeds F6's needs-you band, not F1's card.
+      - It is one read fewer per environment (FE-10), and it agrees with the mock.
+      - `studentsFact` then takes `Schemas['Instance'] | null`.
+      - `Platform.listInstances` loses its only caller, so remove it and its test (the console's rule: a helper
+        with no call site is not built).
+    - *Rejected:* keeping `listInstances`, and writing Task 8's expectation to what the mock says. That would
+      put an untrue sentence on the acceptance.
   - **Any read's `signed-out`** calls `expire()`.
   - **`unreachable`** shows Review Focus 2's words, with **[Try again]**.
 - [ ] **Step 5: `screens.test.tsx`, the machinery test (Decision 9).**
@@ -1182,6 +1201,93 @@ for `api.test.ts`.
   session header.
 - So a Task 4 test under jsdom would reach the mock without its cookie.
 - Task 6's screen tests opt in with `// @vitest-environment jsdom`, per file.
+
+**The machine at the close:**
+- nothing on 7102 or 7105;
+- manifest's working tree touched only by the platform session.
+
+### 2026-09-27 — Sitting 3 (Tasks 4 and 5): one place that calls the platform, and our server on 7105
+
+**Commits:**
+- `b045ca2`: `web/src/platform`;
+- `e4130e7`: `server`.
+
+Against manifest `3c38199` for the contract. The platform session committed `b3d22f4` (agent keys) in its own
+`packages/control-plane` during the sitting, and the contract's source did not change.
+
+**Task 4: one place that calls the platform.**
+- **Five reads:** `getMe`, `listProjects`, `getProject` (always `?expand=environments`), `listInstances` and
+  `getRelease`, each as the console's `unwrap(await client.GET(…), '<operationId>')`.
+- **`refusalOf`:**
+  - `signed-out` on **any** `401`;
+  - `unreachable` on `fetch`'s `TypeError`, or on the edge's empty `502`/`503`/`504` (M7's reading);
+  - otherwise `refused`, with the code and status and **never a message**;
+  - anything that is not the platform's error is `refused` with `UNEXPECTED`, never thrown.
+- 12 tests against an in-process mock, in `node`. Watched failing with no module.
+- **Defect in the mock, filed as FE-27, and Task 7 amended.**
+  - `listInstances` answers the document's example for every environment (someone else's `environmentId`, and a
+    serving instance on a release the fixtures lack).
+  - `getRelease` answers the fixture release for any id.
+  - Task 4's own case passes (one `serving: true`). Task 7's card, fed as written, would read production
+    *"Answering"* against the mock, while Task 8 expects *"Not live yet"*.
+  - The recommendation, for sitting 4 to rule on: feed the card from `Environment.instance`, *"the instance the
+    hostname reaches"*, and drop `listInstances` from F1.
+
+**Task 5: our server on 7105.**
+- **`whoIs`:**
+  - it replays `manifest_session` alone, and only `id` and `displayName` leave it;
+  - a `401`, no header, or an empty value is `undefined`, and in the last two cases it asks nobody;
+  - anything else rethrows as a new error with only the status and code.
+- **The fake control plane echoes the cookie in its `500`.** So a rethrow of the platform's own error carries the
+  session, and the test proves it.
+- **`app.ts`, by M4:**
+  - the factory sends `/api`, `/v1` and `/auth` to Fastify in both modes;
+  - `/api/me` answers `200 { id, displayName }`, `401 { error: { code: 'UNAUTHENTICATED' } }`, or
+    `502 { error: { code: 'PLATFORM_UNAVAILABLE' } }` (a ruling: the brief was silent);
+  - in mock mode `@fastify/http-proxy` carries `/v1` (WebSocket too) and `/auth` to the mock, and in edge mode
+    they are Fastify's `404`.
+- **Driven over real HTTP, not `inject`,** because `inject` enters Fastify's router and skips the factory, where
+  the rule lives.
+- **By hand**, with `pnpm mock` and `pnpm dev:mock`:
+  - `/api/me` → `401 {"error":{"code":"UNAUTHENTICATED"}}`;
+  - `/auth/login?returnTo=/` → `302`, back to `/`;
+  - `/api/me` → `200`, Instructor One, `id 11111111-…`, and `/v1/me` answers the same `id`;
+  - `/` → `404`, because there is no `index.html` until Task 6;
+  - a second server → `manifest-app could not listen on 7105: listen EADDRINUSE`, exit `1`.
+- **Deviations** (each a ruling in the ledger):
+  - `readConfig` refuses an unknown mode;
+  - `@manifest/mock` is linked into `server` for its tests;
+  - **`@fastify/static` is removed**: F1 serves the app through Vite only, and `Config` has no built mode.
+- **Install:** `pnpm install --offline` fails after any `package.json` edit (`ERR_PNPM_NO_OFFLINE_META`: pnpm
+  wants full metadata for `jsdom@29.1.1`, which the cache lacks). `--prefer-offline` fetched metadata only, no
+  tarballs.
+
+**Negative controls.** Each was red, then restored and green.
+
+| Control | Red |
+|---|---|
+| `refusalOf` puts `error.message` into `refused` | *Review Focus 4* and *5* (the keys) |
+| the gateway rule removed | the three `502`/`503`/`504` cases |
+| `whoIs` logs the cookie header (the plan's control) | *never writes the session anywhere* |
+| `whoIs` rethrows the platform's error | *a 500 rejects, and the error does not carry the session* |
+| `whoIs` replays the whole header | *replays manifest_session, and nothing else* |
+| `/v1` no longer Fastify's | mock mode's proxy case, and edge mode's `404` (the app saw it) |
+| the proxy registered in edge mode too | edge mode's `404` |
+| the proxy's `websocket: false` | *the event stream is proxied, and a frame arrives* |
+
+**Could not fail:** nothing this sitting.
+
+**Gates, from the root:**
+- `pnpm test` twice: 47/47 each time (`ui` 4, `web` 22, `server` 21);
+- `pnpm lint` 0 (after one `prefer-const` in `main.ts`, fixed);
+- `pnpm typecheck` 0;
+- `pnpm format:check` clean.
+
+**For sitting 4:**
+- **Rule on Task 7's feed first** (FE-27; the amendment in Task 7).
+- **`vite.config.ts` must carry the contract's alias.** `main.ts` hands Vite `packages/web` as its root, and
+  without `web/vite.config.ts` the page would load the contract's `dist/`.
+- **The HMR settings for edge mode** go in that file. `main.ts` passes only `hmr.server`, and Vite merges the two.
 
 **The machine at the close:**
 - nothing on 7102 or 7105;

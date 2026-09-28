@@ -561,6 +561,40 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
 - **When:** sittings 10–11, beside FE-18, which is the same subject: the platform's packages consumed from a
   sibling. F1 designs around both meanwhile.
 
+### FE-27 — `manifest-mock` answers `listInstances` and `getRelease` from the document's example, whatever is asked
+
+*Found by F1's sitting 3 (Task 4), 2026-09-27, against manifest `3c38199`. Not yet carried to the platform
+session.*
+
+- **Screen and moment:** *Your apps* (moments 2 and 16), and anything else that reads what an address is running.
+- **What we would call:** `listInstances` on each of `mock-app`'s three environments, then `getRelease` for the
+  serving instance's `releaseId`.
+- **What is missing** (measured with `pnpm mock`):
+  - **`listInstances` answers the same document example for every environment.**
+    - It gives `environmentId df060503-…`, which is none of the three asked for.
+    - It gives two instances: a `failed` one, and a *serving, healthy* one on release `165db6ac-…`, which the
+      fixtures do not have.
+    - It answers the sandbox and production exactly as it answers staging.
+  - **`getProject?expand=environments` disagrees with it.** Its hand-written fixtures have the sandbox and
+    production at `instance: null`, and staging healthy on release `55555555-…`.
+  - **`getRelease` answers the fixture release for any id.** Asked for `165db6ac-…`, it answers
+    `id: 55555555-…`, so a client never learns it asked for the wrong one.
+- **Why it matters:** a front-end that reads what an address is running from `listInstances` (as the walk-through's
+  moment 16 does, for the last attempt: FE-13) tells the person their app is *answering students* when, by the
+  mock's own project, it is not live. A test against the mock then asserts something false, or a screen is
+  designed around the mock rather than the contract.
+- **Options:**
+  - **(a) Recommended:** `listInstances` answers from the fixtures, per environment: staging's `INSTANCE`
+    serving, and the sandbox and production empty. `getRelease` answers `404` for an id it does not have.
+    Both as `getProject` already does.
+  - (b) At least: the example's `environmentId` is the one asked for, so a client can see the answer is not
+    about its environment.
+- **When:** with FE-26, in sittings 10–11.
+  - **F1 is not held up by it, and needs no workaround.** Its card has no use for the last attempt, and the
+    contract gives it the exact value it needs: `Environment.instance`, *"the instance the hostname reaches"*
+    (F1 Task 7, amended).
+  - F6's needs-you band, which reads the last attempt, meets this finding head on.
+
 ---
 
 ## Not a gap: decisions that are Rich's
