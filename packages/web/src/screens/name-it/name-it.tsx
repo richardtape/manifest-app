@@ -10,6 +10,7 @@ import {
 } from '@manifest-app/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
+import type { Step } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
@@ -76,6 +77,7 @@ export function NameIt({
   conversation,
   intake,
   working,
+  naming,
   suggest,
   notice,
   expire,
@@ -87,6 +89,8 @@ export function NameIt({
   conversation: Conversation
   intake: Intake
   working: StepKey[]
+  /** The naming step at its latest: a new object with each of its frames, whatever its state. */
+  naming?: Step | undefined
   /** False when the intake is paused or failed: no names are asked for. */
   suggest: boolean
   notice?: ReactNode
@@ -120,30 +124,66 @@ export function NameIt({
   const pressKey = useRef<{ key: string; body: string } | undefined>(undefined)
   const busy = useRef(false)
   const listed = useRef<Schemas['BlueprintList'] | undefined>(undefined)
+  const [list, setList] = useState<Schemas['BlueprintList']>()
   const taken = useRef<string[]>([])
   const nameField = useRef<HTMLDivElement>(null)
 
-  // ON ARRIVAL, ONCE: names, if we may suggest them, and the blueprint, which the person
-  // never sees (D3: an agent chooses it; Task 8 makes the project with it).
+  /**
+   * WAITING FOR NAMES, AND ONLY WHILE SOMETHING IS ON ITS WAY (Review Focus 5, the final
+   * review): a request not yet begun on our server, the naming step at work, or names being
+   * checked. A restart, or a refusal, leaves none of the three, and Something else is offered.
+   */
+  const [asking, setAsking] = useState(
+    () => suggest && intake.names === null && intake.namesAsked === 0,
+  )
+  const [checking, setChecking] = useState(() => intake.names !== null)
+  const namingNow = working.includes('naming')
+  // Any frame of the naming step answers the request: now, done or halted. Each frame is a
+  // new object, so a quick model's now and done in one render still count (found by the walk:
+  // waiting on "now" alone, the blueprint was never asked).
+  useEffect(() => {
+    if (naming !== undefined) setAsking(false)
+  }, [naming])
+  const waitingForNames = namingNow || asking || checking
+  const askNames = (slugs: string[], otherwise: () => void) => {
+    setAsking(true)
+    void ours.names(id, slugs).catch(() => {
+      setAsking(false)
+      otherwise()
+    })
+  }
+
+  // ON ARRIVAL, ONCE: names, if we may suggest them, and the blueprints to choose among,
+  // which the person never sees (D3: an agent chooses; Task 8 makes the project with it).
   const arrived = useRef(false)
   useEffect(() => {
     if (arrived.current) return
     arrived.current = true
-    if (suggest && intake.names === null && intake.namesAsked === 0)
-      void ours.names(id, []).catch(() => setOffers([]))
+    if (asking) askNames([], () => setOffers([]))
     if (intake.blueprint === null)
       void platform
         .listBlueprints()
-        .then((list) => {
-          listed.current = list
-          onBlueprints(list)
-          return ours.blueprint(id, list)
+        .then((blueprints) => {
+          listed.current = blueprints
+          onBlueprints(blueprints)
+          setList(blueprints)
         })
         .catch(() => undefined)
     // Made before a reload, and never handed over: carry on from the project.
     if (made !== undefined) void startWork(made)
     // Once per arrival: what it asks for comes back on the stream.
   }, [])
+
+  // THE BLUEPRINT, ONCE THE NAMES HAVE SETTLED: our server does one piece of work per
+  // conversation at a time, so asked beside the names it was refused as busy (the final
+  // review). Refused or not, Make it falls back to the list's first.
+  const blueprintAsked = useRef(false)
+  useEffect(() => {
+    if (list === undefined || waitingForNames || blueprintAsked.current) return
+    if (intake.blueprint !== null) return
+    blueprintAsked.current = true
+    void ours.blueprint(id, list).catch(() => undefined)
+  }, [list, waitingForNames])
 
   // EVERY SUGGESTION CHECKED BEFORE IT IS SHOWN. Keyed on the names themselves, not the
   // frame: a later frame (the blueprint) must not check them, or ask, again.
@@ -152,6 +192,7 @@ export function NameIt({
     const names = intake.names
     if (names === null) return
     let live = true
+    setChecking(true)
     void Promise.all(
       names.map(async (n): Promise<Offer> => {
         try {
@@ -166,13 +207,14 @@ export function NameIt({
       }),
     ).then((checked) => {
       if (!live) return
+      setChecking(false)
       if (needAnotherRound(checked) && intake.namesAsked < 2) {
         taken.current = [
           ...taken.current,
           ...checked.filter((o) => !o.available).map((o) => o.slug),
         ]
         onTaken(taken.current)
-        void ours.names(id, taken.current).catch(() => setOffers(offerable(checked)))
+        askNames(taken.current, () => setOffers(offerable(checked)))
         return
       }
       setOffers(offerable(checked))
@@ -182,8 +224,9 @@ export function NameIt({
     }
   }, [namesKey])
 
-  // Nothing to offer: Something else, alone, and focused (Review Focus 3).
-  const alone = offers !== undefined && offers.length === 0
+  // Nothing on its way and nothing offered: Something else, alone, and focused (Review Focus 3).
+  const shownOffers = offers ?? (waitingForNames ? undefined : [])
+  const alone = shownOffers !== undefined && shownOffers.length === 0
   useEffect(() => {
     if (alone) setChoice(ELSE)
   }, [alone])
@@ -436,7 +479,7 @@ export function NameIt({
         ) : (
           <h1 className="page-title">{words.nameIt.callTitle}</h1>
         )}
-        {isWorking('naming') || (suggest && offers === undefined) ? (
+        {isWorking('naming') || shownOffers === undefined ? (
           <div>
             <StateChip state="working" label={words.steps.naming} />
           </div>
@@ -452,7 +495,7 @@ export function NameIt({
               setChanging(false)
             }}
             options={[
-              ...(offers ?? []).map((o) => ({
+              ...(shownOffers ?? []).map((o) => ({
                 title: o.name,
                 note: addressOf(o.slug),
                 value: o.slug,

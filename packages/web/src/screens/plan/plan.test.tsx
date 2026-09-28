@@ -384,6 +384,90 @@ describe('the plan (moment 5)', () => {
   })
 })
 
+describe('the final review’s findings on the plan', () => {
+  it('Critical 1: a correction our server refused is tried again as a correction, never agreed', async () => {
+    const s = stage()
+    let refusals = 1
+    const correct = s.ours.correct
+    s.ours.correct = (...args) =>
+      refusals-- > 0
+        ? Promise.reject(new OurRefusal('UNREACHABLE', null))
+        : correct(...args)
+    await open(s)
+    s.state({ state: 'plan-ready' }, { version: 1, plan: PLAN })
+    await press(screen.getByRole('button', { name: words.plan.notQuite }))
+    fireEvent.change(screen.getByLabelText(words.plan.correctionLabel), {
+      target: { value: 'My TA should see everything too.' },
+    })
+    await press(screen.getByRole('button', { name: words.describe.carryOn }))
+    const notice = await screen.findByRole('alert')
+    expect(within(notice).getByText(words.plan.couldntWrite)).toBeTruthy()
+    await press(within(notice).getByRole('button', { name: words.describe.carryOn }))
+    expect(s.called('agree')).toEqual([])
+    expect(s.called('correct')).toEqual([['c-1', 'My TA should see everything too.']])
+  })
+
+  it('Important 4: only the questions the plan now asks are answered, whatever was typed for an earlier version', async () => {
+    const s = stage()
+    await open(s)
+    s.state({ state: 'plan-ready' }, { version: 1, plan: PLAN })
+    fireEvent.change(screen.getByLabelText(PLAN.onlyYouKnow[1]!.ask), {
+      target: { value: 'Yes' },
+    })
+    s.state(
+      { state: 'plan-ready' },
+      {
+        version: 2,
+        plan: { ...PLAN, onlyYouKnow: [PLAN.onlyYouKnow[0]!], changed: ['youSee'] },
+      },
+    )
+    fireEvent.change(screen.getByLabelText(PLAN.onlyYouKnow[0]!.ask), {
+      target: { value: 'It closes.' },
+    })
+    await press(screen.getByRole('button', { name: words.plan.yes }))
+    expect(s.called('agree')).toEqual([['c-1', { late: 'It closes.' }]])
+  })
+
+  it('Important 9: a token is renewed once per failure, not once per page: after a step is done, a later refusal renews again', async () => {
+    const s = stage()
+    await open(s)
+    s.state({ state: 'planning' })
+    s.say({ kind: 'step', step: 'reading', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'TOKEN_REFUSED', reference: '0000-00B1' })
+    await waitFor(() => expect(s.called('plan')).toHaveLength(1))
+    s.say({ kind: 'step', step: 'reading', state: 'now' })
+    s.say({ kind: 'step', step: 'reading', state: 'done' })
+    s.say({ kind: 'step', step: 'writing', state: 'now' })
+    s.say({ kind: 'step', step: 'writing', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'TOKEN_REFUSED', reference: '0000-00B2' })
+    await waitFor(() => expect(s.called('plan')).toHaveLength(2))
+    expect(s.called('mintToken')).toHaveLength(2)
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('Important 9: a step done long ago is not progress: two refusals with nothing done between them are said, never a loop of renewals', async () => {
+    const s = stage()
+    await open(s)
+    s.state({ state: 'planning' })
+    // The first plan was written: both steps are done on this connection.
+    s.say({ kind: 'step', step: 'reading', state: 'now' })
+    s.say({ kind: 'step', step: 'reading', state: 'done' })
+    s.say({ kind: 'step', step: 'writing', state: 'now' })
+    s.say({ kind: 'step', step: 'writing', state: 'done' })
+    // A correction's reading fails, is renewed, and fails again at once.
+    s.say({ kind: 'step', step: 'reading', state: 'now' })
+    s.say({ kind: 'step', step: 'reading', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'TOKEN_REFUSED', reference: '0000-00B3' })
+    await waitFor(() => expect(s.called('plan')).toHaveLength(1))
+    s.say({ kind: 'step', step: 'reading', state: 'now' })
+    s.say({ kind: 'step', step: 'reading', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'TOKEN_REFUSED', reference: '0000-00B4' })
+    const notice = await screen.findByRole('alert')
+    expect(within(notice).getByText(words.plan.couldntWrite)).toBeTruthy()
+    expect(s.called('mintToken')).toHaveLength(1)
+  })
+})
+
 describe('refusals while the plan is written (Rich’s words)', () => {
   async function refused(frame: Extract<Progress, { kind: 'refusal' }>) {
     const s = stage()

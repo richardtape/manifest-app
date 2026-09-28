@@ -566,16 +566,20 @@ describe('Name it (moment 4, before Make it)', () => {
     expect(notIt.getAttribute('href')).toBe('/new?from=c-1')
   })
 
-  it('asks for names and the blueprint once, on arrival, and shows only the names whose address is free, each with it in mono', async () => {
+  it('asks for names on arrival, and the blueprint once they have settled (our server does one piece of work at a time: the final review’s Important 6); shows only the names whose address is free, each with it in mono', async () => {
     const s = stage({ taken: ['weekly-responses'] })
     await naming(s)
     await waitFor(() => expect(s.called('names')).toEqual([['c-1', []]]))
-    await waitFor(() => expect(s.called('blueprint')).toEqual([['c-1', [BLUEPRINT]]]))
+    s.say({ kind: 'step', step: 'naming', state: 'now' })
+    await act(async () => undefined)
+    expect(s.called('blueprint')).toEqual([])
+    s.say({ kind: 'step', step: 'naming', state: 'done' })
     s.state(
       { state: 'naming' },
       { round: 1, understood: UNDERSTOOD, names: NAMES, namesAsked: 1 },
     )
     await waitFor(() => expect(screen.getByLabelText(/Reading responses/)).toBeTruthy())
+    await waitFor(() => expect(s.called('blueprint')).toEqual([['c-1', [BLUEPRINT]]]))
     expect(screen.queryByText('Weekly responses')).toBeNull()
     expect(screen.getByText('seminar-reading-log.manifest.internal')).toBeTruthy()
     expect(
@@ -597,6 +601,69 @@ describe('Name it (moment 4, before Make it)', () => {
     )
     expect(s.called('checkSlug')).toHaveLength(3)
     expect(s.called('names')).toHaveLength(1)
+  })
+
+  it('Important 6, found by the walk: a quick model’s naming frames arriving in one render still let the blueprint be asked', async () => {
+    const s = stage()
+    await naming(s)
+    await waitFor(() => expect(s.called('names')).toHaveLength(1))
+    // now, done and the names, delivered together, as a fast model's are.
+    act(() => {
+      const source = s.sources.at(-1)!
+      source.readyState = 1
+      for (const frame of [
+        { kind: 'step', step: 'naming', state: 'now' },
+        { kind: 'step', step: 'naming', state: 'done' },
+        {
+          kind: 'state',
+          conversation: { ...CONVERSATION, state: 'naming' },
+          intake: {
+            ...NOTHING_YET,
+            round: 1,
+            understood: UNDERSTOOD,
+            names: NAMES,
+            namesAsked: 1,
+          },
+          plan: null,
+        },
+      ])
+        source.onmessage?.(new MessageEvent('message', { data: JSON.stringify(frame) }))
+    })
+    await waitFor(() => expect(screen.getByLabelText(/Reading responses/)).toBeTruthy())
+    await waitFor(() => expect(s.called('blueprint')).toEqual([['c-1', [BLUEPRINT]]]))
+  })
+
+  it('Important 3: a restart while names are thought of never leaves "Thinking of names": Something else is offered', async () => {
+    const s = stage()
+    await naming(s)
+    await waitFor(() => expect(s.called('names')).toHaveLength(1))
+    s.say({ kind: 'step', step: 'naming', state: 'now' })
+    expect(screen.getByText(words.steps.naming)).toBeTruthy()
+    // Our server restarts; the browser reconnects by itself, and nothing is at work any more.
+    act(() => {
+      const source = s.sources.at(-1)!
+      source.readyState = 0
+      source.onerror?.(new Event('error'))
+    })
+    s.state({ state: 'naming' }, { round: 1, understood: UNDERSTOOD })
+    await waitFor(() => expect(screen.queryByText(words.steps.naming)).toBeNull())
+    expect(
+      (screen.getByLabelText(words.nameIt.somethingElse) as HTMLInputElement).checked,
+    ).toBe(true)
+  })
+
+  it('Important 3: names refused on the stream: said, and Something else is there to choose', async () => {
+    const s = stage()
+    await naming(s)
+    await waitFor(() => expect(s.called('names')).toHaveLength(1))
+    s.say({ kind: 'step', step: 'naming', state: 'now' })
+    s.say({ kind: 'step', step: 'naming', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'MODEL_UNREACHABLE', reference: '0000-00C1' })
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      words.describe.couldntRead,
+    )
+    await waitFor(() => expect(screen.queryByText(words.steps.naming)).toBeNull())
+    expect(screen.getByLabelText(words.nameIt.somethingElse)).toBeTruthy()
   })
 
   it('Review Focus 3: every suggestion taken asks once more, naming them; taken again, Something else alone, and focused', async () => {
@@ -1045,6 +1112,111 @@ describe('That’s not it (moment 4 → 3): their words back', () => {
         (screen.getByLabelText(words.describe.label) as HTMLTextAreaElement).value,
       ).toBe(WORDS),
     )
+  })
+})
+
+describe('the final review’s findings on moments 3 and 4', () => {
+  const limitAfterFirst = () => {
+    let starts = 0
+    return {
+      start: () =>
+        ++starts === 1
+          ? Promise.resolve(STARTED)
+          : Promise.reject(refused(409, 'INTAKE_DAILY_LIMIT_REACHED')),
+      starts: () => starts,
+    }
+  }
+  const skips = (s: ReturnType<typeof stage>) =>
+    s.called('intake').filter((c) => JSON.stringify(c[1]) === '{"skip":true}')
+
+  it('Important 5: the blueprint, refused for want of a key, renews nothing: the person never sees it (Make it falls back)', async () => {
+    const limit = limitAfterFirst()
+    const s = stage({ start: limit.start })
+    await describeAndCarryOn(s)
+    s.state(
+      { state: 'naming' },
+      { round: 1, understood: UNDERSTOOD, names: NAMES, namesAsked: 1 },
+    )
+    s.say({ kind: 'step', step: 'blueprint', state: 'now' })
+    s.say({ kind: 'step', step: 'blueprint', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'INTAKE_KEY_MISSING', reference: '0000-00D1' })
+    await act(async () => undefined)
+    expect(limit.starts()).toBe(1)
+    expect(skips(s)).toEqual([])
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('Important 5: a limit met while naming keeps Rich’s words, and never posts a skip from naming', async () => {
+    const limit = limitAfterFirst()
+    const s = stage({ start: limit.start })
+    await describeAndCarryOn(s)
+    s.state({ state: 'naming' }, { round: 1, understood: UNDERSTOOD })
+    s.say({ kind: 'step', step: 'naming', state: 'now' })
+    s.say({ kind: 'step', step: 'naming', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'INTAKE_KEY_MISSING', reference: '0000-00D2' })
+    const notice = await screen.findByRole('alert')
+    await waitFor(() => expect(limit.starts()).toBe(2))
+    expect(notice.textContent).toMatch(/as many new apps today as one person can/)
+    expect(skips(s)).toEqual([])
+    expect(screen.queryByText(words.refused.body)).toBeNull()
+  })
+
+  it('Important 9: a key is renewed once per failure: after a step is done, a later expiry renews again, without a word', async () => {
+    const s = stage()
+    await describeAndCarryOn(s)
+    s.state({})
+    s.say({ kind: 'step', step: 'understanding', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'INTAKE_KEY_MISSING', reference: '0000-00D3' })
+    await waitFor(() => expect(s.called('handIntakeKey')).toHaveLength(2))
+    s.say({ kind: 'step', step: 'understanding', state: 'now' })
+    s.say({ kind: 'step', step: 'understanding', state: 'done' })
+    s.state({ state: 'questions' }, { round: 1, understood: UNDERSTOOD })
+    s.say({ kind: 'step', step: 'understanding', state: 'halted' })
+    s.say({ kind: 'refusal', code: 'INTAKE_KEY_EXPIRED', reference: '0000-00D4' })
+    await waitFor(() => expect(s.called('handIntakeKey')).toHaveLength(3))
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('Important 8: Start something new, from a conversation, starts clean: no words, no notice, names suggested again', async () => {
+    const s = stage()
+    await describeAndCarryOn(s)
+    s.state({})
+    s.say({ kind: 'refusal', code: 'MODEL_UNREACHABLE', reference: '0000-00D5' })
+    await act(async () => {
+      fireEvent.click(
+        await screen.findByRole('button', { name: words.describe.nameItYourself }),
+      )
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: words.shell.startNew }))
+    })
+    expect(window.location.pathname).toBe('/new')
+    expect(
+      (screen.getByLabelText(words.describe.label) as HTMLTextAreaElement).value,
+    ).toBe('')
+    expect(screen.queryByRole('alert')).toBeNull()
+    // The next conversation is suggested names: "Name it yourself" was the last one's.
+    s.ours.startConversation = (description) =>
+      Promise.resolve({ ...CONVERSATION, id: 'c-2', description })
+    fireEvent.change(screen.getByLabelText(words.describe.label), {
+      target: { value: WORDS },
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: words.describe.carryOn }))
+    })
+    await waitFor(() => expect(window.location.pathname).toBe('/new/c-2'))
+    s.state({ id: 'c-2', state: 'naming' }, { round: 1, understood: UNDERSTOOD })
+    await waitFor(() => expect(s.called('names')).toContainEqual(['c-2', []]))
+  })
+
+  it('Important 10: a conversation that is not theirs, or not there, says so, never a blank page', async () => {
+    const s = stage()
+    s.ours.readConversation = () => Promise.reject(new OurRefusal('NOT_FOUND', 404))
+    window.history.pushState({}, '', '/new/c-gone')
+    render(<App platform={s.platform} ours={s.ours} />)
+    expect(await screen.findByText(words.notFound.body, { exact: false })).toBeTruthy()
+    const main = document.getElementById('main')!
+    expect(within(main).getByRole('link', { name: words.notFound.link })).toBeTruthy()
   })
 })
 

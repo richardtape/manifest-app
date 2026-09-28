@@ -163,6 +163,17 @@ describe('useConversation', () => {
     expect(sources).toHaveLength(1)
   })
 
+  it('Review Focus 5: when the browser reconnects by itself, its first frame starts the view again, so a step left working is gone (the final review)', () => {
+    const { result } = renderHook(() => useConversation('c-1', open))
+    last().send(state())
+    last().send({ kind: 'step', step: 'naming', state: 'now' })
+    // Our server restarts; Chrome retries the same EventSource itself (M5, direct).
+    last().fail(FakeSource.CONNECTING)
+    last().send(state({ state: 'naming' }))
+    expect(result.current.steps).toEqual([])
+    expect(result.current.status).toBe('live')
+  })
+
   it('a stream the browser gave up on (CLOSED, as the edge’s 502 leaves it) is reopened, after a growing wait', () => {
     vi.useFakeTimers()
     const { result } = renderHook(() => useConversation('c-1', open))

@@ -59,7 +59,8 @@ export function intakeOf(store: Store, conversationId: string): Intake {
         intake = {
           ...intake,
           answers: { ...intake.answers, ...said.answers },
-          skipped: [...intake.skipped, ...said.skipped],
+          // A round posted again after a failure skips the same questions again: once each.
+          skipped: [...new Set([...intake.skipped, ...said.skipped])],
         }
         break
       case 'names':

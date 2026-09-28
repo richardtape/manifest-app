@@ -9,6 +9,7 @@ import { scripted } from '../model/scripted.js'
 import { openStore, type Conversation, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
 import { createHub, type Hub } from './events.js'
+import { intakeOf } from './intake-state.js'
 import type { Progress } from './progress.js'
 import { ALICE, AS_ALICE, AS_BOB, fakeControlPlane } from './testing.js'
 
@@ -470,5 +471,22 @@ describe('who, and from where', () => {
       ALICE.id,
     )
     expect(unchanged?.state).toBe('describing')
+  })
+})
+
+describe('the intake folded from what was said (the final review)', () => {
+  it('a round of answers posted again after a failure never counts a skipped question twice', async () => {
+    const s = await setUp(undefined)
+    const said = {
+      kind: 'answers',
+      round: 1,
+      answers: { 'Can a student change a response after posting it?': 'No' },
+      skipped: ['Should a TA see everything you see?'],
+    }
+    s.store.addMessage(s.conversation.id, 'person', said)
+    s.store.addMessage(s.conversation.id, 'person', said)
+    expect(intakeOf(s.store, s.conversation.id).skipped).toEqual([
+      'Should a TA see everything you see?',
+    ])
   })
 })

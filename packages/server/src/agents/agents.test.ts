@@ -49,6 +49,22 @@ describe('understand (moment 3)', () => {
     expect(messages[1]!.content).toContain(WORDS)
   })
 
+  it('round 2 may guess the audience from their answers too: they are their words (the final review)', async () => {
+    const guessed = {
+      ...UNDERSTOOD,
+      questions: [],
+      audience: { scale: 'class', burst: 'synchronised', from: 'about 40 of them' },
+    }
+    const model = scripted({ understanding: [guessed] })
+    const answer = await understand(
+      model,
+      WORDS,
+      { 'How many students will use it?': 'About 40 of them.' },
+      2,
+    )
+    expect(answer.audience.from).toBe('about 40 of them')
+  })
+
   it('round 2 reads each question with its answer', async () => {
     const model = scripted({ understanding: [{ ...UNDERSTOOD, questions: [] }] })
     await understand(

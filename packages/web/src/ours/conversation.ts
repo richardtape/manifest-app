@@ -111,6 +111,10 @@ export function useConversation(
       source.onerror = () => {
         if (!live || current !== source) return
         setView((v) => ({ ...v, status: 'connecting' }))
+        // Whoever reconnects, the browser by itself or the page below, the next frame is a
+        // new connection's first: the whole state, which starts the view again (the final
+        // review: a step left "now" by a restart must not outlive it).
+        first = true
         if (source.readyState !== CLOSED) return
         source.close()
         const wait = WAITS[Math.min(failures, WAITS.length - 1)]

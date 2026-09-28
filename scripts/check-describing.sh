@@ -230,10 +230,12 @@ DUMP=$(node -e "
   const tables = db.prepare(\"select name from sqlite_master where type = 'table'\").all()
   console.log(tables.map(({ name }) => JSON.stringify(db.prepare('select * from \"' + name + '\"').all())).join('\n'))
 " "$DB" 2> /dev/null)
-if [ -n "$DUMP" ] && ! printf '%s' "$DUMP" | grep -Eq 'mft_|sk-'; then
+# Where a key can begin, never inside a word: "risk-free" and "task-based" are words (the final review).
+KEYS='(^|[^A-Za-z0-9_])(mft_|sk-)'
+if [ -n "$DUMP" ] && ! printf '%s' "$DUMP" | grep -Eq "$KEYS"; then
   ok 9 "no mft_ and no sk- in any table ($(printf '%s' "$DUMP" | wc -c | tr -d ' ') bytes read)"
 else
-  no 9 "no credential kept" "found $(printf '%s' "$DUMP" | grep -Eo '(mft_|sk-)[A-Za-z0-9_-]{0,12}' | head -3 | tr '\n' ' ')"
+  no 9 "no credential kept" "found $(printf '%s' "$DUMP" | grep -Eo "$KEYS[A-Za-z0-9_-]{0,12}" | head -3 | tr '\n' ' ')"
 fi
 
 echo "$passed passed, $failed failed"

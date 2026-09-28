@@ -22,14 +22,19 @@ const ROWS: PlanRow[] = ['studentsSee', 'youSee', 'itKeeps', 'whoGetsIn', 'ai']
 /** Our server has no token, or the platform refused it: a new one, once, without a word. */
 const RENEW = new Set(['TOKEN_MISSING', 'TOKEN_REFUSED'])
 
-/** A problem shown, with its reference (Decision 11), and the one way on. */
+/**
+ * A problem shown, with its reference (Decision 11), and the one way on: `retry` is the very
+ * thing that failed, never whatever the state suggests (the final review: a failed correction's
+ * Carry on once agreed the uncorrected plan).
+ */
 type Notice = {
   words: string
   reference: string
   tone: 'attention' | 'waiting'
   button: 'carryOn' | 'tryAgain'
+  retry: () => void
 }
-type Said = Omit<Notice, 'reference'>
+type Said = Omit<Notice, 'reference' | 'retry'>
 
 const COULDNT_WRITE: Said = {
   words: words.plan.couldntWrite,
@@ -130,10 +135,18 @@ export function PlanScreen({
   const renewed = useRef(false)
   /** The refusal already on the stream when this screen came: another moment's. */
   const before = useRef(refusal)
+  const doneBefore = useRef(new Set<string>())
 
-  // A press is over once a step begins, ends or halts: from then on, the steps say.
+  // A press is over once a step begins, ends or halts: from then on, the steps say. A step
+  // newly done is progress, so a token may be renewed again for a later failure (the final
+  // review: once per failure, never once per page); a step done long ago is not.
   const stepsKey = steps.map((s) => `${s.step}:${s.state}`).join()
-  useEffect(() => setPressed(false), [stepsKey])
+  useEffect(() => {
+    setPressed(false)
+    const done = new Set(steps.filter((s) => s.state === 'done').map((s) => s.step))
+    if ([...done].some((key) => !doneBefore.current.has(key))) renewed.current = false
+    doneBefore.current = done
+  }, [stepsKey])
 
   const working = (key: StepKey) => steps.some((s) => s.step === key && s.state === 'now')
   const context: 'write' | 'agree' = state === 'plan-ready' ? 'agree' : 'write'
@@ -142,17 +155,24 @@ export function PlanScreen({
   const show = (
     said: Said,
     problem: { code: string; operation: string; status: number | null },
+    retry: () => void,
   ) => {
     setPressed(false)
     const { status, ...rest } = problem
     setNotice({
       ...said,
+      retry,
       reference: reportProblem(status === null ? rest : { ...rest, status }),
     })
   }
 
-  /** What our server or the platform refused, outside the stream. */
-  const failed = (error: unknown, operation: string, during: 'write' | 'agree') => {
+  /** What our server or the platform refused, outside the stream; `retry` does it again. */
+  const failed = (
+    error: unknown,
+    operation: string,
+    during: 'write' | 'agree',
+    retry: () => void,
+  ) => {
     let code: string
     let status: number | null
     if (error instanceof OurRefusal) {
@@ -167,12 +187,12 @@ export function PlanScreen({
     }
     const said =
       during === 'agree' ? COULDNT_SAVE : planRefused(code, undefined, now(), timeZone)
-    show(said, { code, operation, status })
+    show(said, { code, operation, status }, retry)
   }
 
   /** A new token for our server, then the same again: once. */
   const renewThen = async (
-    send: () => Promise<void>,
+    call: () => Promise<void>,
     operation: string,
     during: 'write' | 'agree',
   ) => {
@@ -182,12 +202,13 @@ export function PlanScreen({
       if (projectId === null) throw new OurRefusal('PROJECT_MISSING', null)
       await handOverToken(platform, ours, { id, title: conversation.title }, projectId)
       step = operation
-      await send()
+      await call()
     } catch (error) {
       failed(
         error,
         error instanceof OurRefusal && step === 'mintToken' ? 'handProject' : step,
         during,
+        () => void send(operation, call, during),
       )
     }
   }
@@ -205,18 +226,27 @@ export function PlanScreen({
     } catch (error) {
       if (error instanceof OurRefusal && RENEW.has(error.code) && !renewed.current)
         return renewThen(call, operation, during)
-      failed(error, operation, during)
+      failed(error, operation, during, () => void send(operation, call, during))
     }
   }
 
   const writeIt = () => void send('plan', () => ours.plan(id), 'write')
-  const agreeIt = () => {
-    const given = Object.fromEntries(
+  /**
+   * Their answers to what THIS plan asks, and nothing else: a correction can change the
+   * questions, and our server refuses an answer to one it never asked (the final review).
+   */
+  const given = () => {
+    const asked = new Set(plan?.plan.onlyYouKnow.map((q) => q.id) ?? [])
+    return Object.fromEntries(
       Object.entries(answers)
+        .filter(([question]) => asked.has(question))
         .map(([question, answer]) => [question, answer.trim()] as const)
         .filter(([, answer]) => answer !== ''),
     )
-    void send('agree', () => ours.agree(id, given), 'agree')
+  }
+  const agreeIt = () => {
+    const answered = given()
+    void send('agree', () => ours.agree(id, answered), 'agree')
   }
 
   // A REFUSAL ON THE STREAM: a token renewed once, without a word; anything else said, with the
@@ -225,8 +255,9 @@ export function PlanScreen({
     if (refusal === undefined || refusal === before.current) return
     setPressed(false)
     if (RENEW.has(refusal.code) && !renewed.current) {
+      const answered = given()
       void renewThen(
-        context === 'agree' ? () => ours.agree(id, answers) : () => ours.plan(id),
+        context === 'agree' ? () => ours.agree(id, answered) : () => ours.plan(id),
         context === 'agree' ? 'agree' : 'plan',
         context,
       )
@@ -236,7 +267,13 @@ export function PlanScreen({
       context === 'agree'
         ? COULDNT_SAVE
         : planRefused(refusal.code, refusal.allowance, now(), timeZone)
-    setNotice({ ...said, reference: refusal.reference })
+    // On the stream, what failed is the state's own work: agreeing, or writing (which carries
+    // on a correction our server already holds).
+    setNotice({
+      ...said,
+      reference: refusal.reference,
+      retry: context === 'agree' ? agreeIt : writeIt,
+    })
   }, [refusal])
 
   // Making it's replay done, or its stream never opened: on to the plan, once.
@@ -254,7 +291,7 @@ export function PlanScreen({
           <p className="body-lead">{notice.words}</p>
           <SupportReference reference={notice.reference} />
           <div className="describe__actions">
-            <Button kind="secondary" onClick={context === 'agree' ? agreeIt : writeIt}>
+            <Button kind="secondary" onClick={notice.retry}>
               {words.describe[notice.button]}
             </Button>
           </div>

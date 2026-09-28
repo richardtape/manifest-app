@@ -96,10 +96,8 @@ export function understand(
     { role: 'system', content: UNDERSTANDING_PROMPT },
     { role: 'user', content: user },
   ]
-  return model.complete(
-    'understanding',
-    Understanding,
-    messages,
-    checkedAgainst(description),
-  )
+  // Their words are what they wrote and, in round 2, what they answered: a guess may come
+  // from either (the final review).
+  const theirs = [description, ...asked.map(([, answer]) => answer)].join('\n')
+  return model.complete('understanding', Understanding, messages, checkedAgainst(theirs))
 }

@@ -6,7 +6,7 @@ import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import { useConversation } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import { navigate } from '../../router.js'
+import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { NameIt } from '../name-it/name-it.js'
 import { PlanScreen } from '../plan/plan.js'
@@ -81,6 +81,48 @@ export function Describing({
   const lastAnswers = useRef<Record<string, string> | undefined>(undefined)
   const lastTaken = useRef<string[]>([])
   const blueprints = useRef<Schemas['BlueprintList'] | undefined>(undefined)
+  /** Where the conversation is now, for work that finishes after a render has passed. */
+  const stateNow = useRef(state)
+  stateNow.current = state
+  /** No such conversation, or another person's (the final review): said, never a blank page. */
+  const [missing, setMissing] = useState(false)
+
+  // ANOTHER CONVERSATION, OR A NEW ONE AFTER IT, STARTS CLEAN (the final review): one
+  // component serves /new and /new/<id> so a press survives its id arriving, and nothing of
+  // the last conversation's may carry into the next: its words, its notice, "Name it
+  // yourself", a key renewed or handed over.
+  const previousId = useRef(id)
+  useEffect(() => {
+    const before = previousId.current
+    previousId.current = id
+    if (id !== undefined)
+      void ours.readConversation(id).catch((error: unknown) => {
+        if (!(error instanceof OurRefusal)) return
+        if (error.status === 401) expire()
+        else if (error.status === 404) setMissing(true)
+      })
+    if (before === undefined || before === id) return
+    setText('')
+    setNotice(undefined)
+    setPressedAt(undefined)
+    setMissing(false)
+    renewed.current = false
+    handed.current = false
+    selfNamed.current = false
+    lastAnswers.current = undefined
+    lastTaken.current = []
+    blueprints.current = undefined
+  }, [id])
+
+  // A step newly done is progress: a key may be renewed again for a later failure (the final
+  // review: once per failure, never once per page).
+  const doneBefore = useRef(new Set<string>())
+  const stepsKey = view.steps.map((s) => `${s.step}:${s.state}`).join()
+  useEffect(() => {
+    const done = new Set(view.steps.filter((s) => s.state === 'done').map((s) => s.step))
+    if ([...done].some((key) => !doneBefore.current.has(key))) renewed.current = false
+    doneBefore.current = done
+  }, [stepsKey])
 
   // "That's not it" brings their words back, to be changed (moment 4).
   useEffect(() => {
@@ -139,7 +181,11 @@ export function Describing({
     try {
       started = await platform.startIntakeSession(crypto.randomUUID())
     } catch (error) {
-      if (failed(error, 'startIntakeSession') === 'naming')
+      // On to Name it: unless it is there already, where a skip is refused (the final review).
+      if (
+        failed(error, 'startIntakeSession') === 'naming' &&
+        stateNow.current !== 'naming'
+      )
         await ours
           .intake(conversationId, { skip: true })
           .catch((e: unknown) => failed(e, 'intake'))
@@ -222,12 +268,15 @@ export function Describing({
     if (at !== undefined && at !== 'describing' && at !== 'questions' && at !== 'naming')
       return
     unpress()
+    // The blueprint, which the person never sees, renews nothing: Make it falls back to the
+    // list's first. Renewing for it could meet a limit, and say so, for nothing (the final
+    // review).
+    if (halted === 'blueprint') return
     if (RENEWABLE.has(refusal.code) && !renewed.current) {
       renewed.current = true
       void handOver(id).then((ok) => ok && redo(halted))
       return
     }
-    if (halted === 'blueprint') return
     if (refusal.code === 'MODEL_NOT_AVAILABLE') {
       setNotice({
         words: words.describe.waitingOnAdmin,
@@ -286,6 +335,13 @@ export function Describing({
       </div>
     )
 
+  if (missing && view.conversation === undefined)
+    return (
+      <p className="body-lead">
+        {words.notFound.body} <a {...linkTo('/')}>{words.notFound.link}</a>
+      </p>
+    )
+
   // Connecting to a conversation: nothing drawn, for the seconds it takes (no spinners).
   if (id !== undefined && view.conversation === undefined) return noticeCard ?? null
   const intake: Intake | undefined = view.intake
@@ -299,6 +355,7 @@ export function Describing({
         conversation={view.conversation}
         intake={intake}
         working={view.steps.filter((s) => s.state === 'now').map((s) => s.step)}
+        naming={view.steps.find((s) => s.step === 'naming')}
         suggest={notice?.then !== 'naming' && !selfNamed.current}
         notice={noticeCard}
         expire={expire}
