@@ -15,7 +15,7 @@ says which plan is current. This file states where things stand and the rules. I
     `instructor` at `https://app.manifest.internal`.
   - Its findings, sitting by sitting, are the record. Read them before touching what they touch.
 - **F2 is under way**, in [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  Sittings 1 and 2 are done (2026-09-27).
+  Sittings 1–3 are done (2026-09-27).
   - **Sitting 1** measured what the platform landed: intake sessions (FE-1) and agent sessions, with
     `spentUsd` (FE-23). No Decision broke, and Tasks 2–10 are amended to the contract, each marked *Amended by
     sitting 1*.
@@ -24,7 +24,10 @@ says which plan is current. This file states where things stand and the rules. I
     them.
   - **Sitting 2** built our server's storage and its own API: conversations, support references, and one
     progress stream per conversation, which the page reopens when the browser gives up.
-- **Next: F2's sitting 3**, Tasks 4 and 5: the model client, and the three intake agents against a scripted model.
+  - **Sitting 3** built a model client that takes only structured answers, and the three intake agents with
+    their routes, tested against a scripted model.
+- **Next: F2's sitting 4**, Tasks 6 and 7: the intake key handed to our server (and mock mode's scripted model),
+  and the *Describe* and *Name it* screens.
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
@@ -35,7 +38,9 @@ says which plan is current. This file states where things stand and the rules. I
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract
       with the page is `api/progress.ts`.
-  - **The gates:** `pnpm test` (213 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
+    - `model/` asks a model for structured output only; `agents/` are the intake agents, each a schema and a
+      prompt.
+  - **The gates:** `pnpm test` (300 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
     `scripts/check-slice.sh`.
 - **Findings not yet carried to the platform session** (Rich's to carry; none blocks its sitting 8):
   - FE-26: the mock accepts any session, and a token where only a session may go;

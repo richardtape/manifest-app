@@ -44,7 +44,7 @@ import it (Task 2).
 |---|---|---|---|
 | 1 | 1 | **The measurements**: what the platform has landed since F1; structured output through the local model; storage. **Alone, and first** | **done 2026-09-27.** No Decision breaks. Intake and agent sessions have both landed, and Tasks 2–10 are amended to the contract. Three proposed sentences wait on Rich |
 | 2 | 2, 3 | Storage and our API: conversations, the person, `Origin`, the progress stream | **done 2026-09-27.** Storage, the guard, conversations and support references; the progress stream, reopened by the page when the browser gives up. 213 tests |
-| 3 | 4, 5 | The model client; the three intake agents, tested against a scripted model | |
+| 3 | 4, 5 | The model client; the three intake agents, tested against a scripted model | **done 2026-09-27.** A client that takes only structured answers; the three agents, with checks after parsing ruled on from M3; `/intake`, `/names` and `/blueprint`, with the intake carried in the state frame. 300 tests |
 | 4 | 6, 7 | The intake adapter; the *Describe* and *Name it* screens and their components | |
 | 5 | 8, 9 | Making the project and handing over its tokens; the plan, corrected and agreed, committed as `docs/plan.md` | |
 | 6 | 10 | **The acceptance**: against the mock with a scripted model; against the real platform where sittings 7 and 10 have landed. **Alone, and last** | |
@@ -1146,8 +1146,10 @@ Rich's wording.
 - `889c6c4`: one progress stream per conversation;
 - `0222447`: a comment corrected by measurement (below).
 
-The contract and the mock were unchanged in manifest's working tree during the sitting. The platform session
-worked in `packages/control-plane` only.
+~~The contract and the mock were unchanged in manifest's working tree during the sitting.~~ *Corrected by
+sitting 3:* the platform committed `ce96baa` (archive and restore) at 20:52, during this sitting. It changed
+`openapi.json` (63 → 65 operations: `archiveProject`, `restoreProject`) and the mock's fixtures. It is additive:
+this sitting's gates ran after it, and passed.
 
 **Task 2: storage, the guard, conversations, and Decision 11's server half.**
 - **`store/`:** one SQLite file, `packages/server/.data/app.sqlite`, git-ignored.
@@ -1249,3 +1251,110 @@ worked in `packages/control-plane` only.
 - Task 5 carries M3's evidence and a proposed check after parsing, to rule on;
 - `zod` 3.25.76 arrives with Task 4, an install with the network allowed;
 - publish refusals with `publishRefusal`, never `hub.publish` directly, so each carries its reference.
+
+### 2026-09-27 — Sitting 3 (Tasks 4 and 5): the model client, and the three intake agents
+
+**Commits:**
+- `273fd92`: the model client;
+- `d8a9f02`: the three intake agents, and their routes.
+
+**The contract, against manifest `2ff30d0`:** 65 operations. Since sitting 2 it has gained archive and restore
+(F6's; see sitting 2's correction), and our typecheck and all 300 tests pass against it.
+
+**Task 4: a model client that only accepts structured answers.**
+- `zod` 3.25.76 is added to the server, pinned exactly, from the store. Nothing was downloaded.
+- **`complete(agent, schema, messages, check?)`:**
+  - one schema is the request (`z.toJSONSchema` as it is, `$schema` kept, `strict: true`) and the check;
+  - an optional check after parsing may refuse too;
+  - either kind of failure is retried once, then `MODEL_ANSWER_INVALID`;
+  - no reasoning setting of ours is sent.
+- **LiteLLM's refusals, mapped as the platform measured 1.98.0** (`ai/errors.ts`):
+
+  | The gateway answers | Our code |
+  |---|---|
+  | `429 budget_exceeded` | `MODEL_BUDGET_EXHAUSTED` |
+  | `401` (a key that has ended) | `MODEL_KEY_REFUSED`, **new** |
+  | `403`, and any other `4xx` | `MODEL_NOT_AVAILABLE` |
+  | `5xx`, any other `429`, a refused connection, or 60 s of silence | `MODEL_UNREACHABLE` |
+
+  An error carries a code and a status, never the key or the gateway's words.
+- **`scripted`** runs the same path from fixed answers, and records each prompt. **`notAvailable`** always
+  refuses.
+- **Rulings** (in the ledger): `MODEL_KEY_REFUSED`; the mapping; `check`; the 60 s deadline; `scripted`'s rules.
+
+**Task 5: the three intake agents, and their routes.**
+- **The agents:**
+  - `understand`: round 1 or 2, never 3, by type;
+  - `suggestNames`: the addresses found taken are named in its prompt;
+  - `chooseBlueprint`: one it was given, and a starter of its own.
+  - Every schema field is required, and `choices` is nullable rather than optional, for strict gateways.
+- **Checks after parsing, the plan's question for this sitting, ruled on from M3's real answers.** Each is
+  retried once, like a bad parse:
+  - a question is a question: it ends in `?`, with three words or more;
+  - choices are two to four, and distinct;
+  - the audience is guessed from the person's own words;
+  - names and addresses are distinct, and none is taken.
+  - **The restatement's meaning is not checked**: that would read intent out of free text (`agents.md` rule 3).
+    So an invented *"anonymously"* still passes. Only a better model fixes that: evidence for Rich's decision.
+- **The prompts** speak as *"we"*, forbid technical words, and pass F1's machinery list (imported from web: one
+  list).
+- **The routes** (`api/intake.ts`):
+  - `POST /intake`: read, answers, or skip;
+  - `POST /names`: two rounds at most, then `409 NAMES_EXHAUSTED`;
+  - `POST /blueprint`.
+  - Each answers `202`, works in the background, publishes a step (by its key: the page words it), then the
+    whole state.
+  - Or the step is halted, and a refusal is published with its reference, the conversation left where it was.
+  - One piece of work at a time (`409 CONVERSATION_BUSY`), and each route only in its state
+    (`409 CONVERSATION_STATE`).
+- **The state frame now carries `intake`**, folded from the stored messages, so a reconnect or a restart
+  rebuilds what moments 3 and 4 show. The page's hook keeps it. This changed Task 3's contract, as a ruling.
+- **Found and fixed in my own code before commit:**
+  - The busy check sat in an `async` function with nothing to await, so a second press could slip between the
+    check and the claim. It is now synchronous.
+  - A test of three simultaneous presses **could not fail** against the `async` version (three runs): each
+    press's guard finishes its platform call at its own moment. It holds *one winner*, and says it cannot show
+    the race.
+- **Live, on the running `dev:mock`** (whose intake model is *not available* until Task 6):
+  - `/intake` answered `202`;
+  - the stream showed the step halted, then `MODEL_NOT_AVAILABLE` with reference `33ED-CD94`;
+  - a skip moved the conversation to naming.
+
+**Negative controls.** Each was red, then restored and green.
+
+| Control | Red |
+|---|---|
+| a free-text JSON fallback (the first `{…}`) | the not-JSON case passed where it must fail |
+| the gateway's words in a `401`'s error | the key-never-leaks case |
+| *"container"* in a prompt | the prompts' case |
+| the guess-from-their-words check removed | 2: an empty guess, and invented words |
+| the invented-blueprint check removed | 1 |
+| the taken-address check removed | 1 |
+| the question check removed | 2: *"No"*, and *"Integration?"* |
+| round 2's answers asking a round 3 | *never a round 3* |
+| the busy check removed | the second press |
+| the names cap removed | `NAMES_EXHAUSTED` |
+| `round` typed as `number` | `typecheck`: an unused `@ts-expect-error` |
+
+**Could not fail:** three presses at once through `inject`, as above.
+
+**Gates, from the root:**
+- `pnpm test` twice: 300/300 each time (`ui` 14, `web` 121, `server` 165);
+- `pnpm lint` 0;
+- `pnpm typecheck` 0;
+- `pnpm format:check` clean;
+- `check-slice` 7 passed.
+
+**The machine at the close:**
+- the mock on 7102 and our server on 7105 in mock mode, for Rich;
+- the control plane stopped;
+- manifest's working tree touched only by the platform session.
+
+**For sitting 4 (Tasks 6 and 7):**
+- **Task 6 gives `intakeModel` its key.** The browser starts the intake session and hands the key over. Mock
+  mode gets a scripted model, so Rich can click moments 3 and 4 against the mock.
+- `MODEL_KEY_REFUSED` is the gateway's own *"this key has ended"*. For an intake key, the browser starts
+  another, as `INTAKE_KEY_EXPIRED` does.
+- **Task 7 words the step keys** (`understanding`, `naming`, `blueprint`) in `words.ts`. Only *"Reading it"*
+  is the walk-through's.
+- The three proposed sentences are still Rich's to agree.
