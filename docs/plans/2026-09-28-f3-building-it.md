@@ -6,8 +6,8 @@
 
 **Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
 sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
-whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1 and 2 are done (2026-09-28, in one session
-at Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 3 is next.**
+whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1–3 are done (2026-09-28, in one session at
+Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 4 is next.**
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
@@ -54,7 +54,7 @@ moment 6, which hands over to F4's *Seeing it*.
 |---|---|---|---|
 | 1 | 1 | **The measurements.** The capable model's structured answers; the mock's build and deploy answers; the platform's stream from a server; a round by hand on the real platform; the two frameworks' current documentation; the blueprint's sign-in code. **Alone, and first.** M3 and M4 need the control plane, which the platform's 9b has stopped: they wait for its *"CLOSED"* | **done 2026-09-28** (the dated entry below) |
 | 2 | 2, 3 | The runtime: agents, moves, the runner, its stop conditions, guards, the trace, saved runs. And the model client recording which model answered, and its usage | **done 2026-09-28**, in sitting 1's session at Rich's word (the dated entry below) |
-| 3 | 4, 5 | The platform calls, and the project's event stream | not started |
+| 3 | 4, 5 | The platform calls, and the project's event stream | **done 2026-09-28**, in the same session at Rich's word, beside the platform's sitting 10 (the dated entry below) |
 | 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | not started |
 | 5 | 8, 9 | The round of work, our API's building routes, the building frames, and the new tables | not started |
 | 6 | 10, 11 | The design system's additions, and the building screen, layout C | not started |
@@ -863,6 +863,22 @@ brief is `check: (input) => …` (the CWL specialist's emails).
   status, the sessions' ids and the model), `recordTrace` / `listTrace`, and `user_version` 2 with `building` and
   `built`. This task adds `questions`, as version 3.
 
+**What sitting 3 built that this task stands on:**
+- **`releases.deploy(token, projectId, releaseId)` and `instances.output(token, projectId, instanceId, lines)` take
+  the project**, not an environment id. They find its sandbox themselves, so nothing can name staging. `output`
+  refuses `SANDBOX_ONLY` an instance the sandbox does not list, and answers `{ unavailable: true }` for a failed one
+  (M4). `releases.sandbox()` still answers the draft address and the environment's id, for `instances.list` and
+  `incidents`.
+- `source.commit` throws `CommitRefused` (with `details`) for `SPEC_INVALID`, and `PlatformRefusal` for everything
+  else, `SOURCE_CONFLICT` included. It can record each call in a `sent` array. `source.file` answers
+  `{ unreadable }` for the four `SOURCE_*` refusals.
+- `secrets.setInSandbox` refuses `SECRET_INVALID` (a bad name, or a value under 6 characters) before anything is sent.
+  A project without a sandbox is `SANDBOX_MISSING`.
+- **`stream.watch(…).ready` rejects** when the stream is refused or closed before its first replay. `reconnected` is
+  said once a reconnection's replay is handed over. `refused` is said once.
+- `agentSessions.start(…, { capUsd: 2, durationMinutes: 240 })` answers `capUsd`; `agentSessions.list` answers each
+  session's `spentUsd`, `null` kept.
+
 **Interfaces:**
 
 ```ts
@@ -1355,3 +1371,79 @@ Task 8 now names the stop condition it must add (the runner never stops at the t
 **Gates:** `pnpm test` **580/580, twice** (547 + 20 runtime + 7 store + 6 model); `pnpm lint`, `pnpm typecheck` and
 `pnpm format:check` pass; `scripts/check-describing.sh` 18/18 against the migrated dev database, its no-credential
 scan now reading `runs` and `trace` too.
+
+### 2026-09-28 — Sitting 3 (Tasks 4 and 5): the platform calls, and the event stream
+
+*In the same session again, at Rich's word ("ok, start sitting 3 in parallel"), while the platform session
+(`manifest-82`) ran its sitting 10: the console, the mock, FE-24, FE-17 and FE-18. What was agreed with it:*
+- *it stops and truncates 7100 as it tests, since nothing of ours there must survive, and we tell it before we use
+  7100;*
+- *it messages us at the mock's commit, and we restart our mock between tasks;*
+- *it messages us at each contract commit;*
+- *we hold 7102 and 7105.*
+
+*Sitting 3 used neither 7100 nor the mock's new answers. Its tests run against our own fakes.*
+
+**Commits:** `90c9146` (Task 4), `b3d7efa` (Task 5).
+
+**What was built:**
+- **Task 4, each call asserted by what it SENT**, against the shapes M1 and M4 recorded:
+  - `source`: the tree's files, a file (with the four `SOURCE_*` reasons), and a commit that is dry-run first, with
+    two Idempotency-Keys. `SPEC_INVALID`'s details become `CommitRefused` (path, code and hint, never a message).
+    `SOURCE_CONFLICT` is thrown. Each call is recorded as it goes;
+  - `builds`: `start` always names the commit;
+  - `releases`: `deploy` finds the sandbox itself. Its deadline is 120 s, and every other call keeps 15 s, held by
+    a spy on `AbortSignal.timeout`;
+  - `instances`: `output` reads the sandbox's own instances only;
+  - `secrets`: the sandbox alone, with the name and value checked first;
+  - `members`: the instructor's PUID and email;
+  - `agentSessions`: the $2 cap and the 240 minutes, and each session's spend.
+  - F2's `commitPlan` now runs through `source.commit`. Its tests stand unchanged, and so does
+    `check-describing.sh` (18/18).
+- **Task 5:** the contract's `subscribe()`, wrapped:
+  - each event once;
+  - a drop reconnects after 200 ms, doubling to a 10 s cap and starting again at 200 ms once connected, and says so
+    after the replay;
+  - a `1006` is followed by a `GET`: `401` or `404` is refused once, and `426` reconnects;
+  - `close()` leaves no timer.
+  - One case runs the **real socket** against a hand-written upgrade: the token and no `Origin` sent, the replay
+    handed over, and a cut socket whose `GET` says `401` refused.
+
+**Rulings** (the ledger has each with its cost):
+1. **`deploy` and `output` take the project and find the sandbox themselves.** The brief had an environment id,
+   checked against a remembered `sandbox()` answer, which a restart would forget.
+2. `source.commit` takes an optional `sent` record.
+3. `start`'s options are optional, so F2 still sends `{ name }`.
+4. A long summary is cut, not refused.
+5. Three codes of our own: `SECRET_INVALID`, `SANDBOX_ONLY` and `SANDBOX_MISSING`.
+6. `tokenClient` and `called()` live in `refusal.ts`.
+7. `reconnected` is said after the replay, never at the connect.
+8. `ready` rejects when the stream is refused.
+9. `4403` and `4404` are refused without a `GET`; the waits and the memory are constants.
+10. The stream's tests script `subscribe()`, plus one real-socket case. The brief's *"as F2's proxy test does"*
+    named a test that does not exist in this repository.
+
+**Negative controls**, each red, then restored:
+- **Task 4:**
+  - the dry run skipped;
+  - `deploy` on 15 s;
+  - `deploy` taking the first environment;
+  - `output` reading any instance;
+  - `SPEC_INVALID` as a plain refusal;
+  - a file's refusal thrown;
+  - a secret unchecked;
+  - the tree keeping directories;
+  - the first member taken;
+  - the cap and clock not sent.
+- **Task 5:**
+  - dedupe off;
+  - no reconnect on `1011`;
+  - a reconnect after `GET` `401`;
+  - `close()` leaving its timer;
+  - `reconnected` never said;
+  - no cap on the wait;
+  - the wait never starting again;
+  - a `1006` never asked about.
+
+**Gates:** `pnpm test` **625/625, twice** (580 + 31 platform + 14 stream); `pnpm lint`, `pnpm typecheck` (against the
+platform's uncommitted sitting-10 tree) and `pnpm format:check` pass; `scripts/check-describing.sh` 18/18.
