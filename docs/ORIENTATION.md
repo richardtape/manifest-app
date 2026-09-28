@@ -4,7 +4,7 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F2 executed, and its deferred Minors ruled on)*:
+**Where things stand** *(2026-09-28, F2 executed, its deferred Minors ruled on, and the platform's 9a landed)*:
 - The faculty experience is designed moment by moment and **approved by Rich**
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
@@ -29,32 +29,31 @@ says which plan is current. This file states where things stand and the rules. I
     - the FE-20 check deferred, because a sign-in limited to a class is coming (Rich);
     - one carried into F3.
   - **For Rich to decide:** FE-31.
-- **The capable model is being built**: the platform's sitting 9a, which Rich started on 2026-09-28.
-  - **Rich chose `openai/gpt-6-luna`**, with `openai/gpt-6-sol` if that does not work. The platform's ruling:
-    one setting, `MANIFEST_CAPABLE_MODEL`, and moving to sol is a one-line change and a restart.
-  - **The logical name is `default-chat-large`** (predicted), at `max_classification` internal, whichever model
-    is behind it. Our plan agent then takes `MANIFEST_APP_PLAN_MODEL=default-chat-large`. Nothing in the contract
-    is predicted to move.
-  - **LiteLLM must start with the network on.** Its bundled offline price list has no gpt-6 model at all, so
-    after an offline start the platform refuses to register `default-chat-large` and writes an operator line.
-    Our agents would then have no capable model.
-  - **The platform session will message us** (`manifest-app-b0`) when 9a lands: the commit, the model name, and
-    what moved in the contract.
-- **Next: F3 (building it)**, to be written **once 9a has landed**. Do not start it before the platform session's
-  message. Then re-read `openapi.json`, re-run `pnpm typecheck`, and write F3 from what 9a actually built.
+- **The capable model has landed**: the platform's sitting 9a, close-out `9c54bc3` (2026-09-28), relayed by the
+  platform session.
+  - **Ask for `default-chat-large`**, at `max_classification` internal. It is `openai/gpt-6-luna` (Rich's).
+    **Read the names from `session.models`:** a `confidential` project never gets it.
+  - Our plan agent takes it with `MANIFEST_APP_PLAN_MODEL=default-chat-large`. It is not our default yet, because
+    a confidential project would then have no plan model: F3 decides how an agent chooses from `session.models`.
+  - **It needs the network until the platform's sitting 9b** (Spec action 8, Rich): when OpenAI fails, the
+    network off included, the same name answers from the on-premise model (`default-chat-onprem`), at its price.
+    Until then, offline, a call to it fails with LiteLLM's `500`.
+  - **The contract did not move**: 1.4.0, 66 operations. Our typecheck and 546 tests pass against it.
+- **Next: F3 (building it)**, being written from 2026-09-28, now that 9a has landed.
   - **F3 must draw `paused` and `failed`** (its *Stop*) on every screen that can meet them, each problem with its
     reference. The Describe screen's fallback shows neither today (a deferred Minor of F2's).
 - **The machine** *(2026-09-28)*:
-  - **the control plane on 7100 is stopped**, by the platform session for 9a, with Rich's word. Its first Vitest
-    run truncates the database, so **the F2 walk's projects are gone**. Bring the control plane back only per
-    manifest's RUNBOOK, after 9a, and ask Rich first;
+  - **the control plane running on 7100** (PID 85028), started by the platform session at 9a's close from Rich's
+    `.env`. Its boot line reads `"capableModel":"registered"`. The database was truncated, so the F2 walk's
+    projects are gone, and anyone signed in must sign in again. The platform's 9b will say before it stops it;
   - **our server on 7105 in mock mode**, switched for the Minors' walk. The platform's `make doctor` asks it
-    `/api/__doctor`, in either mode. To go back to the edge once the control plane runs: stop its whole process
-    tree, then `pnpm dev`;
+    `/api/__doctor`, in either mode (20 checks, 0 failed, with it up). To go back to the edge: stop its whole
+    process tree, then `pnpm dev`;
   - the mock on 7102.
   - To go back to the mock: stop our server's whole process tree, then `pnpm dev:mock`.
-- **The platform:** sittings 8 (archive and restore) and 9 (delete, `4738abb`) have landed, both F6's. 66
-  operations, 1.4.0. Our typecheck and tests pass against it.
+- **The platform:** sittings 8 (archive and restore), 9 (delete, `4738abb`) and 9a (the capable model, `9c54bc3`)
+  have landed. 66 operations, 1.4.0. Our typecheck and tests pass against it. Next there is 9b, the capable
+  model's fallback.
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
