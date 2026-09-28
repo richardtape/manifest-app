@@ -349,6 +349,13 @@ describe('the intake key (FE-1, as it landed)', () => {
     expect(intakeKeyFrom(handed, config)).toEqual({ refused: 'INTAKE_KEY_INVALID' })
   })
 
+  it('in mock mode, a key past its time is kept: the mock answers a fixed example time, long past (FE-27)', () => {
+    const mock: Config = { ...config, mode: 'mock' }
+    const past = { ...HANDED, expiresAt: '2026-09-28T02:10:00.000Z' }
+    expect(intakeKeyFrom(past, mock)).toEqual(past)
+    expect(intakeKeyFrom(past, config)).toEqual({ refused: 'INTAKE_KEY_INVALID' })
+  })
+
   it('a baseUrl other than our gateway is MODEL_GATEWAY_REFUSED: our server never calls a URL a browser chose', () => {
     expect(
       intakeKeyFrom({ ...HANDED, baseUrl: 'https://evil.example/v1' }, config),
@@ -448,6 +455,14 @@ describe('each mode’s intake model', () => {
       baseUrl: 'http://127.0.0.1:7106/v1',
       model: 'default-chat',
       expiresAt: later,
+    })
+    expect((await understand(model, words, {}, 1)).questions).toHaveLength(3)
+    // The mock's own answer: a fixed example time, long past. Held to it, mock mode never works.
+    keys.put('c-1', {
+      key: 'sk-example-not-a-real-key',
+      baseUrl: 'http://127.0.0.1:7106/v1',
+      model: 'default-chat',
+      expiresAt: '2026-09-28T02:10:00.000Z',
     })
     expect((await understand(model, words, {}, 1)).questions).toHaveLength(3)
   })

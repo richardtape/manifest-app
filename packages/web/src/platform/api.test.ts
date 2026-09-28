@@ -79,6 +79,64 @@ describe('the five reads F1 makes, against manifest-mock', () => {
   })
 })
 
+describe('moments 3 and 4 (F2 Task 7), against manifest-mock', () => {
+  it('startIntakeSession answers a session, its one model, and its key; endIntakeSession ends it', async () => {
+    await withMock(async (origin) => {
+      const started = await platform(origin).startIntakeSession('describe-0001')
+      expect(started.session.model).toBe('default-chat')
+      expect(started.key).toBe('sk-example-not-a-real-key')
+      expect(started.baseUrl).toBe('http://127.0.0.1:7106/v1')
+      expect(
+        (await platform(origin).endIntakeSession(started.session.id, 'end-0001')).state,
+      ).toBe('ended')
+    })
+  })
+
+  it('checkSlug says mock-app is taken, with the platform’s own reason, and another is free', async () => {
+    await withMock(async (origin) => {
+      expect(await platform(origin).checkSlug('mock-app')).toMatchObject({
+        available: false,
+        reasons: [{ code: 'SLUG_TAKEN', message: 'a project already has this name' }],
+      })
+      expect(await platform(origin).checkSlug('reading-responses')).toMatchObject({
+        available: true,
+      })
+    })
+  })
+
+  it('listBlueprints answers node-ts-mongo@1', async () => {
+    await withMock(async (origin) => {
+      expect((await platform(origin).listBlueprints()).map((b) => b.ref)).toEqual([
+        'node-ts-mongo@1',
+      ])
+    })
+  })
+
+  it('startIntakeSession sends the Idempotency-Key it is given, one per press', async () => {
+    const seen: (string | undefined)[] = []
+    const server = createServer((request, response) => {
+      seen.push(request.headers['idempotency-key'] as string | undefined)
+      response.writeHead(409, { 'content-type': 'application/json' })
+      response.end(
+        JSON.stringify({ error: { code: 'INTAKE_DAILY_LIMIT_REACHED', message: 'x' } }),
+      )
+    })
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+    try {
+      const error = await thrown(() => platform(origin).startIntakeSession('press-0001'))
+      expect(refusalOf(error)).toEqual({
+        kind: 'refused',
+        code: 'INTAKE_DAILY_LIMIT_REACHED',
+        status: 409,
+      })
+      expect(seen).toEqual(['press-0001'])
+    } finally {
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
+})
+
 describe('refusalOf: by kind and code, never by message', () => {
   it('a session-less read is signed-out', async () => {
     await withMock(async (origin) => {

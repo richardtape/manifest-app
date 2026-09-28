@@ -8,8 +8,10 @@ import { useEffect, useState, type MouseEvent } from 'react'
 export type Route =
   | { name: 'your-apps' }
   | { name: 'signed-out' }
-  /** Describe what you need: not built until F2, and the page says so. */
+  /** Describe what you need (moment 3): their words, before a conversation exists. */
   | { name: 'new' }
+  /** The conversation their words began, through moments 3 and 4 (F2). */
+  | { name: 'conversation'; id: string }
   /** An app's own page: not built yet, and the page says so. */
   | { name: 'app'; slug: string }
   | { name: 'profile' }
@@ -25,6 +27,14 @@ export function parse(pathname: string): Route {
     // A malformed address is a page we do not have, never a crash (the final review).
     try {
       return { name: 'app', slug: decodeURIComponent(app[1]) }
+    } catch {
+      return { name: 'unknown' }
+    }
+  }
+  const conversation = /^\/new\/([^/]+)$/.exec(pathname)
+  if (conversation?.[1] !== undefined) {
+    try {
+      return { name: 'conversation', id: decodeURIComponent(conversation[1]) }
     } catch {
       return { name: 'unknown' }
     }

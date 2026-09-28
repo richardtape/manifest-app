@@ -1,8 +1,10 @@
 import { Button, Card, SideNav } from '@manifest-app/ui'
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { signInHref, signOut } from './auth.js'
+import { createOurs, type Ours } from './ours/api.js'
 import type { Platform } from './platform/api.js'
 import { linkTo, navigate, useRoute } from './router.js'
+import { Describing } from './screens/describe/describe.js'
 import { Profile } from './screens/profile.js'
 import { SignIn } from './screens/sign-in.js'
 import { TroubleNotice } from './screens/trouble.js'
@@ -10,12 +12,15 @@ import { YourApps } from './screens/your-apps/your-apps.js'
 import { useSession } from './session.js'
 import { words } from './words.js'
 
+/** Our own API, once: its stream opener must keep its identity across renders. */
+const OURS = createOurs()
+
 /**
  * THE SHELL: session, then route, then screen. Nothing is drawn while `getMe` is asked
  * (seconds, and no spinners: 20-states.md). Signed out is the sign-in screen, the only
  * one without a rail. Signed in, every screen sits beside the rail.
  */
-export function App({ platform }: { platform: Platform }) {
+export function App({ platform, ours = OURS }: { platform: Platform; ours?: Ours }) {
   const { session, retry, expire } = useSession(platform)
   const { route, here } = useRoute()
   const [signOutFailed, setSignOutFailed] = useState(false)
@@ -44,7 +49,9 @@ export function App({ platform }: { platform: Platform }) {
           ? words.shell.yourApps
           : route.name === 'profile'
             ? words.profile.title
-            : words.shell.manifest
+            : route.name === 'new' || route.name === 'conversation'
+              ? words.describe.tab
+              : words.shell.manifest
   }, [session.state, route.name])
 
   if (session.state === 'loading') return null
@@ -97,7 +104,20 @@ export function App({ platform }: { platform: Platform }) {
     page = <YourApps platform={platform} me={session.me} expire={expire} />
   else if (route.name === 'profile')
     page = <Profile me={session.me} onSignOut={() => void leave()} />
-  else if (route.name === 'signed-out')
+  else if (route.name === 'new' || route.name === 'conversation') {
+    const from = new URLSearchParams(here.split('?')[1] ?? '').get('from') ?? undefined
+    // One element for both, in one place: what a press began survives the id arriving.
+    page = (
+      <Describing
+        key="describing"
+        platform={platform}
+        ours={ours}
+        expire={expire}
+        {...(route.name === 'conversation' ? { id: route.id } : {})}
+        {...(from === undefined ? {} : { from })}
+      />
+    )
+  } else if (route.name === 'signed-out')
     page = (
       <>
         <h1 className="page-title">{words.signOut.title}</h1>
@@ -111,9 +131,6 @@ export function App({ platform }: { platform: Platform }) {
   else
     page = (
       <>
-        {route.name === 'new' ? (
-          <p className="body-lead">{words.notFound.describingNext}</p>
-        ) : null}
         {route.name === 'app' ? (
           <p className="body-lead">{words.notFound.appPageNext}</p>
         ) : null}
@@ -134,7 +151,11 @@ export function App({ platform }: { platform: Platform }) {
         <SideNav
           collapsible
           userHref="/profile"
-          {...(route.name === 'your-apps' ? { active: words.shell.yourApps } : {})}
+          {...(route.name === 'your-apps'
+            ? { active: words.shell.yourApps }
+            : route.name === 'new' || route.name === 'conversation'
+              ? { active: words.shell.startNew }
+              : {})}
           homeHref="/"
           newLabel={words.shell.startNew}
           newHref="/new"

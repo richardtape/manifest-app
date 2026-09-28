@@ -43,6 +43,11 @@ function platform(
     listProjects: (answers.listProjects ?? never) as Platform['listProjects'],
     getProject: (answers.getProject ?? never) as Platform['getProject'],
     getRelease: (answers.getRelease ?? never) as Platform['getRelease'],
+    startIntakeSession: (answers.startIntakeSession ??
+      never) as Platform['startIntakeSession'],
+    endIntakeSession: (answers.endIntakeSession ?? never) as Platform['endIntakeSession'],
+    checkSlug: (answers.checkSlug ?? never) as Platform['checkSlug'],
+    listBlueprints: (answers.listBlueprints ?? never) as Platform['listBlueprints'],
   }
 }
 
@@ -263,7 +268,9 @@ describe('Your apps, empty (moment 2)', () => {
     await act(async () => {
       fireEvent.click(describe)
     })
-    expect(await screen.findByText(words.notFound.describingNext)).toBeTruthy()
+    expect(
+      await screen.findByRole('heading', { name: words.describe.title }),
+    ).toBeTruthy()
   })
 })
 
@@ -584,7 +591,7 @@ describe('no machinery on EVERY screen and state (Decision 9; the final review)'
       words.unreachable.body,
     ],
     ['not found', '/nowhere', signedIn, words.notFound.body],
-    ['Describe, not built yet', '/new', signedIn, words.notFound.describingNext],
+    ['Describe it (moment 3)', '/new', signedIn, words.describe.title],
     [
       'an app’s page, not built yet',
       '/apps/mock-app',

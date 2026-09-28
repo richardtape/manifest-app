@@ -120,6 +120,125 @@ const CASES: Record<string, Record<string, unknown>[]> = {
     },
     { tone: 'waiting', title: 'Worth knowing now', className: 'extra', children: 'y' },
   ],
+  // F2 Task 7: the three moments 3 and 4 need.
+  LiveSteps: [
+    { steps: [] },
+    {},
+    // preview.html, both columns
+    {
+      steps: [
+        { text: 'Reading how your app is put together', state: 'done' },
+        { text: 'Fetching the JavaScript toolkit it runs on', state: 'done' },
+        { text: 'Installing the 135 pieces it depends on', state: 'now' },
+        { text: 'Packaging it up', state: 'next' },
+        { text: 'Storing it, ready to run', state: 'next' },
+      ],
+    },
+    {
+      steps: [
+        { text: 'Made the change', state: 'done' },
+        { text: 'Put it where you can try it', state: 'done' },
+        {
+          text: 'Tried to go live for your class',
+          state: 'halted',
+          note: 'And was stopped at the door. Nothing about your running app has changed.',
+        },
+      ],
+    },
+    // a step with no state is next; a note on every state; a className
+    {
+      steps: [
+        { text: 'No state' },
+        { text: 'Done, with a note', state: 'done', note: 'Why' },
+        { text: 'Now, with a note', state: 'now', note: 'Still going' },
+        { text: 'Next, with a note', state: 'next', note: 'Later' },
+      ],
+      className: 'extra',
+    },
+  ],
+  FormField: [
+    { label: 'What should we call it?' },
+    // preview.html: taken, then free
+    {
+      id: 'mf-demo-name',
+      label: 'What should we call it?',
+      hint: 'Lower case, hyphens between words. This becomes its web address.',
+      value: 'mock-app',
+      mono: true,
+      message: {
+        tone: 'attention',
+        title: 'a project already has this name',
+        body: 'Pick another name, or ask its owner to add you.',
+      },
+      onChange: () => undefined,
+    },
+    {
+      id: 'mf-demo-name',
+      label: 'What should we call it?',
+      hint: 'Lower case, hyphens between words. This becomes its web address.',
+      value: 'reading-responses',
+      mono: true,
+      message: {
+        tone: 'steady',
+        title: 'Yours. It will live at reading-responses.manifest.internal',
+      },
+      onChange: () => undefined,
+    },
+    // every tone, one unknown; no hint; a placeholder; read-only without onChange; a className
+    ...['working', 'neutral', 'no-such-tone'].map((tone) => ({
+      id: `f-${tone}`,
+      label: 'Why?',
+      value: 'x',
+      message: { tone, title: 'Title', body: 'Body' },
+      onChange: () => undefined,
+    })),
+    { label: 'In a sentence, why', placeholder: 'Optional', onChange: () => undefined },
+    { id: 'ro', label: 'Read only', value: 'fixed', className: 'extra' },
+  ],
+  Choice: [
+    { options: [] },
+    // preview.html: the radio cards, and the capability checkboxes
+    {
+      name: 'mf-scale',
+      label: 'Who is going to use it?',
+      value: 'class',
+      onChange: () => undefined,
+      options: [
+        { title: 'Just me', note: 'The only person who will open it', value: 'solo' },
+        { title: 'One class', note: 'A section or a seminar group', value: 'class' },
+        {
+          title: 'A large course',
+          note: 'Hundreds of students at once',
+          value: 'large_course',
+        },
+        { title: 'Anyone at all', note: 'Open beyond UBC', value: 'public' },
+      ],
+    },
+    {
+      type: 'checkbox',
+      onChange: () => undefined,
+      options: [
+        { title: 'Look at this project', value: 'project:read', checked: true },
+        { title: 'Build it', value: 'build:create', checked: true },
+        { title: 'Prepare a version', value: 'release:create', checked: false },
+        { title: 'Delete the project', value: 'project:delete', checked: false },
+      ],
+    },
+    // nothing chosen; a type from nowhere is a radio; a className
+    {
+      name: 'n',
+      options: [
+        { title: 'A', value: 'a' },
+        { title: 'B', value: 'b', note: 'b' },
+      ],
+    },
+    {
+      type: 'toggle',
+      value: 'a',
+      options: [{ title: 'A', value: 'a' }],
+      className: 'extra',
+    },
+  ],
   SideNav: [
     {},
     { active: 'Your apps', user: 'Instructor One' },

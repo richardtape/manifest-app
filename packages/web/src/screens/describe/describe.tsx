@@ -1,0 +1,435 @@
+import type { Schemas } from '@manifest/contract'
+import type { Intake, Question, StepKey } from '@manifest-app/server/progress'
+import { Button, Card, Choice, FormField, StateChip } from '@manifest-app/ui'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
+import { useConversation } from '../../ours/conversation.js'
+import type { Platform } from '../../platform/api.js'
+import { refusalOf } from '../../platform/refusal.js'
+import { navigate } from '../../router.js'
+import { words } from '../../words.js'
+import { NameIt } from '../name-it/name-it.js'
+import { SupportReference } from '../reference.js'
+import { rememberIntakeSession } from './memory.js'
+import { intakeRefused } from './model.js'
+
+/**
+ * A problem shown, with its reference (Decision 11). `naming`: it goes on to Name it with no
+ * suggestions; `choose`: the person may try again, or name it themselves.
+ */
+type Notice = { words: string; reference: string; then: 'naming' | 'choose' }
+
+/**
+ * A KEY THAT HAS ENDED IS RENEWED, ONCE, WITHOUT A WORD: none handed over (a restart of our
+ * server, Review Focus 5), past its time, refused by the gateway, or its few cents spent.
+ * A second time, it is said.
+ */
+const RENEWABLE = new Set([
+  'INTAKE_KEY_MISSING',
+  'INTAKE_KEY_EXPIRED',
+  'MODEL_KEY_REFUSED',
+  'MODEL_BUDGET_EXHAUSTED',
+])
+
+/**
+ * MOMENT 3, AND THE WAY INTO MOMENT 4 (F2 Task 7). `/new` is their words; `/new/<id>` is the
+ * conversation they made, followed on its stream. One component for both, so what a press
+ * started (a notice, the words) survives the address gaining its id.
+ * - **The browser starts the intake** in the person's session and hands the key to our
+ *   server (Task 6). Its refusals are read by code, and said as Rich worded them.
+ * - **Round 2 appears only if our server asks one**; there is never a round 3.
+ */
+export function Describing({
+  platform,
+  ours,
+  id,
+  from,
+  expire,
+  now = () => new Date(),
+  timeZone,
+}: {
+  platform: Platform
+  ours: Ours
+  /** The conversation, once there is one. */
+  id?: string
+  /** "That's not it": the conversation whose words to bring back. */
+  from?: string
+  expire: () => void
+  now?: () => Date
+  timeZone?: string
+}) {
+  const view = useConversation(id, ours.events)
+  /**
+   * WHERE A PRESS WAS MADE: the state and the intake round. The press is over when the page
+   * it was made on is gone, so a stream that connects late, or reconnects and never hears
+   * the steps, can never leave a working state stuck (Review Focus 5).
+   */
+  const [pressedAt, setPressedAt] = useState<string | undefined>()
+  const state = view.conversation?.state
+  const here = `${state ?? 'describing'}:${view.intake?.round ?? ''}`
+  const pressed = pressedAt === here
+  const press = () => setPressedAt(here)
+  const unpress = () => setPressedAt(undefined)
+  const [text, setText] = useState('')
+  const [notice, setNotice] = useState<Notice>()
+  const renewed = useRef(false)
+  /** Whether this conversation's key has been handed over: until then, Try again starts one. */
+  const handed = useRef(false)
+  /** "Name it yourself": no names are asked for after that. */
+  const selfNamed = useRef(false)
+  const lastAnswers = useRef<Record<string, string> | undefined>(undefined)
+  const lastTaken = useRef<string[]>([])
+  const blueprints = useRef<Schemas['BlueprintList'] | undefined>(undefined)
+
+  // "That's not it" brings their words back, to be changed (moment 4).
+  useEffect(() => {
+    if (id !== undefined || from === undefined) return
+    void ours.readConversation(from).then(
+      (conversation) => setText(conversation.description),
+      () => undefined,
+    )
+  }, [from])
+
+  /** Shown, with its reference, and reported. */
+  const show = (
+    said: { words: string; then: Notice['then'] },
+    problem: { code: string; operation: string; status?: number },
+  ) => {
+    unpress()
+    setNotice({ ...said, reference: reportProblem(problem) })
+  }
+
+  /** Something outside the stream failed: ours, or the platform's. Answers where it goes on. */
+  const failed = (error: unknown, operation: string): Notice['then'] | undefined => {
+    if (error instanceof OurRefusal) {
+      if (error.status === 401) return void expire()
+      const unreachable = error.code === 'UNREACHABLE'
+      show(
+        {
+          words: unreachable ? words.describe.couldntRead : words.refused.body,
+          then: 'choose',
+        },
+        {
+          code: error.code,
+          operation,
+          ...(error.status === null ? {} : { status: error.status }),
+        },
+      )
+      return 'choose'
+    }
+    const refusal = refusalOf(error)
+    if (refusal.kind === 'signed-out') return void expire()
+    const code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
+    const said = intakeRefused(code, now(), timeZone)
+    show(said, {
+      code,
+      operation,
+      ...(refusal.kind === 'refused' ? { status: refusal.status } : {}),
+    })
+    return said.then
+  }
+
+  /**
+   * AN INTAKE SESSION, STARTED AND HANDED OVER: in the person's session, one
+   * Idempotency-Key per press. Refused, it says why, and a limit goes on to Name it.
+   */
+  const handOver = async (conversationId: string): Promise<boolean> => {
+    let started: Schemas['IntakeSessionStarted']
+    try {
+      started = await platform.startIntakeSession(crypto.randomUUID())
+    } catch (error) {
+      if (failed(error, 'startIntakeSession') === 'naming')
+        await ours
+          .intake(conversationId, { skip: true })
+          .catch((e: unknown) => failed(e, 'intake'))
+      return false
+    }
+    rememberIntakeSession(conversationId, started.session.id)
+    try {
+      await ours.handIntakeKey(conversationId, {
+        key: started.key,
+        baseUrl: started.baseUrl,
+        model: started.session.model,
+        expiresAt: started.session.expiresAt,
+      })
+      handed.current = true
+      return true
+    } catch (error) {
+      failed(error, 'handIntakeKey')
+      return false
+    }
+  }
+
+  const post = (conversationId: string, send: () => Promise<void>, operation: string) =>
+    send().catch((error: unknown) => {
+      failed(error, operation)
+    })
+
+  /** Read their words: the key first, then round 1. */
+  const read = async (conversationId: string) => {
+    setNotice(undefined)
+    press()
+    if (await handOver(conversationId))
+      await post(conversationId, () => ours.intake(conversationId, {}), 'intake')
+  }
+
+  const carryOn = async () => {
+    press()
+    let made
+    try {
+      made = await ours.startConversation(text)
+    } catch (error) {
+      failed(error, 'startConversation')
+      return
+    }
+    navigate(`/new/${encodeURIComponent(made.id)}`)
+    await read(made.id)
+  }
+
+  const nameItYourself = () => {
+    if (id === undefined) return
+    selfNamed.current = true
+    setNotice(undefined)
+    void post(id, () => ours.intake(id, { skip: true }), 'intake')
+  }
+
+  /** The step that halted, done again once the key is renewed. */
+  const redo = (step: StepKey | undefined) => {
+    if (id === undefined) return
+    if (step === 'naming')
+      return void post(id, () => ours.names(id, lastTaken.current), 'names')
+    const list = blueprints.current
+    if (step === 'blueprint') {
+      if (list !== undefined) void post(id, () => ours.blueprint(id, list), 'blueprint')
+      return
+    }
+    const answers = lastAnswers.current
+    if (view.conversation?.state === 'questions' && answers !== undefined)
+      return void post(id, () => ours.intake(id, { answers }), 'intake')
+    void post(id, () => ours.intake(id, {}), 'intake')
+  }
+
+  // A REFUSAL ON THE STREAM: a key renewed once and the step done again; the blueprint,
+  // which the person never sees, left to Make it; anything else said, with the reference
+  // the server already recorded.
+  const halted = [...view.steps].reverse().find((s) => s.state === 'halted')?.step
+  useEffect(() => {
+    const refusal = view.refusal
+    if (refusal === undefined || id === undefined) return
+    unpress()
+    if (RENEWABLE.has(refusal.code) && !renewed.current) {
+      renewed.current = true
+      void handOver(id).then((ok) => ok && redo(halted))
+      return
+    }
+    if (halted === 'blueprint') return
+    if (refusal.code === 'MODEL_NOT_AVAILABLE') {
+      setNotice({
+        words: words.describe.waitingOnAdmin,
+        reference: refusal.reference,
+        then: 'naming',
+      })
+      const state = view.conversation?.state
+      if (state === 'describing' || state === 'questions')
+        void post(id, () => ours.intake(id, { skip: true }), 'intake')
+      return
+    }
+    setNotice({
+      words: words.describe.couldntRead,
+      reference: refusal.reference,
+      then: 'choose',
+    })
+  }, [view.refusal])
+
+  // And over when the understanding step answers (now, done or halted): from then on, the
+  // step itself says whether we are working.
+  const understanding = view.steps.find((s) => s.step === 'understanding')?.state
+  useEffect(() => {
+    if (understanding !== undefined) setPressedAt(undefined)
+  }, [understanding])
+
+  const working = (key: StepKey) =>
+    view.steps.some((s) => s.step === key && s.state === 'now')
+
+  const noticeCard =
+    notice === undefined ? undefined : (
+      <div role="alert">
+        <Card tone={notice.then === 'naming' ? 'waiting' : 'attention'}>
+          <p className="body-lead">{notice.words}</p>
+          <SupportReference reference={notice.reference} />
+          {notice.then === 'choose' ? (
+            <div className="describe__actions">
+              <Button
+                kind="secondary"
+                onClick={() => {
+                  setNotice(undefined)
+                  if (id === undefined) void carryOn()
+                  else if (!handed.current) void read(id)
+                  else redo(halted)
+                }}
+              >
+                {words.describe.tryAgain}
+              </Button>
+              {id !== undefined && state !== 'naming' ? (
+                <Button kind="tertiary" onClick={nameItYourself}>
+                  {words.describe.nameItYourself}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </Card>
+      </div>
+    )
+
+  // Connecting to a conversation: nothing drawn, for the seconds it takes (no spinners).
+  if (id !== undefined && view.conversation === undefined) return noticeCard ?? null
+  const intake: Intake | undefined = view.intake
+
+  if (state === 'naming' && view.conversation !== undefined && intake !== undefined)
+    return (
+      <NameIt
+        key={view.conversation.id}
+        platform={platform}
+        ours={ours}
+        conversation={view.conversation}
+        intake={intake}
+        working={view.steps.filter((s) => s.state === 'now').map((s) => s.step)}
+        suggest={notice?.then !== 'naming' && !selfNamed.current}
+        notice={noticeCard}
+        onTaken={(taken) => (lastTaken.current = taken)}
+        onBlueprints={(list) => (blueprints.current = list)}
+      />
+    )
+
+  if (
+    state === 'questions' &&
+    intake?.understood !== null &&
+    intake?.understood !== undefined
+  )
+    return (
+      <Questions
+        key={intake.round ?? 0}
+        questions={intake.understood.questions}
+        working={pressed || working('understanding')}
+        notice={noticeCard}
+        onAnswer={(answers) => {
+          if (id === undefined) return
+          lastAnswers.current = answers
+          press()
+          void post(id, () => ours.intake(id, { answers }), 'intake')
+        }}
+        onSkip={() => {
+          if (id === undefined) return
+          press()
+          void post(id, () => ours.intake(id, { skip: true }), 'intake')
+        }}
+      />
+    )
+
+  if (state !== undefined && state !== 'describing')
+    return <p className="body-lead">{words.nameIt.makingNext}</p>
+
+  // THEIR WORDS: typed here, or, once sent, theirs as they wrote them.
+  const theirs = view.conversation?.description ?? text
+  const reading = pressed || working('understanding')
+  return (
+    <div className="describe">
+      <div className="describe__main">
+        <h1 className="page-title">{words.describe.title}</h1>
+        <p className="body-lead">{words.describe.lead}</p>
+        {noticeCard}
+        <div className="mf-field">
+          <label className="mf-field__label" htmlFor="describe-words">
+            {words.describe.label}
+          </label>
+          <p className="mf-field__hint">{words.describe.hint}</p>
+          {/* Decision 10: the description box has no system component; the field's input class, recorded. */}
+          <textarea
+            id="describe-words"
+            className="mf-field__input describe__words"
+            value={theirs}
+            readOnly={id !== undefined}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </div>
+        <div className="describe__actions">
+          {reading ? (
+            <StateChip state="working" label={words.steps.understanding} />
+          ) : notice?.then === 'choose' ? null : (
+            <Button
+              kind="primary"
+              disabled={theirs.trim() === ''}
+              onClick={() => (id === undefined ? void carryOn() : void read(id))}
+            >
+              {words.describe.carryOn}
+            </Button>
+          )}
+        </div>
+      </div>
+      <Card title={words.describe.asideTitle} className="describe__aside">
+        <p className="body-lead">{words.describe.aside}</p>
+      </Card>
+    </div>
+  )
+}
+
+/** The follow-up questions (moment 3): at most three, each with its field or its choices. */
+function Questions({
+  questions,
+  working,
+  notice,
+  onAnswer,
+  onSkip,
+}: {
+  questions: Question[]
+  working: boolean
+  notice?: ReactNode
+  onAnswer: (answers: Record<string, string>) => void
+  onSkip: () => void
+}) {
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const set = (questionId: string, answer: string) =>
+    setAnswers((current) => ({ ...current, [questionId]: answer }))
+  return (
+    <div className="describe__main">
+      <h1 className="page-title">{words.describe.questionsTitle}</h1>
+      {notice}
+      {questions.map((q) =>
+        q.choices !== null ? (
+          <fieldset key={q.id} className="describe__question">
+            <legend className="mf-field__label">{q.ask}</legend>
+            <Choice
+              name={`question-${q.id}`}
+              label={q.ask}
+              value={answers[q.id]}
+              onChange={(value) => set(q.id, value)}
+              options={q.choices.map((choice) => ({ title: choice, value: choice }))}
+            />
+          </fieldset>
+        ) : (
+          <FormField
+            key={q.id}
+            id={`question-${q.id}`}
+            label={q.ask}
+            value={answers[q.id] ?? ''}
+            onChange={(e) => set(q.id, e.target.value)}
+          />
+        ),
+      )}
+      <div className="describe__actions">
+        {working ? (
+          <StateChip state="working" label={words.steps.understanding} />
+        ) : (
+          <>
+            <Button kind="primary" onClick={() => onAnswer(answers)}>
+              {words.describe.carryOn}
+            </Button>
+            <Button kind="tertiary" onClick={onSkip}>
+              {words.describe.skip}
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

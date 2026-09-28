@@ -30,7 +30,9 @@ export function intakeKeyFrom(
   if (typeof model !== 'string' || model === '' || model.length > 64) return invalid
   if (typeof baseUrl !== 'string' || typeof expiresAt !== 'string') return invalid
   const until = Date.parse(expiresAt)
-  if (Number.isNaN(until) || until <= Date.now()) return invalid
+  if (Number.isNaN(until)) return invalid
+  // The mock answers a fixed example time, long past (FE-27): in mock mode it is not a time.
+  if (config.mode === 'edge' && until <= Date.now()) return invalid
   if (trimmed(baseUrl) !== trimmed(config.modelGateway))
     return { refused: 'MODEL_GATEWAY_REFUSED' }
   return { key, baseUrl, model, expiresAt }
@@ -60,12 +62,14 @@ export function createIntakeKeys(): IntakeKeys {
 export function gatedIntakeModel(
   keys: IntakeKeys,
   make: (key: IntakeKey) => Model,
+  /** False in mock mode, whose keys carry the document's example time, long past (FE-27). */
+  honourExpiry = true,
 ): (conversation: Pick<Conversation, 'id'>) => Model {
   return (conversation) => ({
     complete(agent, schema, messages, check) {
       const key = keys.get(conversation.id)
       if (key === undefined) return Promise.reject(new ModelError('INTAKE_KEY_MISSING'))
-      if (Date.parse(key.expiresAt) <= Date.now()) {
+      if (honourExpiry && Date.parse(key.expiresAt) <= Date.now()) {
         keys.drop(conversation.id)
         return Promise.reject(new ModelError('INTAKE_KEY_EXPIRED'))
       }
@@ -85,7 +89,7 @@ export function intakeModelFor(
 ): (conversation: Pick<Conversation, 'id'>) => Model {
   if (config.mode === 'mock') {
     const walkthrough = walkthroughModel()
-    return gatedIntakeModel(keys, () => walkthrough)
+    return gatedIntakeModel(keys, () => walkthrough, false)
   }
   return gatedIntakeModel(keys, (key) =>
     openAiCompatible({ baseUrl: config.modelGateway, key: key.key, model: key.model }),

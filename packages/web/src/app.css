@@ -321,3 +321,107 @@
     line-height: 36px;
   }
 }
+
+/* Decision 11 (Rich): the reference a person can quote, and Copy beside it. */
+.support-ref {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  color: var(--ink-secondary);
+}
+
+/* Moment 3: their words, and what happens next beside them. */
+.describe {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+}
+.describe__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 720px;
+}
+.describe__aside {
+  flex: 0 0 300px;
+}
+/* Decision 10: the description box is the field's input, taller. */
+.describe__words {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 150px;
+  height: auto;
+  padding-top: var(--space-3);
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+.describe__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+/* A question with choices: a fieldset only for its legend, which names the group. */
+.describe__question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.describe__question legend {
+  padding: 0;
+  margin-bottom: var(--space-3);
+}
+
+/* Moment 4: one page, in the walk-through's order. */
+.name-it {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 760px;
+}
+.name-it__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.name-it__section .subheading {
+  margin: var(--space-2) 0 0;
+}
+/* Their words, said back as a quotation of them. */
+.name-it__quote {
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  border-left: 3px solid var(--brand);
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.55;
+}
+/* Each suggestion's address, in mono: a hostname is allowed on screen, in mono (C3). */
+.name-it__names .mf-choice__note {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.name-it__guess,
+.name-it__footer {
+  margin: 0;
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 959px) {
+  .describe {
+    flex-direction: column;
+  }
+  .describe__aside {
+    flex-basis: auto;
+    align-self: stretch;
+  }
+}

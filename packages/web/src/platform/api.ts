@@ -19,6 +19,20 @@ export interface Platform {
    */
   getProject(projectId: string): Promise<Schemas['Project']>
   getRelease(releaseId: string): Promise<Schemas['Release']>
+  /**
+   * MOMENT 3 (FE-1, as it landed): a model for describing an app, in the person's own
+   * session (a token is refused). One `Idempotency-Key` per press, reused on its retry.
+   */
+  startIntakeSession(idempotencyKey: string): Promise<Schemas['IntakeSessionStarted']>
+  /** Only the person can end it (F2 sitting 1): our server cannot, and never asks. */
+  endIntakeSession(
+    intakeSessionId: string,
+    idempotencyKey: string,
+  ): Promise<Schemas['IntakeSession']>
+  /** Moment 4: is this address free? Always 200; `reasons` carry the platform's own words. */
+  checkSlug(slug: string): Promise<Schemas['SlugCheck']>
+  /** Moment 4: the blueprints, for the blueprint agent to choose from (D3). */
+  listBlueprints(): Promise<Schemas['BlueprintList']>
 }
 
 /** A read that has not answered by now is unreachable: never a page left blank (review #3). */
@@ -59,6 +73,34 @@ export function createPlatform(options: {
         await client.GET('/v1/releases/{releaseId}', { params: { path: { releaseId } } }),
         'getRelease',
       )
+    },
+    async startIntakeSession(idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/intake-sessions', {
+          params: { header: { 'Idempotency-Key': idempotencyKey } },
+        }),
+        'startIntakeSession',
+      )
+    },
+    async endIntakeSession(intakeSessionId, idempotencyKey) {
+      return unwrap(
+        await client.DELETE('/v1/intake-sessions/{intakeSessionId}', {
+          params: {
+            path: { intakeSessionId },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+        }),
+        'endIntakeSession',
+      )
+    },
+    async checkSlug(slug) {
+      return unwrap(
+        await client.GET('/v1/slugs/{slug}', { params: { path: { slug } } }),
+        'checkSlug',
+      )
+    },
+    async listBlueprints() {
+      return unwrap(await client.GET('/v1/blueprints'), 'listBlueprints')
     },
   }
 }

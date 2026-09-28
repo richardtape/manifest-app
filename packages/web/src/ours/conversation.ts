@@ -65,7 +65,8 @@ function apply(view: ConversationView, frame: Progress): ConversationView {
  *   state on the live one.
  */
 export function useConversation(
-  id: string,
+  /** None yet (moment 3, before the words are sent): nothing is opened. */
+  id: string | undefined,
   open: (id: string) => StreamSource = conversationEvents,
 ): ConversationView {
   const [view, setView] = useState<ConversationView>({ steps: [], status: 'connecting' })
@@ -76,6 +77,7 @@ export function useConversation(
     let timer: ReturnType<typeof setTimeout> | undefined
     let failures = 0
     setView({ steps: [], status: 'connecting' })
+    if (id === undefined) return
 
     const connect = () => {
       const source = open(id)

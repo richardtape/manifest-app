@@ -1,5 +1,5 @@
 /**
- * EVERY SENTENCE F1 SHOWS (Decision 9), copied from the walk-through, which is the design.
+ * EVERY SENTENCE WE SHOW (F1 Decision 9), copied from the walk-through, which is the design.
  * The prototype's words were a starting point; where the walk-through changed one, this is
  * the walk-through's. A screen never writes a sentence of its own.
  */
@@ -57,8 +57,6 @@ export const words = {
   notFound: {
     body: "There's nothing here.",
     link: 'Your apps',
-    /** On the path Describe what you need leads to, until F2 builds it. */
-    describingNext: 'Describing an app arrives next.',
     /** On an app's own page, until a later plan builds it. */
     appPageNext: "An app's own page arrives next.",
   },
@@ -89,6 +87,97 @@ export const words = {
     asleep: 'Asleep until somebody opens it',
     switchedOff: 'Switched off',
     cantTell: "We can't tell right now",
+  },
+  /**
+   * MOMENT 3, DESCRIBE IT (F2). The walk-through's words, and Rich's for the limits (after
+   * F2 sitting 1): whose limit, and when it resets, in the person's own time zone.
+   */
+  describe: {
+    tab: 'Describe what you need',
+    title: 'What do you need?',
+    lead: "Say it as you'd say it to a colleague.",
+    label: 'In your own words',
+    hint: 'Three sentences is plenty.',
+    carryOn: 'Carry on',
+    asideTitle: 'Nothing is built yet',
+    aside:
+      'Next, we say back what we understood and suggest a name. Nothing exists until you agree.',
+    questionsTitle: 'A few questions, so we build the right thing.',
+    skip: 'Skip these — use your best guess',
+    couldntRead:
+      "We couldn't read that just now. Your words are kept. Try again, or name it yourself.",
+    /** Worded here: the walk-through names the two ways on, not their buttons. */
+    tryAgain: 'Try again',
+    nameItYourself: 'Name it yourself',
+    pausedToday: (when: string) =>
+      `You've described as many new apps today as one person can. That resets at ${when}. You can still name it yourself.`,
+    pausedForEveryone: (when: string) =>
+      `Describing new apps is paused for everyone until ${when}, when this month's allowance resets. You can still name it yourself.`,
+    /** Rich's, agreed 2026-09-27. */
+    waitingOnAdmin:
+      'Describing new apps is waiting on a Manifest administrator. You can still name it yourself.',
+  },
+  /**
+   * EACH STEP, BY ITS KEY (the server sends keys: words live here). Only "Reading it" is the
+   * walk-through's; the other two are worded here.
+   */
+  steps: {
+    understanding: 'Reading it',
+    naming: 'Thinking of names',
+    blueprint: 'Choosing how to build it',
+  },
+  /** MOMENT 4, NAME IT (F2): the walk-through's words, with sitting 5's two things. */
+  nameIt: {
+    tab: 'Name it',
+    understoodTitle: 'What we understood',
+    notIt: "That's not it",
+    cannotOne: (thing: string) =>
+      `One thing we can't do yet: ${thing}. Everything else, we can.`,
+    cannotMany: (things: string) =>
+      `Some things we can't do yet: ${things}. Everything else, we can.`,
+    callTitle: 'What should we call it?',
+    somethingElse: 'Something else',
+    /** Worded here. */
+    nameLabel: 'Its name',
+    changeAddress: 'Change the address',
+    addressLabel: 'Its address',
+    /** The prototype's FormField hint. */
+    addressHint: 'Lower case, hyphens between words. This becomes its web address.',
+    /** Worded here: free now, and not yet theirs. */
+    addressFree: (address: string) => `Free. It will live at ${address}.`,
+    /** Added to SLUG_TAKEN when the platform gives no hint of its own. */
+    takenExtra: 'Pick another, or ask its owner to add you.',
+    whoTitle: 'Who is going to use it?',
+    scale: {
+      solo: { title: 'Just me', note: 'I am the only person who will open it' },
+      class: { title: 'One class', note: 'A section or a seminar group' },
+      large_course: { title: 'A large course', note: 'Hundreds of students at once' },
+      public: { title: 'Anyone at all', note: 'Open beyond UBC' },
+    },
+    howTitle: 'How do they turn up?',
+    burst: {
+      steady: { title: 'They come and go', note: 'Spread across a week' },
+      synchronised: { title: 'All at once', note: 'A deadline, or during a lab' },
+    },
+    guessedFrom: (from: string) => `We guessed from '${from}'.`,
+    whyLabel: 'In a sentence, why',
+    whyHint:
+      'Optional. Shown to the people who size it, for a large course or an open app.',
+    worthKnowingTitle: 'Worth knowing now',
+    worthKnowing:
+      "You can rename it whenever you like. Its address can't change once it's live, because UBC registers it.",
+    /** FE-15. */
+    footer:
+      "Who it's for sets how much room we give it. You can't change that yet. Ask us and we'll do it by hand.",
+    makeIt: 'Make it',
+    /** Until F2's Task 8 builds it. */
+    makingNext: 'Making it arrives next.',
+  },
+  /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
+  reference: {
+    line: (reference: string) => `If you contact support, quote ${reference}.`,
+    copy: 'Copy',
+    copied: 'Copied',
   },
   /** §24's two answers, in words. */
   audience: {

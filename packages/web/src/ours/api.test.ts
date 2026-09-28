@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { conversationEvents, reportProblem } from './api.js'
+import {
+  conversationEvents,
+  createOurs,
+  newReference,
+  OurRefusal,
+  reportProblem,
+} from './api.js'
 
 /**
  * OUR OWN API, FROM THE PAGE: its one caller. `reportProblem` is Decision 11's browser half:
@@ -74,6 +80,101 @@ describe('reportProblem (Decision 11)', () => {
     await new Promise((resolve) => setTimeout(resolve, 10))
     process.off('unhandledRejection', unhandled)
     expect(unhandled).not.toHaveBeenCalled()
+  })
+})
+
+describe('reportProblem with a reference made beforehand', () => {
+  it('reports that reference, so a notice can show it before anything is sent (and report it twice, harmlessly)', () => {
+    const fetch = vi.fn(async () => new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetch)
+    const reference = newReference()
+    expect(reportProblem({ code: 'UNREACHABLE', reference })).toBe(reference)
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect(JSON.parse(String(init.body)).reference).toBe(reference)
+  })
+})
+
+describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
+  const answer = (status: number, body?: unknown) =>
+    vi.fn(
+      async () =>
+        new Response(body === undefined ? null : JSON.stringify(body), { status }),
+    )
+
+  it('startConversation posts their words, and answers the conversation', async () => {
+    const fetch = answer(201, { id: 'c-1', state: 'describing' })
+    vi.stubGlobal('fetch', fetch)
+    expect(await createOurs().startConversation('A page')).toMatchObject({ id: 'c-1' })
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect([url, init.method, init.credentials, JSON.parse(String(init.body))]).toEqual([
+      '/api/conversations',
+      'POST',
+      'same-origin',
+      { description: 'A page' },
+    ])
+  })
+
+  it('handIntakeKey sends the four things the platform answered, and nothing else', async () => {
+    const fetch = answer(204)
+    vi.stubGlobal('fetch', fetch)
+    await createOurs().handIntakeKey('c/1', {
+      key: 'sk-x',
+      baseUrl: 'http://127.0.0.1:7106/v1',
+      model: 'default-chat',
+      expiresAt: '2026-09-28T04:00:00.000Z',
+    })
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('/api/conversations/c%2F1/intake-key')
+    expect(Object.keys(JSON.parse(String(init.body))).sort()).toEqual([
+      'baseUrl',
+      'expiresAt',
+      'key',
+      'model',
+    ])
+  })
+
+  it.each([
+    [
+      'intake',
+      (o: ReturnType<typeof createOurs>) => o.intake('c-1', { skip: true }),
+      '/api/conversations/c-1/intake',
+      { skip: true },
+    ],
+    [
+      'names',
+      (o: ReturnType<typeof createOurs>) => o.names('c-1', ['mock-app']),
+      '/api/conversations/c-1/names',
+      { taken: ['mock-app'] },
+    ],
+  ] as const)('%s posts to its route', async (_, call, url, body) => {
+    const fetch = answer(202)
+    vi.stubGlobal('fetch', fetch)
+    await call(createOurs())
+    const [seen, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect([seen, JSON.parse(String(init.body))]).toEqual([url, body])
+  })
+
+  it('a refusal is OurRefusal by its code and status; nothing answering is UNREACHABLE', async () => {
+    vi.stubGlobal('fetch', answer(409, { error: { code: 'CONVERSATION_BUSY' } }))
+    const busy = await createOurs()
+      .intake('c-1', {})
+      .catch((e: unknown) => e)
+    expect(busy).toBeInstanceOf(OurRefusal)
+    expect([(busy as OurRefusal).code, (busy as OurRefusal).status]).toEqual([
+      'CONVERSATION_BUSY',
+      409,
+    ])
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))),
+    )
+    const gone = await createOurs()
+      .startConversation('x')
+      .catch((e: unknown) => e)
+    expect([(gone as OurRefusal).code, (gone as OurRefusal).status]).toEqual([
+      'UNREACHABLE',
+      null,
+    ])
   })
 })
 

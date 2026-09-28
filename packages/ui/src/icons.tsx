@@ -65,3 +65,39 @@ export function NavIcon({
     </svg>
   )
 }
+
+/**
+ * THE BUNDLE'S `icon(d, size, stroke, width)`, attribute for attribute: a stroked 24×24
+ * glyph, `aria-hidden`, that never shrinks. Parity holds its markup (attribute order is
+ * markup: F1 sitting 2).
+ */
+export function Icon({
+  paths,
+  size = 16,
+  stroke = 'currentColor',
+  width = 2,
+}: {
+  paths: readonly string[]
+  size?: number
+  stroke?: string
+  width?: number
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={stroke}
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ flexShrink: 0 }}
+    >
+      {paths.map((d, i) => (
+        <path key={i} d={d} />
+      ))}
+    </svg>
+  )
+}
