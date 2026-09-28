@@ -45,7 +45,7 @@ import it (Task 2).
 | 1 | 1 | **The measurements**: what the platform has landed since F1; structured output through the local model; storage. **Alone, and first** | **done 2026-09-27.** No Decision breaks. Intake and agent sessions have both landed, and Tasks 2–10 are amended to the contract. Three proposed sentences wait on Rich |
 | 2 | 2, 3 | Storage and our API: conversations, the person, `Origin`, the progress stream | **done 2026-09-27.** Storage, the guard, conversations and support references; the progress stream, reopened by the page when the browser gives up. 213 tests |
 | 3 | 4, 5 | The model client; the three intake agents, tested against a scripted model | **done 2026-09-27.** A client that takes only structured answers; the three agents, with checks after parsing ruled on from M3; `/intake`, `/names` and `/blueprint`, with the intake carried in the state frame. 300 tests |
-| 4 | 6, 7 | The intake adapter; the *Describe* and *Name it* screens and their components | |
+| 4 | 6, 7 | The intake adapter; the *Describe* and *Name it* screens and their components | **done 2026-09-27.** The adapters on the contract as it landed; the intake key handed over; *Describe it* and *Name it*, walked in headless Chrome against the mock, where two defects were found and fixed. 395 tests |
 | 5 | 8, 9 | Making the project and handing over its tokens; the plan, corrected and agreed, committed as `docs/plan.md` | |
 | 6 | 10 | **The acceptance**: against the mock with a scripted model; against the real platform where sittings 7 and 10 have landed. **Alone, and last** | |
 
@@ -1359,3 +1359,123 @@ this sitting's gates ran after it, and passed.
 - **Task 7 words the step keys** (`understanding`, `naming`, `blueprint`) in `words.ts`. Only *"Reading it"*
   is the walk-through's.
 - The three proposed sentences are still Rich's to agree.
+
+### 2026-09-27 — Sitting 4 (Tasks 6 and 7): the adapters, and *Describe it* and *Name it*
+
+**Commits:**
+- `f377872`: the adapters, and Rich's agreement to the three proposed sentences;
+- `117b73e`: the two screens and three components.
+
+**The platform closed its sitting 8 during this sitting** (archive and restore), and Rich relayed it. Read
+against the contract at manifest `c6a0c92`:
+- 65 operations;
+- `Project.state` (`active` | `archived`) and `Project.archivedAt`, both required;
+- `PROJECT_ARCHIVED` and `PROJECT_TEARDOWN_INCOMPLETE`;
+- the events `project.archived`, `project.restored` and `sso.deregistered`;
+- `project:delete` can no longer be minted, although the enum still names it;
+- an archived project's tokens answer `401`, and stay revoked after a restore.
+
+For F2, only the mint matters, and Task 8's token never asks for `project:delete`. The rest is F6's (see the
+roadmap). Our typecheck and all 395 tests pass against it.
+
+**Task 6: the adapters, on the contract as it landed.**
+- **`platform/intake`:**
+  - the key the browser hands over (`POST .../intake-key`), kept in memory only, and only with our own
+    gateway's base URL (`Config.modelGateway`);
+  - a model gated on that key: none is `INTAKE_KEY_MISSING` (a restart), and one past its time is
+    `INTAKE_KEY_EXPIRED`;
+  - each mode's model: the gateway through the edge, and the walk-through's answers against the mock, still
+    gated on a key.
+- **`platform/agent-sessions`:**
+  - `budget`, with `monthlyUsd` for Rich's words;
+  - `start`, with one `Idempotency-Key` each;
+  - `end`.
+  - The AI refusals of a start become the model's codes. Others are `PlatformRefusal`, by code, never by
+    message (FE-29).
+- **`platform/authoring`:** `tree`, and `commitPlan`, which dry-runs then commits `docs/plan.md` alone. On
+  `SOURCE_CONFLICT` it reads the tree again and retries once.
+- Every platform call our server makes has a 15 s deadline.
+- Seven negative controls, each red then restored.
+
+**Task 7: *Describe it* and *Name it*.**
+- **Three components ported to parity** with the bundle, from every `preview.html` case and each variant:
+  `LiveSteps`, `FormField` and `Choice`, plus the bundle's `icon()`.
+- **Moment 3:**
+  - *Carry on* makes the conversation, starts the intake in the person's session (one `Idempotency-Key` per
+    press), hands the key over, and reads.
+  - The questions follow, and round 2 appears only when our server asks one.
+  - Intake refusals are said in Rich's words, with the time in the person's own zone.
+  - A key that has ended is renewed once, without a word.
+- **Moment 4:**
+  - what we understood, and *That's not it* back to their words;
+  - each suggestion checked before it is shown;
+  - one more round, naming the taken ones, then *Something else* alone, focused (Review Focus 3);
+  - the address as its own field, checked as it settles, in the platform's own words;
+  - the audience guessed, and said so;
+  - *Make it* ends the intake session. Task 8 makes the project.
+- **Decision 11 on the page:** every notice carries a reference and **[Copy]**, reported once, and F1's
+  trouble notice does too.
+- **Three bugs found by failing tests, before any walk:**
+  - the working row vanished on the first frame;
+  - an answered round's press never ended;
+  - *Try again* after a failed start never started a new session.
+  - Hardest: a stream that connects late never hears the steps, so a press must end when its page changes.
+    It now belongs to its state and round (Review Focus 5).
+- **Walked in headless Chrome against the mock** (`pnpm dev:mock`, 1440 and 375 wide, a DevTools script in
+  the scratchpad). Two defects were found only there, each fixed test-first:
+  1. **The mock's intake key carries the document's fixed time, `2026-09-28T02:10:00Z`, long past**, so our
+     server refused the handover. Mock mode no longer holds a key to its time, at the handover or at the gate.
+     Edge mode is unchanged. FE-27 is extended.
+  2. **The report of that failure was itself refused.** The page named its operation `intake-key`, and our
+     server takes only `startIntakeSession`-shaped names. The page's operations are now its calls' names, and
+     the tests' stand-in refuses what our server would.
+  - Found by the reference doing its job: `192B-EA25` was on screen and not in `problems`.
+  - After the fixes, the whole of moments 3 and 4 works live: the three questions; the names, each checked;
+    *One class* and *All at once* guessed *"from 'About 200 students'"*; `mock-app` taken, in the platform's
+    own words; *Make it*.
+  - No console error, no failed request, and no horizontal overflow, at either width.
+- **Words worded here, for Rich**, where the walk-through gives none:
+  - the steps *"Thinking of names"* and *"Choosing how to build it"*;
+  - *"Try again"* and *"Name it yourself"*;
+  - *"Its name"* and *"Its address"*;
+  - *"Free. It will live at <address>."*;
+  - *"Copy"* and *"Copied"*;
+  - *"Making it arrives next."*
+- **A lapse, recorded:** `ours/api`'s new tests went in with their code, not watched failing first. Each was
+  given a negative control instead.
+
+**Negative controls.** Each was red, then restored and green:
+- Task 6's seven: the gateway check, the expiry check, the modes' models swapped, the key kept in a message, no
+  retry after a conflict, the platform's message carried, and one `Idempotency-Key` for every start.
+- Task 7's fourteen:
+  - an unavailable suggestion shown (the plan's), and suggestions re-checked on every frame;
+  - *Something else* never focused, and a press never over;
+  - a key renewed every time;
+  - the notice without its reference, and a given reference ignored;
+  - the handover sending a fifth thing, and our refusal's code lost;
+  - a stream opened with no conversation (F1's own *Your apps* test went red too), and the limit's words lost;
+  - in `ui`: no `aria-current`, an unknown tone, and an unknown type.
+
+**Could not fail:** an `<input>`'s attribute order. React writes `value` and `checked` itself, whatever the prop
+order, so parity cannot hold it and need not.
+
+**Gates, from the root:**
+- `pnpm test` twice: 395/395 each time;
+- `pnpm lint` 0;
+- `pnpm typecheck` 0;
+- `pnpm format:check` clean;
+- `check-slice` 7 passed.
+
+**The machine at the close:**
+- the mock on 7102 and our server on 7105 in mock mode;
+- the control plane stopped;
+- manifest touched only by the platform session.
+
+**Rich can click moments 3 and 4 now**, at `http://127.0.0.1:7105/new`: describe, answer or skip, pick a name,
+and see its address. *Make it* stops at *"Making it arrives next."*
+
+**For sitting 5 (Tasks 8 and 9):**
+- **Make it:** `createProject` with the chosen blueprint, or the list's first when the agent never answered;
+  the conversation's token; the handover.
+- **The plan**, on an agent session.
+- The mock answers its own fixtures whatever is sent (M2), so the tests assert what was sent.

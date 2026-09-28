@@ -15,7 +15,7 @@ says which plan is current. This file states where things stand and the rules. I
     `instructor` at `https://app.manifest.internal`.
   - Its findings, sitting by sitting, are the record. Read them before touching what they touch.
 - **F2 is under way**, in [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  Sittings 1–3 are done (2026-09-27).
+  Sittings 1–4 are done (2026-09-27).
   - **Sitting 1** measured what the platform landed: intake sessions (FE-1) and agent sessions, with
     `spentUsd` (FE-23). No Decision broke, and Tasks 2–10 are amended to the contract, each marked *Amended by
     sitting 1*.
@@ -25,8 +25,13 @@ says which plan is current. This file states where things stand and the rules. I
     progress stream per conversation, which the page reopens when the browser gives up.
   - **Sitting 3** built a model client that takes only structured answers, and the three intake agents with
     their routes, tested against a scripted model.
-- **Next: F2's sitting 4**, Tasks 6 and 7: the intake key handed to our server (and mock mode's scripted model),
-  and the *Describe* and *Name it* screens.
+  - **Sitting 4** built the adapters on the contract as it landed, and the *Describe it* and *Name it* screens.
+    Walked in headless Chrome against the mock, moments 3 and 4 work at `http://127.0.0.1:7105/new`.
+- **Next: F2's sitting 5**, Tasks 8 and 9: *Make it* (the project, its token, the handover), and the plan
+  written on an agent session and committed as `docs/plan.md`.
+- **The platform's sitting 8 (archive and restore) has landed**, relayed by Rich: `Project.state` and
+  `archivedAt`, and an archived project's tokens answer `401` and stay revoked. That is F6's; the roadmap
+  says so.
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
@@ -39,7 +44,7 @@ says which plan is current. This file states where things stand and the rules. I
       with the page is `api/progress.ts`.
     - `model/` asks a model for structured output only; `agents/` are the intake agents, each a schema and a
       prompt.
-  - **The gates:** `pnpm test` (300 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
+  - **The gates:** `pnpm test` (395 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
     `scripts/check-slice.sh`.
 - **Findings not yet carried to the platform session** (Rich's to carry; none blocks its sitting 8):
   - FE-26: the mock accepts any session, and a token where only a session may go;

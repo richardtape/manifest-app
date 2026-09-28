@@ -640,6 +640,12 @@ session.*
   - **Why it matters:** F2 tests every one of these against its own fakes, and its acceptance asserts what our
     server sent, never what the mock answered. The same remedy, (a), keyed on what names each answer, as the
     mock already does for `getFile`.
+- **Added by F2's sitting 4 (2026-09-27), found live:** **the times are the document's too, and they are past.**
+  - `startIntakeSession` answers `expiresAt: 2026-09-28T02:10:00.000Z`, and `startAgentSession` answers
+    `2026-09-28T02:27:48.266Z`, whenever they are asked.
+  - A client that holds a key to its time, as ours does through the edge, refuses every mock key after that
+    moment. Mock mode now holds no key to its time.
+  - **The remedy:** the mock answers times from now, as the platform does: 30 minutes, and 60.
 
 ### FE-28 — The session cookie is not `__Host-`, and apps live on sibling hosts
 
