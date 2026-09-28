@@ -7,7 +7,8 @@
 **Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
 sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
 whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1–4 are done (2026-09-28, in one session at
-Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 5 is next.**
+Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 5 is done (2026-09-28, a new session).
+Sitting 6 is next.**
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
@@ -56,7 +57,7 @@ moment 6, which hands over to F4's *Seeing it*.
 | 2 | 2, 3 | The runtime: agents, moves, the runner, its stop conditions, guards, the trace, saved runs. And the model client recording which model answered, and its usage | **done 2026-09-28**, in sitting 1's session at Rich's word (the dated entry below) |
 | 3 | 4, 5 | The platform calls, and the project's event stream | **done 2026-09-28**, in the same session at Rich's word, beside the platform's sitting 10 (the dated entry below) |
 | 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | **done 2026-09-28**, in the same session at Rich's word (the dated entry below) |
-| 5 | 8, 9 | The round of work, our API's building routes, the building frames, and the new tables | not started |
+| 5 | 8, 9 | The round of work, our API's building routes, the building frames, and the new tables | **done 2026-09-28**, in a new session (`manifest-app-6a`), beside the platform's sitting 10 (the dated entry below) |
 | 6 | 10, 11 | The design system's additions, and the building screen, layout C | not started |
 | 7 | 12 | **The acceptance:** against the mock with a scripted model; on the real platform with the capable model; Rich's click. **Alone, and last** | not started |
 
@@ -1069,6 +1070,36 @@ export function Disclosure(props: { summary: string; count?: number; children: R
 `web/src/screens/describe/describe.tsx`, `web/src/screens/plan/plan.tsx`, `web/src/ours/{api.ts,conversation.ts}`,
 `web/src/words.ts`.
 
+**What sitting 5 built that this task stands on** (its dated entry has why; trust this over the interfaces above):
+- **Every state frame carries `round: RoundView | null`**, folded from the store alone (`api/round-state.ts`), so a
+  reconnect's first frame, and a restart, rebuild it whole. **The round sends no step frames**: its steps are in
+  `RoundView.steps`. `agreed` now lasts a moment: agree moves to it, then round 1 starts and it is `building`.
+- **`RoundView` has more than the interface above:**
+  - `reference`: the support reference of the problem `needs` shows (tries, conflict, moves, unreachable, month,
+    cannot, refused). `checkpoint` and `token` have none;
+  - `messageWaiting`: a message of theirs waits for the lead. The page says *"Got it, after this step."* from it
+    (`line` is only ever the lead's words);
+  - each question's `answered`, since a secret's `answer` is always `null`;
+  - `steps[].tries` is the failures so far: `1` is *"(second try)"*.
+- **`Needs` gains `{ kind: 'refused', code }`**, a refusal the round could not answer itself: F2's words for its
+  code, with its reference and **[Carry on]**. `checkpoint.monthLeftUsd` can be `null`: word it without the month.
+- **The routes and their answers** (`api/build.ts`), each `403 ORIGIN_REFUSED`, `404 NOT_FOUND` and `409
+  CONVERSATION_STATE` as F2's:
+  - `/build` (`{}` or `{ way: 'different' }`): `202`; `400 BUILD_INVALID`; `409 CONVERSATION_BUSY` while work runs,
+    including just after a *Stop* whose model call is still in flight; `409 TOKEN_MISSING`, which the page answers by
+    handing a token over and pressing again. **Try again** (`conflict`) and **Carry on** (`moves`, `checkpoint`,
+    `unreachable`, `refused`, and after *Stop*) are `{}`; **Try a different way** is `{ way: 'different' }`;
+  - `/messages` (`{ words }`, ≤ 500): `202`; `400 MESSAGE_INVALID`;
+  - `/answers` (`{ questionId, words }`, ≤ 500): `202`; `400 ANSWER_INVALID` (a secret under 6 characters too, so the
+    field says so first); `404 QUESTION_NOT_FOUND`; `409 TOKEN_MISSING` (a secret, with no token held);
+  - `/stop` (`{}`): `202`, twice too. **Stop takes effect at once**: the run is `stopped` in the next frame.
+- **What the round says in the conversation** (`RoundSaid`, as message bodies): theirs, `message` and `answer` (a
+  secret's `text` is `null`); ours, `explained` (`note`, `sentence`: the one line), `fallback` (Decision 4's line, once a
+  round), and `built` (the folded round: `round`, `line`, `cannot`), with the message's own time.
+- **`needs: token`** is set with the token already dropped: mint, hand over, then `/build` with `{}`.
+- **Until this task routes them, `building`, `paused` and `built` fall to F2's fallback**, *"Something went wrong on our
+  side"*, with no reference, while the round builds behind it. That is the first thing this task replaces.
+
 **What it draws** (walk-through moment 6; words to `words.ts`, the walk-through's first):
 - **Left, the conversation (`thread.tsx`):**
   - their words;
@@ -1148,6 +1179,13 @@ export function Disclosure(props: { summary: string; count?: number; children: R
   - only `manifest_session=mock-session` is a session, though a Bearer of any value is taken;
   - **unchanged:** the build is `4444…` of its own commit `5f3c…`, the scripted stream, and `createCommit`'s fixture.
   The round's sandbox-only calls (sitting 3) therefore find a sandbox instance to read.)*
+  *(**Sitting 5: a whole round already ran against the mock**, started by `check-describing.sh`'s agree (its check 6d
+  now waits for round 1): in 14 s, a session, the tree, a read, a dry run then the commit (on `c2ac2119…`, which the
+  mock never moves), done, `startBuild` of that commit, `build.succeeded` for `4444…` off the mock's stream,
+  `createRelease` of `4444…`, `deploy` to the sandbox, `getInstanceOutput` of `…661`, and the session ended, `done`.
+  **The trace names what each call named**: `createCommit` as `dry run on <base>` and `on <base>`, `startBuild` the
+  commit, `createRelease` the build, `deploy` `sandbox`, `getInstanceOutput` the instance, `startAgentSession` and
+  `endAgentSession` the session's id. Items 2–7 read those.)*
   1. the round starts when the plan's commit lands;
   2. the commits' dry runs, then the commits;
   3. `startBuild` names the last commit;
@@ -1568,3 +1606,139 @@ behaviour's negative control stands in for that.
 
 **Gates:** `pnpm test` **705/705, twice**; `pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass;
 `scripts/check-describing.sh` 18/18; `scripts/check-slice.sh` 8/8, where it was 7 with one skipped.
+
+### 2026-09-28 — Sitting 5 (Tasks 8 and 9): the round of work, and our building routes
+
+*In a new session (`manifest-app-6a`), taking over from `manifest-app-fa`, one agent natively as Rich chose, beside the
+platform's sitting 10 (`manifest-82`), which kept to the rules agreed in sitting 3. Its commits during this sitting
+touched no contract: its console (`59eb75f`), FE-17's page (`c944a71`, `a97604e`), and its review's fix (`c33d4df`),
+which changes the mock only under `MANIFEST_MOCK_AGENT_BUDGET=unavailable`, an option we never set. It ran its Docker
+tier, which restarts the edge, while our server stayed in mock mode. Nothing of ours used 7100.*
+
+**Commits:**
+- `25f2ead`: Task 8, the round (`build/round.ts`), the page's `RoundView` (`api/round-state.ts`), the store's
+  version 3, the runtime's `stopWhen`, and two new fields on the lead's moves;
+- `4fcee5b`: Task 9, the routes (`api/build.ts`), each run's own claim, agree starting round 1, and the default
+  rounds wired into the server.
+
+**What was built:**
+- **The round**, one leg at a time inside `work.run`. A leg is started by *start*, *Carry on*, or an answer that frees
+  a question. Each leg:
+  - starts a session only when none is alive ($2, 240 minutes, the most capable model it lists);
+  - reads the tree, `package.json`, the pack, the sandbox and the plan (the store's agreed plan, through
+    `planMarkdown`);
+  - opens the stream.
+- **The five steps, each ticking on its own signal:**
+  - **`pages`**: the lead's moves, until `done` after a landed commit. The round lays its own guard over `done`
+    (*"Nothing is committed yet"*), so an early `done` counts as a refusal;
+  - **`holds`**: our import check over the server code;
+  - **`build`**: `build.succeeded` for the build `startBuild` answered, by id, awaited after the stream's replay;
+  - **`draft`**: the instance `deploy` answered, `healthy` by its `200` or by `instance.healthy` for its id;
+  - **`answers`**: that instance serving, and its output read.
+- **Three tries per kind.** Each build or draft failure is explained in one sentence, which is also the step's note,
+  and goes back to the pages with the platform's words (a draft's incident with its `prompt` and `diffSinceHealthy`).
+  The third failure is `needs: tries`, with `servingBefore`. `SOURCE_CONFLICT` reads the tree again.
+- **The other stops:**
+  - the cap, or an expired key, is the checkpoint; a spent month is `month`;
+  - 40 moves, or the same refusal three times, is `moves`;
+  - a `401`, or the stream's refusal, is `token`, and the token is dropped;
+  - anything else the round cannot answer is `needs: refused`, with a reference.
+- ***Stop* takes effect at once**: the run is `stopped`, and its session ended, when pressed. Whatever is in flight is
+  discarded when it returns.
+- **Their words:**
+  - a message is read at the lead's next move, or, during the build, the draft or the answers, after the answers step,
+    back to the pages in the same session;
+  - a question with a default carries on; one without pauses the conversation (`paused`), and its answer resumes it;
+  - **a secret's answer goes to `setInSandbox` and nowhere else**.
+- **A restart:** the server marks a working or paused run `interrupted` as it is built, before it can listen. *Carry
+  on* ends the old sessions by id, starts a new one, and re-reads the build it had started (`getBuild`): the commit is
+  never built twice.
+- **The fallback** adds our one line once a round. The trace records each answer's model, fallback and usage, and each
+  platform call by what it named. The cost is re-read after answers, at most every 5 seconds.
+- **The routes:**
+  - `/build` keeps F2's busy check;
+  - `/messages`, `/answers` and `/stop` never take it;
+  - each run of work holds a claim only it releases, so agree's end never frees round 1's.
+
+**Against the real mock** (`18f3214`), a whole round ran through `check-describing.sh`'s agree, in 14 s, to `done`,
+with every call as Task 12 will assert it (Task 12's note has the trace).
+
+**Rulings** (the ledger has each with its cost):
+1. The round's own facts are one JSON column, `runs.detail`, and `RoundView` is folded from the store alone.
+2. `RoundView` gains `reference`, `messageWaiting`, and each question's `answered`. `Needs` gains `refused`, and the
+   checkpoint's month may be unknown.
+3. The lead's `done` gains `cannot` (FE-32's channel), and `ask_person`'s `secret` becomes the name the app reads it
+   by. Neither channel existed.
+4. The same refusal three times is `needs: moves`, not a fourth kind of try.
+5. `tries` counts failures: `1` is *"(second try)"*.
+6. A session lives for a round, kept across a question and a *needs you*, and never started without being asked.
+7. A restart interrupts paused runs too.
+8. The plan comes from the store. The token (7 days) always outlives the session's 240 minutes.
+9. The round sends no step frames.
+10. The rounds' `message`, `answer` and `stop` take the conversation. `answer` says why it did not take an answer.
+11. `done` before a landed commit is a guard of the round's.
+12. A bounce off our import check keeps the move count, so a lead that keeps failing it stops at 40.
+13. *Try a different way* resets its count at each press.
+14. Each leg moves the conversation itself when it ends.
+15. A restart mid-deploy deploys the release again.
+16. *Stop* takes effect at once.
+17. `buildServer` marks interrupted runs before it returns, so `main.ts` is unchanged.
+18. Each run holds its own claim (Task 9's option two).
+
+**Found, and fixed test-first:**
+- a bounce off the import check reset the moves, so a lead that kept writing a broken import would ping-pong for ever;
+- *Stop* did nothing until the lead's model call returned.
+
+**Test-first, this time throughout.**
+- Every test ran red before its code: 30 of the round's against no-op scaffolding, and 30 of the routes' against no
+  wiring.
+- Three route behaviours had been written before their tests. They were taken out, their tests watched red, and then
+  put back.
+- One test was dropped because it tested its fake.
+
+**Negative controls**, each red, then restored:
+- **Task 8 (32):**
+  - the plan's five: `done` alone ticking the pages; a session started on a cap without *Carry on*; *Stop* not checked
+    after `deploy`; a restart building twice; the secret stored;
+    - *Stop* after `deploy` **stayed green twice**, since three checks stand after `deploy` by design, and went red
+      only with all three removed;
+  - `stopWhen` before a move's own stop; no secret-name guard; `done` dropping or not guarding `cannot`;
+  - no version-3 column;
+  - any build, or any instance, ticking;
+  - their words never read;
+  - the fallback said every time;
+  - a refused token kept;
+  - an unknown spend as zero;
+  - no note on the step;
+  - a conflict with no re-read;
+  - `servingBefore` always true;
+  - paused runs left at boot;
+  - the token in the folded line;
+  - the import check skipped;
+  - no stop at 40;
+  - no `stopWhen`;
+  - a reconnect reading nothing;
+  - the stream's refusal ignored;
+  - a `401` as a plain refusal;
+  - a secret of any length;
+  - the session not ended at done;
+  - a restart's session left running. This **stayed green at first**: the test's fake named the new server's session
+    `session-1` too. It gained its own ids, then went red.
+- **Task 9 (8):**
+  - `/stop` without the `Origin` check;
+  - the claim freed by any run's `finally`;
+  - `/messages` or `/stop` with the busy check, and `/build` without it;
+  - agree starting no round;
+  - no boot mark;
+  - no `TOKEN_MISSING` for a secret.
+
+**The page, meanwhile:** until Task 11 routes them, `building`, `paused` and `built` fall to F2's fallback sentence,
+*"Something went wrong on our side"*, while the round builds behind it. Task 11's note says so.
+
+**Gates:**
+- `pnpm test` **779/779, twice** (705 + 74);
+- `pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass;
+- `scripts/check-describing.sh` 18/18, its 6d now waiting for round 1;
+- `scripts/check-slice.sh` 8/8.
+
+Our dev database migrated live to version 3.

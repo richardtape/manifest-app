@@ -187,11 +187,13 @@ if [ "$STATUS" = 409 ] && jq -e '.error.code == "PLAN_CHANGED"' "$BODY" > /dev/n
 else
   no 6c "a window behind" "wanted 409 PLAN_CHANGED, got $STATUS: $(body)"
 fi
+# F3 Decision 11: agreed, and round 1 starts at once on our server, so the state a poll sees
+# next is the round's (building, or paused on a question, or built), never agreed for long.
 call POST "/api/conversations/$ID/plan/agree" '{"version":2,"answers":{"late":"It closes at the deadline."}}'
-if [ "$STATUS" = 202 ] && until_state "$ID" '.conversation.state == "agreed"'; then
-  ok 6d "agreed, to version 2"
+if [ "$STATUS" = 202 ] && until_state "$ID" '.round.round == 1 and (.conversation.state | IN("building", "paused", "built"))'; then
+  ok 6d "agreed, to version 2, and round 1 started: $(jq -c '{state: .conversation.state, round: .round.status}' "$BODY")"
 else
-  no 6d "agreeing" "wanted 202 and agreed, got $STATUS: $(body)"
+  no 6d "agreeing" "wanted 202 and round 1 started, got $STATUS: $(body)"
 fi
 
 # 7. What our server sent to createCommit, as the conversation records it: a dry run, then

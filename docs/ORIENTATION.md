@@ -4,37 +4,38 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F3's sittings 1–4 done, in one session at Rich's word)*:
+**Where things stand** *(2026-09-28, F3's sittings 1–5 done: 1–4 in one session, 5 in the next)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3's sitting 5, Tasks 8 and 9.** These are the round of work (moment 6's
-  five steps on their own signals, three tries, the checkpoint and the clock, *Stop*, messages, questions, a restart
-  resumed) and our API's building routes. The plan is
-  [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md). **This is the largest sitting.**
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3's sitting 6, Tasks 10 and 11.** These are the design system's additions
+  for moment 6 (`LiveSteps` with a line and detail, `InverseSurface` and `LogPane` ported, a disclosure of our own)
+  and **the building screen, layout C**. The plan is [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md).
   - **Rich chose how it runs:** one agent, natively (superpowers:executing-plans), not subagent-driven, one sitting
-    per session (he waived that for sittings 2–4). The whole-branch review is done by one fresh reviewer at the end.
+    per session. The whole-branch review is done by one fresh reviewer at the end (Task 12).
   - **Read first:**
-    - the plan's dated entries for sittings 1–4;
+    - the plan's dated entries for sittings 1–5;
     - the ledger's rulings (`.superpowers/sdd/2026-09-28-f3-building-it/progress.md`);
-    - **Task 8's *What sittings 2, 3 and 4 built that this task stands on***, and Task 9's two notes on F2's
-      `work.ts`. Trust them over anything older.
-  - **Everything the round calls now exists:**
-    - `runtime/`;
-    - `model/client.ts`'s `onAnswer` and `modelFor`;
-    - `platform/`'s calls and its stream;
-    - `build/guards.ts` and `imports.ts`;
-    - `agents/lead.ts`, `cwl.ts` and `explaining.ts`;
-    - `build/moves.ts` with its `RoundContext`, which the round implements.
-  - **The platform's sitting 10** (`manifest-82`) committed FE-24's code (`bb32fa6`), FE-18 (`46399c5`) and its mock
-    (`18f3214`, FE-26 and FE-27). **Our mock runs `18f3214`**, and our tests follow it. It has not yet closed. When it
-    does, record the landing (§8). Tell it **before** using 7100.
+    - **Task 11's *What sitting 5 built that this task stands on*.** Trust it over the interfaces above it.
+  - **Everything the screen reads now exists, on our server:**
+    - every state frame carries `round: RoundView | null`, folded from the store, so a reconnect rebuilds it whole.
+      The round sends no step frames;
+    - the routes `/build`, `/messages`, `/answers` and `/stop` (`api/build.ts`), each with its codes;
+    - what the round says in the thread (`api/round-state.ts`'s `RoundSaid`).
+  - **The first thing Task 11 replaces:** today a conversation past *Yes, build that* is `building`, `paused` or
+    `built`, and F2's screens show their fallback, *"Something went wrong on our side"*, while the round builds behind
+    it. **Tell Rich before he clicks the mock.**
+  - **The platform's sitting 10** (`manifest-82`):
+    - it committed FE-24's code (`bb32fa6`), FE-18 (`46399c5`), its mock (`18f3214`, FE-26 and FE-27), FE-17's page
+      (`c944a71`, `a97604e`), its console (`59eb75f`) and its review's fix (`c33d4df`);
+    - `c33d4df` changes the mock only under `MANIFEST_MOCK_AGENT_BUDGET=unavailable`, which we never set;
+    - **it has not yet closed.** When its close-out arrives, record the landing (§8). Tell it **before** using 7100.
   - **Rich decided in sitting 1:** when the fallback answers, **carry on, and say so** once in the conversation. What
     the lead sees is capped at 48,000 characters (Decisions 3 and 4).
   - **What F3 builds, in one breath:**
     - our own small agent framework (`runtime/`), with ideas from OpenAI's Agents SDK and Vercel's AI SDK and no
       dependency on either;
     - the lead agent, with a CWL specialist and an explaining agent;
-    - the round of work: moment 6's five steps, each ticking on a platform signal;
-    - the building screen, layout C.
+    - the round of work: moment 6's five steps, each ticking on a platform signal (**built, sitting 5**);
+    - the building screen, layout C (**next**).
   - **The design is Rich's and settled.** Moment 6 is in [`walkthrough.md`](./walkthrough.md), and his decisions are in
     the plan's *Decided by Rich*. Do not re-open them. The plan's 17 *Decisions* are ours, each with its reasons.
 - **Done so far:**
@@ -43,33 +44,37 @@ says which plan is current. This file states where things stand and the rules. I
     [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
   - **F2 is executed** (2026-09-28): moments 3–5. Describe it, name it, *Make it*, and the plan, committed into the
     app as `docs/plan.md`. [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  - **F3's sittings 1–4 are done** (2026-09-28): the measurements; the runtime and the model client; the platform
-    calls and the event stream; the guards and the three agents. Each is recorded in the plan's dated entry. New findings:
-    **FE-33** (a revoked token keeps its open event stream) and **FE-34** (the fallback also answers a request OpenAI
-    refused). Neither is carried; that is Rich's word.
+  - **F3's sittings 1–5 are done** (2026-09-28): the measurements; the runtime and the model client; the platform
+    calls and the event stream; the guards and the three agents; **the round and our building routes**. Each is
+    recorded in the plan's dated entry.
+    - **Against the mock, a whole round already runs**, started by agree, to `done` in 14 s. Task 12's note has its
+      trace.
+    - Findings **FE-33** and **FE-34** (sitting 1) are not carried; that is Rich's word. Sitting 5 found no API gap.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
   - **Landed:**
     - sittings 8 (archive and restore), 9 (delete), 9a (the capable model, `9c54bc3`) and **9b (its fallback,
       close-out `346cd9e`)**;
     - the contract is still **1.4.0, 66 operations**;
-    - our typecheck and 705 tests pass against it (and against sitting 10's commits so far).
+    - our typecheck and 779 tests pass against it, and against sitting 10's commits so far.
   - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`, Rich's, $0.10/$0.50 a million tokens),
     at `max_classification` internal. **Read model names from `session.models`**, never assume them: a
     `confidential` project never gets it.
     - **When OpenAI cannot answer, the same name answers from `default-chat-onprem`** (`ollama_chat/qwen3.5:4b`, 16k
       context, $1/$3 a million), with the header `x-litellm-attempted-fallbacks: 1`.
     - **It also does so for a request OpenAI refused as malformed** (FE-34): always read the header.
-  - **Under way there: its sitting 10, the console and the mock.** Committed so far: FE-24's code (`bb32fa6`), FE-18
-    (`46399c5`), and the mock (`18f3214`, FE-26 and FE-27). **The mock changed**: re-measured at `18f3214` (Task 12's
-    note). Our mock runs it.
+  - **Under way there: its sitting 10**, the console and the mock (commits above). **Our mock runs `18f3214`**, which
+    its later commits leave unchanged for us.
   - **Our findings FE-26 to FE-32 are carried** (2026-09-28, at Rich's word), each at its option (a). **Our half of
     FE-28 is done.**
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
-- **The machine** *(2026-09-28, sitting 1's close)*:
+- **The machine** *(2026-09-28, sitting 5's close)*:
   - **The control plane on 7100 belongs to the platform's sitting 10**: stopped and truncated as it tests, and restarted
     at its close. Ask it before using 7100. Nothing of ours there needs to survive.
-  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`), with one watcher. The mock is on 7102.
+  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`), with one watcher, restarted by `tsx watch` at each commit.
+    The mock is on 7102.
+    - **Our dev database is at version 3** (migrated live): `runs.detail` and `questions`.
+    - **A conversation that reaches agree in mock mode now builds**, and its round runs against the mock.
   - To switch to the edge: stop our server's whole process tree (§7's trap), then `pnpm dev`. To switch back: the
     same, then `pnpm dev:mock`.
 - **How to run it** is §6, below.
@@ -81,17 +86,21 @@ says which plan is current. This file states where things stand and the rules. I
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2).
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
-      the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`.
+      the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`, each run
+      holding a claim only it releases. **`api/build.ts` is the building routes**, and `api/round-state.ts` folds
+      the round for the page.
     - `model/` asks a model for structured output only, and says which model answered (`onAnswer`). `agents/` are
-      the agents, each a schema and a prompt: the three intake agents, and the plan.
-    - **`runtime/` is our own agent framework** (F3 sitting 2): it knows no platform. `build/` holds the lead's guards
-      and moves (sitting 4), and the round next. `agents/` gained the lead, the CWL specialist and the explaining agent.
+      the agents, each a schema and a prompt: the three intake agents, the plan, the lead, the CWL specialist and the
+      explaining agent.
+    - **`runtime/` is our own agent framework** (F3 sitting 2): it knows no platform. **`build/` holds the lead's
+      guards and moves, and `round.ts`, the round of work** (sitting 5).
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session.
   - **The gates:**
-    - `pnpm test` (705 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (779 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
-    - `scripts/check-describing.sh` (F2's, mock mode, 18 checks). F3 adds `scripts/check-building.sh`.
+    - `scripts/check-describing.sh` (F2's, mock mode, 18 checks; its 6d now waits for round 1). F3 adds
+      `scripts/check-building.sh` (Task 12).
 
 ---
 
@@ -303,6 +312,11 @@ bash scripts/check-describing.sh                                # F2's acceptanc
   Node port: `fetch` with `redirect: 'manual'` and a cookie jar per host.
 - **An event's `subject` is opaque**, and on the real platform some name the slug (`project:<slug>`). Match builds and
   instances by `machineDetail`'s ids.
+- **A fake that names things the way the real one does can hide a control.** Sitting 5's restart test passed with the
+  old session never ended, because the new server's fake also called its first session `session-1`. Give each fake
+  process its own ids. The same sitting's test message, *"Twelve weeks"*, was also in the plan it ran on.
+- **Stop is checked in several places after a platform call, by design.** A control that removes one check stays
+  green; remove them all to see the test go red.
 
 ## 8. Working with the platform session, and other agents
 
