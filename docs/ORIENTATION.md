@@ -4,58 +4,70 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F3 approved by Rich; the platform's 9b under way)*:
+**Where things stand** *(2026-09-28, F3's sitting 1 done; the platform's 9b closed)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3, *Building it*.** Its plan is
-  [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md): seven sittings, twelve tasks.
-  - **Rich approved it on 2026-09-28**, and chose how it runs: **one agent, natively** (superpowers:executing-plans),
-    not subagent-driven. One sitting per session, and the whole-branch review by one fresh reviewer at the end.
-  - **Then sitting 1, Task 1, the measurements, alone.**
-    - **M2, M5 and M6 can run at once:** the mock's answers, the two agent frameworks' documentation, and the
-      blueprint's sign-in code. So can M1's reading of `openapi.json`.
-    - **M1's live half, M3 and M4 need the control plane on 7100**, which the platform's 9b has stopped. Wait for
-      the platform session's *"CLOSED"*: it messages us (§8), or its close-out commit appears in manifest's `git log`.
-      Rich has already agreed that these measurements may spend a little on his OpenAI key and sign in as the test
-      user `instructor`.
-    - Close sitting 1 by correcting Tasks 2–12 to what it measured, as F2's sitting 1 did.
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3's sitting 2, Tasks 2 and 3.** These are the runtime (agents, moves, the
+  runner, its stop conditions, guards, the trace, saved runs) and the model client recording which model answered.
+  The plan is [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md).
+  - **Rich chose how it runs:** one agent, natively (superpowers:executing-plans), not subagent-driven, one sitting
+    per session. The whole-branch review is done by one fresh reviewer at the end.
+  - **Read first:** the plan's dated entry for sitting 1, then the briefing at the end of the ledger
+    (`.superpowers/sdd/2026-09-28-f3-building-it/progress.md`). The briefing lists the files, F2's patterns, and the
+    SQLite traps.
+  - **Sitting 1 corrected Tasks 2–12 to what it measured.** Trust the tasks as they now read. What changes sitting 2:
+    - **the lead's moves are wrapped as `{ move }`** (Decision 1): a union at the schema's root silently sends every
+      call to the 4B fallback (FE-34);
+    - **`Answered` gains `fallback`**, from the header `x-litellm-attempted-fallbacks`. On the normal path `model`
+      reads `default-chat-large`;
+    - **the migration is `user_version` 0 → 2**: F2 never set it;
+    - **`storeTrace` goes over new `Store` methods**;
+    - **an agent's `check` is built from its input**;
+    - M5 changed no interface. Task 2 has the frameworks' names for our ideas.
+  - **Rich decided one more thing in sitting 1:** when the fallback answers, **carry on, and say so** once in the
+    conversation. What the lead sees is capped at 48,000 characters, so the fallback's 16k context never cuts it
+    (Decisions 3 and 4).
   - **What F3 builds, in one breath:**
     - our own small agent framework (`runtime/`), with ideas from OpenAI's Agents SDK and Vercel's AI SDK and no
       dependency on either;
     - the lead agent, with a CWL specialist and an explaining agent;
     - the round of work: moment 6's five steps, each ticking on a platform signal;
     - the building screen, layout C.
-  - **The design is Rich's and settled.** Moment 6 is in [`walkthrough.md`](./walkthrough.md), and his decisions of
-    2026-09-28 are in the plan's *Decided by Rich*. Do not re-open them. The plan's 17 *Decisions* are ours, each
-    with its reasons: correct them from measurement.
+  - **The design is Rich's and settled.** Moment 6 is in [`walkthrough.md`](./walkthrough.md), and his decisions are in
+    the plan's *Decided by Rich*. Do not re-open them. The plan's 17 *Decisions* are ours, each with its reasons.
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md)).
   - **F1 is executed** (2026-09-27): sign-in, the shell, *Your apps*, and a profile.
     [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
   - **F2 is executed** (2026-09-28): moments 3–5. Describe it, name it, *Make it*, and the plan, committed into the
-    app as `docs/plan.md`. It passed against the mock, on the real platform, and in Rich's own click (*"it looks
-    great"*). [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-    - The review's eight deferred Minors are ruled on by Rich and done: six fixed, one deferred (FE-20), and one
-      carried into F3 (its Decision 12).
+    app as `docs/plan.md`. [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
+  - **F3's sitting 1 is done** (2026-09-28): the measurements, recorded in the plan's dated entry. New findings:
+    **FE-33** (a revoked token keeps its open event stream) and **FE-34** (the fallback also answers a request OpenAI
+    refused). Neither is carried; that is Rich's word.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
-  - **Landed:** sittings 8 (archive and restore), 9 (delete) and **9a (the capable model, `9c54bc3`)**. The contract
-    is 1.4.0, with 66 operations. Our typecheck and 546 tests pass against it.
-  - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`, Rich's), at `max_classification`
-    internal. **Read model names from `session.models`**, never assume them: a `confidential` project never gets it.
-    Until 9b it needs the network; offline, a call fails with LiteLLM's `500`.
-  - **Under way: 9b**, the capable model's fallback (session `manifest-b1`). When OpenAI fails, the same name answers
-    from the on-premise model, and the answer's `model` field names the fallback. The contract is predicted not to
-    move.
-  - **Our findings FE-26 to FE-32 are carried** (2026-09-28, at Rich's word), each at its option (a). So is FE-20's
-    news: a sign-in limited to a class is coming, via the Academic API or Canvas. **Our half of FE-28 is done:** a
-    request carrying two `manifest_session` cookies is signed out here.
+  - **Landed:**
+    - sittings 8 (archive and restore), 9 (delete), 9a (the capable model, `9c54bc3`) and **9b (its fallback,
+      close-out `346cd9e`)**;
+    - the contract is still **1.4.0, 66 operations**;
+    - our typecheck and 547 tests pass against it.
+  - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`, Rich's, $0.10/$0.50 a million tokens),
+    at `max_classification` internal. **Read model names from `session.models`**, never assume them: a
+    `confidential` project never gets it.
+    - **When OpenAI cannot answer, the same name answers from `default-chat-onprem`** (`ollama_chat/qwen3.5:4b`, 16k
+      context, $1/$3 a million), with the header `x-litellm-attempted-fallbacks: 1`.
+    - **It also does so for a request OpenAI refused as malformed** (FE-34): always read the header.
+  - **Next there: its sitting 10, the console and the mock** (FE-26, FE-27). **The mock's answers may change**: F3's
+    M2 recorded them at `346cd9e`.
+  - **Our findings FE-26 to FE-32 are carried** (2026-09-28, at Rich's word), each at its option (a). **Our half of
+    FE-28 is done.**
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
-- **The machine** *(2026-09-28)*:
-  - **The control plane on 7100 is stopped**, by the platform's 9b, which truncates the database as it tests. It
-    starts again at 9b's close, and the platform session tells us. Nothing of ours needs to survive there.
+- **The machine** *(2026-09-28, sitting 1's close)*:
+  - **The control plane on 7100 is running** (restarted by the platform session at 9b's close, from an empty database).
+    Sitting 1 left one test project there, `f3-measure-…`, made as `instructor`. Nothing of ours there needs to
+    survive a truncate.
   - **Our server on 7105 is in mock mode** (`pnpm dev:mock`), with one watcher. The mock is on 7102.
-  - To switch to the edge once the control plane runs: stop our server's whole process tree (§7's trap), then
-    `pnpm dev`. To switch back: the same, then `pnpm dev:mock`.
+  - To switch to the edge: stop our server's whole process tree (§7's trap), then `pnpm dev`. To switch back: the
+    same, then `pnpm dev:mock`.
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in `src/`,
@@ -71,7 +83,7 @@ says which plan is current. This file states where things stand and the rules. I
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session.
   - **The gates:**
-    - `pnpm test` (546 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (547 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
     - `scripts/check-describing.sh` (F2's, mock mode, 18 checks). F3 adds `scripts/check-building.sh`.
 
@@ -274,6 +286,17 @@ bash scripts/check-describing.sh                                # F2's acceptanc
 - **A problem's reference is only as good as its report.** If a reference shown on screen is missing from
   `problems` (`packages/server/.data/app.sqlite`), the report was refused. That is how sitting 4's second defect
   was found.
+- **A `200` from `default-chat-large` is not proof OpenAI answered** (F3 sitting 1). LiteLLM's fallback answers any
+  failed primary call, a request OpenAI refused as malformed included, from the 4B model, and cuts its prompt to
+  16k tokens without a word. Read `x-litellm-attempted-fallbacks` on every answer. A zod union at a schema's root is
+  such a request: wrap it in an object.
+- **A script's `DELETE` with `content-type: application/json` and no body is `400`**, which looks like "not
+  allowed". Send no content-type without a body. It hid F3's revocation test for one run.
+- **Scripts through the edge need the platform's CA:** `NODE_EXTRA_CA_CERTS=/Users/rich/Developer/manifest/infra/ca/manifest-root.crt`,
+  set before Node starts. Sign in as `instructor` by manifest's three hops (`infra/lib/idp-login.sh`, read-only), or its
+  Node port: `fetch` with `redirect: 'manual'` and a cookie jar per host.
+- **An event's `subject` is opaque**, and on the real platform some name the slug (`project:<slug>`). Match builds and
+  instances by `machineDetail`'s ids.
 
 ## 8. Working with the platform session, and other agents
 

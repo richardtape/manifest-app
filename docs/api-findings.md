@@ -814,6 +814,74 @@ Measured. **Carried to the platform session 2026-09-28**, at Rich's word (to `ma
     what it resolved.
   - (c) Wait for Phase 3's `exec`.
 - **When:** before a change after launch meets it (moments 8 and 17). F3 is not blocked.
+- **Measured 2026-09-28** (F3 sitting 1, M4, manifest `346cd9e`): `package.json` given `marked@14.1.0` and no lock
+  entry builds `failed` in 3.6 s. The telling lines, *"`npm ci` can only install packages when your package.json and
+  package-lock.json … are in sync"* and *"Missing: marked@14.1.0 from lock file"*, are about 50 lines from the end of
+  a 100-line log. `Build.error` and `build.failed`'s `reason` hold only npm's usage text after them.
+
+### FE-33 — A revoked token keeps its open event stream, and goes on receiving the project's events
+
+*Found 2026-09-28 in F3's sitting 1 (M3), against manifest `346cd9e` (contract 1.4.0). Measured. Not carried: Rich's
+word decides that.*
+
+- **Screen and moment:** moment 6. Our server watches the project's stream with the conversation's token for as long
+  as a round runs. Any agent holding a delegated token can do the same (`docs/api/events.md` ✓).
+- **What happened** (`scratchpad m3-after.mjs`, a token minted for the test):
+  - a token opened `GET /v1/projects/{p}/events`, took its replay and the ready frame;
+  - the person revoked it (`DELETE /v1/tokens/{id}`, `200`, `revokedAt` set);
+  - **the socket stayed open, for the whole minute we watched, and was sent `agent_session.started` and
+    `agent_session.ended`**, made afterwards with another token;
+  - a new upgrade with the revoked token was refused (`1006`; a `GET` of the same URL answers `401 UNAUTHENTICATED`).
+    So revocation is checked at the upgrade and never after it.
+- **Why it matters:**
+  - Revoking a token is how a person stops an agent (*agents.md* ✓: *"Ask the person for a new one"*). An agent
+    stopped that way can still read what happens on the project: builds and their logs, incidents with their
+    `logTail` and `prompt`, commits, who was added.
+  - The events are redacted at capture, so no secret travels this way. What travels is everything else a revoked
+    agent should no longer see.
+  - The same holds for an expired token, if expiry is checked the same way (not measured).
+- **Also measured, for the guide:** a token's upgrade for **another project** closes `1006`, and the `GET` says
+  `404 NOT_FOUND`. The contract's close code `4404` (*"Not found — or not yours"*) was never sent to a token, and
+  `4403` is a session's alone.
+- **Options:**
+  - **(a) Recommended:** revoking a token closes its open streams, with a close code of their own (say `4401`, *"the
+    credential was revoked or expired"*), and an expired token's are closed at its `expiresAt`.
+  - (b) The stream checks its credential on a timer, and closes `4401` within a minute of a revocation.
+- **When:** before faculty use it for real. Our round closes its stream when the round ends (Decision 15), so F3 does
+  not depend on it.
+
+### FE-34 — The capable model's fallback also answers a request OpenAI refused as malformed
+
+*Found 2026-09-28 in F3's sitting 1 (M1), against manifest `346cd9e` (9b's fallback). Measured. Not carried: Rich's
+word decides that.*
+
+- **Screen and moment:** moment 6. The lead asks `default-chat-large` for one move at a time, as structured output.
+- **What happened** (`scratchpad m1-why.mjs`, one agent session):
+  - a `response_format` whose `json_schema` has an `anyOf` at its root (a union of moves, as zod writes it) is one
+    OpenAI's strict mode documents it does not accept (the root must be an object). The primary call failed (the
+    header below says a fallback was attempted); its own error is never shown to the client;
+  - **the call still answered `200`**, from `ollama_chat/qwen3.5:4b`, at the on-premise price, with the header
+    `x-litellm-attempted-fallbacks: 1`. It did so on every one of seven calls in M1's first run;
+  - the same union wrapped as `{ move: … }` is answered by `default-chat-large` itself (`attempted-fallbacks: 0`,
+    `model: "default-chat-large"`).
+  - On the normal path `model` reads `default-chat-large`, not `openai/gpt-6-luna`. Only the fallback names its
+    model (`ollama_chat/qwen3.5:4b`).
+  - The on-premise model's context is 16k tokens: a 108k-token prompt was answered with `prompt_tokens` 16,386, cut
+    without a word.
+- **Why it matters:**
+  - 9b's fallback was for OpenAI *being unreachable* (Spec action 8). LiteLLM's `general` fallback also covers a
+    request OpenAI refused as wrong, so a client's own mistake looks like success from a smaller model, which is
+    then given a prompt cut to its context.
+  - We found it only because we read the header. Another client would build on a 4B model's answers and never
+    know.
+- **What we do** (not a workaround): the lead's schema is a root object (`{ move }`), a test holds it, and every
+  answer's `x-litellm-attempted-fallbacks` and `model` are recorded (F3 Decision 4).
+- **Options:**
+  - **(a) Recommended:** the fallback answers only when the provider could not be reached or failed (a timeout,
+    a connection error, a `5xx`, a `429`). A `400` from the provider is the client's, and is answered as one.
+  - (b) At least the agents guide says so: read `x-litellm-attempted-fallbacks`, not only `model`, and a refused
+    schema falls back silently.
+- **When:** before a client other than ours meets it. F3 is not blocked.
 
 ---
 
