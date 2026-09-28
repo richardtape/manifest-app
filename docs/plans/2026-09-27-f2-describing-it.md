@@ -1434,7 +1434,8 @@ roadmap). Our typecheck and all 395 tests pass against it.
     *One class* and *All at once* guessed *"from 'About 200 students'"*; `mock-app` taken, in the platform's
     own words; *Make it*.
   - No console error, no failed request, and no horizontal overflow, at either width.
-- **Words worded here, for Rich**, where the walk-through gives none:
+- **Words worded here, where the walk-through gives none. Rich agreed them all (2026-09-27: *"words are
+  fine"*):**
   - the steps *"Thinking of names"* and *"Choosing how to build it"*;
   - *"Try again"* and *"Name it yourself"*;
   - *"Its name"* and *"Its address"*;

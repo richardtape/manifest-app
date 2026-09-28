@@ -184,3 +184,31 @@ MODE=edge bash scripts/check-slice.sh                           # the same, thro
 - `pnpm install --offline --frozen-lockfile` works from the store, **unless the lockfile has changed since it was
   last verified**. pnpm 11 then wants registry metadata to re-check it.
 - Once, `pnpm install --frozen-lockfile --prefer-offline` fetches metadata only.
+
+## 7. Traps: each one cost a sitting something
+
+- **Prettier rewrites what you write** (`pnpm format`). Re-read a file before an exact-text edit.
+- **The tool shell is zsh.**
+  - A glob that matches nothing aborts the whole command: `rm -f x*` stops everything after it.
+  - A `rm` of a variable path (`rm $DIR/*`) is refused by a safety check. Name files literally.
+  - Quote heredocs (`<<'EOF'`), or backticks run.
+- **Vitest 2.1.9 cannot `import 'node:sqlite'`.** `store/db.ts` loads it with `createRequire`, and a test that
+  needs the file directly does the same (`store/testing.ts`).
+- **Platform tests run in `node`, never jsdom:** the contract sends no session header when it sees a `document`.
+  Screen tests opt in per file with `// @vitest-environment jsdom`.
+- **StrictMode in a test** is Testing Library's `reactStrictMode: true`. A `<StrictMode>` wrapper around
+  `renderHook` ran effects once (measured).
+- **The mock answers the document's examples, whatever is asked** (FE-27): another project, another name, and
+  fixed times long past. It accepts any session (FE-26), and holds one taken slug, `mock-app`. **Assert what was
+  sent, against a recording fake,** never what the mock answered.
+- **Through the edge, a restart of our server closes `EventSource` for good**: its retry meets the edge's
+  `502`. The page reopens it (`ours/conversation.ts`), and mock mode can never show this.
+- **A test that passes the first time proves nothing yet.** Break what it guards, watch it go red, restore it:
+  each sitting's entry lists these as its *negative controls*.
+- **Walk the screens in a real browser**, as every sitting since F1's has: headless Chrome over the DevTools
+  protocol, from a script in the session's scratchpad, with Node 24's global `WebSocket` and no new dependency.
+  It found two defects in F2's sitting 4 that no unit test could. `pnpm dev:mock` must be running;
+  `tsx watch` restarts our server on each edit.
+- **A problem's reference is only as good as its report.** If a reference shown on screen is missing from
+  `problems` (`packages/server/.data/app.sqlite`), the report was refused. That is how sitting 4's second defect
+  was found.

@@ -106,7 +106,7 @@ export const words = {
     skip: 'Skip these — use your best guess',
     couldntRead:
       "We couldn't read that just now. Your words are kept. Try again, or name it yourself.",
-    /** Worded here: the walk-through names the two ways on, not their buttons. */
+    /** Rich's (2026-09-27): the walk-through names the two ways on, not their buttons. */
     tryAgain: 'Try again',
     nameItYourself: 'Name it yourself',
     pausedToday: (when: string) =>
@@ -118,8 +118,8 @@ export const words = {
       'Describing new apps is waiting on a Manifest administrator. You can still name it yourself.',
   },
   /**
-   * EACH STEP, BY ITS KEY (the server sends keys: words live here). Only "Reading it" is the
-   * walk-through's; the other two are worded here.
+   * EACH STEP, BY ITS KEY (the server sends keys: words live here). "Reading it" is the
+   * walk-through's; the other two are Rich's (2026-09-27).
    */
   steps: {
     understanding: 'Reading it',
@@ -137,13 +137,13 @@ export const words = {
       `Some things we can't do yet: ${things}. Everything else, we can.`,
     callTitle: 'What should we call it?',
     somethingElse: 'Something else',
-    /** Worded here. */
+    /** Rich's (2026-09-27). */
     nameLabel: 'Its name',
     changeAddress: 'Change the address',
     addressLabel: 'Its address',
     /** The prototype's FormField hint. */
     addressHint: 'Lower case, hyphens between words. This becomes its web address.',
-    /** Worded here: free now, and not yet theirs. */
+    /** Rich's (2026-09-27): free now, and not yet theirs. */
     addressFree: (address: string) => `Free. It will live at ${address}.`,
     /** Added to SLUG_TAKEN when the platform gives no hint of its own. */
     takenExtra: 'Pick another, or ask its owner to add you.',
@@ -170,7 +170,7 @@ export const words = {
     footer:
       "Who it's for sets how much room we give it. You can't change that yet. Ask us and we'll do it by hand.",
     makeIt: 'Make it',
-    /** Until F2's Task 8 builds it. */
+    /** Until F2's Task 8 builds it. Rich's (2026-09-27). */
     makingNext: 'Making it arrives next.',
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
