@@ -26,7 +26,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **After the enablement plan, first** | **FE-6**, **FE-25** | The launch path: the three clocks' drafts and state, the staging registration as a tracked object, and an owner's *"please sign this off"* | **The first of the front-end's asks** |
 | **Then** | **FE-19**–**FE-22**, **FE-7**, **FE-3** | Toolkits, integrations, Qdrant, course material; events after a cursor; the sandbox's pretend people (with FE-24's plan) | ordered after the launch path |
 | **Phase 4, as specified** | **FE-4** | Noticing a live app that died | **Phase 4's reconciler (D10)**; the front-end watches meanwhile |
-| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a replayed start's session named only in its message | **Rich's to carry**. FE-28 matters most. None blocks the platform's sitting 8 |
+| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log | **Rich's to carry**. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits. None blocks the platform's sitting 8 |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -674,30 +674,76 @@ platform session.*
 - **When:** before faculty apps share the zone with real people. Sittings 10–11 at the latest, beside FE-18 and
   FE-26.
 
-### FE-29 — A replayed start names its session only in the message
+### FE-29 — A refusal's facts are only in its message
 
-*Found by F2's sitting 1 (M1), 2026-09-27, against manifest `e6a5f70`, from reading. Not yet carried to the
-platform session. Small.*
+*Found by F2's sitting 1 (M1), 2026-09-27, against manifest `e6a5f70`, from reading. Widened the same day at
+Rich's word: a limit is to be said plainly, whose it is and when it resets. Not yet carried to the platform
+session.*
 
-- **Screen and moment:** moment 5, when our server starts an agent session to write the plan. Later, every
-  conversation in F3.
-- **What we would call:** `startAgentSession` (and `startIntakeSession`, from the browser). If the answer is lost
-  in transit, the retry with the same `Idempotency-Key` is answered `409 AGENT_SESSION_ALREADY_STARTED`
-  (`INTAKE_SESSION_ALREADY_STARTED`). Its remedy is to end the session it names and start another.
-- **What is missing:**
-  - It names the session only in `message`: *"this request already started the agent session '<name>' (<id>)…"*
-    (`packages/control-plane/src/api/routes/agents.ts:221` ✓; the intake's is the same, `routes/intake.ts:77` ✓).
-  - The envelope says of `message`: *"For a person. Never parse it; switch on `code`."* ✓
-  - The envelope has no field for it, as it has `pendingAction` for `TOKEN_ACTION_PENDING` ✓.
+- **Screen and moment:**
+  - moments 3 and 4, when describing is paused;
+  - moment 5, when our server starts an agent session to write the plan, and the person's allowance is spent;
+  - every conversation in F3.
+- **What we would call:** the refusal itself, and switch on its `code`, as the envelope asks. Then word it from
+  its facts: whose limit, how much, and when it lifts.
+- **What is missing.** Every fact below is in `message` only, and the envelope says of `message`: *"For a person.
+  Never parse it; switch on `code`."* ✓
+
+  | Code | The fact, in the message only |
+  |---|---|
+  | `AGENT_SESSION_ALREADY_STARTED`, `INTAKE_SESSION_ALREADY_STARTED` | the session the first start made: *"this request already started the agent session '<name>' (<id>)…"* (`routes/agents.ts:221` ✓, `routes/intake.ts:77` ✓) |
+  | `INTAKE_DAILY_LIMIT_REACHED` | the day's limit, *"the <n> intake sessions a person may start in a day"*, and when it lifts: *"paused for today"* (`ai/intake.ts:113-114` ✓) |
+  | `INTAKE_BUDGET_EXHAUSTED` | the platform's month, *"of $<n>"*, and *"until the month resets"* (`ai/intake.ts:77-78` ✓) |
+  | `AGENT_BUDGET_EXHAUSTED` | the person's month and spend, *"of $<n> is spent ($<x> so far)"* (`ai/sessions.ts:181-182` ✓). Its reset *is* readable, from `getAgentBudget` |
+
+  - The envelope already carries such facts for other codes: `pendingAction` for `TOKEN_ACTION_PENDING` ✓, and
+    `launchReadiness` for `RELEASE_PRODUCTION_GATE_UNAVAILABLE` ✓.
+  - The reset rules are written in the contract's prose (*"the first of the month, 00:00 UTC"*; *"midnight,
+    Vancouver time"*). Meanwhile we compute from those, which is a rule we read, not a message we parse.
 - **Why it matters:**
-  - A client cannot follow the remedy without parsing prose.
-  - `listAgentSessions` by name is a guess when two starts share a name.
-  - The cost is small: the orphaned key was never received, so it spends nothing, and it expires at its
-    `expiresAt` (60 minutes by default). We let it expire.
+  - Rich wants every limit said plainly: *"we can tell them that their allocation is up, and when it resets."*
+    For the intake's two limits we can only do that by copying the platform's rules into our code, where they
+    drift silently if an administrator changes them.
+  - A client cannot follow `*_ALREADY_STARTED`'s own remedy, *"end the session this refusal names"*, without
+    parsing prose. `listAgentSessions` by name is a guess when two starts share a name. That cost is small: the
+    orphaned key was never received, so it spends nothing, and it expires on its own (60 minutes by default).
 - **Options:**
-  - **(a) Recommended:** the refusal carries the session, as `error.session: { id, name }`, beside `message`.
-  - (b) The remedy text says to list the sessions instead.
-- **When:** whenever the error envelope is next touched; it adds a field, so it is additive.
+  - **(a) Recommended:** each refusal carries its facts as fields, beside `message`, as `pendingAction` does:
+    - `error.session: { id, name }` on the two `*_ALREADY_STARTED`;
+    - `error.limit: { scope: 'person' | 'platform', period: 'day' | 'month', resetsAt, amountUsd? }` on the three
+      limits.
+  - (b) At least `resetsAt` on the three limits.
+- **When:** whenever the error envelope is next touched. It adds fields, so it is additive (D23.8).
+
+### FE-30 — Nothing lets a support report meet the platform's log
+
+*Raised 2026-09-27 at Rich's word, after F2's sitting 1, against manifest `e6a5f70`. Read, not measured. Not yet
+carried to the platform session.*
+
+- **Screen and moment:** every problem a faculty member is shown. Rich: *"if the member of faculty gets in touch
+  with support, they will copy and paste the error and it will at least have an identifier so we can see what the
+  actual issue is."*
+- **What we would do** (F2's Decision 11): show a reference under every problem, *"If you contact support, quote
+  7F3A-9C21"*, and keep a row saying what happened. For a refusal the browser meets at the platform, that row
+  should name the platform's own record of the request.
+- **What is missing:**
+  - **The platform has no request identifier.** No response header carries one, the error envelope has no field
+    for one, and nothing in `packages/control-plane/src` assigns one ✓ (`grep -i 'request-id\|genReqId\|reqId'`
+    finds nothing).
+  - **It logs only its `500`s**, and without a time or an id: one JSON line of method, URL and message
+    (`api/server.ts:339-380` ✓). A refused request leaves no trace at all.
+  - Its own remedy for `AI_UNMAPPED` reads: *"report the time to the platform's operator, whose log has the
+    gateway's answer"* ✓. That is the gap, in the platform's words.
+- **Why it matters:**
+  - A faculty member's report reaches us with our reference, and we can say what they were shown.
+  - We cannot say why the platform said it, and neither can the platform's operator, unless the time alone is
+    enough.
+- **Options:**
+  - **(a) Recommended:** every response carries a request id in a header, and every refusal carries it as
+    `error.requestId` too. The platform logs one line per refusal, not only per `500`, with the id, the time, the
+    operation and the code. We record the id beside our reference.
+  - (b) At least the header, and a log line for every `5xx`.
+- **When:** before faculty use it for real. It adds a header and a field, so it is additive.
 
 ---
 

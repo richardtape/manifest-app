@@ -67,6 +67,11 @@ import it (Task 2).
 - **The plan's voice is *we*** (D5). **The agreed plan is committed into the app as `docs/plan.md`** (D6).
 - **Our server may replay the session cookie to `getMe`, and for nothing else** (FE-2). It follows that our
   server calls no other operation with the person's session: whatever needs the person, the browser does.
+- **Every problem a person is shown carries a support reference they can quote** (Rich, after sitting 1:
+  *"if the member of faculty gets in touch with support, they will copy and paste the error and it will at least
+  have an identifier so we can see what the actual issue is"*). Decision 11 says how.
+- **A limit is said plainly: whose allowance is used up, and when it resets** (Rich, the same day). The words are
+  in Tasks 7 and 9.
 
 ## Decisions this plan makes, and why
 
@@ -138,6 +143,28 @@ import it (Task 2).
 10. **Components ported in this plan**, each with parity cases, as F1 did: `FormField`, `Choice`, `LiveSteps`.
     **The description box has no system component**: a `<textarea>` styled with the `mf-field__input` class,
     which is recorded rather than invented.
+11. **A support reference on every problem** (Rich's direction, above; added after sitting 1).
+    - **What it is:** `XXXX-XXXX`, eight upper-case hex digits from `crypto.getRandomValues`. It is opaque, so it
+      shows no machinery (C3).
+    - **What the person sees**, under the problem's own words: *"If you contact support, quote 7F3A-9C21."*,
+      with a **[Copy]** button.
+      - Every refusal we show carries one, and so does F1's trouble notice.
+      - A state is not a problem, and has none: signed out, *Not live yet*, *Answering*.
+    - **Where it is made and kept:**
+      - **Our server's own problems** (a `refusal` frame, or an error our API answers): the server makes the
+        reference. It writes one row to `problems` and one JSON line to its output: the reference, the code,
+        when, the person, the conversation, and where it happened.
+      - **What the browser meets at the platform** (a start refused, a read that failed): the browser makes the
+        reference, shows it at once, and reports it to `POST /api/problems` without waiting. A report that fails
+        is lost, and the notice is unchanged.
+      - **Nothing else is kept.** Never a platform message (C3: it can carry machinery), and never a credential:
+        the no-credential test dumps `problems` too.
+    - **The platform's half is FE-30.** It has no request identifier, and it logs only its `500`s. When it answers
+      one, the report carries it, so support can follow a reference into the platform's log.
+    - *Rejected:* showing the platform's code, which is machinery and is not findable in any log. *Rejected:* a
+      reference for our server's problems only, because most of moments 3 and 4's refusals are met by the
+      browser.
+    - *Changing course* is one table and one route.
 
 ## Global Constraints
 
@@ -150,6 +177,10 @@ import it (Task 2).
 - **The words are the walk-through's**, in `words.ts`, and F1's machinery-words test covers every new screen.
 - **The intake shows no money** (it is the platform's cost). The plan step shows nothing about money either;
   F3's allowance line starts with building.
+  - *Amended after sitting 1:* except the allowance's amount when it is used up. That is Rich's wording of the
+    limit (Task 9).
+- **Every problem shown carries a support reference** (Decision 11), and each screen's tests assert it.
+- **A limit says whose it is and when it resets**, in the person's own time zone (Rich, after sitting 1).
 
 ## Review Focus
 
@@ -314,6 +345,42 @@ export function guard(config: Config): (request: FastifyRequest, reply: FastifyR
   - drop the `Origin` check;
   - let `getConversation` ignore `personId`;
   - store a scripted token in `messages`.
+- [ ] *Amended after sitting 1* (Decision 11): **the server half of support references.**
+  - **Files:** `server/src/api/{problems.ts,problems.test.ts}`; `schema.sql` gains `problems`.
+  - **Interfaces:**
+
+    ```ts
+    // store
+    export interface Problem {
+      reference: string                 // 'XXXX-XXXX'
+      code: string                      // ours or the platform's, e.g. INTAKE_DAILY_LIMIT_REACHED
+      at: string
+      where: 'server' | 'browser'
+      operation: string | null          // the platform's operationId, or our route
+      status: number | null
+      personId: string | null           // a person who cannot sign in has problems too
+      conversationId: string | null
+      platformRequestId: string | null  // FE-30; null until the platform answers one
+    }
+    // Store gains: recordProblem(problem: Problem): void   — a duplicate reference is ignored
+    // api/problems.ts
+    export function newReference(): string
+    /** The server's own problem: one row, one JSON line to the output; returns the reference. */
+    export function problem(store: Store, fields: Omit<Problem, 'reference' | 'at' | 'where'>): string
+    // POST /api/problems { reference, code, operation, status, at } → 204.
+    // Origin-guarded like every mutation. The person is recorded when there is one, and a report from nobody is
+    // still kept: guard(config, { person: 'optional' }).
+    ```
+
+  - **Tests, failing first:**
+    - `newReference` matches `/^[0-9A-F]{4}-[0-9A-F]{4}$/`, and 1,000 of them are distinct;
+    - a good report is `204`, with one row;
+    - each of these is `400 PROBLEM_INVALID`, with no row: a bad reference; a code outside
+      `/^[A-Z][A-Z0-9_]{0,63}$/`; **an unknown key, such as `message`**; a body over 1 KB;
+    - a cross-origin report is `403 ORIGIN_REFUSED`, with no row;
+    - `problem()` writes one row and one JSON line;
+    - the no-credential dump includes `problems`.
+  - **Negative control:** accept `message` in the body, and see the unknown-key case go red.
 - [ ] **Step 5: The gates; commit** `feat(server): storage with no credential in it, our API guarded by person and
   Origin, conversations`.
 
@@ -331,6 +398,8 @@ export type Progress =
   | { kind: 'state'; conversation: Conversation }                      // on connect, and on every change
   | { kind: 'step'; step: string; state: 'now' | 'done' | 'halted' }   // "Reading it", "Writing the plan", …
   | { kind: 'refusal'; code: string }                                  // our codes, e.g. MODEL_ANSWER_INVALID
+  // Amended after sitting 1 (Decision 11): { kind: 'refusal'; code: string; reference: string }, the reference
+  // made by problem(), so the row exists before the frame is sent
 export function publish(conversationId: string, frame: Progress): void
 // web
 export function useConversation(id: string): { conversation?: Conversation; steps: ...; refusal?: string; status: 'connecting' | 'live' | 'closed' }
@@ -355,6 +424,10 @@ export function useConversation(id: string): { conversation?: Conversation; step
     one under StrictMode.
   - **Negative control:** skip the on-connect `state` frame, and see the restart case go red.
   - **Negative control** *(amended by sitting 1)*: never reopen a closed stream, and see the `CLOSED` case go red.
+  - *Amended after sitting 1* (Decision 11):
+    - a `refusal` frame carries a `reference`, and its `problems` row exists when the frame arrives;
+    - `web/src/ours/api.ts` gains `reportProblem(problem)`, which posts to `/api/problems`, never throws, and is
+      never awaited by a screen.
 - [ ] **Step 5: The gates; commit** `feat: one progress stream per conversation — state first, then each step`.
 
 ---
@@ -610,6 +683,22 @@ export function needAnotherRound(offers: Offer[]): boolean   // fewer than 2 ava
       | `AI_BACKEND_UNAVAILABLE`, or no answer in 15 seconds | the walk-through's *"We couldn't read that just now. Your words are kept. Try again, or name it yourself."* |
       | any other | F1's *"Something went wrong on our side…"*, with the code to the console |
 
+      *Amended after sitting 1, at Rich's word:* limits are said plainly, whose they are and when they reset
+      (in the person's own time zone). **This table replaces the one above.** Every row is followed by the
+      reference line (Decision 11), and each refusal is reported with `reportProblem`.
+
+      | Code | Says |
+      |---|---|
+      | `INTAKE_DAILY_LIMIT_REACHED` | *"You've described as many new apps today as one person can. That resets at midnight. You can still name it yourself."* **Rich's.** Midnight is Vancouver's, said in the person's own zone |
+      | `INTAKE_BUDGET_EXHAUSTED` | *"Describing new apps is paused for everyone until 5pm on 30 September, when this month's allowance resets. You can still name it yourself."* **Rich's.** The time follows the contract's rule, *"the first of the month, 00:00 UTC"*, until FE-29 answers it as a field |
+      | `INTAKE_MODEL_UNAVAILABLE`, `AI_CATALOGUE_DISABLED` | *"Describing new apps is waiting on a Manifest administrator. You can still name it yourself."* **Proposed, for Rich** |
+      | `AI_BACKEND_UNAVAILABLE`, or no answer in 15 seconds | the walk-through's *"We couldn't read that just now. Your words are kept. Try again, or name it yourself."* |
+      | any other | F1's *"Something went wrong on our side…"* |
+
+    - *Amended after sitting 1* (Decision 11): **F1's `TroubleNotice` gains the reference line and [Copy]**, and
+      reports what it shows. Its tests and the machinery-words test cover the line: a reference is never a
+      machine word.
+
     - *Amended by sitting 1:* **the browser ends the intake session** (`endIntakeSession`) when *Make it* is
       pressed. On `INTAKE_KEY_EXPIRED` from our stream, it starts another, once, and hands it over.
   - ***Name it* (moment 4, before *Make it*):**
@@ -732,6 +821,10 @@ export function planMarkdown(title: string, plan: z.infer<typeof Plan>, onlyYouK
     - The session is named after the conversation's title, at most 64 characters.
     - **`AGENT_BUDGET_EXHAUSTED` from `start` publishes the same *needs you* as `remainingUsd === 0`**, because
       a budget read can be seconds stale (*"Spend lands a few seconds after a call"*).
+    - *Amended after sitting 1, at Rich's word:* that *needs you* says **whose allowance, and when it resets**:
+      *"You've used your $10.00 AI allowance for this month. It resets at 5pm on 30 September. Nothing is lost;
+      this plan will be here."* The amount is `monthlyUsd`, and the time is `resetsAt`, in the person's own zone.
+      It replaces the words above, and every refusal here carries its reference (Decision 11).
     - **`MODEL_NOT_AVAILABLE` now means the platform gives this app no model**: `AI_CATALOGUE_DISABLED` or
       `AGENT_NO_MODEL_FOR_CLASSIFICATION`. *"Arrives soon"* would be untrue, since it has arrived. **Proposed,
       for Rich:** *"Writing plans is waiting on a Manifest administrator. Nothing is lost."*, waiting on someone.
@@ -775,6 +868,9 @@ export function planMarkdown(title: string, plan: z.infer<typeof Plan>, onlyYouK
   - Step 5's project is always `mock-app`, whatever name was chosen, and its token is the mock's fixture.
   - Step 9 has a real `mft_` value to look for: the mock's token secret. The mock's model keys are
     `sk-example-not-a-real-key`.
+
+  *Amended after sitting 1* (Decision 11): **step 10: a refusal carries a reference, and `problems` holds its row**,
+  with no `mft_`, no `sk-` and no platform message in it.
 - [ ] **Step 2: The clicked half, Rich's**, against the mock:
   1. describe the walk-through's example;
   2. answer or skip the questions;
@@ -1016,3 +1112,28 @@ with its reason above: the LiteLLM hop, and the Caddy reload.
 
 **For sitting 2:** Tasks 2 and 3, as amended. Rich's answer on the three proposed sentences is needed by
 sitting 4 (Task 7) and sitting 5 (Task 9), not before.
+
+### 2026-09-27 — After sitting 1: support references, and limits said plainly (Rich)
+
+**Rich, on reading sitting 1:**
+- *"With the 'human language' error messages, I think we might need some way of having an identifier, so if the
+  member of faculty gets in touch with support, they will copy and paste the error and it will at least have an
+  identifier so we can see what the actual issue is."*
+- *"If it's about budgets, I think we can be more explicit to the faculty member, we can tell them that their
+  allocation is up, and when it resets."*
+
+**Written into this plan:**
+- **Decision 11**, a support reference on every problem, and its halves in Tasks 2, 3, 7 and 10;
+- the limit words, **Rich's**, in Tasks 7 and 9. These supersede sitting 1's first proposal (*"paused for now"*).
+
+**Still proposed, for Rich** (needed by sittings 4 and 5):
+- *"Describing new apps is waiting on a Manifest administrator. You can still name it yourself."*
+- *"Writing plans is waiting on a Manifest administrator. Nothing is lost."*
+- *"We couldn't write the plan just now. Nothing is lost."*
+
+**Checked before filing:**
+- The platform has no request identifier, and logs only its `500`s (FE-30).
+- Its limits' facts are in their messages only (FE-29, widened). **Both are for Rich to carry.**
+
+**One constraint moved:** the plan step shows money once, in the allowance's amount when it is used up. That is
+Rich's wording.
