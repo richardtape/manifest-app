@@ -96,7 +96,7 @@ describe('moments 3 and 4 (F2 Task 7), against manifest-mock', () => {
     await withMock(async (origin) => {
       expect(await platform(origin).checkSlug('mock-app')).toMatchObject({
         available: false,
-        reasons: [{ code: 'SLUG_TAKEN', message: 'a project already has this name' }],
+        reasons: [{ code: 'SLUG_TAKEN', message: 'a project already has this slug' }],
       })
       expect(await platform(origin).checkSlug('reading-responses')).toMatchObject({
         available: true,
