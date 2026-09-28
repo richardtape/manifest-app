@@ -98,6 +98,11 @@ export function buildServer(
       }),
   })
 
+  // THE PLATFORM'S `make doctor` ASKS WHO HOLDS 7105 (its F12), as it asks the mock on 7102
+  // for `/v1/__doctor`: our name, and only that. No session, no call to the platform, so it
+  // answers with the platform down, and a stray process on 7105 stays foreign.
+  app.get('/api/__doctor', async () => ({ name: 'manifest-app' }))
+
   app.get('/api/me', async (request, reply) => {
     let person
     try {

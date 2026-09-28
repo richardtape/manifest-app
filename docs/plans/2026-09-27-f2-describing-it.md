@@ -1809,3 +1809,19 @@ clicked half (Task 10, step 2) is owed**.
 - Open `https://app.manifest.internal/new`, sign in as `instructor` / `instructor`, and click moments 3–5.
 - Then F2 is executed, and F3 is next, to be written.
 - The Minors, FE-31, and the capable model are his to decide.
+
+### 2026-09-28 — After sitting 6: the marker on 7105 (the platform's F12)
+
+- **The platform session asked, through Rich,** for a path on 7105 that its `make doctor` can ask, so it can tell
+  our server apart from a stray process. Until now its doctor read one failure whenever we held 7105.
+- **Built:** `GET /api/__doctor` answers `200 {"name":"manifest-app"}` (`packages/server/src/app.ts`), the shape
+  we proposed. It is its mock's pattern (`/v1/__doctor`, naming `manifest-mock`).
+  - No session and no call to the platform, so it answers with the platform down.
+  - It is under `/api`, which Fastify owns in both modes, so the app's `index.html` can never answer it.
+- **Test:** `app.test.ts`, both modes, with no session and the platform unreachable. It was red first (`404`,
+  no route).
+- **Measured live:** `http://127.0.0.1:7105/api/__doctor` and `https://app.manifest.internal/api/__doctor` both
+  answer `{"name":"manifest-app"}`.
+- **Gates:** `pnpm test` 526/526, lint 0, typecheck 0, format clean.
+- **Told the platform session** that its `frontend_is_ours` can ask `http://127.0.0.1:7105/api/__doctor` and
+  match `manifest-app`.

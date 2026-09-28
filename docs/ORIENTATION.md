@@ -60,14 +60,16 @@ says which plan is current. This file states where things stand and the rules. I
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session.
   - **The gates:**
-    - `pnpm test` (524 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (526 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
     - `scripts/check-describing.sh` (F2's, mock mode).
 - **Findings not yet carried to the platform session** (Rich's to carry):
   - FE-26 to FE-30, as before;
   - **FE-31**: `listBlueprints` offers a test fixture with no CWL sign-in, and nothing marks it.
-- **The platform's request to us, Rich's to answer:** a path on 7105 that its `make doctor` can ask (its F12). We
-  would propose `GET /api/__doctor`, answering `manifest-app`.
+- **The platform's request to us is answered** (2026-09-28): `GET /api/__doctor` on 7105 answers
+  `{"name":"manifest-app"}`, with no session, so its `make doctor` can tell our server from a stray process (its
+  F12). The platform session has been told. **Keep that path and that answer.** The platform's doctor matches
+  them.
 
 ---
 

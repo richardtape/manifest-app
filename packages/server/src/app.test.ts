@@ -129,6 +129,22 @@ describe('/api/me: who we serve (FE-2)', () => {
   })
 })
 
+describe("/api/__doctor: the platform's make doctor asking who holds 7105 (its F12)", () => {
+  it.each(['mock', 'edge'] as const)(
+    'in %s mode, answers our name with no session and the platform down, and never reaches the app',
+    async (mode) => {
+      const { base, webSaw } = await serve(
+        mode === 'mock' ? mock('http://127.0.0.1:1') : edge('http://127.0.0.1:1'),
+      )
+      expect(await json(await fetch(`${base}/api/__doctor`))).toEqual([
+        200,
+        { name: 'manifest-app' },
+      ])
+      expect(webSaw).toEqual([])
+    },
+  )
+})
+
 describe('everything else is the app', () => {
   it.each(['mock', 'edge'] as const)(
     'in %s mode, / and a deep path reach the app',
