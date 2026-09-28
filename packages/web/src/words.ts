@@ -233,6 +233,8 @@ export const words = {
     didntComeOut: "The plan didn't come out right. Try again. Nothing was built.",
     /** Rich's (2026-09-27): the agreed plan could not be committed. */
     couldntSave: "We couldn't save the plan with your app just now. Nothing is lost.",
+    /** A window behind said yes to a plan corrected in another (a deferred Minor). */
+    changedElsewhere: 'The plan changed in another window. Read it again, then say yes.',
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
   reference: {

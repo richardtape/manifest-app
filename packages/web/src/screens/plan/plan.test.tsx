@@ -355,7 +355,9 @@ describe('the plan (moment 5)', () => {
       target: { value: 'It closes at the deadline.' },
     })
     await press(screen.getByRole('button', { name: words.plan.yes }))
-    expect(s.called('agree')).toEqual([['c-1', { late: 'It closes at the deadline.' }]])
+    expect(s.called('agree')).toEqual([
+      ['c-1', { version: 1, answers: { late: 'It closes at the deadline.' } }],
+    ])
     s.say({ kind: 'step', step: 'agreeing', state: 'now' })
     expect(screen.getByText(words.steps.agreeing)).toBeTruthy()
     expect(screen.queryByRole('button', { name: words.plan.yes })).toBeNull()
@@ -378,8 +380,33 @@ describe('the plan (moment 5)', () => {
     expect(within(notice).getByText(words.reference.line('0000-00A1'))).toBeTruthy()
     await press(within(notice).getByRole('button', { name: words.describe.tryAgain }))
     expect(s.called('agree')).toEqual([
-      ['c-1', { ta: 'Yes' }],
-      ['c-1', { ta: 'Yes' }],
+      ['c-1', { version: 1, answers: { ta: 'Yes' } }],
+      ['c-1', { version: 1, answers: { ta: 'Yes' } }],
+    ])
+  })
+
+  it('a window behind (409 PLAN_CHANGED): says the plan changed in another window, never a fault; nothing reported, nothing to press but Yes again, on the plan the stream brings (deferred Minor, Rich: fix it)', async () => {
+    const s = stage()
+    const record = s.ours.agree
+    let refusals = 1
+    s.ours.agree = (...args) =>
+      record(...args).then(() =>
+        refusals-- > 0 ? Promise.reject(new OurRefusal('PLAN_CHANGED', 409)) : undefined,
+      )
+    await planReady(s)
+    await press(screen.getByRole('button', { name: words.plan.yes }))
+    const notice = await screen.findByRole('alert')
+    expect(within(notice).getByText(words.plan.changedElsewhere)).toBeTruthy()
+    expect(within(notice).queryByRole('button')).toBeNull()
+    expect(reports).toEqual([])
+    // The stream brings the latest; Yes agrees to that one.
+    s.state(
+      { state: 'plan-ready' },
+      { version: 2, plan: { ...PLAN, changed: ['youSee'] } },
+    )
+    await press(screen.getByRole('button', { name: words.plan.yes }))
+    expect(s.called('agree').map((c) => (c[1] as { version: number }).version)).toEqual([
+      1, 2,
     ])
   })
 })
@@ -448,7 +475,9 @@ describe('the final review’s findings on the plan', () => {
       target: { value: 'It closes.' },
     })
     await press(screen.getByRole('button', { name: words.plan.yes }))
-    expect(s.called('agree')).toEqual([['c-1', { late: 'It closes.' }]])
+    expect(s.called('agree')).toEqual([
+      ['c-1', { version: 2, answers: { late: 'It closes.' } }],
+    ])
   })
 
   it('found on the real platform: an answer belongs to the question it was typed for, even when a correction asks another under the same id', async () => {
@@ -472,7 +501,7 @@ describe('the final review’s findings on the plan', () => {
     )
     expect((screen.getByLabelText(other) as HTMLInputElement).value).toBe('')
     await press(screen.getByRole('button', { name: words.plan.yes }))
-    expect(s.called('agree')).toEqual([['c-1', {}]])
+    expect(s.called('agree')).toEqual([['c-1', { version: 2, answers: {} }]])
   })
 
   it('Important 9: a token is renewed once per failure, not once per page: after a step is done, a later refusal renews again', async () => {

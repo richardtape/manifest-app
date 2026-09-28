@@ -180,11 +180,18 @@ if [ "$STATUS" = 202 ] && until_state "$ID" '.conversation.state == "plan-ready"
 else
   no 6b "the correction" "wanted version 2 with youSee marked, got $STATUS: $(body)"
 fi
-call POST "/api/conversations/$ID/plan/agree" '{"answers":{"late":"It closes at the deadline."}}'
-if [ "$STATUS" = 202 ] && until_state "$ID" '.conversation.state == "agreed"'; then
-  ok 6c "agreed"
+# A window behind, still showing version 1, never agrees to version 2 (a deferred Minor).
+call POST "/api/conversations/$ID/plan/agree" '{"version":1,"answers":{"late":"It closes at the deadline."}}'
+if [ "$STATUS" = 409 ] && jq -e '.error.code == "PLAN_CHANGED"' "$BODY" > /dev/null; then
+  ok 6c "a window behind, agreeing to version 1: 409 PLAN_CHANGED"
 else
-  no 6c "agreeing" "wanted 202 and agreed, got $STATUS: $(body)"
+  no 6c "a window behind" "wanted 409 PLAN_CHANGED, got $STATUS: $(body)"
+fi
+call POST "/api/conversations/$ID/plan/agree" '{"version":2,"answers":{"late":"It closes at the deadline."}}'
+if [ "$STATUS" = 202 ] && until_state "$ID" '.conversation.state == "agreed"'; then
+  ok 6d "agreed, to version 2"
+else
+  no 6d "agreeing" "wanted 202 and agreed, got $STATUS: $(body)"
 fi
 
 # 7. What our server sent to createCommit, as the conversation records it: a dry run, then

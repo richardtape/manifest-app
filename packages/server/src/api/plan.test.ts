@@ -543,6 +543,7 @@ describe('the plan corrected, and agreed', () => {
   it('agreed: docs/plan.md, from the tree’s commit, with their answers; once; then agreed', async () => {
     const { s, conversation } = await ready(scripted({ plan: [PLAN] }))
     const answer = await post(s, conversation.id, 'plan/agree', {
+      version: 1,
       answers: { late: 'It closes at the deadline.' },
     })
     expect(answer.status).toBe(202)
@@ -574,7 +575,50 @@ describe('the plan corrected, and agreed', () => {
 
   it('an answer to a question it never asked is 400 AGREE_INVALID, and nothing is committed', async () => {
     const { s, conversation } = await ready(scripted({ plan: [PLAN] }))
-    const answer = await post(s, conversation.id, 'plan/agree', { answers: { who: 'x' } })
+    const answer = await post(s, conversation.id, 'plan/agree', {
+      version: 1,
+      answers: { who: 'x' },
+    })
+    expect(answer.status).toBe(400)
+    expect(answer.body).toEqual({ error: { code: 'AGREE_INVALID' } })
+    expect(s.named('commitPlan')).toEqual([])
+  })
+
+  it('a window behind: agreeing to a plan that is no longer the latest is 409 PLAN_CHANGED, and nothing is committed (deferred Minor, Rich: fix it)', async () => {
+    const { s, conversation } = await ready(scripted({ plan: [PLAN, CORRECTED] }))
+    await post(s, conversation.id, 'plan/correction', { correction: 'The TA too.' })
+    const answer = await post(s, conversation.id, 'plan/agree', {
+      version: 1,
+      answers: { late: 'Closed.' },
+    })
+    expect(answer.status).toBe(409)
+    expect(answer.body).toEqual({ error: { code: 'PLAN_CHANGED' } })
+    expect(s.named('commitPlan')).toEqual([])
+    expect(s.store.getConversation(conversation.id, ALICE.id)?.state).toBe('plan-ready')
+  })
+
+  it('a window behind whose answers are to questions the correction no longer asks: still 409 PLAN_CHANGED, never AGREE_INVALID', async () => {
+    const ASKS_ANOTHER = {
+      ...CORRECTED,
+      onlyYouKnow: [{ id: 'ta', ask: 'Should your TA see the names as well?' }],
+    }
+    const { s, conversation } = await ready(scripted({ plan: [PLAN, ASKS_ANOTHER] }))
+    await post(s, conversation.id, 'plan/correction', { correction: 'The TA too.' })
+    const answer = await post(s, conversation.id, 'plan/agree', {
+      version: 1,
+      answers: { late: 'Closed.' },
+    })
+    expect(answer.status).toBe(409)
+    expect(answer.body).toEqual({ error: { code: 'PLAN_CHANGED' } })
+  })
+
+  it.each([
+    ['no version', { answers: {} }],
+    ['a version that is not a number', { version: '1', answers: {} }],
+    ['an extra key', { version: 1, answers: {}, plan: {} }],
+  ])('agreeing with %s is 400 AGREE_INVALID', async (_, body) => {
+    const { s, conversation } = await ready(scripted({ plan: [PLAN] }))
+    const answer = await post(s, conversation.id, 'plan/agree', body)
     expect(answer.status).toBe(400)
     expect(answer.body).toEqual({ error: { code: 'AGREE_INVALID' } })
     expect(s.named('commitPlan')).toEqual([])
@@ -584,7 +628,10 @@ describe('the plan corrected, and agreed', () => {
     const { s, conversation } = await ready(scripted({ plan: [PLAN] }), {
       commit: () => Promise.reject(new PlatformRefusal('SOURCE_CONFLICT', 409)),
     })
-    const answer = await post(s, conversation.id, 'plan/agree', { answers: {} })
+    const answer = await post(s, conversation.id, 'plan/agree', {
+      version: 1,
+      answers: {},
+    })
     expect(answer.refusal).toMatchObject({ code: 'SOURCE_CONFLICT' })
     expect(answer.frames).toContainEqual({
       kind: 'step',
@@ -619,7 +666,10 @@ describe('the plan corrected, and agreed', () => {
   it('Decision 1: after writing, correcting and agreeing, no table holds the token or the key', async () => {
     const { s, conversation } = await ready(scripted({ plan: [PLAN, CORRECTED] }))
     await post(s, conversation.id, 'plan/correction', { correction: 'The TA too.' })
-    await post(s, conversation.id, 'plan/agree', { answers: { late: 'Closed.' } })
+    await post(s, conversation.id, 'plan/agree', {
+      version: 2,
+      answers: { late: 'Closed.' },
+    })
     expect(Object.values(dumpAll(s.file)).join('\n')).not.toMatch(/mft_|sk-/)
   })
 })
@@ -665,7 +715,10 @@ describe('what the plan is kept as', () => {
     const conversation = made(s)
     s.store.savePlan(conversation.id, { nonsense: true })
     s.store.setState(conversation.id, 'plan-ready')
-    const answer = await post(s, conversation.id, 'plan/agree', { answers: {} })
+    const answer = await post(s, conversation.id, 'plan/agree', {
+      version: 1,
+      answers: {},
+    })
     expect(answer.status).toBe(409)
     expect(answer.body).toEqual({ error: { code: 'PLAN_MISSING' } })
   })

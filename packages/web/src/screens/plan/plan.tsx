@@ -29,14 +29,16 @@ const RENEW = new Set(['TOKEN_MISSING', 'TOKEN_REFUSED'])
  * thing that failed, never whatever the state suggests (the final review: a failed correction's
  * Carry on once agreed the uncorrected plan).
  */
-type Notice = {
+type Problem = {
   words: string
   reference: string
   tone: 'attention' | 'waiting'
   button: 'carryOn' | 'tryAgain'
   retry: () => void
 }
-type Said = Omit<Notice, 'reference' | 'retry'>
+/** Or words alone, when nothing failed: another window corrected the plan (a deferred Minor). */
+type Notice = Problem | { words: string; tone: 'attention' }
+type Said = Omit<Problem, 'reference' | 'retry'>
 
 const COULDNT_WRITE: Said = {
   words: words.plan.couldntWrite,
@@ -242,6 +244,13 @@ export function PlanScreen({
     } catch (error) {
       if (error instanceof OurRefusal && RENEW.has(error.code) && !renewed.current)
         return renewThen(call, operation, during)
+      // A WINDOW BEHIND (a deferred Minor, Rich's word): nothing failed and nothing was
+      // saved. The stream brings the plan as it is now, and Yes agrees to that.
+      if (error instanceof OurRefusal && error.code === 'PLAN_CHANGED') {
+        setPressed(false)
+        setNotice({ words: words.plan.changedElsewhere, tone: 'attention' })
+        return
+      }
       if (
         error instanceof OurRefusal &&
         error.code === 'CONVERSATION_BUSY' &&
@@ -268,9 +277,11 @@ export function PlanScreen({
         .map((q) => [q.id, (answers[answerKey(q)] ?? '').trim()] as const)
         .filter(([, answer]) => answer !== ''),
     )
+  /** Yes to the plan on screen, by its version: our server refuses a window behind. */
+  const agreement = () => ({ version: plan?.version ?? 0, answers: given() })
   const agreeIt = () => {
-    const answered = given()
-    void send('agree', () => ours.agree(id, answered), 'agree')
+    const agreed = agreement()
+    void send('agree', () => ours.agree(id, agreed), 'agree')
   }
 
   // A REFUSAL ON THE STREAM: a token renewed once, without a word; anything else said, with the
@@ -279,9 +290,9 @@ export function PlanScreen({
     if (refusal === undefined || refusal === before.current) return
     setPressed(false)
     if (RENEW.has(refusal.code) && !renewed.current) {
-      const answered = given()
+      const agreed = agreement()
       void renewThen(
-        context === 'agree' ? () => ours.agree(id, answered) : () => ours.plan(id),
+        context === 'agree' ? () => ours.agree(id, agreed) : () => ours.plan(id),
         context === 'agree' ? 'agree' : 'plan',
         context,
       )
@@ -313,12 +324,16 @@ export function PlanScreen({
       <div role="alert">
         <Card tone={notice.tone}>
           <p className="body-lead">{notice.words}</p>
-          <SupportReference reference={notice.reference} />
-          <div className="describe__actions">
-            <Button kind="secondary" onClick={notice.retry}>
-              {words.describe[notice.button]}
-            </Button>
-          </div>
+          {'retry' in notice ? (
+            <>
+              <SupportReference reference={notice.reference} />
+              <div className="describe__actions">
+                <Button kind="secondary" onClick={notice.retry}>
+                  {words.describe[notice.button]}
+                </Button>
+              </div>
+            </>
+          ) : null}
         </Card>
       </div>
     )

@@ -9,7 +9,7 @@ import { PlatformRefusal } from '../platform/refusal.js'
 import type { Conversation, Store } from '../store/db.js'
 import { guard } from './guard.js'
 import { intakeOf, pendingCorrection, planOf, type Said } from './intake-state.js'
-import type { StepKey } from './progress.js'
+import type { PlanView, StepKey } from './progress.js'
 import { Refused, type Work } from './work.js'
 
 /**
@@ -41,16 +41,29 @@ function correctionOf(body: unknown): string | undefined {
 }
 
 /** `{ answers }`, each a short answer to a question the plan asked, or undefined. */
-function answersOf(body: unknown, asked: string[]): Record<string, string> | undefined {
-  if (!isObject(body) || Object.keys(body).length !== 1 || !isObject(body['answers']))
+/**
+ * YES TO THE PLAN THE WINDOW SHOWS: `{ version, answers }` and nothing else. The version is
+ * the one on screen, so a window behind never agrees to a plan it has not shown (a deferred
+ * Minor, Rich's word).
+ */
+function agreementOf(
+  body: unknown,
+  latest: { version: number; plan: PlanView },
+): { answers: Record<string, string> } | 'changed' | undefined {
+  if (!isObject(body) || Object.keys(body).length !== 2 || !isObject(body['answers']))
     return undefined
+  const version = body['version']
+  if (typeof version !== 'number' || !Number.isInteger(version)) return undefined
+  // Before the answers: a window behind answers questions the latest may no longer ask.
+  if (version !== latest.version) return 'changed'
+  const asked = latest.plan.onlyYouKnow.map((q) => q.id)
   const answers: Record<string, string> = {}
   for (const [id, answer] of Object.entries(body['answers'])) {
     if (!asked.includes(id) || typeof answer !== 'string' || answer.length > MAX_SENTENCE)
       return undefined
     answers[id] = answer
   }
-  return answers
+  return { answers }
 }
 
 const empty = (body: unknown) =>
@@ -240,11 +253,10 @@ export function registerPlan(
       const latest = planOf(store, conversation.id)
       const project = intakeOf(store, conversation.id).project
       if (latest === null || project === null) return refuse(reply, 409, 'PLAN_MISSING')
-      const answers = answersOf(
-        request.body,
-        latest.plan.onlyYouKnow.map((q) => q.id),
-      )
-      if (answers === undefined) return refuse(reply, 400, 'AGREE_INVALID')
+      const agreement = agreementOf(request.body, latest)
+      if (agreement === undefined) return refuse(reply, 400, 'AGREE_INVALID')
+      if (agreement === 'changed') return refuse(reply, 409, 'PLAN_CHANGED')
+      const { answers } = agreement
       const token = tokenFor(conversation, reply)
       if (token === undefined) return reply
       work.run(conversation, 'agreeing', async () => {

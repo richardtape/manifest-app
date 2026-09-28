@@ -175,9 +175,10 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
     ],
     [
       'agree',
-      (o: ReturnType<typeof createOurs>) => o.agree('c-1', { late: 'Closed.' }),
+      (o: ReturnType<typeof createOurs>) =>
+        o.agree('c-1', { version: 2, answers: { late: 'Closed.' } }),
       '/api/conversations/c-1/plan/agree',
-      { answers: { late: 'Closed.' } },
+      { version: 2, answers: { late: 'Closed.' } },
     ],
   ] as const)('%s posts to its route', async (_, call, url, body) => {
     const fetch = answer(202)

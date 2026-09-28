@@ -145,7 +145,11 @@ export interface Ours {
   /** Not quite: one sentence of theirs. */
   correct(id: string, correction: string): Promise<void>
   /** Yes, build that: with their answers to what only they know. */
-  agree(id: string, answers: Record<string, string>): Promise<void>
+  /** Yes to the plan on screen: its version, so a window behind never agrees to another. */
+  agree(
+    id: string,
+    agreement: { version: number; answers: Record<string, string> },
+  ): Promise<void>
   events(id: string): StreamSource
 }
 
@@ -177,8 +181,8 @@ export function createOurs(): Ours {
     correct: async (id, correction) => {
       await call('POST', at(id, '/plan/correction'), { correction })
     },
-    agree: async (id, answers) => {
-      await call('POST', at(id, '/plan/agree'), { answers })
+    agree: async (id, agreement) => {
+      await call('POST', at(id, '/plan/agree'), agreement)
     },
     handProject: async (id, made) => {
       await call('POST', at(id, '/project'), {
