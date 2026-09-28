@@ -348,6 +348,32 @@ describe('the plan (moment 5)', () => {
     ])
   })
 
+  it('a correction past 500 characters: said, and it waits to be sent (deferred Minor, Rich: say the limits)', async () => {
+    const s = stage()
+    await planReady(s)
+    await press(screen.getByRole('button', { name: words.plan.notQuite }))
+    fireEvent.change(screen.getByLabelText(words.plan.correctionLabel), {
+      target: { value: 'x'.repeat(501) },
+    })
+    expect(screen.getByText(words.limits.over('501', '500'))).toBeTruthy()
+    const send = screen.getByRole('button', {
+      name: words.describe.carryOn,
+    }) as HTMLButtonElement
+    expect(send.disabled).toBe(true)
+  })
+
+  it('an answer to what only they know past 500 characters: said, and Yes waits (deferred Minor, Rich: say the limits)', async () => {
+    const s = stage()
+    await planReady(s)
+    fireEvent.change(screen.getByLabelText(PLAN.onlyYouKnow[0]!.ask), {
+      target: { value: 'x'.repeat(501) },
+    })
+    expect(screen.getByText(words.limits.over('501', '500'))).toBeTruthy()
+    const yes = screen.getByRole('button', { name: words.plan.yes }) as HTMLButtonElement
+    expect(yes.disabled).toBe(true)
+    expect(s.called('agree')).toEqual([])
+  })
+
   it('Yes, build that: their answers go with it; saving, then agreed', async () => {
     const s = stage()
     await planReady(s)

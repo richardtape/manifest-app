@@ -1,6 +1,6 @@
 import type { Schemas } from '@manifest/contract'
 import type { Intake, Question, StepKey } from '@manifest-app/server/progress'
-import { Button, Card, Choice, FormField, StateChip } from '@manifest-app/ui'
+import { Button, Card, Choice, FieldCount, FormField, StateChip } from '@manifest-app/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import { useConversation } from '../../ours/conversation.js'
@@ -10,6 +10,7 @@ import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { NameIt } from '../name-it/name-it.js'
 import { PlanScreen } from '../plan/plan.js'
+import { countOf, countProp, LIMITS, tooLong } from '../limits.js'
 import { SupportReference } from '../reference.js'
 import { rememberIntakeSession } from './memory.js'
 import { intakeRefused } from './model.js'
@@ -421,6 +422,8 @@ export function Describing({
   // THEIR WORDS: typed here, or, once sent, theirs as they wrote them.
   const theirs = view.conversation?.description ?? text
   const reading = pressed || working('understanding')
+  // Near 4,000 characters, a count; past it, said, and Carry on waits (a deferred Minor).
+  const count = id === undefined ? countOf(theirs, LIMITS.description) : undefined
   return (
     <div className="describe">
       <div className="describe__main">
@@ -439,7 +442,11 @@ export function Describing({
             value={theirs}
             readOnly={id !== undefined}
             onChange={(e) => setText(e.target.value)}
+            aria-describedby={count === undefined ? undefined : 'describe-words-count'}
           />
+          {count === undefined ? null : (
+            <FieldCount id="describe-words-count" {...count} />
+          )}
         </div>
         <div className="describe__actions">
           {reading ? (
@@ -447,7 +454,7 @@ export function Describing({
           ) : notice?.then === 'choose' ? null : (
             <Button
               kind="primary"
-              disabled={theirs.trim() === ''}
+              disabled={theirs.trim() === '' || tooLong(theirs, LIMITS.description)}
               onClick={() => (id === undefined ? void carryOn() : void read(id))}
             >
               {words.describe.carryOn}
@@ -502,6 +509,7 @@ function Questions({
             label={q.ask}
             value={answers[q.id] ?? ''}
             onChange={(e) => set(q.id, e.target.value)}
+            {...countProp(answers[q.id] ?? '')}
           />
         ),
       )}
@@ -510,7 +518,11 @@ function Questions({
           <StateChip state="working" label={words.steps.understanding} />
         ) : (
           <>
-            <Button kind="primary" onClick={() => onAnswer(answers)}>
+            <Button
+              kind="primary"
+              disabled={Object.values(answers).some((a) => tooLong(a, LIMITS.sentence))}
+              onClick={() => onAnswer(answers)}
+            >
               {words.describe.carryOn}
             </Button>
             <Button kind="tertiary" onClick={onSkip}>

@@ -240,6 +240,12 @@ export const words = {
     changedElsewhere: 'The plan changed in another window. Read it again, then say yes.',
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
+  /** How much we read at once, near and past a limit (F2's deferred Minor, Rich: say it). */
+  limits: {
+    count: (typed: string, most: string) => `${typed} of ${most} characters`,
+    over: (typed: string, most: string) =>
+      `${typed} of ${most} characters: more than we can read at once. Could you shorten it a little?`,
+  },
   reference: {
     line: (reference: string) => `If you contact support, quote ${reference}.`,
     copy: 'Copy',

@@ -2,13 +2,13 @@ import type { FastifyInstance } from 'fastify'
 import type { Config } from '../config.js'
 import type { Store } from '../store/db.js'
 import { guard } from './guard.js'
+import { LIMITS } from './progress.js'
 
 /**
  * `/api/conversations`: a person's words, and what we make of them (moments 3–5). A
  * conversation belongs to the person who started it: another person's is `404`, exactly
  * as one that does not exist, never `403`, as the platform answers a stranger (Decision 3).
  */
-const MAX_WORDS = 4000
 const INVALID = { error: { code: 'DESCRIPTION_INVALID' } }
 const NOT_FOUND = { error: { code: 'NOT_FOUND' } }
 
@@ -19,7 +19,8 @@ function descriptionOf(body: unknown): string | undefined {
   if (keys.length !== 1 || keys[0] !== 'description') return undefined
   const { description } = body as { description: unknown }
   if (typeof description !== 'string') return undefined
-  if (description.trim() === '' || description.length > MAX_WORDS) return undefined
+  if (description.trim() === '' || description.length > LIMITS.description)
+    return undefined
   return description
 }
 

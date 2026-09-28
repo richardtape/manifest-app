@@ -5,6 +5,18 @@
  */
 
 /** Where a conversation is, from the person's words to the agreed plan (moments 3–5). */
+/**
+ * HOW MUCH WE READ AT ONCE, in characters: our server refuses more, and the page says so
+ * before it is sent (F2's deferred Minor, Rich: say the limits). The page imports this file
+ * for its types only, so it keeps its own copy, which a test of its own holds equal to this.
+ */
+export const LIMITS = {
+  /** Their words, moment 3. */
+  description: 4000,
+  /** An answer to a question, a correction, an answer to what only they know. */
+  sentence: 500,
+} as const
+
 export type ConversationState =
   | 'describing'
   | 'questions'

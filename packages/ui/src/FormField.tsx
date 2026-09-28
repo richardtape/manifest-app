@@ -12,6 +12,29 @@ export interface FieldMessage {
   body?: string
 }
 
+/**
+ * OUR EXTENSION (F2's deferred Minor, Rich: say the limits): how much is typed, near a limit.
+ * Words, never colour alone: over the limit, `text` says so.
+ */
+export interface FieldCountProps {
+  id: string
+  text: string
+  over: boolean
+}
+
+/** The count, beneath a field; on its own for a field that is not a FormField. */
+export function FieldCount({ id, text, over }: FieldCountProps) {
+  return (
+    <p
+      id={id}
+      className={cx('mf-field__count', over && 'mf-field__count--over')}
+      aria-live="polite"
+    >
+      {text}
+    </p>
+  )
+}
+
 export interface FormFieldProps {
   label: string
   hint?: string
@@ -21,6 +44,8 @@ export interface FormFieldProps {
   id?: string
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void
   message?: FieldMessage
+  /** Near a limit: how much is typed (ours; not in the reference). */
+  count?: { text: string; over: boolean }
   className?: string
 }
 
@@ -62,6 +87,9 @@ export function FormField(props: FormFieldProps) {
   const id = props.id || 'mf-field'
   const msg = props.message
   const t = msg ? TONE[msg.tone] || TONE['neutral']! : null
+  const describedBy = [props.count && id + '-count', msg && id + '-msg']
+    .filter(Boolean)
+    .join(' ')
   return (
     <div className={cx('mf-field', props.className)}>
       <label className="mf-field__label" htmlFor={id}>
@@ -75,9 +103,10 @@ export function FormField(props: FormFieldProps) {
         value={props.value}
         onChange={props.onChange}
         placeholder={props.placeholder}
-        aria-describedby={msg ? id + '-msg' : undefined}
+        aria-describedby={describedBy || undefined}
         readOnly={!props.onChange}
       />
+      {props.count ? <FieldCount id={id + '-count'} {...props.count} /> : null}
       {msg && t ? (
         <div
           id={id + '-msg'}

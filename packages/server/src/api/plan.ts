@@ -9,7 +9,7 @@ import { PlatformRefusal } from '../platform/refusal.js'
 import type { Conversation, Store } from '../store/db.js'
 import { guard } from './guard.js'
 import { intakeOf, pendingCorrection, planOf, type Said } from './intake-state.js'
-import type { PlanView, StepKey } from './progress.js'
+import { LIMITS, type PlanView, type StepKey } from './progress.js'
 import { Refused, type Work } from './work.js'
 
 /**
@@ -29,14 +29,14 @@ const refuse = (reply: FastifyReply, status: number, code: string) =>
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-const MAX_SENTENCE = 500
 const trimmed = (url: string) => url.replace(/\/+$/, '')
 
 /** `{ correction }`, one sentence of their words, or undefined. */
 function correctionOf(body: unknown): string | undefined {
   if (!isObject(body) || Object.keys(body).length !== 1) return undefined
   const { correction } = body
-  if (typeof correction !== 'string' || correction.length > MAX_SENTENCE) return undefined
+  if (typeof correction !== 'string' || correction.length > LIMITS.sentence)
+    return undefined
   return correction.trim() === '' ? undefined : correction.trim()
 }
 
@@ -59,7 +59,11 @@ function agreementOf(
   const asked = latest.plan.onlyYouKnow.map((q) => q.id)
   const answers: Record<string, string> = {}
   for (const [id, answer] of Object.entries(body['answers'])) {
-    if (!asked.includes(id) || typeof answer !== 'string' || answer.length > MAX_SENTENCE)
+    if (
+      !asked.includes(id) ||
+      typeof answer !== 'string' ||
+      answer.length > LIMITS.sentence
+    )
       return undefined
     answers[id] = answer
   }

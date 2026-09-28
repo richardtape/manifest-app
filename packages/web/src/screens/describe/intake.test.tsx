@@ -362,6 +362,41 @@ describe('Describe it (moment 3)', () => {
   })
 })
 
+describe('how much we read at once, said before it is sent (deferred Minor, Rich: say the limits)', () => {
+  const carryOn = () =>
+    screen.getByRole('button', { name: words.describe.carryOn }) as HTMLButtonElement
+
+  it('their words: a quiet count near 4,000; past it, said, their text kept whole, and Carry on waits', async () => {
+    const s = stage()
+    render(<App platform={s.platform} ours={s.ours} />)
+    const box = (await screen.findByLabelText(
+      words.describe.label,
+    )) as HTMLTextAreaElement
+    fireEvent.change(box, { target: { value: 'x'.repeat(3599) } })
+    expect(screen.queryByText(/of 4,000 characters/)).toBeNull()
+    fireEvent.change(box, { target: { value: 'x'.repeat(3700) } })
+    expect(screen.getByText(words.limits.count('3,700', '4,000'))).toBeTruthy()
+    expect(box.getAttribute('aria-describedby')).toBe('describe-words-count')
+    expect(carryOn().disabled).toBe(false)
+    fireEvent.change(box, { target: { value: 'x'.repeat(4200) } })
+    expect(screen.getByText(words.limits.over('4,200', '4,000'))).toBeTruthy()
+    expect(box.value).toHaveLength(4200)
+    expect(carryOn().disabled).toBe(true)
+    expect(s.called('startConversation')).toEqual([])
+  })
+
+  it('an answer typed to a question: past 500, said, and Carry on waits', async () => {
+    const s = stage()
+    await describeAndCarryOn(s)
+    s.state({ state: 'questions' }, { round: 1, understood: UNDERSTOOD })
+    fireEvent.change(screen.getByLabelText(Q[1]!.ask), {
+      target: { value: 'x'.repeat(501) },
+    })
+    expect(screen.getByText(words.limits.over('501', '500'))).toBeTruthy()
+    expect(carryOn().disabled).toBe(true)
+  })
+})
+
 describe('the follow-up questions (moment 3)', () => {
   // Its first frame is already `questions`, with no steps before it: a stream that connected
   // late. The press made on Describe is over, and the page is never left working.

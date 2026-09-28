@@ -12,6 +12,7 @@ import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Step } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
+import { countProp, LIMITS, tooLong } from '../limits.js'
 import { words } from '../../words.js'
 import { monthResetsAt, whenWords } from '../describe/model.js'
 import { Making } from '../making/making.js'
@@ -434,6 +435,7 @@ export function PlanScreen({
                     [answerKey(q)]: e.target.value,
                   }))
                 }
+                {...countProp(answers[answerKey(q)] ?? '')}
               />
             ))}
           </Card>
@@ -445,7 +447,11 @@ export function PlanScreen({
           <StateChip state="working" label={words.steps.agreeing} />
         ) : (
           <div className="plan__actions">
-            <Button kind="primary" onClick={agreeIt}>
+            <Button
+              kind="primary"
+              disabled={Object.values(given()).some((a) => tooLong(a, LIMITS.sentence))}
+              onClick={agreeIt}
+            >
               {words.plan.yes}
             </Button>
             <Button kind="secondary" onClick={() => setCorrecting(true)}>
@@ -460,11 +466,14 @@ export function PlanScreen({
               label={words.plan.correctionLabel}
               value={correction}
               onChange={(e) => setCorrection(e.target.value)}
+              {...countProp(correction)}
             />
             <div>
               <Button
                 kind="primary"
-                disabled={correction.trim() === ''}
+                disabled={
+                  correction.trim() === '' || tooLong(correction, LIMITS.sentence)
+                }
                 onClick={() =>
                   void send(
                     'correct',

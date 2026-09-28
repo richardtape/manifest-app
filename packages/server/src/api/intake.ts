@@ -8,6 +8,7 @@ import type { Model } from '../model/client.js'
 import type { Conversation, ConversationState, Store } from '../store/db.js'
 import { intakeKeyFrom, type IntakeKeys } from '../platform/intake.js'
 import { guard } from './guard.js'
+import { LIMITS } from './progress.js'
 import { intakeOf, type Said } from './intake-state.js'
 import type { Work } from './work.js'
 
@@ -25,7 +26,6 @@ const refuse = (reply: FastifyReply, status: number, code: string) =>
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-const MAX_ANSWER = 500
 const TAKEN = /^[a-z0-9][a-z0-9-]{0,62}$/
 
 type IntakeBody =
@@ -43,7 +43,7 @@ function intakeBodyOf(body: unknown): IntakeBody | undefined {
   if (keys[0] !== 'answers' || !isObject(body['answers'])) return undefined
   const answers: Record<string, string> = {}
   for (const [id, answer] of Object.entries(body['answers'])) {
-    if (typeof answer !== 'string' || answer.length > MAX_ANSWER) return undefined
+    if (typeof answer !== 'string' || answer.length > LIMITS.sentence) return undefined
     answers[id] = answer
   }
   return { kind: 'answers', answers }

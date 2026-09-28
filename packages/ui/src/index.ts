@@ -9,7 +9,9 @@ export { Button, type ButtonProps } from './Button.js'
 export { Card, type CardProps } from './Card.js'
 export { Choice, type ChoiceOption, type ChoiceProps } from './Choice.js'
 export {
+  FieldCount,
   FormField,
+  type FieldCountProps,
   type FieldMessage,
   type FormFieldProps,
   type Tone,

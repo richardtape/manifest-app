@@ -429,6 +429,18 @@
   transition: border-color 0.12s ease;
   font-family: var(--font-sans);
 }
+/* Ours, not the reference's: a count near a limit (F2's deferred Minor). Said in words too. */
+.mf-field__count {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.mf-field__count--over {
+  color: var(--attention);
+  font-weight: 600;
+}
 .mf-field__input--mono {
   font-family: var(--font-mono);
 }
