@@ -6,7 +6,8 @@
 
 **Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
 sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
-whole-branch review by one fresh reviewer at the end (Task 12). Sitting 1 is next.
+whole-branch review by one fresh reviewer at the end (Task 12). **Sitting 1 is done (2026-09-28), and Tasks 2–12 are
+corrected to what it measured. Sitting 2 is next.**
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
@@ -34,8 +35,8 @@ moment 6, which hands over to F4's *Seeing it*.
 **Tech Stack:**
 - F2's: TypeScript 5, Node 24, Fastify 5, React 19, Vite, Vitest 2.1.9, `zod` 3.25.76 through `zod/v4`,
   `node:sqlite`.
-- **No new dependency.** The platform's event stream is read with the contract's own `subscribe()` helper, or with
-  Node 24's global `WebSocket` if M3 shows the helper cannot run on a server.
+- **No new dependency.** The platform's event stream is read with the contract's own `subscribe()` helper (M1, M3:
+  it runs on a server with a token).
 
 **Spec:**
 - [`../walkthrough.md`](../walkthrough.md): moment 6 (layout C, approved by Rich), D3, D5, D6 and D8's session cap;
@@ -51,7 +52,7 @@ moment 6, which hands over to F4's *Seeing it*.
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1 | **The measurements.** The capable model's structured answers; the mock's build and deploy answers; the platform's stream from a server; a round by hand on the real platform; the two frameworks' current documentation; the blueprint's sign-in code. **Alone, and first.** M3 and M4 need the control plane, which the platform's 9b has stopped: they wait for its *"CLOSED"* | not started |
+| 1 | 1 | **The measurements.** The capable model's structured answers; the mock's build and deploy answers; the platform's stream from a server; a round by hand on the real platform; the two frameworks' current documentation; the blueprint's sign-in code. **Alone, and first.** M3 and M4 need the control plane, which the platform's 9b has stopped: they wait for its *"CLOSED"* | **done 2026-09-28** (the dated entry below) |
 | 2 | 2, 3 | The runtime: agents, moves, the runner, its stop conditions, guards, the trace, saved runs. And the model client recording which model answered, and its usage | not started |
 | 3 | 4, 5 | The platform calls, and the project's event stream | not started |
 | 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | not started |
@@ -81,6 +82,12 @@ moment 6, which hands over to F4's *Seeing it*.
 - **The capable model** (2026-09-28): `openai/gpt-6-luna` as `default-chat-large`, or `openai/gpt-6-sol` if luna
   does not do. A client reads the names from `session.models`. The platform's 9b adds a fallback under the same
   name: the on-premise model, when OpenAI cannot be reached.
+- **When the fallback answers, carry on, and say so** (2026-09-28, in sitting 1, after M1 showed the fallback is the
+  4B on-premise model with a 16k-token context):
+  - the lead goes on building on whatever answers `default-chat-large`, so an offline laptop still builds;
+  - what the lead sees is capped so the fallback's context never cuts it (Decision 3);
+  - the person is told once in the conversation that we are working with a smaller model while the usual one cannot
+    be reached (Decision 4).
 - **The helpers F3 builds: the lead, the explaining agent, and a CWL specialist** (2026-09-28, option B). Toolkit
   specialists beyond CWL, and the domain helpers, come later: toolkit know-how has no home yet (FE-19).
 - **Who is staff inside the app we build** (2026-09-28, option B):
@@ -118,9 +125,13 @@ moment 6, which hands over to F4's *Seeing it*.
 ## Decisions this plan makes, and why
 
 1. **One move per turn, as a structured answer.**
-   - The lead's moves are a discriminated union on `kind`, built from each move's zod schema. It is sent as
-     `response_format: json_schema` by F2's model client. That is the same thing as tool calling with one tool
-     required, but it keeps `agents.md` rule 3, and it works on 9b's small fallback model.
+   - The lead's moves are a discriminated union on `kind`, built from each move's zod schema, **wrapped as
+     `{ move: … }`**, so the schema's root is an object. It is sent as `response_format: json_schema` by F2's model
+     client. That is the same thing as tool calling with one tool required, but it keeps `agents.md` rule 3, and it
+     works on 9b's small fallback model.
+   - **Why wrapped (M1, measured):** with the union at the root, OpenAI's strict mode would not take the schema, and
+     LiteLLM answered every call from the 4B fallback instead, `200`, with `x-litellm-attempted-fallbacks: 1` (FE-34).
+     Wrapped, `default-chat-large` answered 5 of 5, each parsing. A test holds the root to be an object.
    - *Rejected:* native tool calling (see *Decided by Rich*).
    - *Changing course* is one adapter in `runtime/run.ts`.
 2. **The lead's moves are five, and every write is a commit:**
@@ -136,33 +147,50 @@ moment 6, which hands over to F4's *Seeing it*.
    - *Rejected:* a working copy committed once at the end, where *Stop* would lose it.
 3. **What the lead sees, rebuilt before every move** (Vercel's `prepareStep`; `agents.md` rule 5):
    - the agreed plan, `docs/plan.md`, as committed;
-   - the blueprint's knowledge pack **in full**, up to the ceiling M1 sets from the model's context. F2 cut it at
-     24,000 characters for the small model;
+   - the blueprint's knowledge pack **in full** (M1: 11,513 characters for `node-ts-mongo@1`);
    - the tree's paths;
-   - the files it last asked for, up to 60,000 characters;
+   - the files it last asked for, newest first, in what is left of the cap below. A file that does not fit is one
+     line: *"too large to show beside the rest: read it alone"*;
    - the step it is in, and the tries so far;
    - what its last move did: the platform's answer, or a guard's reason;
    - any message from the person it has not yet read.
    - **Never the conversation's history, and never a token or key.** A test dumps every prompt the runtime sends
      and asserts no `mft_` and no `sk-` (Global Constraints).
+   - **The cap: 48,000 characters for everything the lead is sent** (`VIEW_CAP`), instructions included, whatever
+     model is listed. *(M1: `default-chat-large` answered a 108k-token prompt in 15.7 s, but the fallback's context is
+     16k tokens and it cut a longer prompt without a word (FE-34). The text measured 3.7 characters a token, so
+     48,000 is about 13,000 tokens, leaving the fallback room to answer. Rich: carry on with the fallback.)* The
+     plan, the pack, the paths and the step come to about 20,000, so files get about 28,000: `server.js`, at 15,541,
+     fits.
 4. **The model: the most capable one the session lists.**
    - `default-chat-large` if `session.models` names it, else `default-chat`. The choice is recorded in the trace.
-   - The answer's own `model` field is recorded too, since 9b names its fallback there, as is its usage. Neither is
-     ever shown to the person.
+   - **Which model answered** is recorded for each answer: the header `x-litellm-attempted-fallbacks` (`0` or `1`),
+     the answer's own `model`, and its usage. *(M1: on the normal path `model` reads `default-chat-large`, not
+     `openai/gpt-6-luna`; a fallback's reads `ollama_chat/qwen3.5:4b`. The platform session names the header as the
+     signal.)* None of these is shown to the person.
+   - **When the fallback answers, we carry on and say so once** (Rich, 2026-09-28): the round's first fallback answer
+     adds one line of ours to the conversation, *"Our usual model can't be reached just now, so we're carrying on with
+     a smaller one. It may take a few more tries."* It is said once a round, and never again for the explaining
+     agent's calls.
    - The explaining agent and the CWL specialist use the same session and the same model.
 5. **The steps and their signals:**
 
    | Step (words.ts) | Key | Ticks on |
    |---|---|---|
-   | *Writing the pages* | `pages` | the lead's `done`, once its commits have landed (`createCommit` answered; `repository.committed` on the stream) |
-   | *Checking it holds together* | `holds` | the last commit's `spec` outcome with no errors, **and** Decision 6's check |
-   | *Building it* | `build` | `build.succeeded` for that commit |
-   | *Putting it on your draft address* | `draft` | `deploy` answering `healthy`, and `instance.healthy` |
-   | *Checking it answers* | `answers` | the sandbox instance serving and healthy, and its output read (`getInstanceOutput`, **sandbox only**, FE-24) |
+   | *Writing the pages* | `pages` | the lead's `done`, once its commits have landed (`createCommit` answered `201`; `repository.committed` on the stream) |
+   | *Checking it holds together* | `holds` | the last commit's own validation, **and** Decision 6's check. *(M1: a commit whose manifest.yaml is invalid is refused `422 SPEC_INVALID` before anything is written, so a landed commit's manifest is valid; its `spec.warnings` never stop anything. `spec.validated` on the stream says the same, by `commitSha`.)* |
+   | *Building it* | `build` | `build.succeeded` **for the build `startBuild` answered**, matched by its id, `machineDetail.buildId` (M4: a `subject` is opaque, and on the real platform some name the slug: `project:<slug>`, `repository:<slug>`, `sp:<slug>:sandbox`). `startBuild` always names the last commit. *(M4: a build took about 18 s.)* *(M2: the mock builds `4444…` of its own commit whatever is named, so a match on the commit would never tick against it.)* |
+   | *Putting it on your draft address* | `draft` | `deploy`'s `200` answering the instance `healthy`; or, if it answered earlier than that, `instance.healthy` **for that instance's id** (`machineDetail.instanceId`). *(M4: a healthy deploy answered `healthy` in 8.9 s.)* Never matched by environment *(M2: the mock's deploy answers staging's instance)* |
+   | *Checking it answers* | `answers` | the sandbox instance serving and healthy (`listInstances`), and its output read (`getInstanceOutput`, **sandbox only**, FE-24) |
 
 6. **Our own check before paying for a build** (`build/imports.ts`), after the commits:
-   - every relative `require`/`import` in the app's code resolves to a file in the tree;
-   - every bare one is a Node built-in or a dependency in `package.json`.
+   - every relative `import` in the app's server code names a file in the tree **exactly**. *(M6: the blueprint is
+     JavaScript as ES modules, `"type": "module"`, and Node's ES modules resolve no extension and no `index`: an
+     `import './routes/posts'` beside `routes/posts.js` fails at start.)* Static `import … from`, bare `import '…'`,
+     `export … from`, a literal `import('…')`, and `require('…')` all count;
+   - every bare one is a Node built-in (`node:` or not) or a dependency in `package.json`, by its package name
+     (`@scope/name`, or the first segment);
+   - `public/` is the browser's, not Node's, and is not checked.
    - It reads only the committed tree. It is cheap and deterministic, and it catches the commonest failure (FE-32's
      missing package) without a build.
 7. **Three tries, per round, per kind:**
@@ -173,11 +201,17 @@ moment 6, which hands over to F4's *Seeing it*.
    - A guard's refusal, or a dry run's refusal, is not a try: it is the lead's next move's reason. But **the same
      refusal three times in a row** is a try.
 8. **When a build or deploy fails, the explaining agent speaks first.**
-   - The round gives it the platform's own words: `getBuildLog`'s tail (200 lines) and `Build.error`; or the
-     incident's `logTail`, `exitReason` and `failedCheck`, plus `getInstanceOutput`.
+   - The round gives it the platform's own words: `getBuildLog`'s tail (200 lines) and `Build.error`, with
+     `build.failed`'s `reason`; or the incident's `exitReason`, `failedCheck` and `logTail` (**one string**, M1),
+     `instance.failed`'s `failedCheck`. *(M4: `getInstanceOutput` on the failed instance is `409
+     INSTANCE_OUTPUT_UNAVAILABLE`, *"its Incident has its last lines"*: the incident's `logTail` held the whole
+     `ERR_MODULE_NOT_FOUND` stack. And a failed build's telling lines are about 50 lines from the end of its log, while
+     `Build.error` and `reason` hold only npm's usage text after them (FE-32): the log's tail is what explains it.)*
    - It answers `{ note, sentence }`. The `note` is the step's note (*"A piece it depends on was missing"*); the
      `sentence` is the one line in the conversation.
-   - The lead is then given the raw words **and** the explanation, and fixes it.
+   - The lead is then given the raw words **and** the explanation, and fixes it. For a draft failure it is also given
+     the incident's **`prompt`**, which the platform writes for an agent to work from (M1: *"its logs, redacted, and a
+     prompt an agent can work from"*), and its `diffSinceHealthy`.
    - The raw words go behind *"The exact words, for whoever you ask for help"*.
 9. **Stop conditions, each tested** (Vercel's `stopWhen`; OpenAI's `maxTurns`):
    - **moves:** at most 40 moves per step. Then *needs you*: *"This is taking longer than it should."*
@@ -185,7 +219,8 @@ moment 6, which hands over to F4's *Seeing it*.
    - **the session's cap:** LiteLLM's `429 budget_exceeded`. `getAgentBudget` then says whether the month has room:
      room means the checkpoint, none means the month is spent.
    - **the session's clock:** we ask for 240 minutes, never past the token's expiry. An expired key is the same
-     checkpoint, since a new session is new money.
+     checkpoint, since a new session is new money. *(M1: `capUsd: 2` and `durationMinutes: 240` were both taken, and
+     `expiresAt` was 240 minutes after `createdAt`.)*
    - ***Stop*:** checked before every move and after every platform call.
    - Every stop saves the run.
 10. **A run's state is saved** (OpenAI's resumable run state), in three new tables. **Keys and tokens are never
@@ -195,7 +230,8 @@ moment 6, which hands over to F4's *Seeing it*.
     - `trace`: every model call (agent, model named, usage), every move (its kind and its guard's verdict), and
       every platform call (operation, code). **Never a prompt's text, and never a file's content.**
     - `questions`: each question asked, its default, and its answer. **A secret's answer is never stored:** it goes
-      straight to `secret:write` (sandbox only) and is dropped.
+      straight to `setAppSecret` in the sandbox (the token's `secret:write`; Task 4's `secrets.ts`) and is dropped.
+      The platform refuses a value under 6 characters (M1), so the question's field says so before it is sent.
 11. **The round starts by itself, on our server.**
     - When the plan's commit lands (F2's `agreeing` done), our server starts round 1 at once: the plan screen
       already said *"Say yes and this happens: we build it on your draft address, and you watch."*
@@ -204,29 +240,47 @@ moment 6, which hands over to F4's *Seeing it*.
 12. **The conversation's states gain `building` and `built`.** `paused` means a question the work cannot pass.
     - `failed` stays unused: F3 sets it nowhere. Every screen's fallback for a state it does not draw now shows its
       words **with a reference** (`useReported`). That meets F2's deferred Minor.
-    - The `conversations` table's `check` is rebuilt by a migration (`pragma user_version` 1 → 2), because SQLite
-      cannot alter a `check`.
+    - The `conversations` table's `check` is rebuilt by a migration (`pragma user_version` 0 → 2), because SQLite
+      cannot alter a `check`. *(Read in sitting 1: F2 never set `user_version`, so every existing file is at 0; F2's
+      schema counts as version 1.)*
 13. **Staff inside the app** (Rich's B), which the CWL specialist builds:
     - `config/staff.json` holds `{ puids: [<the instructor's>], emails: [<named by the instructor>] }`.
+    - **What it builds on** (M6): a signed-in request's `req.user.user` is the blueprint's `bridge(profile)`, by
+      friendly name, so the check is `puids.includes(req.user?.user?.ubcEduCwlPuid)` or
+      `emails.includes(req.user?.user?.mail?.toLowerCase())`. It is an Express middleware after `passport.session()`,
+      in front of the instructor's routes and never `/healthz`. `manifest.yaml`'s `auth.attributes` must hold
+      `ubcEduCwlPuid` and `mail` (both pre-authorized by UBC IAM; the proof-app starter has both).
     - The instructor's PUID comes from `listMembers` with the conversation's token: the member whose `userId` is the
       conversation's person. It never comes from the session (FE-2).
     - **A named email must appear in the person's own words**: their description, a message, or an answer. A guard
       refuses an email the lead or the specialist invented, which is where injected text would put one.
     - Adding someone later is a change: F4's moment 8.
 14. **The cost line:**
-    - The month is `getAgentBudget`. This conversation's figure is the sum of `spentUsd` over its sessions
-      (`listAgentSessions`, by the ids in `runs`).
+    - The month is `getAgentBudget` (`remainingUsd`, `resetsAt`; either can be `null`, with `unavailable` saying
+      why). This conversation's figure is the sum of `spentUsd` over its sessions (`listAgentSessions`, whose answer is
+      `{ sessions, truncated }`, by the ids in `runs`).
     - Spend lands a few seconds after a call, so it is re-read after each model call, at most every 5 seconds.
     - An unknown `spentUsd` (null) shows the month's figure alone.
 15. **The project's event stream is our server's, one per conversation while a round runs** (Task 5):
-    - replayed events are ignored by `id`;
+    - opened with the contract's own `subscribe()` and the conversation's token (M1: it runs in Node by design, sends
+      `Authorization: Bearer` and **no `Origin`**, and rejects `ready` when the socket closes first). Reconnecting is
+      ours: `subscribe()` does none;
+    - replayed events are ignored by `id`; log frames are never replayed (M1), and the round never needs them;
     - a reconnect re-reads the build and the instance (FE-7: the replay is only 50);
-    - a refused stream (`4403`) pauses the round for a token;
+    - **a refused stream pauses the round for a token.** *(M1 corrects this plan's `4403`: a token's refused upgrade
+      closes `1006`, which a WebSocket shows with no status, and the contract's rule is to `GET` the same URL with the
+      same credential to learn it: `401 UNAUTHENTICATED` is refused, `426 EVENTS_UPGRADE_REQUIRED` means the token is
+      good and the drop was the network. `4403` is a session from another origin, never a token's.)* *(M3,
+      measured: a revoked token's upgrade closes `1006` in 33 ms and its `GET` answers `401`; another project's id
+      closes `1006` and its `GET` answers `404`. `4404` was never sent. **A token revoked while its stream is open
+      keeps the stream, and goes on receiving events** (FE-33), so the round learns of a revocation from its next
+      call's `401`, never from the stream.)*
     - it closes when the round ends.
 16. **After the round: `built`.** The round folds into the conversation as one line. The message box says
     *"Asking for a change arrives next."* A change is F4's moment 8, as F2 said of building.
 17. **Deploy has its own deadline:** `DEPLOY_TIMEOUT_MS = 120_000`. `deploy` is synchronous for up to about 90 seconds;
-    every other call keeps F1's 15 seconds.
+    every other call keeps F1's 15 seconds. *(M4, measured: a healthy deploy answered in 8.9 s; one that could not
+    start answered `200 failed` after 91 s and 87 readiness attempts. 120 s stands.)*
 
 ## Global Constraints
 
@@ -278,6 +332,7 @@ packages/server/src/
   platform/releases.ts   createRelease, the sandbox environment, deploy (120 s)
   platform/instances.ts  listInstances, getInstanceOutput, listIncidents
   platform/members.ts    the instructor's PUID
+  platform/secrets.ts    a secret's value, sandbox only (setAppSecret)
   platform/agent-sessions.ts  (+ capUsd, durationMinutes, list)
   platform/stream.ts     the project's event stream (Task 5)
   platform/platform.test.ts   recording fake control plane: what we SENT
@@ -288,7 +343,7 @@ packages/server/src/
   api/build.ts     api/build.test.ts   /build, /messages, /answers, /stop                          Task 9
   api/progress.ts  (+ BuildStep, RoundView, Needs; states building, built)
   store/schema.sql store/migrate.ts store/runs.ts   runs, trace, questions; user_version 2
-packages/ui/src/   LiveSteps.tsx (+ line, detail)  Disclosure.tsx  (+ tests; parity holds without them)   Task 10
+packages/ui/src/   LiveSteps.tsx (+ line, detail)  InverseSurface.tsx LogPane.tsx (ported)  Disclosure.tsx   Task 10
 packages/web/src/
   ours/api.ts  ours/conversation.ts   + the building calls and frames
   screens/building/building.tsx  building/work.tsx  building/thread.tsx  building/needs.tsx   Task 11
@@ -303,7 +358,7 @@ scripts/check-building.sh          Task 12, mock mode
 
 Throwaway code in the scratchpad. Only this plan's findings are committed. **Run nothing in manifest**: read it.
 
-- [ ] **M1: the contract, and the capable model's structured answers.**
+- [x] **M1: the contract, and the capable model's structured answers.**
   - Re-read `openapi.json`. Record the commit, the version and the operation count.
   - Record the exact paths and bodies of: `getTree`, `getFile`, `createCommit`, `startBuild`, `getBuild`,
     `getBuildLog`, `createRelease`, `listEnvironments`, `deploy`, `listInstances`, `getInstanceOutput`,
@@ -314,32 +369,32 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
     largest prompt that answers (it sets Decision 3's ceiling); `spentUsd` afterwards.
   - **Every adapter is written against what M1 records.** Where this plan's names differ, the contract wins, and
     this plan is corrected in the same commit.
-- [ ] **M2: the mock's answers**, measured with `pnpm mock`, to:
+- [x] **M2: the mock's answers**, measured with `pnpm mock`, to:
   - every operation in M1's list;
   - the event stream's scripted frames: does it send `build.*` and `instance.*`?
 
   Record the bodies. The mock answers the document's examples (FE-27), so Task 12's mock half asserts what we sent,
   and failures are proven by fakes.
-- [ ] **M3: the platform's event stream from a server** (after 9b's CLOSED).
+- [x] **M3: the platform's event stream from a server** (after 9b's CLOSED).
   - Can the contract's `subscribe()` run in Node with a Bearer token, against `http://127.0.0.1:7100`?
   - Record the frames on connect (the replay), then `manifest.stream.ready`.
   - Record the close code when the token is revoked.
   - If `subscribe()` cannot run on a server, use Node 24's `WebSocket` with a `headers` option, as F2's proxy test
     does.
-- [ ] **M4: one round by hand on the real platform** (after 9b's CLOSED; the test user, at Rich's word).
+- [x] **M4: one round by hand on the real platform** (after 9b's CLOSED; the test user, at Rich's word).
   - On a project made from the fixture blueprint's skeleton, run `startBuild` on `main`'s commit and time it.
   - Then `createRelease`, then `deploy` to the sandbox. Time it, and record the `Instance`.
   - Then `listInstances` and `getInstanceOutput`.
-  - Then commit a deliberate break (`require('./missing')`), build, deploy, and record `build.failed`'s
+  - Then commit a deliberate break (`import './missing.js'`), build, deploy, and record `build.failed`'s
     `machineDetail` and `getBuildLog`'s tail, or the incident.
   - **These times set the words' *"A few minutes"*** and Decision 17's deadline.
-- [ ] **M5: the two frameworks' current documentation** (OpenAI's Agents SDK for JavaScript; Vercel's AI SDK).
+- [x] **M5: the two frameworks' current documentation** (OpenAI's Agents SDK for JavaScript; Vercel's AI SDK).
   - Record, for each idea *Decided by Rich* takes, the name and meaning it has there: `Agent`, `tool`, agents as
     tools, `RunContext`, `maxTurns` / `stopWhen`, `prepareStep`, guardrails and their tripwire, interruptions and
     `RunState`, tracing spans.
   - Name ours to match where it reads well. Record anything that changes Task 2's interfaces.
   - **No dependency.**
-- [ ] **M6: what the CWL specialist builds on.** Read the blueprint's skeleton and the proof-app starter
+- [x] **M6: what the CWL specialist builds on.** Read the blueprint's skeleton and the proof-app starter
   (`blueprints/node-ts-mongo/`):
   - `auth/ubcshib.js` and `auth/attributes.js`: what `bridge(profile)` and `puid(profile)` give, and the attribute
     name of the email (`mail`);
@@ -347,7 +402,7 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
   - where a staff check would sit in the routes;
   - `manifest.yaml`'s `auth` block;
   - whether the reference bundle has an `InverseSurface` and a disclosure component (Task 10).
-- [ ] **Close:** the dated entry. **Correct Tasks 2–12 to what M1–M6 found before sitting 2.** Commit the plan file
+- [x] **Close:** the dated entry. **Correct Tasks 2–12 to what M1–M6 found before sitting 2.** Commit the plan file
   only.
 
 ---
@@ -356,6 +411,25 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
 
 **Files:** `server/src/runtime/{agent.ts,tool.ts,run.ts,trace.ts,runtime.test.ts}`,
 `server/src/store/{schema.sql,migrate.ts,runs.ts}` (the `runs` and `trace` tables only; `questions` is Task 8's).
+
+**M5, the names these ideas have there** (OpenAI's Agents SDK for JavaScript v0.18.0; Vercel's AI SDK `ai@7.0.120`;
+both read 2026-09-28). **Nothing changes these interfaces' shape**, and ours keep the plan's names:
+
+| Ours | OpenAI Agents SDK | Vercel AI SDK |
+|---|---|---|
+| `defineAgent` (`instructions`, `answer`) | `Agent` (`instructions`, a string or a function of the run context; `outputType`) | `ToolLoopAgent` (`instructions`) |
+| `defineTool` (`input`, `run`) | `tool({ parameters, execute })` | `tool({ inputSchema, execute })` |
+| `askAgent` | `agent.asTool()` | a subagent: a tool whose `execute` calls it, `toModelOutput` shaping what the parent sees |
+| `context` | `RunContext<T>.context`: *"not sent to the LLM"* | `runtimeContext`: *"not added to the model prompt"* |
+| `view`, rebuilt every move | `callModelInputFilter` | `prepareStep` |
+| `maxMoves: 40` | `maxTurns` (default 10), `MaxTurnsExceededError` | `stopWhen: isStepCount(n)` (was `stepCountIs`; default 20) |
+| `guard` → a reason, the move skipped, the run goes on | a tool input guardrail's `rejectContent` (its `throwException` is a tripwire: we need none) | none built in |
+| `Stop` `paused` + a saved `RunState` | `needsApproval` → `interruptions`; `RunState` `toString()` / `fromString()` | `needsApproval` → `tool-approval-request` |
+| a message read at the next move | `RunState.addInput()` | — |
+| `trace`, no text | spans with `traceIncludeSensitiveData: false` | telemetry with `recordInputs` / `recordOutputs: false` |
+
+OpenAI's guide adds one rule this plan already keeps: *"avoid putting secrets in `runContext.context` if you intend to
+persist … serialized state"*. Our context holds the token and is never saved.
 
 **Interfaces:**
 
@@ -368,7 +442,7 @@ export interface AgentDef<In, Out> {
   instructions: string                           // how to behave; never what the platform allows (agents.md rule 4)
   brief: (input: In) => Message[]                // rebuilt before every call (Vercel's prepareStep)
   answer: z.ZodType<Out>
-  check?: Check<Out>                              // after parsing; a reason makes the model client try again
+  check?: (input: In) => Check<Out>               // built from the call's input, as F2's `checkedAgainst(taken)` is (read in sitting 1): the CWL specialist's check needs its brief's emails
 }
 export function defineAgent<In, Out>(def: AgentDef<In, Out>): AgentDef<In, Out>
 /** One structured answer: how the lead calls a helper (agents as tools), and how a round calls the explaining agent. */
@@ -387,8 +461,10 @@ export interface ToolDef<Ctx, In> {
   run: (input: In, context: Ctx) => Promise<MoveResult>
 }
 export function defineTool<Ctx, In>(def: ToolDef<Ctx, In>): ToolDef<Ctx, In>
-/** The union the model answers: z.discriminatedUnion('kind', tools.map(t => t.input.extend({ kind: z.literal(t.kind) }))). */
-export function movesOf(tools: ToolDef<never, never>[]): z.ZodType<{ kind: string } & Record<string, unknown>>
+/** What the model answers: z.object({ move: z.discriminatedUnion('kind', tools.map(t => t.input.extend({ kind: z.literal(t.kind) }))) }).
+ *  WRAPPED, so the JSON Schema's root is an object (Decision 1, M1: a root `anyOf` sends every call to the fallback).
+ *  The runner unwraps `move`. */
+export function movesOf(tools: ToolDef<never, never>[]): z.ZodType<{ move: { kind: string } & Record<string, unknown> }>
 
 // runtime/run.ts — the runner (OpenAI's Runner; Vercel's multi-step loop)
 export type Stop =
@@ -424,6 +500,8 @@ export type TraceEntry =
   | { kind: 'move'; move: string; verdict: 'ran' | 'guarded'; reason?: string }
   | { kind: 'platform'; operation: string; code: string | null; named: string | null }   // the commit, build, release or environment kind it named
 export interface Trace { record(runId: string, entry: TraceEntry): void; list(runId: string): (TraceEntry & { at: string })[] }
+/** Over two new `Store` methods, `recordTrace` and `listTrace` (read in sitting 1: `openStore` owns the one
+ *  DatabaseSync and `Store` exposes only methods; `runs.ts` holds the rows' types and SQL, called from `db.ts`). */
 export function storeTrace(store: Store): Trace
 ```
 
@@ -431,6 +509,8 @@ export function storeTrace(store: Store): Trace
   did):
   - **one move per turn:** a script `[read, commit, done]` runs the three tools in order and answers `done`, with
     its line;
+  - **the schema's root is an object:** `z.toJSONSchema(movesOf(tools))` has `type: 'object'` and no root `anyOf`
+    (Decision 1, M1);
   - **the view is rebuilt every move:** the second prompt carries the first move's `report`, and the first
     prompt's `report` is absent from the third;
   - **a guard sends a move back:** a guarded `commit` never runs, and the next prompt carries the guard's reason.
@@ -454,8 +534,12 @@ export function storeTrace(store: Store): Trace
   `pnpm --filter @manifest-app/server exec vitest run src/runtime`
 - [ ] **Step 3: Implement** `agent.ts`, `tool.ts`, `run.ts` and `trace.ts`, plus the `runs` and `trace` tables in
   `schema.sql`. The migration (`store/migrate.ts`: `pragma user_version`; version 2 rebuilds `conversations` with the
-  new `check`, Decision 12) goes in here, with its own test in `store/db.test.ts`: a version-1 file with a
-  conversation opens as version 2, with the conversation intact.
+  new `check`, Decision 12) goes in here, with its own test in `store/db.test.ts`: **an F2 file (version 0, the
+  old `check`) with a conversation, its messages and its plan opens as version 2, with all three intact, and a
+  conversation can then be set to `building`.** The rebuild is SQLite's own twelve steps: `pragma foreign_keys =
+  off` outside the transaction (`messages` and `plans` reference `conversations`), create the new table, copy, drop,
+  rename, recreate its index, `pragma foreign_key_check`, then `foreign_keys` on again. `schema.sql`'s own
+  `create table if not exists conversations` carries the new `check`, so a new file needs no rebuild.
 - [ ] **Step 4: Run them green; then the negative controls:**
   - the guard not consulted → the guard test is red;
   - the view not rebuilt → the view test is red;
@@ -472,10 +556,12 @@ export function storeTrace(store: Store): Trace
 **Interfaces:**
 
 ```ts
-export interface Answered { model: string | null; usage: { in: number; out: number } | null }
+/** M1: `model` is LiteLLM's (`default-chat-large` on the normal path, the fallback's own name otherwise);
+ *  `fallback` is the header `x-litellm-attempted-fallbacks` above 0; usage is `prompt_tokens` / `completion_tokens`. */
+export interface Answered { model: string | null; fallback: boolean; usage: { in: number; out: number } | null }
 export function openAiCompatible(options: {
   baseUrl: string; key: string; model: string; fetch?: typeof fetch; timeoutMs?: number
-  /** Each 2xx answer's own `model` (9b names its fallback there) and `usage`, for the trace. Never shown. */
+  /** Each 2xx answer's own `model`, whether a fallback answered, and `usage`, for the trace and Decision 4's one line. */
   onAnswer?: (answered: Answered) => void
 }): Model
 /** Decision 4: the most capable model the session lists. */
@@ -483,8 +569,11 @@ export function modelFor(listed: string[]): string | undefined   // 'default-cha
 ```
 
 - [ ] **Step 1: Tests, failing first:**
-  - `onAnswer` receives `{ model: 'openai/gpt-6-luna', usage: { in: 812, out: 96 } }` from a fake gateway's answer
-    whose `model` and `usage` (`prompt_tokens`, `completion_tokens`) say so;
+  - `onAnswer` receives `{ model: 'default-chat-large', fallback: false, usage: { in: 9644, out: 313 } }` from a fake
+    gateway's answer whose `model` and `usage` (`prompt_tokens`, `completion_tokens`) say so and whose header
+    `x-litellm-attempted-fallbacks` is `0` (M1's recorded shape);
+  - **a fallback's answer:** header `x-litellm-attempted-fallbacks: 1` and `model: 'ollama_chat/qwen3.5:4b'` →
+    `{ fallback: true, model: 'ollama_chat/qwen3.5:4b' }`; no header at all is `fallback: false`;
   - a missing `usage` is `null`, never zero;
   - `onAnswer` is not called for a refusal;
   - `modelFor(['default-chat', 'default-chat-large'])` is `default-chat-large`, `modelFor(['default-chat'])` is
@@ -495,7 +584,7 @@ export function modelFor(listed: string[]): string | undefined   // 'default-cha
 
 ## Task 4: The platform calls F3 needs
 
-**Files:** `server/src/platform/{source.ts,builds.ts,releases.ts,instances.ts,members.ts,agent-sessions.ts,refusal.ts,authoring.ts}`,
+**Files:** `server/src/platform/{source.ts,builds.ts,releases.ts,instances.ts,secrets.ts,members.ts,agent-sessions.ts,refusal.ts,authoring.ts}`,
 `server/src/platform/platform.test.ts`.
 
 **Interfaces** (paths and field names corrected to M1's record before this task starts):
@@ -508,45 +597,53 @@ export class CommitRefused extends PlatformRefusal {
   constructor(code: string, status: number | null, readonly details: { path: string; code: string; hint: string | null }[])
 }
 
-// source.ts
+// source.ts — getTree, getFile, createCommit (M1: GET /v1/projects/{p}/tree?ref, GET …/file?path&ref, POST …/commits)
 export interface Source {
+  /** getTree's `entries` whose `type` is `file`; `size` and `binary` are null for anything else, so never here. */
   tree(token: string, projectId: string): Promise<{ commitSha: string; paths: { path: string; size: number; binary: boolean }[]; truncated: boolean }>
-  file(token: string, projectId: string, path: string, ref: string): Promise<{ content: string } | { unreadable: 'too-large' | 'not-text' | 'not-a-file' }>
+  /** SOURCE_FILE_TOO_LARGE (> 1 MiB), SOURCE_FILE_NOT_TEXT, SOURCE_PATH_NOT_A_FILE and SOURCE_PATH_NOT_FOUND are the lead's reasons, not a crash. */
+  file(token: string, projectId: string, path: string, ref: string): Promise<{ content: string } | { unreadable: 'too-large' | 'not-text' | 'not-a-file' | 'not-found' }>
   /** The dry run, then the commit: each its own Idempotency-Key. SOURCE_CONFLICT is thrown for the round to count. */
   commit(token: string, projectId: string, body: { baseCommit: string; message: string; changes: Change[] }):
-    Promise<{ commitSha: string; changed: { path: string; status: 'added' | 'modified' | 'deleted' }[]; specWarnings: string[] }>
+    Promise<{ commitSha: string; changed: { path: string; status: 'added' | 'modified' | 'deleted' }[]; warnings: { code: string; path: string; hint: string | null }[] }>   // spec.warnings (M1)
 }
-export type Change = { op: 'write'; path: string; content: string } | { op: 'delete'; path: string }
+export type Change = { op: 'write'; path: string; content: string } | { op: 'delete'; path: string }   // ≤ 500 a commit, ≤ 1 MiB a file (M1)
 
-// builds.ts
-export type Build = { id: string; commitSha: string; status: 'running' | 'succeeded' | 'failed'; error: string | null }
+// builds.ts — startBuild (202), getBuild, getBuildLog (?tail ≤ 10000; lines { seq, stream, text, at })
+export type Build = { id: string; commitSha: string; status: 'pending' | 'running' | 'succeeded' | 'failed'; error: string | null }   // M1: `pending` too
 export interface Builds {
-  start(token: string, projectId: string, commitSha: string): Promise<Build>     // always names the commit
+  start(token: string, projectId: string, commitSha: string): Promise<Build>     // always names the commit (with none, the platform builds the last RECORDED validation's)
   get(token: string, buildId: string): Promise<Build>
   log(token: string, buildId: string, tail: number): Promise<string[]>           // getBuildLog's lines, as text
 }
 
-// releases.ts
+// releases.ts — createRelease (201), listEnvironments, deploy (POST /v1/environments/{e}/deploy { releaseId } → 200 Instance)
 export interface Releases {
   create(token: string, projectId: string, buildId: string, summary: string): Promise<{ id: string }>   // summary ≤ 500
-  sandbox(token: string, projectId: string): Promise<{ environmentId: string; hostname: string }>
+  sandbox(token: string, projectId: string): Promise<{ environmentId: string; hostname: string; url: string }>   // listEnvironments' `kind: 'sandbox'`
   deploy(token: string, environmentId: string, releaseId: string): Promise<Instance>   // DEPLOY_TIMEOUT_MS; a failed deploy is a 200
 }
-export type Instance = { id: string; releaseId: string; state: 'provisioning' | 'starting' | 'healthy' | 'failed' | 'destroying' | 'gone' }
+export type Instance = { id: string; releaseId: string; state: 'pending' | 'building' | 'provisioning' | 'starting' | 'healthy' | 'failed' | 'hibernated' | 'waking' | 'destroying' | 'gone' }   // M1: ten states
 
-// instances.ts
+// instances.ts — listInstances ({ instances, truncated }), getInstanceOutput (?lines ≤ 1000), listIncidents ({ incidents })
 export interface Instances {
   list(token: string, environmentId: string): Promise<(Instance & { serving: boolean })[]>
+  /** INSTANCE_OUTPUT_UNAVAILABLE is `unavailable`; INSTANCE_OUTPUT_PRODUCTION can never be asked (the sandbox check). */
   output(token: string, instanceId: string, lines: number): Promise<{ lines: string[]; failure: string | null } | { unavailable: true }>
-  incidents(token: string, environmentId: string): Promise<{ exitReason: string | null; logTail: string[]; failedCheck: string | null }[]>
+  /** M1: every field a string, never null; `logTail` one string; `prompt` is written for an agent (Decision 8). */
+  incidents(token: string, environmentId: string): Promise<{ instanceId: string; releaseId: string; exitReason: string; logTail: string; failedCheck: string; diffSinceHealthy: string; prompt: string }[]>
 }
 
-// members.ts
+// secrets.ts — setAppSecret (PUT /v1/environments/{e}/secrets/{NAME} { value }), for Task 8's secret answer. Sandbox only.
+/** M1: a NAME is /^[A-Z][A-Z0-9_]{0,127}$/, a value 6 characters to 16 KiB (shorter is 400 REQUEST_INVALID); it takes effect at the next deploy. */
+export interface Secrets { setInSandbox(token: string, projectId: string, name: string, value: string): Promise<void> }
+
+// members.ts — listMembers (an array of { userId, puid, cwlLogin, displayName, email, role })
 export interface Members { instructor(token: string, projectId: string, personId: string): Promise<{ puid: string; email: string } | undefined> }
 
-// agent-sessions.ts (extended)
-start(token, projectId, name, options: { durationMinutes: number }): Promise<{ sessionId; key; baseUrl; models; expiresAt; capUsd: number }>
-list(token: string, projectId: string): Promise<{ id: string; spentUsd: number | null }[]>
+// agent-sessions.ts (extended) — startAgentSession { name ≤ 64, capUsd?, durationMinutes? ≤ 480 } → { session, key, baseUrl }
+start(token, projectId, name, options: { capUsd: number; durationMinutes: number }): Promise<{ sessionId; key; baseUrl; models; expiresAt; capUsd: number }>   // sends capUsd 2 (Rich's $2) and 240
+list(token: string, projectId: string): Promise<{ id: string; spentUsd: number | null }[]>   // listAgentSessions' `sessions`
 ```
 
 - [ ] **Step 1: Tests, failing first** (`platform.test.ts`: F2's recording fake control plane, answering each
@@ -560,10 +657,16 @@ list(token: string, projectId: string): Promise<{ id: string; spentUsd: number |
     still gives up at 15 s;
   - a `deploy` answered `200` with `state: 'failed'` is returned as failed, never thrown;
   - **`deploy` and `output` refuse to name any environment but the one `sandbox()` answered** (Global Constraints):
-    a staging id is refused before any request is sent;
+    a staging id is refused before any request is sent. `output` takes only an instance `list()` answered for the
+    sandbox. **The check is on what we send, never on the answer** (M2: the mock's `deploy` and `getInstanceOutput`
+    answer staging's instance whatever is named);
+  - `setInSandbox` names the sandbox's environment and the name as given, and a value under 6 characters is refused
+    before any request is sent;
+  - `file` turns each of the four `SOURCE_*` refusals into its `unreadable` reason; `tree` keeps only `type: 'file'`;
   - `instructor` answers the member whose `userId` is the person, with their `puid` and `email`; another member
     never;
-  - `start` sends `durationMinutes: 240`, and `list` reads `spentUsd`, keeping `null` as `null`;
+  - `start` sends `capUsd: 2` and `durationMinutes: 240`, and `list` reads `sessions[].spentUsd`, keeping `null` as
+    `null`;
   - **F2's FE-2 test extended:** no call in this file carries a `Cookie`.
 - [ ] **Step 2: Red. Step 3: Implement.**
   - `authoring.ts`'s `commitPlan` becomes one call to `source.commit` with one change. Its tests stay green:
@@ -586,10 +689,11 @@ export interface ProjectStream {
   watch(token: string, projectId: string, handlers: {
     event: (event: ProjectEvent) => void          // each event once, whatever the replays
     reconnected: () => void                        // the round re-reads the build and the instance (Decision 15)
-    refused: () => void                            // 4403/4404: the round pauses for a token
+    refused: () => void                            // a 1006 whose GET answers 401 or 404 (M3): the round pauses for a token
   }): Watch
 }
-export function platformStream(origin: string, open?: (url: string, token: string) => WebSocketLike): ProjectStream
+/** M1/M3: the contract's own subscribe(), wrapped with reconnect and dedupe; `subscribe` is injected for the tests. */
+export function platformStream(origin: string, open?: typeof subscribe, probe?: (url: string, token: string) => Promise<number>): ProjectStream
 ```
 
 - [ ] **Step 1: Tests, failing first**, with a fake WebSocket server (`node:http` plus the upgrade, as F2's proxy
@@ -597,15 +701,20 @@ export function platformStream(origin: string, open?: (url: string, token: strin
   - **each event once:** a replay of 50 events that overlaps what was seen delivers only the new ones;
   - **a drop reconnects:** close codes `1001`, `1011` and `1013` reconnect after a growing wait (200 ms, 400 ms,
     800 ms…, capped), and call `reconnected` each time;
-  - **`4403` stops:** no reconnect, and `refused` is called once;
+  - **a refused token stops** (M1: a token's refused upgrade is a `1006`, and a `GET` of the same URL with the same
+    token says why): `1006` then `GET` `401` → no reconnect, and `refused` is called once; `1006` then `GET` `426`
+    (the token is good) → a reconnect; `1006` then `GET` `404` (M3: another project's id; `4404` is never sent) →
+    `refused`;
   - **`close()`** stops everything, and no timer is left (Vitest's fake timers show none);
-  - **the Bearer token is sent, and no `Origin`** (the platform's rule for a server);
+  - **the Bearer token is sent, and no `Origin`** (the platform's rule for a server; `subscribe()` does it, and the
+    test holds it);
   - **Review Focus 5:** a build whose `build.succeeded` fell outside the replay. `reconnected` fires, and Task 8's
     round test drives the re-read.
-- [ ] **Step 2: Red. Step 3: Implement** with what M3 chose (the contract's `subscribe()`, or Node's `WebSocket`).
-  **Step 4: Green; controls:** dedupe off; no reconnect on `1011`; a reconnect on `4403`. Each red, then restored.
+- [ ] **Step 2: Red. Step 3: Implement** with the contract's `subscribe()` (M1, M3).
+  **Step 4: Green; controls:** dedupe off; no reconnect on `1011`; a reconnect after `GET` `401`. Each red, then
+  restored.
 - [ ] **Step 5: Commit** `feat(server): the project's event stream on our server — each event once, reconnected on
-  a drop, refused on 4403`.
+  a drop, refused when the token is`.
 
 ## Task 6: The guards
 
@@ -628,7 +737,8 @@ export function importsHold(files: { path: string; content: string }[], paths: s
 - [ ] **Step 1: Tests, failing first** (**Review Focus 1**, each its own case):
   - a path with `..`, a leading `/`, a backslash, or inside `.git` → refused;
   - `Dockerfile`, `.npmrc`, or a `runtime.build` block written into `manifest.yaml` → refused, naming the knowledge
-    pack's rule;
+    pack's rule. *(M1: the platform itself accepts a `Dockerfile` or `.npmrc` and replaces it at build, so this is
+    our guard's alone; a `runtime.build` block it refuses as `SPEC_BUILD_BLOCK_FORBIDDEN`.)*
   - **`package.json` whose `dependencies` or `devDependencies` gain or change a package** → refused (FE-32). Its
     reason tells the lead to say plainly what cannot be added. Changing its `scripts` is allowed;
   - text matching the platform's secret shapes (`mft_…`, `sk-…`, a PEM block) → refused before the platform's own
@@ -636,8 +746,11 @@ export function importsHold(files: { path: string; content: string }[], paths: s
   - `words`: *"Writing the page students post on."* passes; *"Deploying the container"*, *"Running npm ci"* and
     *"It works"* are refused, using F1's machinery list plus *it works*;
   - `staff`: an email in the person's description passes; one nobody wrote is refused;
-  - `importsHold`: `require('./routes/posts')` with `routes/posts.js` in the tree holds; `require('marked')` absent
-    from `package.json` is `{ path, missing: 'marked' }`; `require('node:crypto')` holds.
+  - `importsHold` (M6: ES modules): `import { list } from './routes/posts.js'` with `routes/posts.js` in the tree
+    holds; **`import './routes/posts'` beside it is `{ path, missing: './routes/posts' }`** (no extension is
+    resolved); `import { marked } from 'marked'` absent from `package.json` is `{ path, missing: 'marked' }`;
+    `node:crypto`, `fs` and `passport-ubcshib/lib/x.js` (a dependency's subpath) hold; `public/app.js` is not
+    read;
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** each guard removed in turn → its case red, then
   restored.
 - [ ] **Step 5: Commit** `feat(server): the lead's guards — the app's files only, no Dockerfile, no new dependency,
@@ -646,7 +759,8 @@ export function importsHold(files: { path: string; content: string }[], paths: s
 ## Task 7: The three agents, and the lead's moves
 
 **Files:** `server/src/agents/{lead.ts,cwl.ts,explaining.ts,building.test.ts}`, `server/src/build/moves.ts`,
-`server/src/api/progress.ts` (`BuildStep`).
+`server/src/api/progress.ts` (`BuildStep`), `server/src/model/walkthrough.ts` (mock mode's answers for the three, F2
+Decision 7's way: the mock has no model, M2, and its session lists no `default-chat-large`).
 
 **Interfaces:**
 
@@ -709,8 +823,17 @@ export const leadMoves: ToolDef<RoundContext, never>[]   // read, commit, ask_cw
     and reports its proposed changes **without committing them**: the lead commits (rule 2);
   - **`ask_person`** with a default answers at once with the default (*"We've built it so only you can"*) and
     records the question. **Without** a default, it stops the run as `paused`;
-  - **`explaining`** turns a build log whose tail says `Cannot find module 'marked'` into a `note` and a
-    `sentence`, and neither holds a path, a module name or a code (C3);
+  - **`explaining`**, given the platform's own words as M4 recorded them, answers a `note` and a `sentence`, and
+    neither holds a path, a module name or a code (C3). Two fixtures, verbatim from M4 (the dated entry):
+    - a build: the log's lines *"npm error `npm ci` can only install packages when your package.json and
+      package-lock.json or npm-shrinkwrap.json are in sync…"* and *"npm error Missing: marked@14.1.0 from lock
+      file"*, with `Build.error` beginning *"BUILD_FAILED: build failed (exit 1)"*;
+    - a draft: an incident whose `exitReason` is *"the process exited with code 1"*, whose `failedCheck` is
+      *"readiness: GET /healthz … the edge last answered 0 after 87 attempt(s)"*, and whose `logTail` holds
+      *"Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/app/missing.js' imported from /app/server.js"*;
+  - **the lead's view keeps to `VIEW_CAP`** (Decision 3): with files that would pass it, every message the lead is
+    sent comes to 48,000 characters or fewer, the plan and the pack are whole, and the file left out is its one
+    line;
   - **the CWL specialist's answer** writes `config/staff.json` with exactly the instructor's PUID and the brief's
     emails, and its checks refuse an answer that writes any other staff.
 - [ ] **Step 2: Red. Step 3: Implement.** The prompts live beside their schemas, as F2's agents do.
@@ -760,7 +883,7 @@ export interface Rounds {
   interruptedOnBoot(): void                                         // working → interrupted (Review Focus 3)
 }
 export function createRounds(deps: { store: Store; hub: Hub; work: Work; sessions: AgentSessions; source: Source;
-  builds: Builds; releases: Releases; instances: Instances; members: Members; stream: ProjectStream;
+  builds: Builds; releases: Releases; instances: Instances; secrets: Secrets; members: Members; stream: ProjectStream;
   modelFor: (session: { key: string; baseUrl: string; model: string }, onAnswer: (a: Answered) => void) => Model;
   projects: Projects; trace: Trace; now: () => Date }): Rounds
 ```
@@ -787,7 +910,7 @@ export function createRounds(deps: { store: Store; hub: Hub; work: Work; session
   - **a message mid-build:** the line becomes *"Got it, after this step."* at once. The next move's view carries
     it. A message during `build` is applied after `answers`, in the same session: back to `pages`;
   - **questions:** one with a default carries on; one without pauses (`paused`), and `answer` resumes. **A secret's
-    answer goes to `secret:write` for the sandbox only, and F2's dump of every table afterwards holds no trace of
+    answer goes to `secrets.setInSandbox` and nowhere else, and F2's dump of every table afterwards holds no trace of
     it**;
   - **FE-32:** a lead whose commit is guarded for a dependency, and which then answers `done`, leaves
     `needs: cannot`, and the rest built;
@@ -796,7 +919,10 @@ export function createRounds(deps: { store: Store; hub: Hub; work: Work; session
     that commit again;
   - **the stream reconnected** during `build`: the round re-reads the build, and ticks `build` from what it reads
     (Review Focus 5);
-  - **the token refused** (`4403`) → `needs: token`, and `carryOn` with a new token resumes;
+  - **the token refused** (the stream's `refused`, Task 5, or any call's `401 UNAUTHENTICATED`) → `needs: token`, and
+    `carryOn` with a new token resumes;
+  - **the fallback** (Rich, Decision 4): the round's first answer with `fallback: true` adds our one line to the
+    conversation, and the round carries on; a second fallback answer in the same round adds nothing;
   - **the cost:** after each model call, `conversationUsd` is the sum of the round's sessions' `spentUsd`, and a
     `null` leaves it `null`;
   - **no credential reaches a prompt, or the store,** after a whole round (Global Constraints).
@@ -815,7 +941,16 @@ export function createRounds(deps: { store: Store; hub: Hub; work: Work; session
 
 ## Task 9: Our API's building routes
 
-**Files:** `server/src/api/{build.ts,build.test.ts,events.ts,plan.ts}`, `server/src/app.ts`, `server/src/main.ts`.
+**Files:** `server/src/api/{build.ts,build.test.ts,events.ts,plan.ts,work.ts}`, `server/src/app.ts`, `server/src/main.ts`.
+
+**Two things F2's `work.ts` does that this task must change** (read in sitting 1):
+- **`work.mine` answers `409 CONVERSATION_BUSY` to anything while a piece of work runs**, and the round runs for
+  minutes. So `/messages`, `/answers` and `/stop`, which exist to reach a round *while it works*, never take its busy
+  check: they hand their words to `rounds.message`, `rounds.answer` and `rounds.stop`. `/build` keeps it.
+- **A run's `finally` releases the conversation's claim whoever holds it.** Agree's work ends `'agreed'` and
+  releases in its `finally`; a round started from inside it (Decision 11) would lose its claim to that `finally`,
+  and a second `/build` would pass. Either agreeing and round 1 are **one** run (agree's work goes on into the
+  round), or each run holds a claim of its own that only it releases.
 
 **Routes** (every one guarded by the person and by `Origin`, F2 Decision 3):
 
@@ -833,17 +968,27 @@ export function createRounds(deps: { store: Store; hub: Hub; work: Work; session
     round 1 `working` (Decision 11);
   - `/build` without a token held → `409 TOKEN_MISSING`, which the page answers by handing one over (F2's pattern);
   - the state frame carries `round`, and a reconnect's first frame rebuilds it whole;
+  - **while the round's work is running**, `/messages`, `/answers` and `/stop` are `202` (never
+    `CONVERSATION_BUSY`), and `/build` is `409 CONVERSATION_BUSY`;
+  - **agree's run ending does not free round 1's claim:** straight after `/plan/agree`, a `/build` is `409
+    CONVERSATION_BUSY`;
   - `/stop` twice is `202` both times, and one session is ended;
   - `main.ts` calls `rounds.interruptedOnBoot()` before listening.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; control:** `/stop` without the Origin check → red.
+- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** `/stop` without the Origin check → red; the
+  claim released by any run's `finally` → the agree test red.
 - [ ] **Step 5: Commit** `feat(server): our building routes — carry on, a message, an answer, stop; the round
   starts when the plan is committed`.
 
 ## Task 10: What the design system lacks for moment 6
 
-**Files:** `ui/src/{LiveSteps.tsx,Disclosure.tsx,index.ts,components.css,LiveSteps.test.tsx,Disclosure.test.tsx}`.
-M6 records whether the reference bundle has an `InverseSurface` and a disclosure. If it does, **port it** (with parity
-cases) instead of writing one.
+**Files:** `ui/src/{LiveSteps.tsx,InverseSurface.tsx,LogPane.tsx,Disclosure.tsx,index.ts,components.css,parity.test.tsx,LiveSteps.test.tsx,Disclosure.test.tsx}`.
+
+**M6 found:** the reference bundle **has `InverseSurface`** (`title`, `body`, `inset`, `warn`, `children`) **and
+`LogPane`** (`lines`, `writtenBefore`), and our `components.css` already carries `.mf-inverse` and `.mf-log`. So both
+are **ported, with parity cases**. It has **no disclosure**, so `Disclosure` is ours. The design system's rule for it
+(manifest's `components/InverseSurface/README.md`): machine text sits *"behind a disclosure that is shut by default"*,
+collapsed to a line count, line numbers muted and not selectable. Its summary is the walk-through's words (*"The exact
+words, for whoever you ask for help"*), which are the design.
 
 **Interfaces:**
 
@@ -852,18 +997,23 @@ cases) instead of writing one.
 export interface Step { text: string; note?: string; state?: 'done' | 'now' | 'next' | 'halted'
   /** Under the `now` step: what we are doing now. aria-live polite. */ line?: string
   /** A finished step's disclosure: what changed. */ detail?: ReactNode }
-// Disclosure: a native <details>, styled; its body can be machine text (InverseSurface) on purpose
-export function Disclosure(props: { summary: string; children: ReactNode; machine?: boolean }): JSX.Element
+// InverseSurface and LogPane: ported from the reference, markup byte for byte (parity.test.tsx)
+export function InverseSurface(props: InverseSurfaceProps): JSX.Element
+export function LogPane(props: { lines: string[]; writtenBefore?: number; className?: string }): JSX.Element
+// Disclosure: a native <details>, styled; closed, its summary says how many lines are inside; its body can be
+// machine text on purpose (an InverseSurface holding a LogPane)
+export function Disclosure(props: { summary: string; count?: number; children: ReactNode; machine?: boolean }): JSX.Element
 ```
 
 - [ ] **Step 1: Tests, failing first:**
   - `line` renders under the `now` step only, in an `aria-live="polite"` element;
   - `detail` renders inside the finished step;
   - `Disclosure` is a `<details>`, closed by default, and its `summary` is a real focusable element;
-  - `machine` gives the body the inverse surface's class;
-  - **parity:** without `line` and `detail`, `LiveSteps`' markup is byte for byte the reference's.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green. Step 5: Commit** `feat(ui): LiveSteps' line and detail, and a
-  Disclosure — ours; parity holds without them`.
+  - `machine` gives the body the inverse surface (`InverseSurface`), and `count` shows in the closed summary;
+  - **parity:** `InverseSurface` and `LogPane`, ported, render the reference's markup byte for byte; and without
+    `line` and `detail`, `LiveSteps`' markup is byte for byte the reference's.
+- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green. Step 5: Commit** `feat(ui): LiveSteps' line and detail;
+  InverseSurface and LogPane ported with parity; a Disclosure of ours`.
 
 ## Task 11: The building screen, layout C
 
@@ -883,8 +1033,10 @@ export function Disclosure(props: { summary: string; children: ReactNode; machin
   - the `StateChip` (one of the five states);
   - `LiveSteps` with the line and each step's note and tries; each finished step's *What changed*, with
     *"The exact changes, for whoever you ask for help"* inside it;
-  - *"A few minutes. You can leave: it keeps going, and this page shows where it got to when you come back."* (the
-    minutes come from M4);
+  - *"A few minutes. You can leave: it keeps going, and this page shows where it got to when you come back."*
+    *(M4 and M1 hold "a few minutes": a build took about 18 s and a sandbox deploy 9 s, 91 s when it cannot start; a
+    move of the lead's took 4 to 21 s on `default-chat-large`, so a round of 15 to 30 moves is about 2 to 8 minutes.)*
+    Decision 4's fallback line is in `words.ts` too;
   - the draft address, in mono, as a link;
   - *serving right now* beside *the last attempt*, while a draft attempt fails;
   - the cost line: *"$0.40 so far · $9.60 left this month"*, or the month alone;
@@ -933,7 +1085,12 @@ export function Disclosure(props: { summary: string; children: ReactNode; machin
 
 - [ ] **Step 1: Against the mock.** `scripts/check-building.sh`, beside `check-describing.sh`, drives our API as the
   browser does, with the scripted model. It asserts **what our server sent**, read from the trace, whose platform
-  entries say what each call named (Task 2):
+  entries say what each call named (Task 2). *(M2: the mock's `main` never moves, so every commit's base is
+  `c2ac2119…`; its build is `4444…` of its own commit; its `deploy` and `getInstanceOutput` answer staging's instance;
+  and its stream plays `build.started` at 1 s, `build.succeeded` at 14 s and `instance.healthy` at 20.6 s, once per
+  connection, whatever was started. So the round ticks on ids, and this check reads what was sent. **The platform's
+  sitting 10 is the mock's (FE-26, FE-27)**: if it has landed by sitting 7, measure the mock again before trusting
+  this note.)*
   1. the round starts when the plan's commit lands;
   2. the commits' dry runs, then the commits;
   3. `startBuild` names the last commit;
@@ -954,9 +1111,15 @@ export function Disclosure(props: { summary: string; children: ReactNode; machin
   - **watch the round:** each step ticks on its signal, the line changes, and the cost line moves;
   - it reaches ***"It started and answered."*** Record the draft address, the time, the cost, and the model the trace
     says answered;
-  - **the deliberate break** (Rich's word): after the plan's commit and before the build, commit
-    `require('./missing')` into the app with a token the headless page mints. Watch the lead read the log, fix it,
-    and build again: *"Building it (second try)"*;
+  - **the deliberate break** (Rich's word): after the plan's commit and before the build, commit a line that fails
+    at start, `throw new Error('a deliberate break')`, with a token the headless page mints. *(M4: this blueprint's build runs only `npm ci`, so code cannot fail it; a start that fails is a draft
+    failure, `200 failed` after about 91 s, with an incident. An `import './missing.js'` would be caught earlier,
+    by Decision 6, before any build.)* Watch the explaining agent's sentence, and the lead read the incident, fix
+    it, and deploy again: *"Putting it on your draft address (second try)"*;
+    **Put it where the lead will not overwrite it:** the lead writes whole files, so a break in `server.js` before
+    its pages is written over, and a commit after its `done` is not in the commit the round builds. So the throw goes
+    at the top of a blueprint file the lead has no reason to rewrite, `auth/session.js`, straight after the plan's
+    commit;
   - press *Stop* in a second round; the draft address keeps the first round's version;
   - **record the lead's words verbatim**, as F2 recorded the plan's: its lines, its accounts, its questions.
 - [ ] **Step 3: Rich's click:** `https://app.manifest.internal/new`, signed in as `instructor`, moments 3–6.
@@ -976,5 +1139,132 @@ export function Disclosure(props: { summary: string; children: ReactNode; machin
 
 ## What executing this plan found
 
-*Nothing yet. Each sitting adds a dated entry here: its measurements, its rulings, its negative controls, and its
-gates.*
+*Each sitting adds a dated entry here: its measurements, its rulings, its negative controls, and its gates.*
+
+### 2026-09-28 — Sitting 1 (Task 1): the measurements
+
+*One agent, natively, as Rich chose. M1's reading, M2, M5 and M6 ran while the platform's 9b tested. M1's live half, M3
+and M4 ran after its CLOSED (manifest `346cd9e`; the control plane restarted empty), signed in as the test user
+`instructor` at Rich's word. The throwaway scripts and their records are in the session's scratchpad; this entry is
+the record. The contract did not move: **1.4.0, 66 operations**, before and after 9b.*
+
+**The one decision of Rich's this sitting asked for.** M1 showed 9b's fallback is the 4B on-premise model, with a
+16k-token context that cuts a longer prompt without a word. Asked what the round does when it answers, Rich chose
+***"Carry on, but say so"*** (recorded in *Decided by Rich*; Decisions 3 and 4 carry it).
+
+**M1: the contract, and the capable model** (one agent session at a time; `capUsd: 2` and `durationMinutes: 240` were
+both taken, and `expiresAt` was 240 minutes after `createdAt`):
+- **The union of moves at the schema's root never reached OpenAI.** Seven calls of seven answered `200` from
+  `ollama_chat/qwen3.5:4b`, with `x-litellm-attempted-fallbacks: 1`. A diagnosis, cheapest first: no schema, a root
+  object, and a root object without `$schema` all answered from `default-chat-large`. A root `anyOf` fell back. The
+  lead's union **wrapped as `{ move }`** answered from `default-chat-large`. So Decision 1 is corrected, and FE-34 is
+  written.
+- **Wrapped, on `default-chat-large`:** 5 of 5 parsed, in 4.0, 5.4, 6.7, 8.5 and 21.2 s. The prompt was 35,955
+  characters, 9,644 tokens; the answers took 137 to 1,200 reasoning tokens; the prompt was cached after the first
+  call (9,641 tokens). A 95,978-character prompt (33,782 tokens) answered in 7.1 s, and a 280,319-character one
+  (107,984 tokens) in 15.7 s. All seven calls cost **$0.021**. The first run, on the fallback, cost $0.086.
+- **Which model answered:** on the normal path the answer's `model` reads `default-chat-large` (not
+  `openai/gpt-6-luna`), and the header says `0`. The fallback's reads `ollama_chat/qwen3.5:4b`, and the header says
+  `1`. On the fallback, prompts of 95,978 and 280,319 characters both counted **16,386** prompt tokens: cut, silently.
+  Hence Decision 3's cap of 48,000 characters.
+- **The lead's moves, verbatim in spirit:** its first move was `ask_cwl`, with a brief true to the plan (*"Anyone with
+  a CWL account can sign in; we cannot restrict access to the class yet."*). Reads asked for the blueprint's auth
+  files. One `ask_person` found a real gap in the plan: *"To show how many students have not posted, we need to know
+  the class roster or at least the expected class size…"*, with the default *"We'll show the number of responses
+  received, but not a count of students who have not posted, unless you provide an expected class size."* (FE-20's
+  shadow.)
+- **The contract's shapes** (Task 4 now carries them): `getTree`'s `entries` with `type`, `size` and `binary` nullable
+  for non-files; `getFile`'s four `SOURCE_*` refusals; `createCommit`'s `spec.warnings` (there is no `specWarnings`);
+  `Build.status` with `pending`; `Instance.state` with ten values; `listIncidents`' fields all strings, `logTail` one
+  string, and a `prompt` written for an agent; `listAgentSessions` as `{ sessions, truncated }`; `setAppSecret`, which
+  no task had, and which is now Task 4's `secrets.ts`.
+- **`listMembers` answers the conversation's token**, and the owner's `userId` is `getMe`'s `id`
+  (`instructor@ubc.ca`, PUID `ins000001`), so Decision 13's PUID comes from it as planned.
+- **The contract's `subscribe()` runs in Node with a token**, sends `Authorization: Bearer` and no `Origin`, and
+  rejects `ready` when a socket closes first. It does not reconnect: Task 5 does that.
+
+**M2: the mock** (`manifest-mock` on 7102, before 9b's close):
+- Every operation answers a token of any value, from the document's examples (FE-27). `createCommit` wants the base
+  `c2ac2119…`, answers that same sha as the new commit (`main` never moves), and checks nothing else: a Dockerfile,
+  a secret-shaped value and `../a.js` were all `201`.
+- `startBuild` answers build `4444…` of commit `5f3c…`, whatever is named. `deploy` and `getInstanceOutput` answer
+  **staging's** instance whatever is named. Its sessions list no `default-chat-large`.
+- **Its stream** replays three events, sends ready, then plays one script **per connection, from connect**:
+  `build.started` at 1 s, 20 log frames, `build.succeeded` at 14 s, then staging's instance provisioning, starting,
+  and `instance.healthy` at 20.6 s.
+- So the round ticks on ids, never on a commit or an environment (Decision 5), and Task 12's mock half asserts what
+  was sent.
+
+**M3: the stream from a server** (the real platform, `subscribe()` with a token):
+- The replay came oldest first (13, then 33 events), then ready, in 25–47 ms.
+- A revoked token's new upgrade closed `1006` in 33 ms, and a `GET` of the same URL answered `401 UNAUTHENTICATED`. A
+  good token's `GET` answers `426`. Another project's id closed `1006`, and its `GET` answered `404`. **`4404` and
+  `4403` were never sent to a token**, so Decision 15 and Task 5 now read `1006`, then the `GET`.
+- **A token revoked while its stream is open keeps the stream, and goes on receiving the project's events**:
+  `agent_session.started` and `agent_session.ended` arrived after the revocation. That is **FE-33**. The round learns of
+  a revocation from its next call's `401`.
+
+**M4: one round by hand** (a `node-ts-mongo@1` + `proof-app` project, the real platform):
+
+| Step | Measured |
+|---|---|
+| `startBuild` → `build.succeeded` | 17.8 s and 18.2 s (75 log lines); the event arrived before any poll |
+| `createRelease` | 19–25 ms |
+| `deploy` to the sandbox, healthy | **8.9 s**, answered `healthy`; `getInstanceOutput` read `proof app listening`; `/healthz` and `/` answered `200` through the edge |
+| **Break A:** `import './missing.js'` in `server.js` | built fine (18.2 s). `deploy` answered **`200 failed` after 91 s** (87 readiness attempts). The earlier instance **kept serving**. `getInstanceOutput` was `409 INSTANCE_OUTPUT_UNAVAILABLE`, and the incident held the whole `ERR_MODULE_NOT_FOUND` stack, a `diffSinceHealthy` and a `prompt` |
+| **Break B:** `marked@14.1.0` in `package.json`, no lock | **`build.failed` in 3.6 s.** The telling lines are about 50 from the end of 100: `Build.error` and `reason` hold only npm's usage text (FE-32, now measured) |
+| Dry-run refusals | stale base `409 SOURCE_CONFLICT`; a secret-shaped value `409 SOURCE_SECRET_DETECTED`, naming `config/aws.js:1` in the message, with no `details`; `../x.js` `400 REQUEST_INVALID`; a `Dockerfile` **`201`** (the platform replaces it at build); `runtime.build` `422 SPEC_INVALID`, `details[0].code` `SPEC_BUILD_BLOCK_FORBIDDEN`; the same file again `409 SOURCE_NOTHING_TO_COMMIT` |
+
+- Real subjects include the slug (`project:<slug>`, `repository:<slug>`, `sp:<slug>:sandbox`), and a deploy also
+  sends `sso.registered` and `ai.key_rotated`. So Decision 5 matches on `machineDetail`'s ids.
+- **"A few minutes" holds:** a build of 18 s, a deploy of 9 s (91 s when it cannot start), and a move of 4–21 s. A
+  round of 15–30 moves is about 2–8 minutes. **Decision 17's 120 s stands.**
+- This blueprint's build runs only `npm ci`, so code cannot fail a build. Task 12's deliberate break is now a throw
+  at start, placed where the lead will not overwrite it.
+
+**M5: the two frameworks** (OpenAI's Agents SDK for JavaScript **v0.18.0**; Vercel's AI SDK **`ai@7.0.120`**; read from
+their repositories' docs): every idea *Decided by Rich* takes has a name there, recorded as a table in Task 2. **Nothing
+changes Task 2's shape.** Our guard is OpenAI's tool input guardrail with `rejectContent`; `maxMoves` is `maxTurns` and
+`isStepCount`; the view is `callModelInputFilter` and `prepareStep`.
+
+**M6: the blueprint** (read-only):
+- JavaScript, as **ES modules** (`"type": "module"`). So Decision 6 and Task 6 now demand an exact relative path.
+- `server.js` is the entry. A signed-in request's `req.user.user` is `bridge(profile)` by friendly name
+  (`ubcEduCwlPuid`, `mail`). The staff check is middleware after `passport.session()` (Decision 13).
+- The knowledge pack is 11,513–11,569 characters, so it goes whole.
+- The design system's reference **has `InverseSurface` and `LogPane`**, which Task 10 now ports, and **no disclosure**,
+  which stays ours.
+
+**Read from our own code** (the prep Rich asked for while 9b tested), each now a test in its task:
+- F2 never set `pragma user_version`, so the migration is 0 → 2.
+- `Store` exposes no database, so `storeTrace` is two new `Store` methods.
+- An agent's check is built from its input, as F2's `checkedAgainst` is.
+- **`work.mine` answers `409 CONVERSATION_BUSY` while work runs**, so `/messages`, `/answers` and `/stop` must skip it
+  (Task 9).
+- A run's `finally` must not free a later run's claim (agree → round 1, Task 9).
+
+**Rulings** (the ledger has each with its cost):
+1. M4 built `node-ts-mongo@1` + `proof-app`, not the fixture, because its times are the ones "a few minutes" rests on.
+2. Break A was `import './missing.js'` (ES modules).
+3. M3 revoked a token of its own.
+4. `secrets.ts` joins Task 4.
+5. Mock mode's answers for the three agents join Task 7.
+6. Decision 15's `4403` became the contract's `1006`-then-`GET`, confirmed by M3.
+7. The five corrections from reading our code.
+
+**Findings written:**
+- **FE-33** (a revoked token's open stream keeps receiving) and **FE-34** (the fallback answers a request OpenAI
+  refused); neither is carried.
+- **FE-32** is now measured.
+
+**Measurement controls** (a measurement can be wrong too):
+- M3's first run revoked nothing: our helper sent `content-type: application/json` with an empty `DELETE`, which the
+  platform answered `400`. The stream "surviving a revocation" was therefore unproven. It was fixed and run again,
+  and the open stream was then shown receiving events made *after* the `200` revocation.
+- M1's first `endAgentSession` failed the same way, and was ended by hand (`200`, `$0.086`).
+
+**Gates:** `pnpm test` **547/547, twice** (ORIENTATION said 546: FE-28's fix added one); `pnpm lint`, `pnpm typecheck`
+and `pnpm format:check` pass. No code changed this sitting: the plan, `api-findings.md`, ORIENTATION and the roadmap.
+
+**Spent:** $0.107 of the test user's month. $0.086 of it was charged at the fallback's on-premise price, before the
+cause was found. **On Rich's OpenAI key, about $0.02.**
