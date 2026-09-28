@@ -4,28 +4,26 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F3's sitting 1 done; the platform's 9b closed)*:
+**Where things stand** *(2026-09-28, F3's sittings 1 and 2 done, in one session at Rich's word)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3's sitting 2, Tasks 2 and 3.** These are the runtime (agents, moves, the
-  runner, its stop conditions, guards, the trace, saved runs) and the model client recording which model answered.
-  The plan is [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3's sitting 3, Tasks 4 and 5.** These are the platform calls (source,
+  builds, releases with deploy at 120 s and sandbox only, instances, secrets, members, sessions with their clock) and
+  the project's event stream on our server. The plan is
+  [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md).
   - **Rich chose how it runs:** one agent, natively (superpowers:executing-plans), not subagent-driven, one sitting
-    per session. The whole-branch review is done by one fresh reviewer at the end.
-  - **Read first:** the plan's dated entry for sitting 1, then the briefing at the end of the ledger
-    (`.superpowers/sdd/2026-09-28-f3-building-it/progress.md`). The briefing lists the files, F2's patterns, and the
-    SQLite traps.
-  - **Sitting 1 corrected Tasks 2–12 to what it measured.** Trust the tasks as they now read. What changes sitting 2:
-    - **the lead's moves are wrapped as `{ move }`** (Decision 1): a union at the schema's root silently sends every
-      call to the 4B fallback (FE-34);
-    - **`Answered` gains `fallback`**, from the header `x-litellm-attempted-fallbacks`. On the normal path `model`
-      reads `default-chat-large`;
-    - **the migration is `user_version` 0 → 2**: F2 never set it;
-    - **`storeTrace` goes over new `Store` methods**;
-    - **an agent's `check` is built from its input**;
-    - M5 changed no interface. Task 2 has the frameworks' names for our ideas.
-  - **Rich decided one more thing in sitting 1:** when the fallback answers, **carry on, and say so** once in the
-    conversation. What the lead sees is capped at 48,000 characters, so the fallback's 16k context never cuts it
-    (Decisions 3 and 4).
+    per session (he waived that once, for sitting 2). The whole-branch review is done by one fresh reviewer at the
+    end.
+  - **Read first:**
+    - the plan's dated entries for sittings 1 and 2;
+    - the ledger's rulings (`.superpowers/sdd/2026-09-28-f3-building-it/progress.md`);
+    - **Tasks 4 and 5 as they now read.** Their interfaces were rewritten to the contract sitting 1 recorded: M1 for
+      the shapes, M3 for the stream's `1006`-then-`GET`, and M4 for the timings. Trust them over anything older.
+  - **What sitting 2 left for you:**
+    - `runtime/` (agents, moves, the runner, the trace), and `store/`'s `runs` and `trace` at `user_version` 2;
+    - `model/client.ts`'s `onAnswer` (which model answered, `fallback`, usage) and `modelFor`;
+    - F2's `authoring.ts` `commitPlan` moves onto Task 4's `source.commit`, as a targeted change.
+  - **Rich decided in sitting 1:** when the fallback answers, **carry on, and say so** once in the conversation. What
+    the lead sees is capped at 48,000 characters (Decisions 3 and 4).
   - **What F3 builds, in one breath:**
     - our own small agent framework (`runtime/`), with ideas from OpenAI's Agents SDK and Vercel's AI SDK and no
       dependency on either;
@@ -40,7 +38,8 @@ says which plan is current. This file states where things stand and the rules. I
     [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
   - **F2 is executed** (2026-09-28): moments 3–5. Describe it, name it, *Make it*, and the plan, committed into the
     app as `docs/plan.md`. [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  - **F3's sitting 1 is done** (2026-09-28): the measurements, recorded in the plan's dated entry. New findings:
+  - **F3's sittings 1 and 2 are done** (2026-09-28): the measurements, then the runtime and the model client, each
+    recorded in the plan's dated entry. New findings:
     **FE-33** (a revoked token keeps its open event stream) and **FE-34** (the fallback also answers a request OpenAI
     refused). Neither is carried; that is Rich's word.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
@@ -48,7 +47,7 @@ says which plan is current. This file states where things stand and the rules. I
     - sittings 8 (archive and restore), 9 (delete), 9a (the capable model, `9c54bc3`) and **9b (its fallback,
       close-out `346cd9e`)**;
     - the contract is still **1.4.0, 66 operations**;
-    - our typecheck and 547 tests pass against it.
+    - our typecheck and 580 tests pass against it.
   - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`, Rich's, $0.10/$0.50 a million tokens),
     at `max_classification` internal. **Read model names from `session.models`**, never assume them: a
     `confidential` project never gets it.
@@ -78,12 +77,14 @@ says which plan is current. This file states where things stand and the rules. I
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
       the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`.
-    - `model/` asks a model for structured output only. `agents/` are the agents, each a schema and a prompt: the
-      three intake agents, and the plan. F3 adds `runtime/` and `build/`, and three agents.
+    - `model/` asks a model for structured output only, and says which model answered (`onAnswer`). `agents/` are
+      the agents, each a schema and a prompt: the three intake agents, and the plan.
+    - **`runtime/` is our own agent framework** (F3 sitting 2): it knows no platform. F3 adds `build/` and three
+      agents next.
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session.
   - **The gates:**
-    - `pnpm test` (547 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (580 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
     - `scripts/check-describing.sh` (F2's, mock mode, 18 checks). F3 adds `scripts/check-building.sh`.
 

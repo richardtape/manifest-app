@@ -6,8 +6,8 @@
 
 **Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
 sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
-whole-branch review by one fresh reviewer at the end (Task 12). **Sitting 1 is done (2026-09-28), and Tasks 2–12 are
-corrected to what it measured. Sitting 2 is next.**
+whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1 and 2 are done (2026-09-28, in one session
+at Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 3 is next.**
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
@@ -53,7 +53,7 @@ moment 6, which hands over to F4's *Seeing it*.
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements.** The capable model's structured answers; the mock's build and deploy answers; the platform's stream from a server; a round by hand on the real platform; the two frameworks' current documentation; the blueprint's sign-in code. **Alone, and first.** M3 and M4 need the control plane, which the platform's 9b has stopped: they wait for its *"CLOSED"* | **done 2026-09-28** (the dated entry below) |
-| 2 | 2, 3 | The runtime: agents, moves, the runner, its stop conditions, guards, the trace, saved runs. And the model client recording which model answered, and its usage | not started |
+| 2 | 2, 3 | The runtime: agents, moves, the runner, its stop conditions, guards, the trace, saved runs. And the model client recording which model answered, and its usage | **done 2026-09-28**, in sitting 1's session at Rich's word (the dated entry below) |
 | 3 | 4, 5 | The platform calls, and the project's event stream | not started |
 | 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | not started |
 | 5 | 8, 9 | The round of work, our API's building routes, the building frames, and the new tables | not started |
@@ -808,6 +808,11 @@ export interface RoundContext {
 export const leadMoves: ToolDef<RoundContext, never>[]   // read, commit, ask_cwl, ask_person, done
 ```
 
+*From sitting 2:* the lead's `answer` is `movesOf(leadMoves)`, `{ move }`-wrapped. `commit` refused `SPEC_INVALID` (or
+`SOURCE_SECRET_DETECTED`, `SOURCE_PATH_CONFLICT`…) reports the facts **and** returns `refused: <code>`, so three in a
+row count. `ask_person` without a default returns `stop: { kind: 'paused', questionId }`. A check that needs the
+brief is `check: (input) => …` (the CWL specialist's emails).
+
 - [ ] **Step 1: Tests, failing first** (`building.test.ts`, scripted answers):
   - **the lead's prompt** says: *we*; the stack is fixed and no dependency may be added (FE-32); never a Dockerfile
     or `.npmrc`; describe what people see, never code, in `line` and `account`; ask only what only the person can
@@ -844,6 +849,19 @@ export const leadMoves: ToolDef<RoundContext, never>[]   // read, commit, ask_cw
 
 **Files:** `server/src/build/{round.ts,round.test.ts}`, `server/src/store/runs.ts` (+ `questions`),
 `server/src/api/progress.ts`, `server/src/api/work.ts` (step keys).
+
+**What sitting 2 built that this task stands on** (its dated entry has why):
+- `run()` knows only `ModelError`. A tool that meets a platform refusal the lead cannot answer returns it as its
+  `stop` (`{ kind: 'refused', error }`), or throws it for `work.run` to say. Anything unknown is thrown.
+- `MoveResult.refused` is a dry run's code. It counts toward `sameRefusal` as a guard's reason does. **The runner
+  never stops at the third same refusal** (a test holds it), so the round adds its own stop condition:
+  `stopWhen?: (state: RunState) => Stop | null` in `RunOptions` (Vercel's `stopWhen`), checked after each save, and
+  `Stop`'s `limit` gains `'refusals'`.
+- **Model entries in the trace are the round's to record**, from each session's `onAnswer`:
+  `{ kind: 'model', agent, asked, answered, fallback, usage }`. The runner records only moves.
+- The store already has `saveRun` / `getRun` (a `Run` is `RunState` plus the conversation, the round, the tries, the
+  status, the sessions' ids and the model), `recordTrace` / `listTrace`, and `user_version` 2 with `building` and
+  `built`. This task adds `questions`, as version 3.
 
 **Interfaces:**
 
@@ -1268,3 +1286,72 @@ and `pnpm format:check` pass. No code changed this sitting: the plan, `api-findi
 
 **Spent:** $0.107 of the test user's month. $0.086 of it was charged at the fallback's on-premise price, before the
 cause was found. **On Rich's OpenAI key, about $0.02.**
+
+### 2026-09-28 — Sitting 2 (Tasks 2 and 3): the runtime, and which model answered
+
+*In the same session as sitting 1, at Rich's word ("ok please continue with the next sitting"): he had chosen one
+sitting per session, and waived it here.*
+
+**Commits:**
+- `d6545f5`: Task 2, the runtime (`runtime/agent.ts`, `tool.ts`, `run.ts`, `trace.ts`), the `runs` and `trace`
+  tables, and the migration;
+- `67e90df`: Task 3, the model client's `onAnswer` and `modelFor`.
+
+**What was built:**
+- **An agent is data:** instructions, a brief rebuilt every call, an answer, and a check built from the call's input.
+  `askAgent` sends the instructions as the system message.
+- **A move is a tool:** a zod schema, a guard, and a run over a context the model never sees. `movesOf` wraps the
+  union as `{ move }`.
+- **The runner** asks one move at a time, guards it, runs it, traces it, and saves the run after every move. It
+  stops on:
+  - `done`;
+  - `paused`;
+  - 40 moves;
+  - *Stop*, checked before a move **and once the model has answered**, so a move answered after *Stop* never runs;
+  - a `ModelError`.
+
+  The same refusal, a guard's or a dry run's, is counted for the round.
+- **The trace** holds moves (and, from Task 8, model and platform entries), never text. The store refuses an entry
+  shaped like a credential (`mft_…`, `sk-…` at a word's start).
+- **`openAiCompatible`'s `onAnswer`** hears every answer paid for: its own `model`, `fallback` from
+  `x-litellm-attempted-fallbacks`, and `usage` (`null` when absent, never zero). It hears nothing of a refusal.
+  `modelFor` prefers `default-chat-large`, then `default-chat`.
+- **The migration** takes F2's files (`user_version` 0) to 2. It rebuilds `conversations` for `building` and `built`
+  by SQLite's twelve steps, reading the table's definition out of `schema.sql` itself.
+  - **Our dev database migrated live** on the next restart: 51 conversations, 221 messages and 47 plans intact,
+    `pragma foreign_key_check` clean.
+
+**Rulings** (the ledger has each with its cost):
+1. `RunOptions.agent` answers the wrapped `Moves`.
+2. The runtime knows only `ModelError`. A tool hands back a platform refusal as its `stop`, or throws; an unknown
+   error is thrown.
+3. `MoveResult.refused` exists, for Decision 7's dry-run refusals.
+4. *Stop* is checked after the answer too (Review Focus 4).
+5. The trace's model entry carries `fallback`.
+6. The runner records moves only; model entries are the round's, from `onAnswer`.
+7. The migration reads the table's definition from `schema.sql`.
+8. `onAnswer` hears the retried answer too.
+9. `fallback` is the header alone.
+
+Task 8 now names the stop condition it must add (the runner never stops at the third same refusal).
+
+**Negative controls**, each red, then restored:
+- **Task 2:**
+  - the guard not consulted;
+  - the view not rebuilt;
+  - `maxMoves` ignored;
+  - the context spread into the view. It **stayed green at first**: the test's own agent rendered only two fields
+    of its view. It was strengthened with an agent whose brief shows everything it is given, and then went red;
+  - *Stop* not checked after the answer;
+  - the union at the root;
+  - no migration;
+  - the trace's credential check removed.
+- **Task 3:**
+  - `onAnswer` before the refusal check;
+  - the header ignored;
+  - a missing usage as zero;
+  - `default-chat` before `default-chat-large`.
+
+**Gates:** `pnpm test` **580/580, twice** (547 + 20 runtime + 7 store + 6 model); `pnpm lint`, `pnpm typecheck` and
+`pnpm format:check` pass; `scripts/check-describing.sh` 18/18 against the migrated dev database, its no-credential
+scan now reading `runs` and `trace` too.
