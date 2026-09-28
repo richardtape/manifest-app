@@ -1,0 +1,36 @@
+import { fileURLToPath } from 'node:url'
+import { createServer as createVite } from 'vite'
+import { buildServer } from './app.js'
+import { readConfig } from './config.js'
+
+/**
+ * OUR SERVER ON 7105: `pnpm dev` (edge) or `pnpm dev:mock`. The app is served by Vite in
+ * middleware mode, and its HMR socket shares our HTTP server (M4). 7105 is ours and only
+ * ours: if it is taken we stop, and never choose another port.
+ */
+const WEB = fileURLToPath(new URL('../../web/', import.meta.url))
+const config = readConfig(process.env)
+
+// The app is asked for only once we listen, which is after Vite exists: the closure reads
+// `vite` then, and Vite needs our HTTP server first, for its HMR socket.
+const app = buildServer(config, (request, response) =>
+  vite.middlewares(request, response),
+)
+const vite = await createVite({
+  root: WEB,
+  appType: 'spa',
+  server: { middlewareMode: true, hmr: { server: app.server } },
+})
+
+try {
+  await app.listen({ host: '127.0.0.1', port: config.port })
+} catch (error) {
+  console.error(
+    `manifest-app could not listen on ${config.port}: ${(error as Error).message}`,
+  )
+  await vite.close()
+  process.exit(1)
+}
+console.log(
+  `manifest-app (${config.mode}) on http://127.0.0.1:${config.port}, asking ${config.platformOrigin}`,
+)

@@ -4,13 +4,16 @@
   "type": "module",
   "description": "Our server on 7105: the app, /api/*, and in mock mode the proxy to manifest-mock. It learns who it serves from GET /v1/me and nothing else (FE-2).",
   "scripts": {
+    "dev": "tsx watch --clear-screen=false src/main.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fastify/http-proxy": "11.6.3",
-    "@fastify/static": "10.1.5",
     "@manifest/contract": "link:../../../manifest/packages/contract",
     "fastify": "5.12.3",
     "vite": "8.3.0"
+  },
+  "devDependencies": {
+    "@manifest/mock": "link:../../../manifest/packages/mock"
   }
 }
