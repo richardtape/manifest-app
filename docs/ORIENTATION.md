@@ -26,7 +26,7 @@ says which plan is current. This file states where things stand and the rules. I
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2); measured
     against the platform on 7100.
-  - **The gates:** `pnpm test` (107 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
+  - **The gates:** `pnpm test` (141 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
     `scripts/check-slice.sh`.
 - **Findings not yet carried to the platform session:**
   - FE-26: the mock accepts any session;

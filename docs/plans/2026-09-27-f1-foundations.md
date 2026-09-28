@@ -1535,7 +1535,7 @@ agreed).
   regenerate it from manifest's copy, which would have undone every change made at source (#6).
 - **Filed:** FE-28. The session cookie has no `__Host-` prefix, and apps live on sibling hosts, so cookie
   tossing is possible. That comes from reading, and was not measured.
-- **Deferred minors**, for Rich:
+- **Deferred minors**, for Rich (all since fixed, at his word: see the entry after the close-out):
   - one failed read hides every app (`Promise.all`);
   - a test that cannot fail on the CSS risk it names;
   - `signOut`'s redirect check accepts `/\evil.example`;
@@ -1563,3 +1563,20 @@ agreed).
   - the mock on 7102 and our server on 7105 in mock mode, for Rich;
   - the control plane stopped;
   - manifest untouched by us.
+
+### 2026-09-27 — After the close-out: the review's deferred minors, fixed at Rich's word
+
+**Commit:** `b639030`.
+- Each fix was watched failing, or its new test was controlled by breaking what it guards.
+- 141/141 twice; `check-slice` 7 passed.
+
+| Minor | Fixed |
+|---|---|
+| One failed read hid every app | each app is read on its own. One that fails keeps its name and audience and says *"We can't tell right now"*; a release that fails is *"Answering"* without its date. A 401 anywhere still ends the session, and nothing read at all is still the page's notice |
+| A test that could not fail on its CSS risk | renamed. `packages/ui/src/styles.test.ts` reads `components.css` and holds the collapsed labels to `clip-path`, never `display:none` |
+| `signOut`'s redirect check | parsed as a URL: a path must land on this origin, and a full URL must be `https:`. **On the production origin the old check, and my first URL version, let `//evil.example`, `/\evil.example` and a tab-split one through**, so the tests now run on it |
+| No error boundary | an `ErrorBoundary` shows our generic words. The router survives `/apps/%E0`, and so does our server: **Vite answered it an empty 404, a blank page**, so an undecodable path now reaches the app as `/`, and the page says *"There's nothing here."* |
+| The machinery check missed screens | eleven screens and states |
+| The page's alias was untested | `vite-config.test.ts` |
+| Small ones | the sign-out notice clears on moving; React is `ui`'s peer; `check-slice` empties its jar before the header cookie; moment 2's *"Try again in a minute."* is restored |
+| No reduced motion | the pulse and the working bar stop. **The first placement lost to the bar's own later rule** (a media query adds no specificity); the test now holds the order, and Chrome with the media emulated reads `none / none` |
