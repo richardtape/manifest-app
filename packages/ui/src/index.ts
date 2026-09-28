@@ -8,6 +8,7 @@
 export { Button, type ButtonProps } from './Button.js'
 export { Card, type CardProps } from './Card.js'
 export { Choice, type ChoiceOption, type ChoiceProps } from './Choice.js'
+export { Disclosure, type DisclosureProps } from './Disclosure.js'
 export {
   FieldCount,
   FormField,
@@ -16,8 +17,11 @@ export {
   type FormFieldProps,
   type Tone,
 } from './FormField.js'
+export { InverseSurface, type InverseSurfaceProps } from './InverseSurface.js'
 export { LiveSteps, type LiveStepsProps, type Step } from './LiveSteps.js'
+export { LogPane, type LogPaneProps } from './LogPane.js'
 export { SideNav, type NavItem, type SideNavProps } from './SideNav.js'
 export { StateChip, type State, type StateChipProps } from './StateChip.js'
+export { TwoFacts, type Fact, type FactTone, type TwoFactsProps } from './TwoFacts.js'
 export { MARK, TICK } from './icons.js'
 export { PERSON } from './icons.js'

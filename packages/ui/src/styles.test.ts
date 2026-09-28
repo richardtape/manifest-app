@@ -55,3 +55,13 @@ describe('motion, for a person who asks for less (prefers-reduced-motion)', () =
     ),
   )
 })
+
+describe('machine text at a phone’s width (F3 Task 10)', () => {
+  // A log line is one long word as often as not (a path, a hash): unwrapped, it widens the
+  // whole page at 375px, since the pane sits inside a step inside a list.
+  it('a log line wraps anywhere rather than widen what holds it', () =>
+    expect(declarationsFor(CSS, '.mf-log')).toMatch(/overflow-wrap:\s*anywhere/))
+
+  it('a step holding a disclosure may shrink below its content’s width', () =>
+    expect(declarationsFor(CSS, '.mf-step__body')).toMatch(/min-width:\s*0/))
+})

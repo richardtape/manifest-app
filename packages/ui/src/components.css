@@ -140,6 +140,21 @@
 .mf-step--done .mf-step__text {
   color: var(--ink-secondary);
 }
+/* OURS (F3 Task 10): the line under the step at work, and a step's disclosure. A step holding
+   a disclosure is a block that may shrink, so nothing inside it widens the page. */
+.mf-step__line {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+}
+.mf-step__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mf-step__detail {
+  margin-top: var(--space-2);
+}
 
 .mf-bar {
   border-radius: var(--radius-xs);
@@ -590,6 +605,8 @@
   line-height: 22px;
   color: var(--ink-inverse);
   overflow-y: auto;
+  /* Ours (F3 Task 10): a path or a hash is one long word; unwrapped, it widened the page. */
+  overflow-wrap: anywhere;
 }
 .mf-log__line--old {
   color: var(--ink-inverse-muted);
@@ -598,6 +615,41 @@
   color: var(--ink-inverse-muted);
   user-select: none;
   white-space: pre;
+}
+
+/* OURS (F3 Task 10): a disclosure, a native <details>, shut by default. Its summary stays in
+   the product's voice; machine text inside it sits on the inverse surface, its height held. */
+.mf-disclosure {
+  font-family: var(--font-sans);
+}
+.mf-disclosure__summary {
+  width: fit-content;
+  max-width: 100%;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+  border-radius: var(--radius-xs);
+}
+.mf-disclosure__summary:hover {
+  color: var(--ink);
+}
+.mf-disclosure__count {
+  font-weight: 400;
+  color: var(--ink-subtle);
+}
+.mf-disclosure__body {
+  margin-top: var(--space-2);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+.mf-disclosure--machine > .mf-disclosure__body {
+  padding: var(--space-4);
+}
+.mf-disclosure--machine .mf-log {
+  max-height: 22rem;
 }
 
 .mf-timeline {

@@ -4,6 +4,9 @@
  */
 export const TICK: readonly string[] = ['M5 13l4 4L19 7']
 
+/** InverseSurface's warning mark: the bundle's triangle, used once, above a one-time key. */
+export const WARN: readonly string[] = ['M12 4l9 16H3z', 'M12 10v4', 'M12 17v.01']
+
 export const NAV_ICONS: Readonly<Record<string, readonly string[]>> = {
   apps: [
     'M4 4.5h6.5V11H4z',

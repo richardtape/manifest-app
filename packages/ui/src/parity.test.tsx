@@ -156,6 +156,88 @@ const CASES: Record<string, Record<string, unknown>[]> = {
       className: 'extra',
     },
   ],
+  // F3 Task 10: moment 6's machine text, and its two facts.
+  InverseSurface: [
+    {},
+    // preview.html: a log, and a one-time key with its warning mark and a button
+    {
+      style: { flex: '1 1 0', minWidth: 0 },
+      children: React.createElement(REF['LogPane']!, {
+        writtenBefore: 2,
+        lines: [
+          '#1 [internal] load build definition',
+          '#1 DONE 0.1s',
+          '#7 added 135 packages',
+        ],
+      }),
+    },
+    {
+      style: { flex: '1 1 0', minWidth: 0 },
+      warn: true,
+      title: 'The only time you will see this',
+      body: 'We keep a fingerprint, not the key. Once you close this we cannot show it again.',
+      inset: 'mft_77777777-7777-4777-8777-777777777777_ZmFrZS1zZWNyZXQ',
+      children: React.createElement('button', { type: 'button' }, 'Copy it'),
+    },
+    // a title without the mark; the mark without a title draws nothing; body alone; a className
+    { title: 'Title', body: 'Body' },
+    { warn: true, body: 'No title, so no mark' },
+    { inset: 'mono', className: 'extra' },
+  ],
+  LogPane: [
+    { lines: [] },
+    {},
+    // preview.html
+    {
+      writtenBefore: 2,
+      lines: [
+        '#1 [internal] load build definition',
+        '#1 transferring dockerfile: 892B done',
+        '#1 DONE 0.1s',
+        '#7 [4/8] RUN npm ci --omit=dev',
+        '#7 added 135 packages in 6s',
+      ],
+    },
+    // none written before; all of them; more than there are; 1,000 lines' numbering; a className and style
+    { lines: ['a', 'b'] },
+    { lines: ['a', 'b'], writtenBefore: 2 },
+    { lines: ['a'], writtenBefore: 5 },
+    { lines: Array.from({ length: 1001 }, (_, i) => `line ${i}`), writtenBefore: 999 },
+    { lines: ['a'], className: 'extra', style: { maxHeight: 200 } },
+  ],
+  TwoFacts: [
+    {},
+    // preview.html
+    {
+      serving: {
+        overline: 'What people get',
+        title: 'The version from 18 September, 9:00am',
+        note: 'Running without complaint for 9 hours.',
+      },
+      attempt: {
+        overline: 'What you tried last',
+        title: 'A change that didn’t take, 4 minutes ago',
+        note: 'What went wrong →',
+        tone: 'attention',
+      },
+    },
+    // every tone on both sides, one unknown; no note; the foot dropped, and a foot of its own
+    ...['steady', 'attention', 'working', 'neutral', 'no-such-tone'].map((tone) => ({
+      serving: { overline: 'Serving', title: 'Nothing yet', tone },
+      attempt: { overline: 'Last', title: 'It never answered', note: 'Why', tone },
+    })),
+    {
+      serving: { overline: 'A', title: 'B' },
+      attempt: { overline: 'C', title: 'D' },
+      foot: null,
+    },
+    {
+      serving: { overline: 'A', title: 'B' },
+      attempt: { overline: 'C', title: 'D' },
+      foot: 'Our own foot.',
+      className: 'extra',
+    },
+  ],
   FormField: [
     { label: 'What should we call it?' },
     // preview.html: taken, then free
