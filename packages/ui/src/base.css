@@ -1,0 +1,28 @@
+/* THE PAGE BENEATH THE COMPONENTS: the design system's type, surface, links and focus. Ours,
+   written in F1 sitting 5, where the prototype set these per page in its own <style>. */
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--surface-page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A plain link's colours, at NO specificity (:where, over the whole selector, :hover
+   included): a component's own colours always win. `a:hover`, and then `:where(a):hover`,
+   each outranked .mf-btn--primary's white text, and Continue with CWL read dark blue on dark
+   blue under the pointer: 1.24:1, measured (Rich's click-through). */
+:where(a) {
+  color: var(--brand);
+}
+:where(a:hover) {
+  color: var(--brand-hover);
+}
+
+/* FOCUS IS VISIBLE ON EVERY FOCUSABLE THING (accessibility is a legal requirement). The
+   components declared it for buttons and fields, and not for links. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}

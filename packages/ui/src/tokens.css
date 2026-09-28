@@ -1,6 +1,7 @@
 /* GENERATED from tokens.json — do not edit. Regenerate with build-tokens-css.mjs. */
 
-:root, [data-theme="light"] {
+:root,
+[data-theme='light'] {
   --surface-page: #f4f6fa;
   --surface-card: #ffffff;
   --surface-sunken: #eef2f8;
@@ -59,7 +60,7 @@
   --speculative-hatch-a: #eaeff7;
   --speculative-hatch-b: #dee6f2;
   --warning-mark: #e8b04b;
-  --shadow-raise: 0 1px 2px rgba(14, 22, 38, 0.10);
+  --shadow-raise: 0 1px 2px rgba(14, 22, 38, 0.1);
   --shadow-float: 0 10px 30px rgba(14, 22, 38, 0.08);
   --shadow-overlay: 0 24px 60px rgba(14, 22, 38, 0.28);
 }
@@ -80,21 +81,96 @@
   --radius-lg: 12px;
   --radius-xl: 14px;
   --radius-pill: 999px;
-  --font-sans: "Instrument Sans", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
-.hero { font-family: var(--font-sans); font-size: 40px; line-height: 44px; font-weight: 700; letter-spacing: -0.035em; }
-.page-title { font-family: var(--font-sans); font-size: 31px; line-height: 36px; font-weight: 700; letter-spacing: -0.03em; }
-.moment { font-family: var(--font-sans); font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.025em; }
-.heading { font-family: var(--font-sans); font-size: 17px; line-height: 23px; font-weight: 600; letter-spacing: -0.02em; }
-.subheading { font-family: var(--font-sans); font-size: 15px; line-height: 21px; font-weight: 600; }
-.body-lead { font-family: var(--font-sans); font-size: 15px; line-height: 24px; font-weight: 400; }
-.body { font-family: var(--font-sans); font-size: 14px; line-height: 21px; font-weight: 400; }
-.body-small { font-family: var(--font-sans); font-size: 13px; line-height: 20px; font-weight: 400; }
-.label { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 500; }
-.caption { font-family: var(--font-sans); font-size: 12px; line-height: 17px; font-weight: 400; }
-.overline { font-family: var(--font-sans); font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.1em; }
-.mono { font-family: var(--font-mono); font-size: 12.5px; line-height: 18px; font-weight: 400; }
-.mono-address { font-family: var(--font-mono); font-size: 17px; line-height: 25px; font-weight: 400; }
-.mono-log { font-family: var(--font-mono); font-size: 12.5px; line-height: 22px; font-weight: 400; }
+.hero {
+  font-family: var(--font-sans);
+  font-size: 40px;
+  line-height: 44px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+.page-title {
+  font-family: var(--font-sans);
+  font-size: 31px;
+  line-height: 36px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.moment {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.heading {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 23px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.subheading {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 21px;
+  font-weight: 600;
+}
+.body-lead {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 400;
+}
+.body-small {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.caption {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 400;
+}
+.overline {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 18px;
+  font-weight: 400;
+}
+.mono-address {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 400;
+}
+.mono-log {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 22px;
+  font-weight: 400;
+}

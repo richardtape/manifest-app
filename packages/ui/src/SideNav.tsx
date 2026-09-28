@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { cx } from './cx.js'
-import { MARK, NavIcon } from './icons.js'
+import { MARK, NavIcon, PERSON } from './icons.js'
 
 export interface NavItem {
   label: string
@@ -27,19 +27,37 @@ export interface SideNavProps {
   signOutHref?: string
   className?: string
   style?: CSSProperties
+  /**
+   * OURS, NOT THE REFERENCE'S (Rich's click-through, F1 sitting 5): below 900px the rail is
+   * icons only (fixes.css). Each label is wrapped so CSS can hide it while it stays the link's
+   * accessible name, and a `title` names it to a pointer. Without it, the markup is the
+   * reference's (parity.test.tsx).
+   */
+  collapsible?: boolean
+  /** OURS: the person is a link, with an icon, to their profile. */
+  userHref?: string
 }
 
 /** The bundle's `navItem`: the active item is a fill, a weight and `aria-current`. */
-function RailItem({ item, active }: { item: NavItem; active: string | undefined }) {
+function RailItem({
+  item,
+  active,
+  collapsible,
+}: {
+  item: NavItem
+  active: string | undefined
+  collapsible: boolean | undefined
+}) {
   const on = item.label === active
   return (
     <a
       href={item.href || '#'}
       className={cx('mf-rail__item', on && 'mf-rail__item--on')}
       aria-current={on ? 'page' : undefined}
+      title={collapsible ? item.label : undefined}
     >
-      <NavIcon name={item.icon} />
-      {item.label}
+      <NavIcon {...(item.icon === undefined ? {} : { name: item.icon })} />
+      {collapsible ? <span className="mf-rail__label">{item.label}</span> : item.label}
     </a>
   )
 }
@@ -47,9 +65,10 @@ function RailItem({ item, active }: { item: NavItem; active: string | undefined 
 /** The product's whole navigation, on every signed-in screen. */
 export function SideNav(props: SideNavProps) {
   const items = props.items || []
+  const { active, collapsible } = props
   return (
     <nav
-      className={cx('mf-rail', props.className)}
+      className={cx('mf-rail', collapsible && 'mf-rail--collapsible', props.className)}
       aria-label={props.name || 'Manifest'}
       style={props.style}
     >
@@ -81,7 +100,8 @@ export function SideNav(props: SideNavProps) {
           href: props.homeHref || '#',
           icon: 'apps',
         }}
-        active={props.active}
+        active={active}
+        collapsible={collapsible}
       />
       {props.newLabel === null ? null : (
         <RailItem
@@ -91,7 +111,8 @@ export function SideNav(props: SideNavProps) {
             href: props.newHref || '#',
             icon: 'plus',
           }}
-          active={props.active}
+          active={active}
+          collapsible={collapsible}
         />
       )}
       {items.length ? <div className="mf-rail__rule" /> : null}
@@ -99,12 +120,23 @@ export function SideNav(props: SideNavProps) {
         <span className="mf-rail__over">{props.projectName}</span>
       ) : null}
       {items.map((item, i) => (
-        <RailItem key={i} item={item} active={props.active} />
+        <RailItem key={i} item={item} active={active} collapsible={collapsible} />
       ))}
       <div style={{ flexGrow: 1 }} />
       {props.user ? (
         <div className="mf-rail__foot">
-          <span className="mf-rail__who">{props.user}</span>
+          {props.userHref === undefined ? (
+            <span className="mf-rail__who">{props.user}</span>
+          ) : (
+            <a
+              className="mf-rail__who mf-rail__who--link"
+              href={props.userHref}
+              title={props.user}
+            >
+              <NavIcon paths={PERSON} />
+              <span className="mf-rail__label">{props.user}</span>
+            </a>
+          )}
           <a className="mf-rail__out" href={props.signOutHref || '#'}>
             Sign out
           </a>

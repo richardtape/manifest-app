@@ -1,6 +1,6 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, Card, StateChip } from '@manifest-app/ui'
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
@@ -101,7 +101,15 @@ function AppCardView({ card }: { card: AppCard }) {
   return (
     <Card className="app-card">
       <div className="app-card__head">
-        <h2 className="heading app-card__name">{card.name}</h2>
+        <h2 className="heading app-card__name">
+          {/* Its own page arrives in a later plan; until then it says so (Rich, sitting 5). */}
+          <a
+            className="app-card__link"
+            {...linkTo(`/apps/${encodeURIComponent(card.slug)}`)}
+          >
+            {card.name}
+          </a>
+        </h2>
         {card.audience === '' ? null : (
           <p className="body-small app-card__audience">{card.audience}</p>
         )}
@@ -124,10 +132,31 @@ function AddressView({ label, address }: { label: string; address: Address }) {
       <dt className="label">{label}</dt>
       <dd>
         {address.hostname === undefined ? null : (
-          <span className="mono">{address.hostname}</span>
+          <span className="mono">
+            <Hostname name={address.hostname} />
+          </span>
         )}
         <StateChip state={address.fact.state} label={address.fact.words} />
       </dd>
     </div>
+  )
+}
+
+/** A hostname that breaks, when it must, after a dot: never mid-label, as `mock-` did. */
+function Hostname({ name }: { name: string }) {
+  const labels = name.split('.')
+  return (
+    <>
+      {labels.map((label, i) => (
+        <Fragment key={i}>
+          {label}
+          {i < labels.length - 1 ? (
+            <>
+              .<wbr />
+            </>
+          ) : null}
+        </Fragment>
+      ))}
+    </>
   )
 }

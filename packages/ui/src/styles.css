@@ -1,5 +1,7 @@
-/* The design system's stylesheets, vendored verbatim (reference/SOURCE.md). Same markup
-   plus the same stylesheet is the same pixels (Decision 2). The fonts are loaded by the
-   page, with the gallery's <link> (packages/web/index.html). */
-@import '../reference/tokens.css';
-@import '../reference/bundle.css';
+/* THE DESIGN SYSTEM, OURS (Rich, F1 sitting 5: "we control the whole plane"). It began as
+   manifest's docs/superpowers/design/system at 3c38199 (reference/SOURCE.md), and is fixed
+   here, at source. The fonts are loaded by the page, with the gallery's <link>
+   (packages/web/index.html). */
+@import './tokens.css';
+@import './base.css';
+@import './components.css';

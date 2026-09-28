@@ -1,30 +1,26 @@
-/* The app's own layout, in the design system's tokens (reference/tokens.css). The
-   components' styles are the vendored bundle.css; nothing here restyles a component. */
+/* The app's own layout, in the design system's tokens. The design system's base (type,
+   links, focus) and components are @manifest-app/ui/styles.css, and nothing here restyles a
+   component: a component is fixed in packages/ui, at source. */
 
-body {
-  margin: 0;
-  font-family: var(--font-sans);
-  background: var(--surface-page);
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
+/* The keyboard's first stop: out of sight until it has focus. */
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-3);
+  z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  font-weight: 600;
+  transform: translateY(-200%);
 }
-
-a {
-  color: var(--brand);
+.skip-link:focus {
+  transform: none;
+  /* Its shadow only when shown: hidden above the page, the shadow still reached into it. */
+  box-shadow: var(--shadow-float);
 }
-a:hover {
-  color: var(--brand-hover);
-}
-
-/* FOCUS IS VISIBLE ON EVERY FOCUSABLE THING (accessibility is a legal requirement).
-   bundle.css declares it for buttons and fields but not for links, the rail's among them;
-   on the rail, a brand ring would vanish against the brand, so it is white there. */
-:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 3px;
-}
-.mf-rail :focus-visible {
-  outline-color: var(--nav-ink);
+.app-main:focus {
+  outline: none;
 }
 
 /* Signed in: the rail, and the page beside it. */
@@ -220,19 +216,99 @@ a:hover {
 }
 .app-card__address {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-3);
 }
 .app-card__address dt {
-  min-width: 110px;
+  flex: 0 0 110px;
   color: var(--ink-muted);
 }
+/* Each address wraps inside its own column: the hostname, then its chip beneath it where the
+   row is too narrow for both, so the two rows always read alike. */
 .app-card__address dd {
   margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2) var(--space-3);
 }
 .app-card .mono {
+  min-width: 0;
+  overflow-wrap: break-word;
   color: var(--ink-secondary);
+}
+.app-card__link {
+  color: var(--ink);
+  text-decoration: none;
+}
+.app-card__link:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+.app-card:has(.app-card__link:hover) {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-raise);
+}
+
+/* The person's profile. */
+.profile__facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.profile__facts dt {
+  color: var(--ink-muted);
+}
+.profile__facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.profile__source {
+  margin: 0;
+  color: var(--ink-subtle);
+}
+
+/* NARROW WINDOWS (Rich's click-through: below about 750px there was a horizontal scrollbar).
+   The rail folds to icons below 900px (ui's fixes.css), the page's margins shrink, and Sign in
+   stacks its brand panel above its form. */
+@media (max-width: 899px) {
+  .app-main {
+    padding: var(--space-8) var(--space-6);
+  }
+}
+@media (max-width: 599px) {
+  .app-main {
+    padding: var(--space-6) var(--space-4);
+  }
+  .app-card__address {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .app-card__address dt {
+    flex-basis: auto;
+  }
+}
+@media (max-width: 959px) {
+  .signin {
+    flex-direction: column;
+  }
+  .signin__brand {
+    width: auto;
+    padding: var(--space-8) var(--space-6);
+    gap: var(--space-8);
+  }
+  .signin__form {
+    max-width: none;
+    padding: var(--space-8) var(--space-6);
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 599px) {
+  .signin__hero .hero {
+    font-size: 32px;
+    line-height: 36px;
+  }
 }

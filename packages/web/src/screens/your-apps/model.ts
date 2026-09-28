@@ -86,6 +86,7 @@ export function mine(
 export type Address = { hostname: string | undefined; fact: Fact }
 export type AppCard = {
   id: string
+  slug: string
   name: string
   audience: string
   /** Production: the students' fact, which leads the card. */
@@ -118,6 +119,7 @@ export function appCard(
   }
   return {
     id: project.id,
+    slug: project.slug,
     // `Project.name` (sitting 5), or the slug before it has one.
     name: project.name ?? project.slug,
     audience: audienceWords(project.audience),

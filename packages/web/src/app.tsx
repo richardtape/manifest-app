@@ -3,6 +3,7 @@ import { useEffect, useState, type MouseEvent, type ReactNode } from 'react'
 import { signInHref, signOut } from './auth.js'
 import type { Platform } from './platform/api.js'
 import { linkTo, navigate, useRoute } from './router.js'
+import { Profile } from './screens/profile.js'
 import { SignIn } from './screens/sign-in.js'
 import { YourApps } from './screens/your-apps/your-apps.js'
 import { useSession } from './session.js'
@@ -26,7 +27,9 @@ export function App({ platform }: { platform: Platform }) {
         ? words.signIn.tab
         : route.name === 'your-apps'
           ? words.shell.yourApps
-          : words.shell.manifest
+          : route.name === 'profile'
+            ? words.profile.title
+            : words.shell.manifest
   }, [session.state, route.name])
 
   if (session.state === 'loading') return null
@@ -67,6 +70,8 @@ export function App({ platform }: { platform: Platform }) {
   let page: ReactNode
   if (route.name === 'your-apps')
     page = <YourApps platform={platform} me={session.me} expire={expire} />
+  else if (route.name === 'profile')
+    page = <Profile me={session.me} onSignOut={() => void leave()} />
   else if (route.name === 'signed-out')
     page = (
       <>
@@ -84,6 +89,9 @@ export function App({ platform }: { platform: Platform }) {
         {route.name === 'new' ? (
           <p className="body-lead">{words.notFound.describingNext}</p>
         ) : null}
+        {route.name === 'app' ? (
+          <p className="body-lead">{words.notFound.appPageNext}</p>
+        ) : null}
         <p className="body-lead">
           {words.notFound.body} <a {...linkTo('/')}>{words.notFound.link}</a>
         </p>
@@ -92,9 +100,15 @@ export function App({ platform }: { platform: Platform }) {
 
   return (
     <div className="app-shell">
+      {/* The keyboard's first stop: without it, Tab ran down the rail and out of the page. */}
+      <a className="skip-link" href="#main">
+        {words.shell.skipToContent}
+      </a>
       {/* A wrapper for the rail's clicks: the links inside it are what the keyboard reaches. */}
       <div className="app-rail" onClick={onRail}>
         <SideNav
+          collapsible
+          userHref="/profile"
           {...(route.name === 'your-apps' ? { active: words.shell.yourApps } : {})}
           homeHref="/"
           newLabel={words.shell.startNew}
@@ -103,7 +117,7 @@ export function App({ platform }: { platform: Platform }) {
           signOutHref="/signed-out"
         />
       </div>
-      <main className="app-main">
+      <main className="app-main" id="main" tabIndex={-1}>
         {session.state === 'expired' ? (
           <div role="alert">
             <Card tone="attention">

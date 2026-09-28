@@ -24,13 +24,28 @@ export const NAV_ICONS: Readonly<Record<string, readonly string[]>> = {
   plus: ['M12 5.5v13', 'M5.5 12h13'],
 }
 
+/**
+ * ONE PERSON: ours, not the bundle's (its `people` is two). The rail's link to a person's
+ * profile (Rich's click-through, F1 sitting 5).
+ */
+export const PERSON: readonly string[] = [
+  'M5 20a7 7 0 0 1 14 0',
+  'M12 12a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5',
+]
+
 /** The house in the rail's mark. */
 export const MARK: readonly string[] = ['M4 19V9.5L12 4l8 5.5V19', 'M9.5 19v-6h5v6']
 
 /** A rail item's icon, as `navItem` draws it; an unknown name draws `overview`. */
-export function NavIcon({ name }: { name: string | undefined }) {
+export function NavIcon({
+  name,
+  paths: given,
+}: {
+  name?: string
+  paths?: readonly string[]
+}) {
   const paths =
-    (name === undefined ? undefined : NAV_ICONS[name]) ?? NAV_ICONS['overview']!
+    given ?? (name === undefined ? undefined : NAV_ICONS[name]) ?? NAV_ICONS['overview']!
   return (
     <svg
       width={16}

@@ -10,12 +10,18 @@ export type Route =
   | { name: 'signed-out' }
   /** Describe what you need: not built until F2, and the page says so. */
   | { name: 'new' }
+  /** An app's own page: not built yet, and the page says so. */
+  | { name: 'app'; slug: string }
+  | { name: 'profile' }
   | { name: 'unknown' }
 
 export function parse(pathname: string): Route {
   if (pathname === '/') return { name: 'your-apps' }
   if (pathname === '/signed-out') return { name: 'signed-out' }
   if (pathname === '/new') return { name: 'new' }
+  if (pathname === '/profile') return { name: 'profile' }
+  const app = /^\/apps\/([^/]+)$/.exec(pathname)
+  if (app?.[1] !== undefined) return { name: 'app', slug: decodeURIComponent(app[1]) }
   return { name: 'unknown' }
 }
 

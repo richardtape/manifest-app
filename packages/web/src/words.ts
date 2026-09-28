@@ -25,6 +25,15 @@ export const words = {
     manifest: 'Manifest',
     yourApps: 'Your apps',
     startNew: 'Start something new',
+    /** The keyboard's first stop, so it can reach the page and not only the rail. */
+    skipToContent: 'Skip to content',
+  },
+  /** Rich's click-through: the person, from the rail, with Sign out on it. */
+  profile: {
+    title: 'Your profile',
+    name: 'Name',
+    email: 'Email',
+    source: 'UBC tells us these when you sign in with CWL.',
   },
   expired: {
     body: "You've been signed out. It happens after twelve hours. Sign in again and you'll come straight back here.",
@@ -44,6 +53,8 @@ export const words = {
     link: 'Your apps',
     /** On the path Describe what you need leads to, until F2 builds it. */
     describingNext: 'Describing an app arrives next.',
+    /** On an app's own page, until a later plan builds it. */
+    appPageNext: "An app's own page arrives next.",
   },
   /** Moments 2 and 16. */
   yourApps: {

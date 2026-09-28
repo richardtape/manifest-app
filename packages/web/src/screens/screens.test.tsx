@@ -382,3 +382,46 @@ describe('no machinery on any screen (C3, Decision 9)', () => {
     expect(machineryIn(wordsOnScreen())).toEqual([])
   })
 })
+
+describe('the keyboard reaches the page, not only the rail (Rich’s click-through)', () => {
+  it('the first stop is Skip to content, and the page itself can take focus', async () => {
+    render(<App platform={mockPlatform()} />)
+    await screen.findByRole('heading', { name: 'Mock course app' })
+    const first = document.querySelector('a[href], button')
+    expect(first?.textContent).toBe(words.shell.skipToContent)
+    expect(first?.getAttribute('href')).toBe('#main')
+    const main = document.getElementById('main')
+    expect(main?.tagName).toBe('MAIN')
+    expect(main?.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('an app’s name is a link, to a page that says it arrives next', async () => {
+    render(<App platform={mockPlatform()} />)
+    const name = await screen.findByRole('link', { name: 'Mock course app' })
+    expect(name.getAttribute('href')).toBe('/apps/mock-app')
+    await act(async () => {
+      fireEvent.click(name)
+    })
+    expect(await screen.findByText(words.notFound.appPageNext)).toBeTruthy()
+    expect(window.location.pathname).toBe('/apps/mock-app')
+  })
+})
+
+describe('the person’s profile (Rich’s click-through)', () => {
+  it('the rail names the person as a link to their profile, which shows who UBC says they are', async () => {
+    render(<App platform={mockPlatform()} />)
+    const rail = await screen.findByRole('navigation', { name: 'Manifest' })
+    const who = within(rail).getByRole('link', { name: 'Instructor One' })
+    expect(who.getAttribute('href')).toBe('/profile')
+    await act(async () => {
+      fireEvent.click(who)
+    })
+    expect(await screen.findByRole('heading', { name: words.profile.title })).toBeTruthy()
+    const main = screen.getByRole('main')
+    expect(within(main).getByText(fixtures.ME.displayName)).toBeTruthy()
+    expect(within(main).getByText(fixtures.ME.email)).toBeTruthy()
+    expect(within(main).getByRole('button', { name: words.signOut.button })).toBeTruthy()
+    await waitFor(() => expect(document.title).toBe(words.profile.title))
+    expect(machineryIn(wordsOnScreen())).toEqual([])
+  })
+})
