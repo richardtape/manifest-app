@@ -1,7 +1,14 @@
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import { afterEach, describe, expect, it } from 'vitest'
 import { z } from 'zod/v4'
-import { ModelError, notAvailable, openAiCompatible, type Message } from './client.js'
+import {
+  ModelError,
+  modelFor,
+  notAvailable,
+  openAiCompatible,
+  type Answered,
+  type Message,
+} from './client.js'
 import { scripted } from './scripted.js'
 
 /**
@@ -14,7 +21,7 @@ interface Seen {
   headers: IncomingHttpHeaders
   body: Record<string, unknown>
 }
-type Answer = { status: number; body: unknown } | 'hang'
+type Answer = { status: number; body: unknown; headers?: Record<string, string> } | 'hang'
 
 const servers: Server[] = []
 afterEach(async () => {
@@ -39,7 +46,10 @@ async function gateway(answers: Answer[]): Promise<{ baseUrl: string; seen: Seen
       seen.push({ url: request.url, headers: request.headers, body: JSON.parse(text) })
       const answer = answers[Math.min(seen.length - 1, answers.length - 1)]!
       if (answer === 'hang') return
-      response.writeHead(answer.status, { 'content-type': 'application/json' })
+      response.writeHead(answer.status, {
+        'content-type': 'application/json',
+        ...answer.headers,
+      })
       response.end(JSON.stringify(answer.body))
     })
   })
@@ -274,6 +284,85 @@ describe('openAiCompatible: when the gateway refuses (LiteLLM 1.98.0, as the pla
       expect(everything).not.toContain(KEY)
       expect(everything).not.toContain('sk-')
     }
+  })
+})
+
+/** An answer as LiteLLM 1.98.0 gave it in F3's M1: its own `model`, its usage, and the fallback header. */
+const litellm = (
+  content: string,
+  model: string,
+  fallbacks: string | null,
+  usage: unknown = { prompt_tokens: 9644, completion_tokens: 313, total_tokens: 9957 },
+) => ({
+  status: 200,
+  body: {
+    model,
+    choices: [{ message: { role: 'assistant', content } }],
+    ...(usage === null ? {} : { usage }),
+  },
+  headers: fallbacks === null ? {} : { 'x-litellm-attempted-fallbacks': fallbacks },
+})
+
+describe('openAiCompatible: which model answered (F3 Task 3, Decision 4)', () => {
+  async function heard(answers: Answer[]): Promise<Answered[]> {
+    const { baseUrl } = await gateway(answers)
+    const answered: Answered[] = []
+    await openAiCompatible({
+      baseUrl,
+      key: KEY,
+      model: 'default-chat-large',
+      onAnswer: (a) => answered.push(a),
+    })
+      .complete('a', Guess, MESSAGES)
+      .catch(() => undefined)
+    return answered
+  }
+
+  it("hears the answer's own model, its usage, and no fallback (M1's shape)", async () => {
+    expect(await heard([litellm(GOOD, 'default-chat-large', '0')])).toEqual([
+      { model: 'default-chat-large', fallback: false, usage: { in: 9644, out: 313 } },
+    ])
+  })
+
+  it('hears a fallback answer: the header says 1, and the model names itself', async () => {
+    expect(await heard([litellm(GOOD, 'ollama_chat/qwen3.5:4b', '1')])).toEqual([
+      {
+        model: 'ollama_chat/qwen3.5:4b',
+        fallback: true,
+        usage: { in: 9644, out: 313 },
+      },
+    ])
+  })
+
+  it('no header at all is no fallback; a missing usage is null, never zero; a missing model is null', async () => {
+    const bare = { status: 200, body: { choices: [{ message: { content: GOOD } }] } }
+    expect(await heard([litellm(GOOD, 'default-chat-large', null, null)])).toEqual([
+      { model: 'default-chat-large', fallback: false, usage: null },
+    ])
+    expect(await heard([bare])).toEqual([{ model: null, fallback: false, usage: null }])
+  })
+
+  it('hears every answer that was paid for, the one retried included', async () => {
+    const answered = await heard([
+      litellm('not json', 'ollama_chat/qwen3.5:4b', '1'),
+      litellm(GOOD, 'default-chat-large', '0'),
+    ])
+    expect(answered.map((a) => a.fallback)).toEqual([true, false])
+  })
+
+  it('hears nothing of a refusal', async () => {
+    expect(await heard([refused(429, 'budget_exceeded')])).toEqual([])
+  })
+})
+
+describe('modelFor: the most capable model the session lists (Decision 4)', () => {
+  it('prefers default-chat-large, then default-chat, else none', () => {
+    expect(modelFor(['default-chat', 'default-chat-large', 'default-embed'])).toBe(
+      'default-chat-large',
+    )
+    expect(modelFor(['default-chat-onprem', 'default-chat'])).toBe('default-chat')
+    expect(modelFor(['default-embed'])).toBeUndefined()
+    expect(modelFor([])).toBeUndefined()
   })
 })
 

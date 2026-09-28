@@ -97,6 +97,41 @@ function refusal(status: number, body: unknown): ModelError {
 }
 
 /**
+ * WHICH MODEL ANSWERED (F3 Decision 4), for the trace and the round's one line. Never shown.
+ * F3 M1 measured LiteLLM 1.98.0: `model` is its own name for what answered
+ * (`default-chat-large` on the normal path, `ollama_chat/qwen3.5:4b` for 9b's fallback), and the
+ * header `x-litellm-attempted-fallbacks` is above 0 when the fallback answered.
+ */
+export interface Answered {
+  model: string | null
+  fallback: boolean
+  usage: { in: number; out: number } | null
+}
+
+function answeredOf(payload: unknown, headers: Headers): Answered {
+  const body = payload as
+    | {
+        model?: unknown
+        usage?: { prompt_tokens?: unknown; completion_tokens?: unknown }
+      }
+    | undefined
+  const tokens = body?.usage
+  const count = (value: unknown) => (typeof value === 'number' ? value : null)
+  const input = count(tokens?.prompt_tokens)
+  const output = count(tokens?.completion_tokens)
+  return {
+    model: typeof body?.model === 'string' ? body.model : null,
+    fallback: Number(headers.get('x-litellm-attempted-fallbacks') ?? 0) > 0,
+    usage: input === null || output === null ? null : { in: input, out: output },
+  }
+}
+
+/** Decision 4: the most capable model a session lists, or none. */
+export function modelFor(listed: string[]): string | undefined {
+  return ['default-chat-large', 'default-chat'].find((name) => listed.includes(name))
+}
+
+/**
  * AN OPENAI-COMPATIBLE GATEWAY: the platform's LiteLLM, with an intake or agent session's
  * key. It sends no reasoning setting of its own: the gateway's `think: false` on
  * `default-chat` is load-bearing, and only a request's own `think: true` beats it (F2 M3).
@@ -108,8 +143,17 @@ export function openAiCompatible(options: {
   fetch?: typeof fetch
   /** Per attempt. F1's 15 s is for reads; a model takes longer (M3: up to 7.8 s on a 4B model). */
   timeoutMs?: number
+  /** Each 2xx answer's own model, whether a fallback answered, and its usage: every answer paid for. */
+  onAnswer?: (answered: Answered) => void
 }): Model {
-  const { baseUrl, key, model, fetch: send = fetch, timeoutMs = 60_000 } = options
+  const {
+    baseUrl,
+    key,
+    model,
+    fetch: send = fetch,
+    timeoutMs = 60_000,
+    onAnswer,
+  } = options
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`
   return {
     complete(agent, schema, messages, check) {
@@ -125,6 +169,7 @@ export function openAiCompatible(options: {
         async () => {
           let status: number
           let text: string
+          let headers: Headers
           try {
             const response = await send(url, {
               method: 'POST',
@@ -136,6 +181,7 @@ export function openAiCompatible(options: {
               signal: AbortSignal.timeout(timeoutMs),
             })
             status = response.status
+            headers = response.headers
             text = await response.text()
           } catch {
             // Refused, or no answer by the deadline. Never the error itself: its cause
@@ -149,6 +195,7 @@ export function openAiCompatible(options: {
             payload = undefined
           }
           if (status < 200 || status >= 300) throw refusal(status, payload)
+          onAnswer?.(answeredOf(payload, headers))
           const content = (payload as { choices?: { message?: { content?: unknown } }[] })
             ?.choices?.[0]?.message?.content
           return typeof content === 'string' ? content : ''
