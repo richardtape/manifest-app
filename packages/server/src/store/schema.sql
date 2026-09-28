@@ -71,7 +71,8 @@ create table if not exists runs (
   last text,                           -- JSON { kind, report }
   same_refusal text,                   -- JSON { reason, count }
   created_at text not null,
-  updated_at text not null
+  updated_at text not null,
+  detail text                          -- JSON: the round's own facts (F3 Task 8); null before version 3
 );
 create index if not exists runs_by_conversation on runs (conversation_id, round);
 
@@ -84,3 +85,18 @@ create table if not exists trace (
   entry text not null,                 -- JSON: a model call, a move and its guard's verdict, a platform call
   primary key (run_id, seq)
 );
+
+-- F3 Decision 10: each question a round asked, its default, and its answer. A SECRET'S ANSWER IS NEVER STORED:
+-- it goes to the sandbox (setAppSecret) and is dropped, so a secret's row says only that it was answered.
+create table if not exists questions (
+  id text primary key,
+  run_id text not null,
+  conversation_id text not null references conversations (id),
+  ask text not null,
+  fallback text,                       -- the default the work went on with; null when it waits
+  secret text,                         -- the name the app reads it by; null for a question in words
+  answer text,                         -- a default until they answer; never a secret's
+  answered_at text,
+  asked_at text not null
+);
+create index if not exists questions_by_run on questions (run_id, asked_at);

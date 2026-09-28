@@ -111,7 +111,7 @@ const WEEKS_PAGE = [
 function lead(user: string): unknown {
   const last = /Your last move \((\w+)\)/.exec(user)?.[1]
   if (!/The step: Writing the pages/.test(user) || last === 'commit' || last === 'done')
-    return { move: { kind: 'done', line: 'The pages are written.' } }
+    return { move: { kind: 'done', line: 'The pages are written.', cannot: null } }
   if (last === 'read')
     return {
       move: {

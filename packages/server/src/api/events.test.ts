@@ -173,6 +173,7 @@ describe('GET /api/conversations/:id/events', () => {
       conversation: made,
       intake: NOTHING_YET,
       plan: null,
+      round: null,
     })
   })
 
@@ -200,6 +201,7 @@ describe('GET /api/conversations/:id/events', () => {
           conversation: expect.objectContaining({ state: 'questions' }),
           intake: NOTHING_YET,
           plan: null,
+          round: null,
         },
       ])
     }
@@ -330,6 +332,7 @@ describe('Review Focus 5, the stream’s half: our server restarts', () => {
       conversation: expect.objectContaining({ id: made.id, state: 'planning' }),
       intake: NOTHING_YET,
       plan: null,
+      round: null,
     })
   })
 })

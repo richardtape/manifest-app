@@ -1,0 +1,1239 @@
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
+import { roundOf } from '../api/round-state.js'
+import { createHub, type Hub } from '../api/events.js'
+import type { Progress, RoundView } from '../api/progress.js'
+import { createWork } from '../api/work.js'
+import {
+  answered,
+  ModelError,
+  type Answered,
+  type Message,
+  type Model,
+} from '../model/client.js'
+import type { AgentSessions } from '../platform/agent-sessions.js'
+import type { Build, Builds } from '../platform/builds.js'
+import type { Incident, Instances } from '../platform/instances.js'
+import type { Members } from '../platform/members.js'
+import { createConversationTokens, type Projects } from '../platform/project.js'
+import { PlatformRefusal } from '../platform/refusal.js'
+import type { Instance, Releases } from '../platform/releases.js'
+import type { Secrets } from '../platform/secrets.js'
+import type { Change, Source } from '../platform/source.js'
+import type { ProjectStream } from '../platform/stream.js'
+import { storeTrace } from '../runtime/trace.js'
+import { openStore, type Store } from '../store/db.js'
+import { dumpAll, scratchDir } from '../store/testing.js'
+import { createRounds, type Rounds } from './round.js'
+
+/**
+ * F3 TASK 8: THE ROUND OF WORK. Moment 6's five steps, each ticking on its own platform signal;
+ * three tries; the checkpoint and the session's clock; Stop; messages; questions; a restart
+ * resumed. Every dependency is a recording fake, the platform's events are driven by hand, and
+ * the lead is scripted.
+ */
+const TOKEN = 'mft_test_x_the_conversations_token'
+const NEW_TOKEN = 'mft_test_z_a_token_handed_over_again'
+const GATEWAY = 'http://127.0.0.1:7106/v1'
+const ALICE = {
+  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  displayName: 'Alice Instructor',
+}
+const PROJECT = {
+  id: '22222222-2222-4222-8222-222222222222',
+  name: 'Reading responses',
+  slug: 'reading-responses',
+  blueprint: 'node-ts-mongo@1',
+}
+const ENV = '33333333-3333-4333-8333-333333333333'
+const SANDBOX = {
+  environmentId: ENV,
+  hostname: 'reading-responses.sandbox.manifest.internal',
+  url: 'https://reading-responses.sandbox.manifest.internal',
+}
+const BASE = 'c2ac2119'.padEnd(40, '0')
+const WORDS =
+  "A page where students post a response to the week's reading. My TA, sam.lee@ubc.ca, sees everything."
+const PLAN = {
+  studentsSee: 'One page listing the weeks.',
+  youSee: 'Every response for a week on one page.',
+  itKeeps: 'The text students write, their name, and when they posted it.',
+  whoGetsIn: 'Anyone with a CWL can sign in.',
+  ai: 'None.',
+  assumed: ['Twelve weeks, matching a standard term'],
+  onlyYouKnow: [{ id: 'late', ask: 'Is a late post still a post?' }],
+  changed: [],
+}
+const PACKAGE = JSON.stringify({
+  name: 'app',
+  type: 'module',
+  dependencies: { express: '4.22.2' },
+})
+const FILES: Record<string, string> = {
+  'server.js':
+    "import express from 'express'\nimport { weeks } from './routes/weeks.js'\nconst app = express()\n",
+  'routes/weeks.js': 'export const weeks = []\n',
+  'package.json': PACKAGE,
+  'package-lock.json': '{}',
+  'manifest.yaml': 'manifest: 1\n',
+}
+const PAGE = '<!doctype html>\n<h1>This week’s reading</h1>\n'
+const LOG = [
+  'npm error `npm ci` can only install packages when your package.json and package-lock.json or npm-shrinkwrap.json are in sync.',
+  'npm error Missing: marked@14.1.0 from lock file',
+]
+const EXPLAINED = {
+  note: 'A piece it depends on was missing',
+  sentence:
+    'We asked for a piece the app does not have yet, so it could not be put together.',
+}
+
+const write = (path: string, content: string): Change => ({ op: 'write', path, content })
+const read = (...paths: string[]) => ({ move: { kind: 'read', paths } })
+const commit = (changes: Change[] = [write('public/weeks.html', PAGE)], over = {}) => ({
+  move: {
+    kind: 'commit',
+    message: 'The page students post on',
+    changes,
+    line: 'Writing the page students post on.',
+    account: 'One page listing the weeks',
+    ...over,
+  },
+})
+const done = (line = 'The pages are written.', cannot: string | null = null) => ({
+  move: { kind: 'done', line, cannot },
+})
+const ask = (
+  question: string,
+  fallback: string | null,
+  secret: string | null = null,
+) => ({
+  move: { kind: 'ask_person', ask: question, default: fallback, secret },
+})
+
+const cleanups: (() => unknown)[] = []
+afterEach(async () => {
+  for (const cleanup of cleanups.splice(0).reverse()) await cleanup()
+})
+
+/** A deferred: a platform call held open until the test says. */
+function held<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((r) => (resolve = r))
+  return { promise, resolve }
+}
+
+/** Waits for a condition the round reaches on its own time, or fails with what it saw. */
+async function until(check: () => boolean, what: () => unknown, ms = 1500) {
+  const deadline = Date.now() + ms
+  while (!check()) {
+    if (Date.now() > deadline)
+      throw new Error(`never reached; saw ${JSON.stringify(what(), null, 1)}`)
+    await new Promise((resolve) => setTimeout(resolve, 2))
+  }
+}
+
+type Script = Record<string, unknown[]>
+
+/**
+ * THE MODEL, SCRIPTED, over every session: an answer that is an Error is thrown (the gateway's
+ * refusal), anything else goes through the same parse, check and retry as a real answer. Each
+ * answer is heard by the session's `onAnswer`, as the gateway's would be.
+ */
+function scriptedModel(script: Script, fallback: (agent: string, n: number) => boolean) {
+  const next = new Map<string, number>()
+  const calls: { agent: string; messages: Message[] }[] = []
+  const bound = (onAnswer: (a: Answered) => void): Model => ({
+    complete(agent, schema, messages, check) {
+      calls.push({ agent, messages })
+      return answered(
+        async () => {
+          const index = next.get(agent) ?? 0
+          next.set(agent, index + 1)
+          const answer = (script[agent] ?? [])[index]
+          if (answer === undefined) return new Promise(() => undefined)
+          if (answer instanceof Error) throw answer
+          onAnswer({
+            model: fallback(agent, index)
+              ? 'ollama_chat/qwen3.5:4b'
+              : 'default-chat-large',
+            fallback: fallback(agent, index),
+            usage: { in: 100, out: 10 },
+          })
+          return answer
+        },
+        schema,
+        check,
+      )
+    },
+  })
+  return { calls, bound }
+}
+
+interface Options {
+  script: Script
+  fallback?: (agent: string, n: number) => boolean
+  remainingUsd?: number | null
+  spent?: (number | null)[]
+  deploy?: (releaseId: string, n: number) => Promise<Instance> | Instance
+  commit?: (n: number, body: { baseCommit: string; changes: Change[] }) => void
+  tree?: (n: number) => Promise<{ commitSha: string }> | { commitSha: string }
+  listInstances?: () => (Instance & { serving: boolean })[]
+  /** Each build succeeds on the stream by itself, for a test that does not drive them. */
+  autoBuild?: boolean
+  /** What this server's sessions are called: a restarted server's are its own. */
+  sessionIds?: string
+}
+
+function harness(options: Options, file?: string, store0?: Store) {
+  let where = file
+  if (where === undefined) {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    where = join(dir, 'app.sqlite')
+  }
+  const store = store0 ?? openStore(where)
+  if (store0 === undefined) cleanups.push(() => store.close())
+  const hub: Hub = createHub()
+  const work = createWork(hub, store)
+  const tokens = createConversationTokens()
+  const did: string[] = []
+  const frames: Progress[] = []
+  const model = scriptedModel(options.script, options.fallback ?? (() => false))
+
+  // THE PLATFORM, as recording fakes.
+  let sessionsStarted = 0
+  const sessionStarts: { token: string; options: unknown }[] = []
+  const ended: string[] = []
+  const models: { key: string; baseUrl: string; model: string }[] = []
+  const sessions: AgentSessions = {
+    budget: async (token) => {
+      did.push(`budget ${token.slice(0, 10)}`)
+      return {
+        monthlyUsd: 10,
+        remainingUsd: options.remainingUsd === undefined ? 9.6 : options.remainingUsd,
+        resetsAt: '2026-10-01T07:00:00.000Z',
+      }
+    },
+    start: async (token, projectId, name, opts) => {
+      sessionsStarted++
+      sessionStarts.push({ token, options: opts })
+      did.push(`startAgentSession ${projectId.slice(0, 4)} ${name}`)
+      return {
+        sessionId: `${options.sessionIds ?? 'session'}-${sessionsStarted}`,
+        key: `sk-test-key-${sessionsStarted}`,
+        baseUrl: GATEWAY,
+        models: ['default-chat', 'default-chat-large', 'default-embed'],
+        expiresAt: '2026-09-28T23:00:00.000Z',
+        capUsd: 2,
+      }
+    },
+    end: async (_token, sessionId) => {
+      ended.push(sessionId)
+      did.push(`endAgentSession ${sessionId}`)
+    },
+    list: async () =>
+      Array.from({ length: sessionsStarted }, (_, i) => ({
+        id: `${options.sessionIds ?? 'session'}-${i + 1}`,
+        spentUsd: options.spent?.[i] === undefined ? 0.1 : options.spent[i]!,
+      })),
+  }
+
+  const attempts: { baseCommit: string; message: string; changes: Change[] }[] = []
+  const commits: { baseCommit: string; message: string; changes: Change[] }[] = []
+  let trees = 0
+  const source: Source = {
+    tree: async (token) => {
+      trees++
+      did.push(`getTree ${token.slice(0, 10)}`)
+      const sha = (await options.tree?.(trees))?.commitSha ?? BASE
+      return {
+        commitSha: sha,
+        paths: Object.keys(FILES).map((path) => ({ path, size: 1, binary: false })),
+        truncated: false,
+      }
+    },
+    file: async (_token, _project, path) => {
+      const landed = commits
+        .flatMap((c) => c.changes)
+        .filter((c) => c.path === path)
+        .at(-1)
+      if (landed?.op === 'write') return { content: landed.content }
+      const content = FILES[path]
+      return content === undefined ? { unreadable: 'not-found' } : { content }
+    },
+    commit: async (_token, _project, body, sent = []) => {
+      attempts.push(body)
+      // As the real one records them: the dry run, then the commit.
+      const paths = body.changes.map((c) => c.path)
+      sent.push({ dryRun: true, baseCommit: body.baseCommit, paths })
+      options.commit?.(attempts.length, body)
+      sent.push({ dryRun: false, baseCommit: body.baseCommit, paths })
+      commits.push(body)
+      did.push(`createCommit ${body.baseCommit.slice(0, 7)}`)
+      return {
+        commitSha: `c${commits.length}`.padEnd(40, '0'),
+        changed: body.changes.map((c) => ({ path: c.path, status: 'added' as const })),
+        warnings: [],
+      }
+    },
+  }
+
+  const started: Build[] = []
+  const buildStatus = new Map<string, Build['status']>()
+  const builds: Builds = {
+    start: async (_token, _project, commitSha) => {
+      const build = {
+        id: `build-${started.length + 1}`,
+        commitSha,
+        status: 'pending' as const,
+        error: null,
+      }
+      started.push(build)
+      did.push(`startBuild ${commitSha.slice(0, 7)}`)
+      if (options.autoBuild === true)
+        setTimeout(() => emit('build.succeeded', { buildId: build.id }), 1)
+      return build
+    },
+    get: async (_token, buildId) => {
+      did.push(`getBuild ${buildId}`)
+      const build = started.find((b) => b.id === buildId)!
+      return {
+        ...build,
+        status: buildStatus.get(buildId) ?? 'running',
+        error:
+          buildStatus.get(buildId) === 'failed'
+            ? 'BUILD_FAILED: build failed (exit 1)'
+            : null,
+      }
+    },
+    log: async (_token, buildId) => {
+      did.push(`getBuildLog ${buildId}`)
+      return LOG
+    },
+  }
+
+  const deployed: Instance[] = []
+  const releasesMade: { buildId: string; summary: string }[] = []
+  const releases: Releases = {
+    create: async (_token, _project, buildId, summary) => {
+      releasesMade.push({ buildId, summary })
+      did.push(`createRelease ${buildId}`)
+      return { id: `release-${releasesMade.length}` }
+    },
+    sandbox: async () => SANDBOX,
+    deploy: async (_token, projectId, releaseId) => {
+      did.push(`deploy ${projectId.slice(0, 4)} ${releaseId}`)
+      const n = deployed.length + 1
+      const instance = (await options.deploy?.(releaseId, n)) ?? {
+        id: `instance-${n}`,
+        releaseId,
+        state: 'healthy' as const,
+      }
+      deployed.push(instance)
+      return instance
+    },
+  }
+
+  const outputs: string[] = []
+  const INCIDENT: Omit<Incident, 'instanceId' | 'releaseId'> = {
+    exitReason: 'the process exited with code 1',
+    failedCheck: 'readiness: GET /healthz … the edge last answered 0 after 87 attempt(s)',
+    logTail:
+      "Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/app/missing.js' imported from /app/server.js",
+    diffSinceHealthy: '+ import ./missing.js',
+    prompt: 'The app could not start: a module it imports is missing.',
+  }
+  const instances: Instances = {
+    list: async (_token, environmentId) => {
+      did.push(`listInstances ${environmentId === ENV ? 'sandbox' : environmentId}`)
+      return (
+        options.listInstances?.() ??
+        deployed.map((i) => ({ ...i, serving: i.state === 'healthy' }))
+      )
+    },
+    output: async (_token, _project, instanceId) => {
+      outputs.push(instanceId)
+      did.push(`getInstanceOutput ${instanceId}`)
+      return { lines: ['proof app listening'], failure: null }
+    },
+    incidents: async () =>
+      deployed
+        .filter((i) => i.state === 'failed')
+        .map((i) => ({ ...INCIDENT, instanceId: i.id, releaseId: i.releaseId })),
+  }
+
+  const secretsSet: { token: string; projectId: string; name: string; value: string }[] =
+    []
+  const secrets: Secrets = {
+    setInSandbox: async (token, projectId, name, value) => {
+      secretsSet.push({ token, projectId, name, value })
+      did.push(`setAppSecret ${name}`)
+    },
+  }
+  const members: Members = {
+    instructor: async () => ({ puid: 'ins000001', email: 'alice@ubc.ca' }),
+  }
+  const projects: Projects = {
+    read: async () => PROJECT,
+    knowledgePack: async () => '## AGENTS.md\n\nThe stack is fixed.',
+  }
+
+  const watches: {
+    token: string
+    handlers: Parameters<ProjectStream['watch']>[2]
+    closed: boolean
+  }[] = []
+  const stream: ProjectStream = {
+    watch(token, _project, handlers) {
+      const watch = { token, handlers, closed: false }
+      watches.push(watch)
+      return { ready: Promise.resolve(), close: () => void (watch.closed = true) }
+    },
+  }
+  let events = 0
+  /** A platform event on the round's open stream. */
+  const emit = (type: string, detail: Record<string, unknown>) => {
+    const open = watches.filter((w) => !w.closed).at(-1)
+    open?.handlers.event({ id: `event-${++events}`, type, subject: 'project:x', detail })
+  }
+
+  const rounds: Rounds = createRounds({
+    store,
+    hub,
+    work,
+    tokens,
+    sessions,
+    source,
+    builds,
+    releases,
+    instances,
+    secrets,
+    members,
+    stream,
+    projects,
+    trace: storeTrace(store),
+    now: () => new Date(),
+    modelFor: (session, onAnswer) => {
+      models.push(session)
+      return model.bound(onAnswer)
+    },
+  })
+
+  return {
+    store,
+    hub,
+    tokens,
+    rounds,
+    file: where,
+    did,
+    frames,
+    model,
+    sessionStarts,
+    ended,
+    models,
+    attempts,
+    commits,
+    started,
+    buildStatus,
+    deployed,
+    releasesMade,
+    outputs,
+    secretsSet,
+    watches,
+    emit,
+    trees: () => trees,
+  }
+}
+
+type H = ReturnType<typeof harness>
+
+/** A conversation whose plan is agreed and committed: moment 5 is over. */
+function agreed(h: H) {
+  h.store.rememberPerson(ALICE)
+  const conversation = h.store.createConversation(ALICE.id, WORDS)
+  h.store.addMessage(conversation.id, 'we', { kind: 'project', project: PROJECT })
+  h.store.savePlan(conversation.id, PLAN)
+  h.store.addMessage(conversation.id, 'person', {
+    kind: 'agreed',
+    version: 1,
+    answers: { late: 'It closes at the deadline.' },
+    commitSha: BASE,
+    sent: [],
+  })
+  const made = h.store.setState(conversation.id, 'agreed', { projectId: PROJECT.id })
+  h.hub.subscribe(made.id, (frame) => h.frames.push(frame))
+  return made
+}
+
+const viewOf = (h: H, id: string): RoundView | null => roundOf(h.store, id)
+const stepOf = (h: H, id: string, key: string) =>
+  viewOf(h, id)?.steps.find((s) => s.key === key)
+const stateOf = (h: H, id: string) => h.store.getConversation(id, ALICE.id)?.state
+const said = (h: H, id: string) =>
+  h.store.listMessages(id).map((m) => ({ from: m.from, ...(m.body as object) })) as {
+    from: string
+    kind: string
+    [key: string]: unknown
+  }[]
+/** Every user message the lead was sent, one string per call. */
+const leadPrompts = (h: H) =>
+  h.model.calls
+    .filter((c) => c.agent === 'lead')
+    .map((c) => c.messages.map((m) => m.content).join('\n'))
+
+async function startedRound(options: Options) {
+  const h = harness(options)
+  const conversation = agreed(h)
+  h.tokens.put(conversation.id, TOKEN)
+  h.rounds.start(conversation, TOKEN)
+  return { h, id: conversation.id, conversation }
+}
+
+async function untilStatus(h: H, id: string, status: RoundView['status']) {
+  await until(
+    () => viewOf(h, id)?.status === status,
+    () => ({ view: viewOf(h, id), did: h.did }),
+  )
+}
+
+/** A whole round, straight through: read, commit, done; built, deployed healthy, answered. */
+const STRAIGHT: Script = { lead: [read('server.js'), commit(), done()] }
+
+describe('the five steps, each on its own signal (Decision 5)', () => {
+  it('ticks each step on its signal, never before, and ends built with the session ended', async () => {
+    const deploy = held<Instance>()
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      deploy: () => deploy.promise,
+    })
+
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    // Writing the pages ticked on done after a landed commit; holds on its own check.
+    expect(stepOf(h, id, 'pages')?.state).toBe('done')
+    expect(stepOf(h, id, 'holds')?.state).toBe('done')
+    expect(stepOf(h, id, 'build')?.state).toBe('now')
+    expect(h.started[0]?.commitSha).toBe('c1'.padEnd(40, '0'))
+
+    // Another build's success is not this build's.
+    h.emit('build.succeeded', { buildId: 'build-99' })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(stepOf(h, id, 'build')?.state).toBe('now')
+    expect(h.releasesMade).toEqual([])
+
+    h.emit('build.succeeded', { buildId: 'build-1' })
+    await until(
+      () => stepOf(h, id, 'draft')?.state === 'now',
+      () => viewOf(h, id),
+    )
+    expect(stepOf(h, id, 'build')?.state).toBe('done')
+    expect(h.releasesMade).toEqual([{ buildId: 'build-1', summary: expect.any(String) }])
+
+    // The deploy answered before the instance was healthy: draft waits for ITS instance.
+    deploy.resolve({ id: 'instance-1', releaseId: 'release-1', state: 'starting' })
+    await until(
+      () => h.deployed.length === 1,
+      () => h.did,
+    )
+    h.emit('instance.healthy', { instanceId: 'instance-66' })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(stepOf(h, id, 'draft')?.state).toBe('now')
+    expect(h.outputs).toEqual([])
+
+    h.deployed[0]!.state = 'healthy'
+    h.emit('instance.healthy', { instanceId: 'instance-1' })
+    await untilStatus(h, id, 'done')
+
+    const view = viewOf(h, id)!
+    expect(view.steps.map((s) => s.state)).toEqual([
+      'done',
+      'done',
+      'done',
+      'done',
+      'done',
+    ])
+    expect(view.line).toBe('The pages are written.')
+    expect(view.draft).toEqual({
+      address: SANDBOX.url,
+      serving: true,
+      lastAttempt: 'healthy',
+    })
+    expect(h.outputs).toEqual(['instance-1'])
+    expect(stateOf(h, id)).toBe('built')
+    expect(h.ended).toEqual(['session-1'])
+    expect(h.watches.every((w) => w.closed)).toBe(true)
+    // The round folds into the conversation as one line (Decision 16).
+    expect(said(h, id).at(-1)).toMatchObject({
+      from: 'we',
+      kind: 'built',
+      round: 1,
+      line: 'The pages are written.',
+    })
+    // Its steps travel whole in RoundView: never as F2's step frames.
+    expect(h.frames.filter((f) => f.kind === 'step')).toEqual([])
+    const last = h.frames.filter((f) => f.kind === 'state').at(-1)
+    expect(last?.kind === 'state' && last.round?.status).toBe('done')
+  })
+
+  it('Writing the pages stays now on a done with nothing committed: the lead is told, and ticks after a commit lands', async () => {
+    const { h, id } = await startedRound({
+      script: { lead: [done(), commit(), done()] },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    const prompts = leadPrompts(h)
+    expect(prompts).toHaveLength(3)
+    expect(prompts[1]).toMatch(/nothing (is|has been) committed/i)
+    expect(h.started).toHaveLength(1)
+  })
+
+  it('Checking it holds together: an import that names no file sends the lead back, before any build', async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          commit([write('routes/posts.js', "import { x } from './missing.js'\n")]),
+          done(),
+          commit([write('routes/posts.js', 'export const posts = []\n')]),
+          done(),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    const prompts = leadPrompts(h)
+    expect(prompts[2]).toContain('./missing.js')
+    expect(h.started).toHaveLength(1)
+    expect(h.started[0]?.commitSha).toBe('c2'.padEnd(40, '0'))
+  })
+
+  it('a lead that keeps writing an import that holds nothing is bounded by its 40 moves, never sent back for ever (Review Focus 2)', async () => {
+    const broken = commit([
+      write('routes/posts.js', "import { x } from './missing.js'\n"),
+    ])
+    const { h, id } = await startedRound({
+      script: { lead: Array.from({ length: 30 }, () => [broken, done()]).flat() },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'moves' })
+    expect(leadPrompts(h)).toHaveLength(40)
+    expect(h.started).toEqual([])
+  })
+
+  it('starts by itself on a session of $2 and 240 minutes, with the most capable model it lists', async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    expect(h.sessionStarts).toEqual([
+      { token: TOKEN, options: { capUsd: 2, durationMinutes: 240 } },
+    ])
+    expect(h.models).toEqual([
+      { key: 'sk-test-key-1', baseUrl: GATEWAY, model: 'default-chat-large' },
+    ])
+    expect(h.store.latestRun(id)).toMatchObject({
+      round: 1,
+      sessionIds: ['session-1'],
+      model: 'default-chat-large',
+    })
+    expect(stateOf(h, id)).toBe('building')
+  })
+})
+
+describe('three tries, then ask (Decision 7)', () => {
+  const failing: Script = {
+    lead: [commit(), done(), commit(), done(), commit(), done(), commit(), done()],
+    explaining: [EXPLAINED, EXPLAINED, EXPLAINED],
+  }
+
+  async function failBuild(h: H, n: number) {
+    await until(
+      () => h.started.length === n,
+      () => h.did,
+    )
+    h.buildStatus.set(`build-${n}`, 'failed')
+    h.emit('build.failed', { buildId: `build-${n}`, reason: 'npm ci failed' })
+  }
+
+  it('three failed builds: needs you, with the note, the tries, the exact words, and whether anything is serving', async () => {
+    const { h, id } = await startedRound({ script: failing })
+    await failBuild(h, 1)
+    await until(
+      () => h.started.length === 2,
+      () => viewOf(h, id),
+    )
+    // The explaining agent's sentence is the one line in the conversation.
+    expect(said(h, id).filter((m) => m.kind === 'explained')).toEqual([
+      { from: 'we', kind: 'explained', round: 1, step: 'build', ...EXPLAINED },
+    ])
+    expect(stepOf(h, id, 'build')).toMatchObject({ tries: 1, note: EXPLAINED.note })
+    // The lead was given the platform's words and the explanation.
+    expect(leadPrompts(h)[2]).toContain('npm error Missing: marked@14.1.0 from lock file')
+    expect(leadPrompts(h)[2]).toContain(EXPLAINED.sentence)
+
+    await failBuild(h, 2)
+    await failBuild(h, 3)
+    await untilStatus(h, id, 'needs-you')
+    const view = viewOf(h, id)!
+    expect(view.needs).toEqual({ kind: 'tries', step: 'build', servingBefore: false })
+    expect(view.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(stepOf(h, id, 'build')).toMatchObject({
+      state: 'halted',
+      tries: 3,
+      note: EXPLAINED.note,
+      exact: expect.arrayContaining([LOG[1]]),
+    })
+    expect(stateOf(h, id)).toBe('building')
+    // The session is kept for Try a different way: never a new one without asking.
+    expect(h.ended).toEqual([])
+
+    // Try a different way: the count starts again, and the lead is told what failed.
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN, 'different')
+    await until(
+      () => h.started.length === 4,
+      () => viewOf(h, id),
+    )
+    expect(stepOf(h, id, 'build')?.tries).toBe(0)
+    const after = leadPrompts(h)[6]!
+    expect(after).toMatch(/trying a different way/i)
+    expect(after.match(/could not be put together/g)?.length).toBeGreaterThanOrEqual(3)
+    expect(h.sessionStarts).toHaveLength(1)
+  })
+
+  it('a failed draft: the incident is read, the lead is given its words and its prompt, and the step says it failed', async () => {
+    let failures = 1
+    const { h, id } = await startedRound({
+      script: { lead: [commit(), done(), commit(), done()], explaining: [EXPLAINED] },
+      deploy: (releaseId, n) => ({
+        id: `instance-${n}`,
+        releaseId,
+        state: failures-- > 0 ? 'failed' : 'healthy',
+      }),
+    })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.emit('build.succeeded', { buildId: 'build-1' })
+    await until(
+      () => h.started.length === 2,
+      () => viewOf(h, id),
+    )
+    expect(stepOf(h, id, 'draft')).toMatchObject({ tries: 1, note: EXPLAINED.note })
+    const prompt = leadPrompts(h)[2]!
+    expect(prompt).toContain('ERR_MODULE_NOT_FOUND')
+    expect(prompt).toContain('The app could not start: a module it imports is missing.')
+    expect(viewOf(h, id)?.draft).toMatchObject({ lastAttempt: 'failed', serving: false })
+    h.emit('build.succeeded', { buildId: 'build-2' })
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.draft).toMatchObject({ lastAttempt: 'healthy', serving: true })
+  })
+})
+
+describe('someone else changed the app (SOURCE_CONFLICT)', () => {
+  it('the tree is read again, and the lead redoes its commit on the new base; three is needs you', async () => {
+    const { h, id } = await startedRound({
+      script: { lead: [commit(), commit(), commit()] },
+      tree: (n) => ({ commitSha: `${n}`.repeat(40) }),
+      commit: () => {
+        throw new PlatformRefusal('SOURCE_CONFLICT', 409)
+      },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'conflict' })
+    expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(h.trees()).toBe(3)
+    expect(h.attempts.map((c) => c.baseCommit)).toEqual([
+      '1'.repeat(40),
+      '2'.repeat(40),
+      '3'.repeat(40),
+    ])
+    expect(leadPrompts(h)[1]).toMatch(/someone else changed/i)
+  })
+})
+
+describe('the money and the clock (Decision 9)', () => {
+  it("the session's cap: needs the checkpoint, and no new session until Carry on; then one, and it resumes at its step", async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          read('server.js'),
+          new ModelError('MODEL_BUDGET_EXHAUSTED', 429),
+          commit(),
+          done(),
+        ],
+      },
+      remainingUsd: 4,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({
+      kind: 'checkpoint',
+      capUsd: 2,
+      monthLeftUsd: 4,
+    })
+    expect(viewOf(h, id)?.reference).toBeNull()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(h.sessionStarts).toHaveLength(1)
+
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN)
+    await until(
+      () => h.started.length === 1,
+      () => viewOf(h, id),
+    )
+    expect(h.sessionStarts).toHaveLength(2)
+    expect(h.store.latestRun(id)?.sessionIds).toEqual(['session-1', 'session-2'])
+    // It carried on writing the pages: the read before the checkpoint is still its last move.
+    expect(leadPrompts(h)[2]).toContain('Your last move (read)')
+  })
+
+  it('the month spent: needs the month, with when it comes back', async () => {
+    const { h, id } = await startedRound({
+      script: { lead: [new ModelError('MODEL_BUDGET_EXHAUSTED', 429)] },
+      remainingUsd: 0,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({
+      kind: 'month',
+      resetsAt: '2026-10-01T07:00:00.000Z',
+    })
+  })
+
+  it("the session's clock: an expired key mid-round is the same checkpoint", async () => {
+    const { h, id } = await startedRound({
+      script: { lead: [read('server.js'), new ModelError('MODEL_KEY_REFUSED', 401)] },
+      remainingUsd: 4,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({
+      kind: 'checkpoint',
+      capUsd: 2,
+      monthLeftUsd: 4,
+    })
+  })
+
+  it('40 moves in one step: needs you, never more (Review Focus 2)', async () => {
+    const { h, id } = await startedRound({
+      script: { lead: Array.from({ length: 45 }, () => read('server.js')) },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'moves' })
+    expect(leadPrompts(h)).toHaveLength(40)
+    expect(h.sessionStarts).toHaveLength(1)
+  })
+
+  it('the same refusal three times in a row: needs you as moves', async () => {
+    const docker = commit([write('Dockerfile', 'FROM node')])
+    const { h, id } = await startedRound({
+      script: { lead: [docker, docker, docker, done()] },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'moves' })
+    expect(leadPrompts(h)).toHaveLength(3)
+  })
+})
+
+describe('Stop (Review Focus 4)', () => {
+  it('mid-build: the session is ended, the run is stopped, and nothing is deployed after it', async () => {
+    const { h, id, conversation } = await startedRound({ script: STRAIGHT })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.rounds.stop(conversation)
+    await untilStatus(h, id, 'stopped')
+    h.emit('build.succeeded', { buildId: 'build-1' })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(h.ended).toEqual(['session-1'])
+    expect(h.releasesMade).toEqual([])
+    expect(h.deployed).toEqual([])
+    expect(stateOf(h, id)).toBe('building')
+    // Twice is once.
+    h.rounds.stop(conversation)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(h.ended).toEqual(['session-1'])
+  })
+
+  it('pressed while deploy is in flight: the run is still stopped when deploy answers, and nothing after it runs', async () => {
+    const deploy = held<Instance>()
+    const { h, id, conversation } = await startedRound({
+      script: STRAIGHT,
+      deploy: () => deploy.promise,
+    })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.emit('build.succeeded', { buildId: 'build-1' })
+    await until(
+      () => h.did.some((d) => d.startsWith('deploy')),
+      () => h.did,
+    )
+    h.rounds.stop(conversation)
+    deploy.resolve({ id: 'instance-1', releaseId: 'release-1', state: 'healthy' })
+    await untilStatus(h, id, 'stopped')
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(viewOf(h, id)?.status).toBe('stopped')
+    expect(h.outputs).toEqual([])
+    expect(h.ended).toEqual(['session-1'])
+  })
+})
+
+describe('their words while it works', () => {
+  it('a message mid-build is waiting at once, and after the answers step the round goes back to the pages, in the same session', async () => {
+    const { h, id, conversation } = await startedRound({
+      script: { lead: [commit(), done(), commit(), done()] },
+    })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.rounds.message(conversation, 'Make the title bigger, please.')
+    expect(viewOf(h, id)?.messageWaiting).toBe(true)
+    expect(said(h, id).at(-1)).toMatchObject({
+      from: 'person',
+      kind: 'message',
+      round: 1,
+      text: 'Make the title bigger, please.',
+    })
+    h.emit('build.succeeded', { buildId: 'build-1' })
+    await until(
+      () => h.started.length === 2,
+      () => viewOf(h, id),
+    )
+    expect(h.outputs).toEqual(['instance-1'])
+    expect(leadPrompts(h)[2]).toContain('- "Make the title bigger, please."')
+    expect(viewOf(h, id)?.messageWaiting).toBe(false)
+    expect(h.sessionStarts).toHaveLength(1)
+    h.emit('build.succeeded', { buildId: 'build-2' })
+    await untilStatus(h, id, 'done')
+    // Read once: never again.
+    expect(leadPrompts(h)[3]).not.toContain('Make the title bigger')
+  })
+
+  it('a message while the pages are written is read at the next move', async () => {
+    const reading = held<void>()
+    const { h, id, conversation } = await startedRound({
+      script: { lead: [read('server.js'), commit(), done()] },
+      tree: async () => {
+        await reading.promise
+        return { commitSha: BASE }
+      },
+      autoBuild: true,
+    })
+    h.rounds.message(conversation, 'Call them units, not weeks.')
+    reading.resolve()
+    await untilStatus(h, id, 'done')
+    expect(leadPrompts(h)[0]).toContain('- "Call them units, not weeks."')
+    expect(leadPrompts(h)[1]).not.toContain('Call them units')
+  })
+})
+
+describe('questions', () => {
+  it('one with a default carries on with it; one without pauses, and its answer resumes', async () => {
+    const { h, id, conversation } = await startedRound({
+      script: {
+        lead: [
+          ask('Should a TA see everything you see?', "We've built it so only you can."),
+          ask('Is a late post still a post?', null),
+          commit(),
+          done(),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'paused')
+    expect(stateOf(h, id)).toBe('paused')
+    const questions = viewOf(h, id)!.questions
+    expect(questions).toEqual([
+      {
+        id: expect.any(String),
+        ask: 'Should a TA see everything you see?',
+        default: "We've built it so only you can.",
+        answer: "We've built it so only you can.",
+        answered: false,
+        secret: false,
+      },
+      {
+        id: expect.any(String),
+        ask: 'Is a late post still a post?',
+        default: null,
+        answer: null,
+        answered: false,
+        secret: false,
+      },
+    ])
+    expect(h.rounds.answer(conversation, 'no-such-question', 'x')).toBe('unknown')
+    expect(
+      h.rounds.answer(conversation, questions[1]!.id, 'It closes at the deadline.'),
+    ).toBe('taken')
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.questions[1]).toMatchObject({
+      answer: 'It closes at the deadline.',
+      answered: true,
+    })
+    expect(leadPrompts(h)[2]).toContain('It closes at the deadline.')
+    expect(h.sessionStarts).toHaveLength(1)
+  })
+
+  it("a secret's answer goes to the sandbox and nowhere else: no table, no prompt, no trace holds it", async () => {
+    const VALUE = 'the-secret-value-9f8e7d'
+    const { h, id, conversation } = await startedRound({
+      script: { lead: [ask('What is the SIS key?', null, 'SIS_KEY'), commit(), done()] },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'paused')
+    const question = viewOf(h, id)!.questions[0]!
+    expect(question).toMatchObject({ secret: true, answered: false })
+    expect(h.rounds.answer(conversation, question.id, 'short')).toBe('invalid')
+    expect(h.secretsSet).toEqual([])
+    expect(h.rounds.answer(conversation, question.id, VALUE)).toBe('taken')
+    await untilStatus(h, id, 'done')
+    expect(h.secretsSet).toEqual([
+      { token: TOKEN, projectId: PROJECT.id, name: 'SIS_KEY', value: VALUE },
+    ])
+    expect(viewOf(h, id)?.questions[0]).toMatchObject({ answered: true, answer: null })
+    expect(JSON.stringify(dumpAll(h.file))).not.toContain(VALUE)
+    expect(JSON.stringify(h.model.calls)).not.toContain(VALUE)
+    expect(JSON.stringify(h.frames)).not.toContain(VALUE)
+  })
+})
+
+describe('FE-32: a piece we cannot install', () => {
+  it('a commit guarded for a dependency, then done with what cannot be added: the rest is built, and needs says what', async () => {
+    const adds = JSON.stringify({
+      name: 'app',
+      type: 'module',
+      dependencies: { express: '4.22.2', marked: '14.1.0' },
+    })
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          commit([write('package.json', adds)]),
+          commit(),
+          done('The rest is built.', 'the formatted text box'),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(h.commits).toHaveLength(1)
+    expect(leadPrompts(h)[1]).toMatch(/cannot add a package/i)
+    expect(viewOf(h, id)?.needs).toEqual({
+      kind: 'cannot',
+      what: 'the formatted text box',
+    })
+    expect(stateOf(h, id)).toBe('built')
+    expect(said(h, id).at(-1)).toMatchObject({
+      kind: 'built',
+      cannot: 'the formatted text box',
+    })
+  })
+})
+
+describe('a restart (Review Focus 3)', () => {
+  it('a working run is interrupted at boot; Carry on with a new token re-reads the build it started, and never builds that commit again', async () => {
+    const first = await startedRound({ script: STRAIGHT })
+    await until(
+      () => first.h.started.length === 1,
+      () => first.h.did,
+    )
+    // The process ends: a new server over the same file, with the same platform.
+    const second = harness(
+      { script: { lead: [] }, sessionIds: 'after' },
+      first.h.file,
+      first.h.store,
+    )
+    second.started.push(...first.h.started)
+    second.rounds.interruptedOnBoot()
+    expect(viewOf(second, first.id)?.status).toBe('interrupted')
+    expect(second.store.getConversation(first.id, ALICE.id)?.state).toBe('building')
+
+    second.buildStatus.set('build-1', 'succeeded')
+    second.rounds.carryOn(second.store.getConversation(first.id, ALICE.id)!, NEW_TOKEN)
+    await untilStatus(second, first.id, 'done')
+    expect(second.did).toContain('getBuild build-1')
+    expect(second.did.filter((d) => d.startsWith('startBuild'))).toEqual([])
+    expect(second.releasesMade).toEqual([
+      { buildId: 'build-1', summary: expect.any(String) },
+    ])
+    // The session before the restart is ended by its id, before a new one is started with the
+    // new token; that one is ended when the round is built.
+    expect(second.ended).toEqual(['session-1', 'after-1'])
+    const did = second.did
+    expect(did.indexOf('endAgentSession session-1')).toBeLessThan(
+      did.findIndex((d) => d.startsWith('startAgentSession')),
+    )
+    expect(second.sessionStarts[0]?.token).toBe(NEW_TOKEN)
+    expect(second.store.latestRun(first.id)?.sessionIds).toEqual(['session-1', 'after-1'])
+  })
+
+  it('a paused run is interrupted at boot too, and its conversation is building again', async () => {
+    const first = await startedRound({
+      script: { lead: [ask('Is a late post still a post?', null)] },
+    })
+    await untilStatus(first.h, first.id, 'paused')
+    const second = harness({ script: { lead: [] } }, first.h.file, first.h.store)
+    second.rounds.interruptedOnBoot()
+    expect(viewOf(second, first.id)?.status).toBe('interrupted')
+    expect(second.store.getConversation(first.id, ALICE.id)?.state).toBe('building')
+  })
+})
+
+describe('the stream (Decision 15; Review Focus 5)', () => {
+  it('reconnected during a build whose success fell outside the replay: the build is read again, and ticks from what it reads', async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.buildStatus.set('build-1', 'succeeded')
+    h.watches.at(-1)!.handlers.reconnected()
+    await untilStatus(h, id, 'done')
+    expect(h.did).toContain('getBuild build-1')
+  })
+
+  it('the token refused on the stream: needs a token; Carry on with a new one resumes', async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.watches.at(-1)!.handlers.refused()
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'token' })
+    expect(viewOf(h, id)?.reference).toBeNull()
+    expect(h.tokens.get(id)).toBeUndefined()
+
+    h.buildStatus.set('build-1', 'succeeded')
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, NEW_TOKEN)
+    await untilStatus(h, id, 'done')
+    expect(h.watches.at(-1)?.token).toBe(NEW_TOKEN)
+    expect(h.did.filter((d) => d.startsWith('startBuild'))).toHaveLength(1)
+  })
+
+  it('any call refused 401: needs a token', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      tree: () => {
+        throw new PlatformRefusal('UNAUTHENTICATED', 401)
+      },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'token' })
+  })
+
+  it('the platform unreachable: needs you, waiting on someone, with a reference', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      tree: () => {
+        throw new PlatformRefusal('PLATFORM_UNAVAILABLE', null)
+      },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'unreachable', what: 'platform' })
+    expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+  })
+})
+
+describe('the fallback (Rich: carry on, and say so; Decision 4)', () => {
+  it("the round's first fallback answer adds our one line, and carries on; a second adds nothing", async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      fallback: (agent, n) => agent === 'lead' && n <= 1,
+    })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    expect(said(h, id).filter((m) => m.kind === 'fallback')).toEqual([
+      { from: 'we', kind: 'fallback', round: 1 },
+    ])
+    const models = h.store
+      .listTrace(h.store.latestRun(id)!.id)
+      .map((t) => t.entry as { kind: string; answered?: string; fallback?: boolean })
+      .filter((e) => e.kind === 'model')
+    expect(models.map((m) => m.fallback)).toEqual([true, true, false])
+    expect(models[0]).toMatchObject({
+      agent: 'lead',
+      asked: 'default-chat-large',
+      answered: 'ollama_chat/qwen3.5:4b',
+    })
+  })
+})
+
+describe('the cost (Decision 14)', () => {
+  it("after a model call, the conversation's figure is its sessions' spend, and the month's is the budget's", async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT, spent: [0.4] })
+    await until(
+      () => viewOf(h, id)?.cost.conversationUsd === 0.4,
+      () => viewOf(h, id),
+    )
+    expect(viewOf(h, id)?.cost).toEqual({
+      conversationUsd: 0.4,
+      monthLeftUsd: 9.6,
+      resetsAt: '2026-10-01T07:00:00.000Z',
+    })
+  })
+
+  it('a spend the gateway did not say leaves the figure unknown', async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT, spent: [null] })
+    await until(
+      () => viewOf(h, id)?.cost.monthLeftUsd === 9.6,
+      () => viewOf(h, id),
+    )
+    expect(viewOf(h, id)?.cost.conversationUsd).toBeNull()
+  })
+})
+
+describe('no credential anywhere (Global Constraints)', () => {
+  it('after a whole round: no mft_ and no sk- in any prompt, any table, or any frame', async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.emit('build.succeeded', { buildId: 'build-1' })
+    await untilStatus(h, id, 'done')
+    expect(JSON.stringify(h.model.calls)).not.toMatch(/mft_|sk-/)
+    expect(JSON.stringify(dumpAll(h.file))).not.toMatch(/mft_|sk-/)
+    expect(JSON.stringify(h.frames)).not.toMatch(/mft_|sk-/)
+  })
+
+  it('the trace says what each platform call named: the commits, the build, the release, the sandbox and its instance', async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.emit('build.succeeded', { buildId: 'build-1' })
+    await untilStatus(h, id, 'done')
+    const platform = h.store
+      .listTrace(h.store.latestRun(id)!.id)
+      .map((t) => t.entry as { kind: string; operation?: string; named?: string | null })
+      .filter((e) => e.kind === 'platform')
+      .map((e) => `${e.operation} ${e.named}`)
+    expect(platform).toEqual(
+      expect.arrayContaining([
+        'startAgentSession session-1',
+        `createCommit dry run on ${BASE}`,
+        `createCommit on ${BASE}`,
+        `startBuild ${'c1'.padEnd(40, '0')}`,
+        'createRelease build-1',
+        'deploy sandbox',
+        'getInstanceOutput instance-1',
+        'endAgentSession session-1',
+      ]),
+    )
+  })
+})
+
+describe('the store is enough (a reconnect, or a restart)', () => {
+  it("the round's view is folded from the store alone, and says nothing before a round", async () => {
+    const h = harness({ script: STRAIGHT })
+    const conversation = agreed(h)
+    expect(viewOf(h, conversation.id)).toBeNull()
+  })
+})

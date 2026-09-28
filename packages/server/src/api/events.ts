@@ -6,6 +6,7 @@ import { guard } from './guard.js'
 import { intakeOf, planOf } from './intake-state.js'
 import { problem } from './problems.js'
 import type { Allowance, Progress } from './progress.js'
+import { roundOf } from './round-state.js'
 
 /**
  * ONE PROGRESS STREAM PER CONVERSATION (F2 Decision 4): Server-Sent Events, the whole state
@@ -50,13 +51,14 @@ export function createHub(): Hub {
   }
 }
 
-/** The whole state: the conversation, its intake so far, and its latest plan. */
+/** The whole state: the conversation, its intake so far, its latest plan, and its latest round. */
 export function stateFrame(store: Store, conversation: Conversation): Progress {
   return {
     kind: 'state',
     conversation,
     intake: intakeOf(store, conversation.id),
     plan: planOf(store, conversation.id),
+    round: roundOf(store, conversation.id),
   }
 }
 

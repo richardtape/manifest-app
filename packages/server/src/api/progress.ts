@@ -112,6 +112,71 @@ export interface Allowance {
 /** F3 Decision 5: moment 6's five steps, each ticking on its own signal. */
 export type BuildStep = 'pages' | 'holds' | 'build' | 'draft' | 'answers'
 
+/**
+ * WHAT A ROUND NEEDS OF THE PERSON (F3 Task 8), one card each (Task 11). A problem's card
+ * carries `RoundView.reference`.
+ */
+export type Needs =
+  /** Three failures of one kind: "…still has the last version that worked", or "…is still empty". */
+  | { kind: 'tries'; step: 'build' | 'draft'; servingBefore: boolean }
+  /** Someone else changed the app three times while we worked. */
+  | { kind: 'conflict' }
+  /** The piece of work's $2 is used: Carry on starts another session, if they say so. */
+  | { kind: 'checkpoint'; capUsd: number; monthLeftUsd: number | null }
+  /** The month's allowance is spent. */
+  | { kind: 'month'; resetsAt: string | null }
+  /** 40 moves in one step, or the same refusal three times in a row (Review Focus 2). */
+  | { kind: 'moves' }
+  | { kind: 'unreachable'; what: 'platform' | 'model' }
+  /** FE-32: what they asked for that needs a piece we cannot install, in the lead's plain words. */
+  | { kind: 'cannot'; what: string }
+  /** The token was refused: the page mints another, without a word. */
+  | { kind: 'token' }
+  /** A refusal the round cannot answer itself: F2's words for its code. */
+  | { kind: 'refused'; code: string }
+
+/** Where a round is (F3 Task 8): the whole of it, in every state frame. */
+export interface RoundView {
+  round: number
+  status: 'working' | 'paused' | 'needs-you' | 'stopped' | 'interrupted' | 'done'
+  /** The lead's line now, in its words. */
+  line: string | null
+  /** A message of theirs waits for the lead: the page says "Got it, after this step." */
+  messageWaiting: boolean
+  steps: {
+    key: BuildStep
+    state: 'next' | 'now' | 'done' | 'halted'
+    /** The failures so far: 1 is "(second try)". */
+    tries: number
+    note: string | null
+    changed: string | null
+    /** The files changed, or the platform's own words: "The exact words, for whoever you ask for help". */
+    exact: string[] | null
+  }[]
+  needs: Needs | null
+  /** The support reference of the problem `needs` shows (Global Constraints). */
+  reference: string | null
+  questions: {
+    id: string
+    ask: string
+    default: string | null
+    /** Never a secret's: it goes to the sandbox and is dropped. */
+    answer: string | null
+    answered: boolean
+    secret: boolean
+  }[]
+  draft: {
+    address: string
+    serving: boolean
+    lastAttempt: 'healthy' | 'failed' | null
+  } | null
+  cost: {
+    conversationUsd: number | null
+    monthLeftUsd: number | null
+    resetsAt: string | null
+  }
+}
+
 export type StepKey =
   | 'understanding'
   | 'naming'
@@ -121,6 +186,8 @@ export type StepKey =
   | 'writing'
   /** The plan agreed, and committed as docs/plan.md. */
   | 'agreeing'
+  /** F3: the round's steps travel whole in `RoundView`, never as step frames. */
+  | BuildStep
 
 /** One frame of `GET /api/conversations/:id/events`, as `data: <json>`. */
 export type Progress =
@@ -131,6 +198,8 @@ export type Progress =
       intake: Intake
       /** The latest plan and its version: null until one is written (Task 9). */
       plan: { version: number; plan: PlanView } | null
+      /** The latest round of work (F3): null until the plan is agreed. */
+      round: RoundView | null
     }
   /** A step, by its key, ticking on real completion. */
   | { kind: 'step'; step: StepKey; state: 'now' | 'done' | 'halted' }

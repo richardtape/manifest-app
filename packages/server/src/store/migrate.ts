@@ -6,11 +6,13 @@ import type { DatabaseSync } from 'node:sqlite'
  * - 0: F2 never set one, so every file it left is at 0. Its schema counts as version 1.
  * - 2: F3 Decision 12. `conversations` gains `building` and `built`. SQLite cannot alter a
  *   `check`, so the table is rebuilt.
+ * - 3: F3 Task 8. `runs` gains `detail`, the round's own facts; `questions` is a new table,
+ *   which `schema.sql` makes.
  *
  * `schema.sql` runs first, and makes a new file's tables as they are now. Only an existing
  * table keeps the definition it was made with, which is what this corrects.
  */
-export const VERSION = 2
+export const VERSION = 3
 
 /**
  * The one definition of `conversations`, read out of `schema.sql` itself, so the rebuild can
@@ -30,7 +32,17 @@ export function migrate(db: DatabaseSync, schema: string): void {
   const { user_version: version } = db.prepare('pragma user_version').get() as {
     user_version: number
   }
-  if (version >= VERSION) return
+  if (version < 2) rebuildConversations(db, schema)
+  if (version < 3) {
+    // A new file's runs already have it (schema.sql); sitting 2's do not.
+    const columns = db.prepare('pragma table_info(runs)').all() as { name: string }[]
+    if (!columns.some((column) => column.name === 'detail'))
+      db.exec('alter table runs add column detail text')
+  }
+  if (version < VERSION) db.exec(`pragma user_version = ${VERSION}`)
+}
+
+function rebuildConversations(db: DatabaseSync, schema: string): void {
   // SQLITE'S OWN TWELVE STEPS (its "Making Other Kinds Of Table Schema Changes"). Foreign keys
   // off, OUTSIDE the transaction, where the pragma is a no-op: `messages`, `plans` and `runs`
   // reference `conversations`, and name it, so they reach the new table once it is renamed.
@@ -50,7 +62,7 @@ export function migrate(db: DatabaseSync, schema: string): void {
       const broken = db.prepare('pragma foreign_key_check').all()
       if (broken.length > 0)
         throw new Error('the rebuilt conversations broke a reference')
-      db.exec(`pragma user_version = ${VERSION}`)
+      db.exec('pragma user_version = 2')
       db.exec('commit')
     } catch (error) {
       db.exec('rollback')

@@ -165,6 +165,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
       conversation: { ...CONVERSATION, ...conversation },
       intake: INTAKE,
       plan,
+      round: null,
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))

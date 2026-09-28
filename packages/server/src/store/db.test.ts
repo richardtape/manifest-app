@@ -180,6 +180,34 @@ describe("a round's run and its trace (F3 Decision 10)", () => {
     model: 'default-chat-large',
     last: { kind: 'read', report: 'read server.js' },
     sameRefusal: null,
+    detail: null,
+  }
+  const DETAIL = {
+    line: 'Writing the page students post on.',
+    needs: { kind: 'tries' as const, step: 'build' as const, servingBefore: false },
+    reference: '7F3A-9C21',
+    steps: {
+      build: {
+        note: 'A piece it depends on was missing',
+        changed: null,
+        exact: ['npm error Missing: marked@14.1.0 from lock file'],
+      },
+    },
+    draft: null,
+    cost: {
+      conversationUsd: 0.4,
+      monthLeftUsd: 9.6,
+      resetsAt: '2026-10-01T07:00:00.000Z',
+    },
+    landed: true,
+    buildId: '44444444-4444-4444-8444-444444444444',
+    releaseId: null,
+    instanceId: null,
+    fallbackSaid: false,
+    heard: 0,
+    failures: [],
+    tried: [],
+    cannot: null,
   }
 
   it('saves a run, reads it back, and a second save replaces the first', () => {
@@ -202,6 +230,45 @@ describe("a round's run and its trace (F3 Decision 10)", () => {
       sameRefusal: { reason: 'no Dockerfile', count: 1 },
     })
     expect(store.getRun('no-such-run')).toBeUndefined()
+  })
+
+  it("keeps the round's own facts beside the run, as saved (F3 Task 8)", () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const conversation = store.createConversation(ALICE.id, WORDS)
+    store.saveRun({ ...RUN, conversationId: conversation.id, detail: DETAIL })
+    expect(store.getRun('run-1')?.detail).toEqual(DETAIL)
+  })
+
+  it("lists a conversation's runs by round, the latest last, and finds the runs in given states", () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const one = store.createConversation(ALICE.id, WORDS)
+    const two = store.createConversation(ALICE.id, WORDS)
+    store.saveRun({
+      ...RUN,
+      id: 'run-2',
+      round: 2,
+      conversationId: one.id,
+      status: 'paused',
+    })
+    store.saveRun({
+      ...RUN,
+      id: 'run-1',
+      round: 1,
+      conversationId: one.id,
+      status: 'done',
+    })
+    store.saveRun({ ...RUN, id: 'run-3', round: 1, conversationId: two.id })
+    expect(store.listRuns(one.id).map((r) => r.id)).toEqual(['run-1', 'run-2'])
+    expect(store.latestRun(one.id)?.id).toBe('run-2')
+    expect(store.latestRun('no-such-conversation')).toBeUndefined()
+    expect(
+      store
+        .runsIn(['working', 'paused'])
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual(['run-2', 'run-3'])
   })
 
   it("lists a run's trace in order, each entry with its time, and never another run's", () => {
@@ -248,6 +315,65 @@ describe("a round's run and its trace (F3 Decision 10)", () => {
   })
 })
 
+describe("a round's questions (F3 Decision 10)", () => {
+  it('asked, read back in order, and answered; a default is its answer until they give one', () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const conversation = store.createConversation(ALICE.id, WORDS)
+    const base = { runId: 'run-1', conversationId: conversation.id }
+    store.addQuestion({
+      ...base,
+      id: 'q-1',
+      ask: 'Should a TA see everything you see?',
+      fallback: "We've built it so only you can.",
+      secret: null,
+    })
+    store.addQuestion({
+      ...base,
+      id: 'q-2',
+      ask: 'Is a late post still a post?',
+      fallback: null,
+      secret: null,
+    })
+    expect(store.listQuestions('run-1')).toMatchObject([
+      { id: 'q-1', answer: "We've built it so only you can.", answered: false },
+      { id: 'q-2', answer: null, answered: false },
+    ])
+    store.answerQuestion('q-2', 'It closes at the deadline.')
+    expect(store.getQuestion('q-2')).toMatchObject({
+      id: 'q-2',
+      conversationId: conversation.id,
+      ask: 'Is a late post still a post?',
+      fallback: null,
+      secret: null,
+      answer: 'It closes at the deadline.',
+      answered: true,
+    })
+    expect(store.getQuestion('no-such-question')).toBeUndefined()
+  })
+
+  it("a secret's question keeps its name, and its answer is never a column: answered, with none", () => {
+    const { store, file } = fresh()
+    store.rememberPerson(ALICE)
+    const conversation = store.createConversation(ALICE.id, WORDS)
+    store.addQuestion({
+      id: 'q-1',
+      runId: 'run-1',
+      conversationId: conversation.id,
+      ask: 'What is the SIS key?',
+      fallback: null,
+      secret: 'SIS_KEY',
+    })
+    store.answerQuestion('q-1', null)
+    expect(store.getQuestion('q-1')).toMatchObject({
+      secret: 'SIS_KEY',
+      answer: null,
+      answered: true,
+    })
+    expect(Object.keys(dumpAll(file))).toContain('questions')
+  })
+})
+
 describe('the migration (F3 Decision 12: building and built)', () => {
   /** What F2 left behind: its schema as it was, and no user_version (0). */
   const F2 = `
@@ -282,7 +408,7 @@ describe('the migration (F3 Decision 12: building and built)', () => {
     insert into plans values ('c-1', 1, '{"whoGetsIn":"Anyone with a CWL"}', '2026-09-28T00:00:00.000Z');
   `
 
-  it('opens an F2 file (version 0) at version 2, its conversation, messages and plan intact, and able to build', () => {
+  it('opens an F2 file (version 0) at version 3, its conversation, messages and plan intact, and able to build', () => {
     const { dir, remove } = scratchDir()
     cleanups.push(remove)
     const file = join(dir, 'app.sqlite')
@@ -291,7 +417,7 @@ describe('the migration (F3 Decision 12: building and built)', () => {
 
     const store = openStore(file)
     cleanups.push(() => store.close())
-    expect(pragmaOf(file, 'user_version')).toBe(2)
+    expect(pragmaOf(file, 'user_version')).toBe(3)
     expect(store.getConversation('c-1', ALICE.id)).toMatchObject({
       state: 'agreed',
       projectId: 'p-1',
@@ -308,16 +434,16 @@ describe('the migration (F3 Decision 12: building and built)', () => {
     expect(store.setState('c-1', 'built').state).toBe('built')
   })
 
-  it('opens a new file at version 2, and a state it does not know is still refused', () => {
+  it('opens a new file at version 3, and a state it does not know is still refused', () => {
     const { store, file } = fresh()
-    expect(pragmaOf(file, 'user_version')).toBe(2)
+    expect(pragmaOf(file, 'user_version')).toBe(3)
     store.rememberPerson(ALICE)
     const made = store.createConversation(ALICE.id, WORDS)
     expect(store.setState(made.id, 'building').state).toBe('building')
     expect(() => store.setState(made.id, 'deploying' as never)).toThrow()
   })
 
-  it('opens a version-2 file again without rebuilding it', () => {
+  it('opens a version-3 file again without rebuilding it', () => {
     const { dir, remove } = scratchDir()
     cleanups.push(remove)
     const file = join(dir, 'app.sqlite')
@@ -329,6 +455,32 @@ describe('the migration (F3 Decision 12: building and built)', () => {
     const second = openStore(file)
     cleanups.push(() => second.close())
     expect(second.getConversation(made.id, ALICE.id)?.state).toBe('built')
-    expect(pragmaOf(file, 'user_version')).toBe(2)
+    expect(pragmaOf(file, 'user_version')).toBe(3)
+  })
+
+  it("opens sitting 2's file (version 2, runs without their detail) at version 3: the runs intact, their detail null, and questions there", () => {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    execOn(
+      file,
+      `${F2}
+      create table runs (
+        id text primary key, conversation_id text not null references conversations (id),
+        round integer not null, step text not null, moves integer not null, tries text not null,
+        status text not null, session_ids text not null, model text, last text, same_refusal text,
+        created_at text not null, updated_at text not null
+      );
+      insert into runs values ('run-1', 'c-1', 1, 'pages', 2, '{}', 'working', '[]', null, null, null,
+        '2026-09-28T00:00:00.000Z', '2026-09-28T00:00:00.000Z');
+      pragma user_version = 2;`,
+    )
+    const store = openStore(file)
+    cleanups.push(() => store.close())
+    expect(pragmaOf(file, 'user_version')).toBe(3)
+    expect(store.getRun('run-1')).toMatchObject({ id: 'run-1', moves: 2, detail: null })
+    // Version 2 was already rebuilt for building and built: never rebuilt again.
+    expect(store.getConversation('c-1', ALICE.id)?.state).toBe('agreed')
+    expect(Object.keys(dumpAll(file))).toContain('questions')
   })
 })

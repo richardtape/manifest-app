@@ -29,12 +29,17 @@ export interface RoundContext {
   wrote(changes: Change[]): void
   /** The files a read answered, kept for the lead's view, newest first (Decision 3). */
   keep(files: { path: string; content: string }[]): void
-  /** Records the question. A default answers at once; none, or a secret, pauses the run. */
+  /**
+   * Records the question. A default answers at once; none, or a secret, pauses the run. A
+   * secret is the name the app reads it by; its value goes to the sandbox alone.
+   */
   question(
     ask: string,
     fallback: string | null,
-    secret: boolean,
+    secret: string | null,
   ): { id: string; answeredWith: string | null }
+  /** FE-32: what the plan asked for that needs a piece we cannot install, in the lead's words. */
+  cannot(what: string): void
   askCwl(brief: CwlBrief): Promise<{ changes: Change[]; summary: string }>
   /** Their description, their messages, their answers: whose emails staff may be (Decision 13). */
   theirWords(): string[]
@@ -52,6 +57,8 @@ export const CHANGE = z.discriminatedUnion('op', [
 
 const LINE = z.string().min(1).max(120)
 const ACCOUNT = z.string().min(1).max(200)
+/** A secret's name as the platform takes it (M1). Checked by the guard, never as a schema pattern. */
+const SECRET_NAME = /^[A-Z][A-Z0-9_]{0,127}$/
 
 const UNREADABLE = {
   'too-large': 'too large to read',
@@ -243,15 +250,18 @@ const askCwl = defineTool({
 const askPerson = defineTool({
   kind: 'ask_person',
   describe:
-    'ask_person { ask, default, secret }: ask the person something only they can answer, with a default when there is a sensible one; secret for a value that must never be shown.',
+    'ask_person { ask, default, secret }: ask the person something only they can answer, with a default when there is a sensible one. For a value that must never be shown (a key), secret is the name the app reads it by, in capitals (SIS_KEY), and the default is null; otherwise secret is null.',
   input: z.object({
     ask: z.string().min(1).max(300),
     default: z.string().max(300).nullable(),
-    secret: z.boolean(),
+    secret: z.string().max(128).nullable(),
   }),
-  guard: ({ ask, default: fallback }, context: RoundContext) =>
+  guard: ({ ask, default: fallback, secret }, context: RoundContext) =>
     context.guards.words(ask) ??
-    (fallback === null ? null : context.guards.words(fallback)),
+    (fallback === null ? null : context.guards.words(fallback)) ??
+    (secret === null || SECRET_NAME.test(secret)
+      ? null
+      : "a secret's name is capitals, digits and underscores, starting with a capital: SIS_KEY"),
   async run(
     { ask, default: fallback, secret },
     context: RoundContext,
@@ -270,10 +280,15 @@ const askPerson = defineTool({
 
 const done = defineTool({
   kind: 'done',
-  describe: 'done { line }: the pages are written.',
-  input: z.object({ line: LINE }),
-  guard: ({ line }, context: RoundContext) => context.guards.words(line),
-  run: async ({ line }) => ({ report: 'Done.', stop: { kind: 'done', line } }),
+  describe:
+    'done { line, cannot }: the pages are written. cannot is what they asked for that needs a piece we cannot install, in their words ("the formatted text box"), or null.',
+  input: z.object({ line: LINE, cannot: z.string().min(1).max(120).nullable() }),
+  guard: ({ line, cannot }, context: RoundContext) =>
+    context.guards.words(line) ?? (cannot === null ? null : context.guards.words(cannot)),
+  async run({ line, cannot }, context: RoundContext): Promise<MoveResult> {
+    if (cannot !== null) context.cannot(cannot)
+    return { report: 'Done.', stop: { kind: 'done', line } }
+  },
 })
 
 export const leadMoves = [read, commit, askCwl, askPerson, done] as unknown as ToolDef<

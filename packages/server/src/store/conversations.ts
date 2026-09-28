@@ -1,10 +1,10 @@
 import type { Person } from '../identity.js'
 import type { Conversation, ConversationState } from '../api/progress.js'
-import type { Run } from './runs.js'
+import type { AskedQuestion, Run, RunStatus } from './runs.js'
 
 /** The page's contract owns these (Decision 4); the store keeps them. */
 export type { Conversation, ConversationState } from '../api/progress.js'
-export type { Run, RunStatus } from './runs.js'
+export type { AskedQuestion, Run, RunDetail, RunStatus } from './runs.js'
 
 export type Sender = 'person' | 'we'
 
@@ -49,6 +49,17 @@ export interface Store {
   /** F3 Decision 10: a round's run, saved after every move. A second save replaces the first. */
   saveRun(run: Run): void
   getRun(id: string): Run | undefined
+  /** A conversation's runs, by round: the latest last. */
+  listRuns(conversationId: string): Run[]
+  latestRun(conversationId: string): Run | undefined
+  /** Every run in one of these states (a restart marks them, Review Focus 3). */
+  runsIn(statuses: RunStatus[]): Run[]
+  /** F3 Decision 10: a question a round asked; its default is its answer until they give one. */
+  addQuestion(question: Omit<AskedQuestion, 'answer' | 'answered'>): void
+  /** Their answer. A secret's is null: it never reaches this store. */
+  answerQuestion(id: string, answer: string | null): void
+  getQuestion(id: string): AskedQuestion | undefined
+  listQuestions(runId: string): AskedQuestion[]
   /** What happened in a run, never what was said. Anything shaped like a credential is refused. */
   recordTrace(runId: string, entry: unknown): void
   listTrace(runId: string): { at: string; entry: unknown }[]

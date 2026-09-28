@@ -74,6 +74,7 @@ const state = (
   conversation: { ...CONVERSATION, ...patch },
   intake,
   plan,
+  round: null,
 })
 
 beforeEach(() => {

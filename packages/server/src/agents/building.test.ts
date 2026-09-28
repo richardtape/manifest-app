@@ -42,7 +42,8 @@ function roundContext(over: Partial<RoundContext> = {}) {
   const did: string[] = []
   const kept: { path: string; content: string }[] = []
   const written: Change[][] = []
-  const questions: { ask: string; fallback: string | null; secret: boolean }[] = []
+  const questions: { ask: string; fallback: string | null; secret: string | null }[] = []
+  const cannot: string[] = []
   const briefs: CwlBrief[] = []
   const commits: { baseCommit: string; message: string; changes: Change[] }[] = []
   const source: Source = {
@@ -90,8 +91,12 @@ function roundContext(over: Partial<RoundContext> = {}) {
     keep: (files) => kept.push(...files),
     question: (ask, fallback, secret) => {
       questions.push({ ask, fallback, secret })
-      return { id: `q-${questions.length}`, answeredWith: secret ? null : fallback }
+      return {
+        id: `q-${questions.length}`,
+        answeredWith: secret === null ? fallback : null,
+      }
     },
+    cannot: (what) => void cannot.push(what),
     askCwl: async (brief) => {
       briefs.push(brief)
       return {
@@ -110,7 +115,17 @@ function roundContext(over: Partial<RoundContext> = {}) {
     ],
     ...over,
   }
-  return { context, did, kept, written, questions, briefs, commits, base: () => base }
+  return {
+    context,
+    did,
+    kept,
+    written,
+    questions,
+    cannot,
+    briefs,
+    commits,
+    base: () => base,
+  }
 }
 
 const tool = (kind: string) => leadMoves.find((t) => t.kind === kind)!
@@ -154,8 +169,10 @@ describe('the moves the lead may answer (Decision 2)', () => {
         kind: 'ask_cwl',
         brief: { whoGetsIn: 'a', youSee: 'b', studentsSee: 'c', namedEmails: [] },
       },
-      { kind: 'ask_person', ask: 'Late posts?', default: 'They count.', secret: false },
-      { kind: 'done', line: 'The pages are written.' },
+      { kind: 'ask_person', ask: 'Late posts?', default: 'They count.', secret: null },
+      { kind: 'ask_person', ask: 'Your SIS key?', default: null, secret: 'SIS_KEY' },
+      { kind: 'done', line: 'The pages are written.', cannot: null },
+      { kind: 'done', line: 'The rest is built.', cannot: 'the formatted text box' },
     ])
       expect(moves.safeParse({ move }).success).toBe(true)
   })
@@ -165,8 +182,13 @@ describe('the moves the lead may answer (Decision 2)', () => {
     const paths = Array.from({ length: 21 }, (_, i) => `f${i}.js`)
     expect(moves.safeParse({ move: { kind: 'read', paths } }).success).toBe(false)
     expect(
-      moves.safeParse({ move: { kind: 'done', line: 'x'.repeat(121) } }).success,
+      moves.safeParse({ move: { kind: 'done', line: 'x'.repeat(121), cannot: null } })
+        .success,
     ).toBe(false)
+    // Strict mode asks for every field (M1): a done that leaves out `cannot` is not a move.
+    expect(moves.safeParse({ move: { kind: 'done', line: 'Built.' } }).success).toBe(
+      false,
+    )
   })
 
   it("is the lead's own answer, and its root is an object (M1)", () => {
@@ -346,7 +368,7 @@ describe('ask_person', () => {
       {
         ask: 'Should a TA see everything you see?',
         default: "We've built it so only you can.",
-        secret: false,
+        secret: null,
       },
       r.context,
     )
@@ -354,7 +376,7 @@ describe('ask_person', () => {
       {
         ask: 'Should a TA see everything you see?',
         fallback: "We've built it so only you can.",
-        secret: false,
+        secret: null,
       },
     ])
     expect(result.report).toContain("We've built it so only you can.")
@@ -367,7 +389,7 @@ describe('ask_person', () => {
       (
         await runOf(
           'ask_person',
-          { ask: 'Is a late post still a post?', default: null, secret: false },
+          { ask: 'Is a late post still a post?', default: null, secret: null },
           r.context,
         )
       ).stop,
@@ -379,7 +401,7 @@ describe('ask_person', () => {
       (
         await runOf(
           'ask_person',
-          { ask: 'What is the SIS key?', default: null, secret: true },
+          { ask: 'What is the SIS key?', default: null, secret: 'SIS_KEY' },
           r.context,
         )
       ).stop,
@@ -387,6 +409,31 @@ describe('ask_person', () => {
       kind: 'paused',
       questionId: 'q-2',
     })
+    // The name the app reads it by is recorded with the question; the value never is.
+    expect(r.questions[1]).toEqual({
+      ask: 'What is the SIS key?',
+      fallback: null,
+      secret: 'SIS_KEY',
+    })
+  })
+
+  it("a secret's name is one the platform takes (upper case, digits and underscores), or the move is sent back", () => {
+    const { context } = roundContext()
+    for (const secret of ['sis key', 'SIS-KEY', '9LIVES', 'x'.repeat(129).toUpperCase()])
+      expect(
+        guardOf(
+          'ask_person',
+          { ask: 'What is the SIS key?', default: null, secret },
+          context,
+        ),
+      ).not.toBeNull()
+    expect(
+      guardOf(
+        'ask_person',
+        { ask: 'What is the SIS key?', default: null, secret: 'SIS_KEY' },
+        context,
+      ),
+    ).toBeNull()
   })
 
   it('is guarded: the question and its default are words the person reads', () => {
@@ -394,7 +441,7 @@ describe('ask_person', () => {
     expect(
       guardOf(
         'ask_person',
-        { ask: 'Should we deploy to the sandbox?', default: null, secret: false },
+        { ask: 'Should we deploy to the sandbox?', default: null, secret: null },
         context,
       ),
     ).not.toBeNull()
@@ -403,13 +450,33 @@ describe('ask_person', () => {
 
 describe('done', () => {
   it('ends the run with its line, guarded for plain words', async () => {
-    const { context } = roundContext()
+    const r = roundContext()
     expect(
-      await runOf('done', { line: 'The pages are written.' }, context),
+      await runOf('done', { line: 'The pages are written.', cannot: null }, r.context),
     ).toMatchObject({
       stop: { kind: 'done', line: 'The pages are written.' },
     })
-    expect(guardOf('done', { line: 'It works' }, context)).not.toBeNull()
+    expect(r.cannot).toEqual([])
+    expect(guardOf('done', { line: 'It works', cannot: null }, r.context)).not.toBeNull()
+  })
+
+  it('FE-32: what cannot be added is handed to the round in its plain words, guarded like the line', async () => {
+    const r = roundContext()
+    expect(
+      await runOf(
+        'done',
+        { line: 'The rest is built.', cannot: 'the formatted text box' },
+        r.context,
+      ),
+    ).toMatchObject({ stop: { kind: 'done', line: 'The rest is built.' } })
+    expect(r.cannot).toEqual(['the formatted text box'])
+    expect(
+      guardOf(
+        'done',
+        { line: 'The rest is built.', cannot: 'the npm package marked' },
+        r.context,
+      ),
+    ).not.toBeNull()
   })
 })
 

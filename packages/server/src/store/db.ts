@@ -13,10 +13,12 @@ import type {
 } from './conversations.js'
 
 export type {
+  AskedQuestion,
   Conversation,
   ConversationState,
   Problem,
   Run,
+  RunDetail,
   RunStatus,
   Store,
 } from './conversations.js'

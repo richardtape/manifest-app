@@ -261,6 +261,7 @@ function stage(
       conversation: { ...CONVERSATION, ...patch },
       intake: { ...NOTHING_YET, ...intake },
       plan: null,
+      round: null,
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))

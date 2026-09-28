@@ -39,11 +39,12 @@ export interface Work {
    * The work, from its first step: `next` ends one step and begins another. Its answer is the
    * state to move to, or none; a refusal halts the step it met, and is published with its
    * reference. Anything unexpected is ours, said as INTERNAL, with its stack to the output.
-   * The conversation stays where it was, so the person can carry on.
+   * The conversation stays where it was, so the person can carry on. A round of work (F3)
+   * passes no first step: its steps travel whole in its `RoundView`, never as step frames.
    */
   run(
     conversation: Conversation,
-    first: StepKey,
+    first: StepKey | null,
     work: (next: (key: StepKey) => void) => Promise<ConversationState | undefined>,
   ): void
   moveTo(conversation: Conversation, state: ConversationState): Conversation
@@ -54,8 +55,9 @@ const refuse = (reply: FastifyReply, status: number, code: string) =>
 
 export function createWork(hub: Hub, store: Store): Work {
   const working = new Set<string>()
-  const step = (id: string, key: StepKey, state: 'now' | 'done' | 'halted') =>
-    hub.publish(id, { kind: 'step', step: key, state })
+  const step = (id: string, key: StepKey | null, state: 'now' | 'done' | 'halted') => {
+    if (key !== null) hub.publish(id, { kind: 'step', step: key, state })
+  }
   const moveTo = (conversation: Conversation, state: ConversationState) => {
     const moved = store.setState(conversation.id, state)
     publishState(hub, store, moved)
@@ -102,7 +104,7 @@ export function createWork(hub: Hub, store: Store): Work {
             publishRefusal(hub, store, {
               conversation,
               code: known ? error.code : 'INTERNAL',
-              operation: `conversation ${current}`,
+              operation: `conversation ${current ?? 'round'}`,
               allowance: error instanceof Refused ? error.allowance : undefined,
             })
           },

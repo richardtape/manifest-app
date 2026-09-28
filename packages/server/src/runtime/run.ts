@@ -8,8 +8,8 @@ export type Stop =
   | { kind: 'done'; line: string }
   /** A question it cannot pass (OpenAI's interruption). */
   | { kind: 'paused'; questionId: string }
-  /** Decision 9's 40 moves in one step. */
-  | { kind: 'limit'; limit: 'moves' }
+  /** Decision 9's 40 moves in one step; or a condition the caller set (`stopWhen`). */
+  | { kind: 'limit'; limit: 'moves' | 'refusals' }
   /** The person's Stop. */
   | { kind: 'stopped' }
   /** A refusal nothing in the run can answer: the model's, or one a tool hands back. */
@@ -43,6 +43,11 @@ export interface RunOptions<Ctx, In> {
   /** After every move. */
   save: (state: RunState) => void
   trace: Trace
+  /**
+   * A stop condition of the caller's (Vercel's `stopWhen`), checked after each save: the round's
+   * third same refusal (Decision 7). A move's own stop wins over it.
+   */
+  stopWhen?: (state: RunState) => Stop | null
 }
 
 function sameRefusal(
@@ -62,7 +67,8 @@ function sameRefusal(
  * hands it back as its `stop`, or throws it for the round to say.
  */
 export async function run<Ctx, In>(options: RunOptions<Ctx, In>): Promise<Stop> {
-  const { agent, tools, context, view, model, maxMoves, stopped, save, trace } = options
+  const { agent, tools, context, view, model, maxMoves, stopped, save, trace, stopWhen } =
+    options
   let state = options.state
   for (;;) {
     if (stopped()) return { kind: 'stopped' }
@@ -106,5 +112,7 @@ export async function run<Ctx, In>(options: RunOptions<Ctx, In>): Promise<Stop> 
     }
     save(state)
     if (result.stop !== undefined) return result.stop
+    const stop = stopWhen?.(state) ?? null
+    if (stop !== null) return stop
   }
 }

@@ -38,8 +38,8 @@ export type LeadMove =
         namedEmails: string[]
       }
     }
-  | { kind: 'ask_person'; ask: string; default: string | null; secret: boolean }
-  | { kind: 'done'; line: string }
+  | { kind: 'ask_person'; ask: string; default: string | null; secret: string | null }
+  | { kind: 'done'; line: string; cannot: string | null }
 
 /**
  * DECISION 3's CAP: everything the lead is sent, instructions included, whatever model is

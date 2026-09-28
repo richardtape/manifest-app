@@ -114,7 +114,13 @@ const telling = defineAgent({
 
 function harness(
   model: Model,
-  options: { state?: RunState; maxMoves?: number; ctx?: Ctx; agent?: typeof lead } = {},
+  options: {
+    state?: RunState
+    maxMoves?: number
+    ctx?: Ctx
+    agent?: typeof lead
+    stopWhen?: (state: RunState) => Stop | null
+  } = {},
 ) {
   const ctx = options.ctx ?? context()
   const store = openStore(':memory:')
@@ -131,6 +137,7 @@ function harness(
     stopped: () => ctx.stop,
     save: (state) => saved.push(structuredClone(state)),
     trace,
+    ...(options.stopWhen === undefined ? {} : { stopWhen: options.stopWhen }),
   })
   return { ctx, saved, trace, result }
 }
@@ -228,6 +235,35 @@ describe('the same refusal (Decision 7)', () => {
       null,
       null,
     ])
+  })
+  it("a stopWhen the round adds (Vercel's stopWhen) ends the run after the save it names: the third same refusal as limit refusals", async () => {
+    const model = scripted({
+      lead: [
+        commit('a Dockerfile'),
+        commit('another Dockerfile'),
+        commit('a third Dockerfile'),
+        read('a.js'),
+      ],
+    })
+    const { ctx, saved, result } = harness(model, {
+      stopWhen: (state) =>
+        (state.sameRefusal?.count ?? 0) >= 3
+          ? { kind: 'limit', limit: 'refusals' }
+          : null,
+    })
+    expect(await result).toEqual({ kind: 'limit', limit: 'refusals' })
+    expect(saved).toHaveLength(3)
+    expect(saved[2]?.sameRefusal).toEqual({ reason: DOCKERFILE, count: 3 })
+    expect(ctx.did).toEqual([])
+    expect(model.calls).toHaveLength(3)
+  })
+
+  it('a move that stops the run itself wins over stopWhen', async () => {
+    const model = scripted({ lead: [done('Built.')] })
+    const { result } = harness(model, {
+      stopWhen: () => ({ kind: 'limit', limit: 'refusals' }),
+    })
+    expect(await result).toEqual({ kind: 'done', line: 'Built.' })
   })
 })
 
