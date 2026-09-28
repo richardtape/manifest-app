@@ -297,7 +297,11 @@ describe('Your apps, with an app (moment 16’s card)', () => {
     expect(draft?.querySelector('.mono')?.textContent).toBe(
       'mock-app.sandbox.manifest.internal',
     )
-    expect(draft?.textContent).toContain(words.facts.notLive)
+    // Since the platform's sitting 10 (manifest 18f3214, FE-27), the mock's sandbox runs too.
+    expect(draft?.querySelector('.mf-chip')?.className).toContain('mf-is-steady')
+    expect(draft?.textContent).toMatch(
+      /Answering · the version from 18 September, \d{1,2}:\d{2}(am|pm)/,
+    )
     expect(tryingOut?.textContent).toContain(words.yourApps.tryingOut)
     expect(tryingOut?.querySelector('.mono')?.textContent).toBe(
       'mock-app.staging.manifest.internal',

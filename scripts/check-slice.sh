@@ -109,10 +109,12 @@ if [ "$MODE" = mock ]; then
     echo "FAIL 6b /api/me's id '$our_id' is not /v1/me's '$platform_id'"
   fi
 
-  # 7. manifest-mock accepts ANY session value (FE-26), so a nonsense one cannot be refused
-  #    here. The server's identity.test.ts proves it against a fake that refuses, and edge
-  #    mode proves it against the platform.
-  skip 7 "a nonsense session: the mock accepts any session value (FE-26); run MODE=edge"
+  # 7. Since the platform's sitting 10 (manifest 18f3214, FE-26), the mock refuses a session it
+  #    did not issue, so a nonsense one is refused here as it is through the edge. The nonsense
+  #    session is the ONLY cookie sent: the jar is emptied first.
+  : > "$JAR"
+  get "$APP/api/me" -H 'cookie: manifest_session=nonsense'
+  check 7 "GET /api/me, a nonsense session" 401 '^{"error":{"code":"UNAUTHENTICATED"}}$'
 else
   skip "4-6" "signing in is a person typing a password at the IdP (Task 8, Step 4)"
   # The nonsense session is the ONLY cookie sent: the jar is emptied first (the final review).

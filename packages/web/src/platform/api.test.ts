@@ -84,7 +84,7 @@ describe('moments 3 and 4 (F2 Task 7), against manifest-mock', () => {
     await withMock(async (origin) => {
       const started = await platform(origin).startIntakeSession('describe-0001')
       expect(started.session.model).toBe('default-chat')
-      expect(started.key).toBe('sk-example-not-a-real-key')
+      expect(started.key).toBe(fixtures.MOCK_MODEL_KEY)
       expect(started.baseUrl).toBe('http://127.0.0.1:7106/v1')
       expect(
         (await platform(origin).endIntakeSession(started.session.id, 'end-0001')).state,
