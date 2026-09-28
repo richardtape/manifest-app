@@ -451,6 +451,30 @@ describe('the final review’s findings on the plan', () => {
     expect(s.called('agree')).toEqual([['c-1', { late: 'It closes.' }]])
   })
 
+  it('found on the real platform: an answer belongs to the question it was typed for, even when a correction asks another under the same id', async () => {
+    const s = stage()
+    await open(s)
+    s.state({ state: 'plan-ready' }, { version: 1, plan: PLAN })
+    fireEvent.change(screen.getByLabelText(PLAN.onlyYouKnow[0]!.ask), {
+      target: { value: 'It closes at the deadline.' },
+    })
+    const other = 'Do you need your TA to see everything, names and answers?'
+    s.state(
+      { state: 'plan-ready' },
+      {
+        version: 2,
+        plan: {
+          ...PLAN,
+          onlyYouKnow: [{ id: 'late', ask: other }, PLAN.onlyYouKnow[1]!],
+          changed: ['youSee'],
+        },
+      },
+    )
+    expect((screen.getByLabelText(other) as HTMLInputElement).value).toBe('')
+    await press(screen.getByRole('button', { name: words.plan.yes }))
+    expect(s.called('agree')).toEqual([['c-1', {}]])
+  })
+
   it('Important 9: a token is renewed once per failure, not once per page: after a step is done, a later refusal renews again', async () => {
     const s = stage()
     await open(s)

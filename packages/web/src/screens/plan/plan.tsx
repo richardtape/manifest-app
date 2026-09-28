@@ -19,6 +19,8 @@ import { handOverToken } from '../making/token.js'
 import { SupportReference } from '../reference.js'
 
 const ROWS: PlanRow[] = ['studentsSee', 'youSee', 'itKeeps', 'whoGetsIn', 'ai']
+/** An answer belongs to its question: its id and its words. */
+const answerKey = (q: { id: string; ask: string }) => `${q.id}\n${q.ask}`
 /** Our server has no token, or the platform refused it: a new one, once, without a word. */
 const RENEW = new Set(['TOKEN_MISSING', 'TOKEN_REFUSED'])
 
@@ -258,15 +260,14 @@ export function PlanScreen({
    * Their answers to what THIS plan asks, and nothing else: a correction can change the
    * questions, and our server refuses an answer to one it never asked (the final review).
    */
-  const given = () => {
-    const asked = new Set(plan?.plan.onlyYouKnow.map((q) => q.id) ?? [])
-    return Object.fromEntries(
-      Object.entries(answers)
-        .filter(([question]) => asked.has(question))
-        .map(([question, answer]) => [question, answer.trim()] as const)
+  // Found on the real platform: a correction can ask a new question under an old id, so an
+  // answer is kept by the question it was typed for, its id and its words together.
+  const given = () =>
+    Object.fromEntries(
+      (plan?.plan.onlyYouKnow ?? [])
+        .map((q) => [q.id, (answers[answerKey(q)] ?? '').trim()] as const)
         .filter(([, answer]) => answer !== ''),
     )
-  }
   const agreeIt = () => {
     const answered = given()
     void send('agree', () => ours.agree(id, answered), 'agree')
@@ -411,9 +412,12 @@ export function PlanScreen({
                 key={q.id}
                 id={`plan-answer-${q.id}`}
                 label={q.ask}
-                value={answers[q.id] ?? ''}
+                value={answers[answerKey(q)] ?? ''}
                 onChange={(e) =>
-                  setAnswers((current) => ({ ...current, [q.id]: e.target.value }))
+                  setAnswers((current) => ({
+                    ...current,
+                    [answerKey(q)]: e.target.value,
+                  }))
                 }
               />
             ))}
