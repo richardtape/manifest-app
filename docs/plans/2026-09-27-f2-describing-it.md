@@ -1563,7 +1563,8 @@ close-out.
 - **Against the mock, the project is always *"Mock course app"***, whatever name was chosen (FE-27), so that is the
   heading. The mock's agent session names another project and another name. The plan step reads neither.
 
-**Words worded here, where the walk-through gives none. Proposed, for Rich:**
+**Words worded here, where the walk-through gives none. Rich agreed them all (2026-09-27: *"words are
+fine"*):**
 - the step *"Saving the plan with your app"*;
 - *"Changed"*, on a row a correction changed;
 - *"One thing only you know"*, when the plan asks one;
@@ -1612,4 +1613,4 @@ close-out.
   server and the mock. **For sitting 6 to rule on.**
 - Rich's clicked half: moments 3–5 now click whole at `http://127.0.0.1:7105/new`.
 - The real platform (step 3) is Rich's and the platform session's to start.
-- The six proposed words wait on Rich.
+- The six words are Rich's (agreed after the sitting's close).

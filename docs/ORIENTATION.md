@@ -31,7 +31,7 @@ says which plan is current. This file states where things stand and the rules. I
     - Review Focus 4 (a double press, a retry) and 5 (a restart) are pinned by tests.
   - **Moments 3–5 click whole against the mock** at `http://127.0.0.1:7105/new`, walked in headless Chrome at
     1440 and 375 wide. Against the mock the project is always *"Mock course app"* (FE-27).
-  - **Six words proposed in sitting 5 wait on Rich** (the plan's *What executing this plan found*, sitting 5).
+  - The six words sitting 5 worded are Rich's (*"words are fine"*, 2026-09-27).
 - **Next: F2's sitting 6, Task 10, alone and last.**
   - The acceptance script against the mock, and Rich's clicked half.
   - Then the real platform, **which needs Rich and the platform session**.

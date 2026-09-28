@@ -128,7 +128,7 @@ export const words = {
     /** Moment 5's two, the walk-through's. */
     reading: 'Reading how apps like this are built',
     writing: 'Writing the plan',
-    /** Proposed (F2 sitting 5), for Rich: the agreed plan committed as docs/plan.md. */
+    /** Rich's (2026-09-27, F2 sitting 5): the agreed plan committed as docs/plan.md. */
     agreeing: 'Saving the plan with your app',
   },
   /** MOMENT 4, NAME IT (F2): the walk-through's words, with sitting 5's two things. */
@@ -191,7 +191,7 @@ export const words = {
   },
   /**
    * MOMENT 5, THE PLAN (F2 Task 9): the walk-through's words; Rich's for the allowance and
-   * for what the plan waits on (2026-09-27); and a few proposed in sitting 5, marked.
+   * for what the plan waits on, and for the few sitting 5 worded (2026-09-27), marked.
    */
   plan: {
     title: "Here's what we'd build",
@@ -203,10 +203,10 @@ export const words = {
       whoGetsIn: 'Who gets in',
       ai: 'AI',
     },
-    /** Proposed (sitting 5): a row a correction changed. */
+    /** Rich's (2026-09-27): a row a correction changed. */
     changed: 'Changed',
     assumedTitle: 'Things we assumed',
-    /** The walk-through's "Two things only you know"; the one-question form proposed (sitting 5). */
+    /** The walk-through's "Two things only you know"; the one-question form Rich's (2026-09-27). */
     onlyYouKnow: (count: number) =>
       count === 1 ? 'One thing only you know' : 'Two things only you know',
     yesTitle: 'Say yes and this happens',
@@ -214,7 +214,7 @@ export const words = {
       'We build it on your draft address, and you watch. You can leave; it keeps going.',
     yes: 'Yes, build that',
     notQuite: 'Not quite — let me correct it',
-    /** Proposed (sitting 5): the one sentence box. */
+    /** Rich's (2026-09-27): the one sentence box. */
     correctionLabel: 'In a sentence, what should change',
     /** Until F3 builds it: the plan's own words. */
     agreed: 'Agreed. Building it arrives next.',
@@ -228,7 +228,7 @@ export const words = {
     couldntWrite: "We couldn't write the plan just now. Nothing is lost.",
     /** The walk-through's: the plan came back malformed twice. */
     didntComeOut: "The plan didn't come out right. Try again. Nothing was built.",
-    /** Proposed (sitting 5): the agreed plan could not be committed. */
+    /** Rich's (2026-09-27): the agreed plan could not be committed. */
     couldntSave: "We couldn't save the plan with your app just now. Nothing is lost.",
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
