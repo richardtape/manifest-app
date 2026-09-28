@@ -40,7 +40,8 @@ export const words = {
     button: 'Sign in again',
   },
   unreachable: {
-    body: "We can't reach Manifest just now. Nothing of yours has changed.",
+    /** Moment 2's words, in full (the final review): when to try, as well as that they can. */
+    body: "We can't reach Manifest just now. Nothing of yours has changed. Try again in a minute.",
     button: 'Try again',
   },
   /** Review Focus 5: a refusal we do not name. Its code goes to the console, never here. */

@@ -35,7 +35,7 @@ const refused = (status: number, code: string) =>
 
 /** A platform whose reads answer as told; anything not told never settles. */
 function platform(
-  answers: Partial<{ [K in keyof Platform]: () => Promise<unknown> }>,
+  answers: Partial<{ [K in keyof Platform]: (...args: never[]) => Promise<unknown> }>,
 ): Platform {
   const never = () => new Promise<never>(() => undefined)
   return {
@@ -461,5 +461,162 @@ describe('focus follows an in-app navigation to the page (review, accessibility)
     })
     await screen.findByText(words.notFound.appPageNext)
     expect(document.activeElement).toBe(document.getElementById('main'))
+  })
+})
+
+describe('one app that cannot be read does not hide the others (review, deferred minor)', () => {
+  const second = {
+    ...fixtures.PROJECT,
+    id: '22222222-2222-4222-8222-000000000002',
+    slug: 'second-app',
+    name: 'Second app',
+  }
+  const two = (getProject: Platform['getProject'], getRelease?: Platform['getRelease']) =>
+    platform({
+      getMe: () => Promise.resolve(ME),
+      listProjects: () => Promise.resolve([fixtures.PROJECT, second]),
+      getProject,
+      getRelease: getRelease ?? (() => Promise.resolve(fixtures.RELEASE)),
+    })
+
+  it('the one that failed says it cannot tell; the other is drawn in full', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    render(
+      <App
+        platform={two((id) =>
+          id === second.id
+            ? Promise.reject(refused(500, 'INTERNAL'))
+            : Promise.resolve(fixtures.PROJECT_EXPANDED),
+        )}
+      />,
+    )
+    const failed = (await screen.findByRole('link', { name: 'Second app' })).closest(
+      '.mf-card',
+    )
+    expect(failed?.querySelector('.app-card__students')?.textContent).toContain(
+      words.facts.cantTell,
+    )
+    const whole = screen
+      .getByRole('link', { name: 'Mock course app' })
+      .closest('.mf-card')
+    expect(whole?.textContent).toContain('mock-app.staging.manifest.internal')
+    expect(screen.queryByText(words.refused.body)).toBeNull()
+    vi.restoreAllMocks()
+  })
+
+  it('a release that cannot be read is Answering, without its date', async () => {
+    render(
+      <App
+        platform={two(
+          () => Promise.resolve(fixtures.PROJECT_EXPANDED),
+          () => Promise.reject(refused(500, 'INTERNAL')),
+        )}
+      />,
+    )
+    const card = (
+      await screen.findAllByRole('link', { name: 'Mock course app' })
+    )[0]!.closest('.mf-card')
+    const tryingOut = [...card!.querySelectorAll('.app-card__address')][1]
+    expect(tryingOut?.querySelector('.mf-chip')?.textContent).toBe(words.facts.answering)
+  })
+
+  it('a 401 on any one of them is the session ending', async () => {
+    render(
+      <App
+        platform={two((id) =>
+          id === second.id
+            ? Promise.reject(refused(401, 'UNAUTHENTICATED'))
+            : Promise.resolve(fixtures.PROJECT_EXPANDED),
+        )}
+      />,
+    )
+    expect(await screen.findByText(words.expired.body)).toBeTruthy()
+  })
+
+  it('when every one fails to be reached, it is the page’s own notice', async () => {
+    render(<App platform={two(() => Promise.reject(new TypeError('fetch failed')))} />)
+    expect(await screen.findByText(words.unreachable.body)).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Second app' })).toBeNull()
+  })
+})
+
+describe('no machinery on EVERY screen and state (Decision 9; the final review)', () => {
+  const signedIn = {
+    getMe: () => Promise.resolve(ME),
+    listProjects: () => Promise.resolve([]),
+  }
+  const cases: [string, string, Parameters<typeof platform>[0], string][] = [
+    [
+      'sign-in',
+      '/',
+      { getMe: () => Promise.reject(refused(401, 'UNAUTHENTICATED')) },
+      words.signIn.title,
+    ],
+    [
+      'the session cannot be reached',
+      '/',
+      { getMe: () => Promise.reject(new TypeError('x')) },
+      words.unreachable.body,
+    ],
+    [
+      'the session is refused',
+      '/',
+      { getMe: () => Promise.reject(refused(500, 'INTERNAL')) },
+      words.refused.body,
+    ],
+    [
+      'a session that ends',
+      '/',
+      {
+        getMe: () => Promise.resolve(ME),
+        listProjects: () => Promise.reject(refused(401, 'UNAUTHENTICATED')),
+      },
+      words.expired.body,
+    ],
+    ['Your apps, empty', '/', signedIn, words.yourApps.empty],
+    [
+      'Your apps cannot be read',
+      '/',
+      {
+        getMe: () => Promise.resolve(ME),
+        listProjects: () => Promise.reject(new TypeError('x')),
+      },
+      words.unreachable.body,
+    ],
+    ['not found', '/nowhere', signedIn, words.notFound.body],
+    ['Describe, not built yet', '/new', signedIn, words.notFound.describingNext],
+    [
+      'an app’s page, not built yet',
+      '/apps/mock-app',
+      signedIn,
+      words.notFound.appPageNext,
+    ],
+    ['signed out, the fallback page', '/signed-out', signedIn, words.signOut.title],
+    ['the profile', '/profile', signedIn, words.profile.title],
+  ]
+  it.each(cases)('%s', async (_, path, answers, anchor) => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    window.history.pushState({}, '', path)
+    render(<App platform={platform(answers)} />)
+    expect((await screen.findAllByText(anchor)).length).toBeGreaterThan(0)
+    expect(machineryIn(wordsOnScreen())).toEqual([])
+    vi.restoreAllMocks()
+  })
+})
+
+describe('a failed sign-out’s notice does not follow them round (the final review)', () => {
+  it('is cleared when they move to another page', async () => {
+    vi.stubGlobal('fetch', async () => new Response('', { status: 500 }))
+    render(<App platform={mockPlatform()} />)
+    const rail = await screen.findByRole('navigation', { name: 'Manifest' })
+    await act(async () => {
+      fireEvent.click(within(rail).getByText('Sign out'))
+    })
+    expect(await screen.findByText(words.signOut.failed)).toBeTruthy()
+    await act(async () => {
+      fireEvent.click(within(rail).getByRole('link', { name: 'Instructor One' }))
+    })
+    await screen.findByRole('heading', { name: words.profile.title })
+    expect(screen.queryByText(words.signOut.failed)).toBeNull()
   })
 })

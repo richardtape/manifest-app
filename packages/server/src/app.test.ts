@@ -122,6 +122,15 @@ describe('everything else is the app', () => {
   )
 })
 
+describe('a malformed address (the final review)', () => {
+  it('reaches the app as its home page, whose router says there is nothing here; never an empty 404', async () => {
+    const { base, webSaw } = await serve(mock(await mockPlatform()))
+    const response = await fetch(`${base}/apps/%E0`)
+    expect(response.status).toBe(200)
+    expect(webSaw).toEqual(['/'])
+  })
+})
+
 describe('/v1 and /auth are never ours to answer', () => {
   it('in mock mode they reach manifest-mock, untouched', async () => {
     const { base, webSaw } = await serve(mock(await mockPlatform()))

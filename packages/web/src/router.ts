@@ -21,7 +21,14 @@ export function parse(pathname: string): Route {
   if (pathname === '/new') return { name: 'new' }
   if (pathname === '/profile') return { name: 'profile' }
   const app = /^\/apps\/([^/]+)$/.exec(pathname)
-  if (app?.[1] !== undefined) return { name: 'app', slug: decodeURIComponent(app[1]) }
+  if (app?.[1] !== undefined) {
+    // A malformed address is a page we do not have, never a crash (the final review).
+    try {
+      return { name: 'app', slug: decodeURIComponent(app[1]) }
+    } catch {
+      return { name: 'unknown' }
+    }
+  }
   return { name: 'unknown' }
 }
 

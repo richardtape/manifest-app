@@ -30,6 +30,8 @@ export function App({ platform }: { platform: Platform }) {
       return
     }
     document.getElementById('main')?.focus()
+    // A failed sign-out's notice belongs to the page it happened on (the final review).
+    setSignOutFailed(false)
   }, [here])
 
   // Each page names its tab, so a person with several open, or a screen reader, can tell
@@ -61,7 +63,10 @@ export function App({ platform }: { platform: Platform }) {
       </main>
     )
 
-  const leave = () => signOut().catch(() => setSignOutFailed(true))
+  const leave = () => {
+    setSignOutFailed(false)
+    return signOut().catch(() => setSignOutFailed(true))
+  }
   // SideNav's Sign out is the design system's <a> (its markup is held by the parity test),
   // and signing out is a POST. So its plain click is caught here; its href is /signed-out,
   // a page with a real button, so opening it in a new tab signs nobody out.

@@ -63,10 +63,16 @@ describe('signOut', () => {
       200,
       JSON.stringify({ redirectTo: 'http://idp.example/slo' }),
     ],
+    // A browser reads the backslash as a slash: this is `//evil.example`, another host.
+    ['a backslashed redirectTo', 200, JSON.stringify({ redirectTo: '/\\evil.example' })],
+    ['a tab-split redirectTo', 200, JSON.stringify({ redirectTo: '/\t/evil.example' })],
   ])('refuses %s, and goes nowhere', async (_, status, body) => {
     answering(status, body)
     const went: string[] = []
-    await expect(signOut((url) => went.push(url))).rejects.toThrow()
+    // On the origin it runs on in production, where `//x` resolves to `https://x`.
+    await expect(
+      signOut((url) => went.push(url), 'https://app.manifest.internal'),
+    ).rejects.toThrow()
     expect(went).toEqual([])
   })
 })

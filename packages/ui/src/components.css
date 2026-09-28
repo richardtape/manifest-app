@@ -987,3 +987,18 @@
     display: none;
   }
 }
+
+/* FOR A PERSON WHO ASKS FOR LESS MOTION (the final review). Motion means a machine is moving
+   (20-states.md), but a state never depends on it: a chip is a dot and a word, and a bar is
+   its fill and its words. So the infinite animations stop, and the bar's fill jumps rather
+   than slides. Last in the file: a media query adds no specificity, so it must follow
+   every rule it overrides. */
+@media (prefers-reduced-motion: reduce) {
+  .mf-pulse,
+  .mf-bar__fill--working {
+    animation: none;
+  }
+  .mf-bar__fill {
+    transition: none;
+  }
+}

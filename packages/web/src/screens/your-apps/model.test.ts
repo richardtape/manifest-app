@@ -1,7 +1,13 @@
 import type { Schemas } from '@manifest/contract'
 import { describe, expect, it } from 'vitest'
 import { machineryIn } from '../machinery.js'
-import { audienceWords, mine, studentsFact, versionWords } from './model.js'
+import {
+  audienceWords,
+  mine,
+  studentsFact,
+  unreadableCard,
+  versionWords,
+} from './model.js'
 
 const inst = (state: string) =>
   ({
@@ -109,4 +115,25 @@ describe('mine: an administrator sees their own (Review Focus 3, FE-10)', () => 
       'a',
       'b',
     ]))
+})
+
+describe('a card whose project could not be read (review, deferred minor)', () => {
+  it('keeps what the list told us, and says honestly that it cannot tell the rest', () => {
+    const project = {
+      id: 'p',
+      slug: 'reading-responses',
+      name: 'Reading responses',
+      audience: { scale: 'class', burst: 'synchronised' },
+    } as unknown as Schemas['Project']
+    const cantTell = { state: 'notyet', words: "We can't tell right now" }
+    expect(unreadableCard(project)).toEqual({
+      id: 'p',
+      slug: 'reading-responses',
+      name: 'Reading responses',
+      audience: 'one class, all arriving at once',
+      students: cantTell,
+      draft: { hostname: undefined, fact: cantTell },
+      tryingOut: { hostname: undefined, fact: cantTell },
+    })
+  })
 })

@@ -115,6 +115,8 @@ if [ "$MODE" = mock ]; then
   skip 7 "a nonsense session: the mock accepts any session value (FE-26); run MODE=edge"
 else
   skip "4-6" "signing in is a person typing a password at the IdP (Task 8, Step 4)"
+  # The nonsense session is the ONLY cookie sent: the jar is emptied first (the final review).
+  : > "$JAR"
   get "$APP/api/me" -H 'cookie: manifest_session=nonsense'
   check 7 "GET /api/me, a nonsense session" 401 '^{"error":{"code":"UNAUTHENTICATED"}}$'
 fi

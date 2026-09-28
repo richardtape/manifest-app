@@ -6,7 +6,14 @@ import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { words } from '../../words.js'
-import { appCard, mine, releasesToRead, type Address, type AppCard } from './model.js'
+import {
+  appCard,
+  mine,
+  releasesToRead,
+  unreadableCard,
+  type Address,
+  type AppCard,
+} from './model.js'
 
 type Loaded =
   | { state: 'loading' }
@@ -21,15 +28,40 @@ type Loaded =
  */
 async function read(platform: Platform, me: Schemas['Me']): Promise<AppCard[]> {
   const projects = mine(await platform.listProjects(), me)
-  const expanded = await Promise.all(projects.map((p) => platform.getProject(p.id)))
-  const releases = new Map(
-    await Promise.all(
-      releasesToRead(expanded).map(
-        async (id) => [id, await platform.getRelease(id)] as const,
-      ),
+  const read = await Promise.allSettled(projects.map((p) => platform.getProject(p.id)))
+  const releaseIds = releasesToRead(
+    read.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : [])),
+  )
+  const releases = await Promise.allSettled(
+    releaseIds.map((id) => platform.getRelease(id)),
+  )
+
+  // ONE APP THAT CANNOT BE READ DOES NOT HIDE THE OTHERS: its card says it cannot tell, and a
+  // release that cannot be read is Answering without its date. But a 401 anywhere is the
+  // session ending, and when nothing at all could be read, it is the page's own notice.
+  const failures = [...read, ...releases].flatMap((r) =>
+    r.status === 'rejected' ? [r.reason as unknown] : [],
+  )
+  const ended = failures.find((reason) => refusalOf(reason).kind === 'signed-out')
+  if (ended !== undefined) throw ended
+  if (projects.length > 0 && read.every((r) => r.status === 'rejected')) throw failures[0]
+  for (const reason of failures) {
+    const refusal = refusalOf(reason)
+    if (refusal.kind === 'refused')
+      console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+  }
+
+  const releaseById = new Map(
+    releases.flatMap((r) =>
+      r.status === 'fulfilled' ? [[r.value.id, r.value] as const] : [],
     ),
   )
-  return expanded.map((project) => appCard(project, releases))
+  return projects.map((project, i) => {
+    const r = read[i]
+    return r?.status === 'fulfilled'
+      ? appCard(r.value, releaseById)
+      : unreadableCard(project)
+  })
 }
 
 /** *YOUR APPS* (moments 2 and 16). */

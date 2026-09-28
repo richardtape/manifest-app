@@ -129,6 +129,24 @@ export function appCard(
   }
 }
 
+/**
+ * A card for an app whose project could not be read, when the others could: what the list
+ * told us (its name and audience), and "We can't tell right now" for every address, which is
+ * true, where "Not live yet" would not be.
+ */
+export function unreadableCard(project: Schemas['Project']): AppCard {
+  const cantTell: Fact = { state: 'notyet', words: f.cantTell }
+  return {
+    id: project.id,
+    slug: project.slug,
+    name: project.name ?? project.slug,
+    audience: audienceWords(project.audience),
+    students: cantTell,
+    draft: { hostname: undefined, fact: cantTell },
+    tryingOut: { hostname: undefined, fact: cantTell },
+  }
+}
+
 /** The releases worth a read: the ones an answering address reaches, each once. */
 export function releasesToRead(projects: Schemas['Project'][]): string[] {
   const ids = projects.flatMap((p) =>

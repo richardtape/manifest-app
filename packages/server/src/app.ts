@@ -19,6 +19,15 @@ function fastifyOwns(url: string | undefined): boolean {
   return FASTIFY.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
 }
 
+function decodable(url: string | undefined): boolean {
+  try {
+    decodeURI(url ?? '/')
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * ONE PROCESS ON 7105 (Decision 4; M4 chose Fastify's `serverFactory`). The factory's
  * handler is the front door: Fastify's paths to Fastify, everything else to the app. It is
@@ -27,9 +36,14 @@ function fastifyOwns(url: string | undefined): boolean {
 export function buildServer(config: Config, web: WebHandler): FastifyInstance {
   const app = Fastify({
     serverFactory: (handler) =>
-      createServer((request, response) =>
-        fastifyOwns(request.url) ? handler(request, response) : web(request, response),
-      ),
+      createServer((request, response) => {
+        if (fastifyOwns(request.url)) return handler(request, response)
+        // A path that cannot be decoded reaches the app as its home page, whose own router
+        // reads the address and says there is nothing here. Vite would answer it an empty
+        // 404: a blank page (the final review).
+        if (!decodable(request.url)) request.url = '/'
+        web(request, response)
+      }),
   })
 
   app.get('/api/me', async (request, reply) => {

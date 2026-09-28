@@ -22,6 +22,7 @@ export async function signOut(
   go: (url: string) => void = (url) => {
     window.location.href = url
   },
+  origin: string = globalThis.location?.origin ?? 'http://localhost',
 ): Promise<void> {
   const response = await fetch('/auth/logout', { method: 'POST' })
   if (response.status !== 200)
@@ -32,10 +33,25 @@ export async function signOut(
   } catch {
     redirectTo = undefined
   }
-  if (
-    typeof redirectTo !== 'string' ||
-    !(/^\/(?!\/)/.test(redirectTo) || redirectTo.startsWith('https://'))
-  )
+  if (typeof redirectTo !== 'string' || !safeDestination(redirectTo, origin))
     throw new Error('POST /auth/logout did not say where to go next')
   go(redirectTo)
+}
+
+/**
+ * Where a sign-out may send the page, parsed as the browser will parse it, not matched as
+ * text (the final review's deferred minor):
+ * - written as a path, it must land on THIS origin. `//evil.example`, `/\\evil.example` and a
+ *   tab-split `/\t/evil.example` all read as another host;
+ * - written out in full, it must be `https:`: the IdP's single logout.
+ */
+function safeDestination(redirectTo: string, origin: string): boolean {
+  let url: URL
+  try {
+    url = new URL(redirectTo, origin)
+  } catch {
+    return false
+  }
+  if (redirectTo.startsWith('/')) return url.origin === origin
+  return /^https:\/\//i.test(redirectTo) && url.protocol === 'https:'
 }

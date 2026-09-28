@@ -51,7 +51,7 @@ describe('SideNav, collapsible', () => {
     ])
   })
 
-  it('keeps each item’s accessible name: the label is still its text', () =>
+  it('keeps the label as the item’s text, so it stays its accessible name (styles.test.ts holds the CSS that hides it)', () =>
     expect([...nav.querySelectorAll('.mf-rail__item')].map((a) => a.textContent)).toEqual(
       ['Your apps', 'Start something new', 'Overview'],
     ))
