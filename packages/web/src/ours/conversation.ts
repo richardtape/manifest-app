@@ -4,6 +4,8 @@ import type {
   Intake,
   PlanView,
   Progress,
+  RoundView,
+  Said,
   StepKey,
 } from '@manifest-app/server/progress'
 import { useEffect, useState } from 'react'
@@ -17,6 +19,10 @@ export interface ConversationView {
   intake?: Intake
   /** Moment 5: the latest plan and its version, once one is written. */
   plan?: { version: number; plan: PlanView } | null
+  /** Moment 6 (F3): the latest round of work, whole, once the plan is agreed. */
+  round?: RoundView | null
+  /** What every round said, oldest first. */
+  thread?: Said[]
   /** Each step at its latest, in the order they began. */
   steps: Step[]
   /** Our code, and the reference the person may quote (Decision 11); whose allowance, if spent. */
@@ -38,6 +44,8 @@ function apply(view: ConversationView, frame: Progress): ConversationView {
         conversation: frame.conversation,
         intake: frame.intake,
         plan: frame.plan,
+        round: frame.round,
+        thread: frame.thread,
         status: 'live',
       }
     case 'step': {

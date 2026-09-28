@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import type { Conversation, Intake, Progress } from '@manifest-app/server/progress'
+import type {
+  Conversation,
+  Intake,
+  Progress,
+  RoundView,
+  Said,
+} from '@manifest-app/server/progress'
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { StreamSource } from './api.js'
@@ -75,6 +81,7 @@ const state = (
   intake,
   plan,
   round: null,
+  thread: [],
 })
 
 beforeEach(() => {
@@ -94,6 +101,8 @@ describe('useConversation', () => {
       conversation: CONVERSATION,
       intake: NOTHING_YET,
       plan: null,
+      round: null,
+      thread: [],
       steps: [],
       status: 'live',
     })
@@ -126,6 +135,39 @@ describe('useConversation', () => {
     })
   })
 
+  it('keeps the round the state carries, and what the rounds said (F3 Task 11)', () => {
+    const round: RoundView = {
+      round: 1,
+      status: 'working',
+      line: 'Writing the page students post on.',
+      messageWaiting: true,
+      steps: [
+        { key: 'pages', state: 'now', tries: 0, note: null, changed: null, exact: null },
+      ],
+      needs: null,
+      reference: null,
+      questions: [],
+      draft: null,
+      cost: { conversationUsd: 0.4, monthLeftUsd: 9.6, resetsAt: null },
+    }
+    const thread: Said[] = [
+      {
+        kind: 'message',
+        round: 1,
+        text: 'Also add a word count.',
+        at: '2026-09-28T16:12:00Z',
+      },
+    ]
+    const { result } = renderHook(() => useConversation('c-1', open))
+    last().send({ ...state({ state: 'building' }), round, thread } as Progress)
+    expect(result.current.round).toEqual(round)
+    expect(result.current.thread).toEqual(thread)
+    // The next state is the whole again: a round gone from it is gone from the page.
+    last().send(state({ state: 'building' }))
+    expect(result.current.round).toBeNull()
+    expect(result.current.thread).toEqual([])
+  })
+
   it('keeps each step at its latest, in the order they began, and the refusal with its reference', () => {
     const { result } = renderHook(() => useConversation('c-1', open))
     last().send(state())
@@ -138,6 +180,8 @@ describe('useConversation', () => {
       conversation: { ...CONVERSATION, state: 'naming' },
       intake: NOTHING_YET,
       plan: null,
+      round: null,
+      thread: [],
       steps: [
         { step: 'understanding', state: 'done' },
         { step: 'naming', state: 'now' },

@@ -391,17 +391,6 @@ export function PlanScreen({
     </Card>
   )
 
-  if (state === 'agreed')
-    return (
-      <div className="plan-wait">
-        <h1 className="page-title">{name}</h1>
-        <p className="body-lead" role="status">
-          {words.plan.agreed}
-        </p>
-        {rows}
-      </div>
-    )
-
   const saving = pressed || working('agreeing')
   return (
     <div className="plan">

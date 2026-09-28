@@ -46,6 +46,8 @@ export interface FormFieldProps {
   message?: FieldMessage
   /** Near a limit: how much is typed (ours; not in the reference). */
   count?: { text: string; over: boolean }
+  /** A secret the app needs (ours, F3 Task 11): never shown as typed, never kept by the browser. */
+  secret?: boolean
   className?: string
 }
 
@@ -98,7 +100,8 @@ export function FormField(props: FormFieldProps) {
       {props.hint ? <p className="mf-field__hint">{props.hint}</p> : null}
       <input
         id={id}
-        type="text"
+        type={props.secret ? 'password' : 'text'}
+        autoComplete={props.secret ? 'off' : undefined}
         className={cx('mf-field__input', props.mono && 'mf-field__input--mono')}
         value={props.value}
         onChange={props.onChange}

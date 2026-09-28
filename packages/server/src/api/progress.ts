@@ -177,6 +177,34 @@ export interface RoundView {
   }
 }
 
+/**
+ * WHAT A ROUND SAID IN THE CONVERSATION (F3 Task 11), as the page draws it, oldest first, each
+ * with its time: theirs (`message`, `answer`) and ours. Folded from the store with every state
+ * frame, as the round is.
+ */
+export type Said =
+  | { kind: 'message'; round: number; text: string; at: string }
+  /** Their answer, with the question it answers; a secret's `text` is always null. */
+  | { kind: 'answer'; round: number; ask: string; text: string | null; at: string }
+  /** The explaining agent's one sentence (Decision 8). */
+  | {
+      kind: 'explained'
+      round: number
+      step: 'build' | 'draft'
+      sentence: string
+      at: string
+    }
+  /** Decision 4: we are working with a smaller model; once a round. */
+  | { kind: 'fallback'; round: number; at: string }
+  /** A round, folded into one line (Decision 16): what changed, in the lead's own accounts. */
+  | {
+      kind: 'built'
+      round: number
+      changed: string | null
+      cannot: string | null
+      at: string
+    }
+
 export type StepKey =
   | 'understanding'
   | 'naming'
@@ -200,6 +228,8 @@ export type Progress =
       plan: { version: number; plan: PlanView } | null
       /** The latest round of work (F3): null until the plan is agreed. */
       round: RoundView | null
+      /** What every round said, oldest first (F3 Task 11): empty until one speaks. */
+      thread: Said[]
     }
   /** A step, by its key, ticking on real completion. */
   | { kind: 'step'; step: StepKey; state: 'now' | 'done' | 'halted' }

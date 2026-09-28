@@ -174,6 +174,7 @@ describe('GET /api/conversations/:id/events', () => {
       intake: NOTHING_YET,
       plan: null,
       round: null,
+      thread: [],
     })
   })
 
@@ -202,6 +203,7 @@ describe('GET /api/conversations/:id/events', () => {
           intake: NOTHING_YET,
           plan: null,
           round: null,
+          thread: [],
         },
       ])
     }
@@ -333,6 +335,7 @@ describe('Review Focus 5, the stream’s half: our server restarts', () => {
       intake: NOTHING_YET,
       plan: null,
       round: null,
+      thread: [],
     })
   })
 })

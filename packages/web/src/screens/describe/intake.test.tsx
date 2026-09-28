@@ -242,6 +242,10 @@ function stage(
     plan: record('plan') as Ours['plan'],
     correct: record('correct') as Ours['correct'],
     agree: record('agree') as Ours['agree'],
+    build: record('build') as Ours['build'],
+    message: record('message') as Ours['message'],
+    answer: record('answer') as Ours['answer'],
+    stop: record('stop') as Ours['stop'],
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -262,6 +266,7 @@ function stage(
       intake: { ...NOTHING_YET, ...intake },
       plan: null,
       round: null,
+      thread: [],
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))

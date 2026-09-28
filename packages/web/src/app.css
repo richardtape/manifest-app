@@ -509,7 +509,160 @@
   margin-top: var(--space-4);
 }
 
+/*
+ * Moment 6, layout C (Rich): the conversation on the left, the work on the right, which stays
+ * in view however long the conversation grows. The work comes first in the page, so on a
+ * phone the state, what it needs of them and Stop are seen first, and focus never jumps back.
+ */
+.building {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.building__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  grid-template-areas: 'talk work';
+  gap: var(--space-8);
+  align-items: start;
+}
+.building__talk {
+  grid-area: talk;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  max-width: 720px;
+}
+.building__work {
+  grid-area: work;
+  position: sticky;
+  top: var(--space-6);
+  max-height: calc(100vh - 2 * var(--space-6));
+  overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+.building__state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.building__needs:empty {
+  display: none;
+}
+.building__quiet,
+.building__leave,
+.building__cost {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-subtle);
+}
+.building__leave {
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+.building__changed {
+  margin: 0 0 var(--space-2);
+}
+.building__draft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.building__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+.building__draft .mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.building__stop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+}
+.building__message {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+/* The conversation: theirs marked "You" in words, ours in the product's voice. */
+.thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.said {
+  max-width: 88%;
+  box-sizing: border-box;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-wrap: anywhere;
+}
+.said--theirs {
+  align-self: flex-end;
+  background: var(--brand-tint);
+}
+.said--ours {
+  align-self: flex-start;
+  background: var(--surface-sunken);
+}
+.said__who {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+.said__ask {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+.said__text {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
 @media (max-width: 959px) {
+  .building__columns {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'work'
+      'talk';
+    gap: var(--space-6);
+  }
+  .building__work {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+  .said {
+    max-width: 100%;
+  }
   .describe {
     flex-direction: column;
   }

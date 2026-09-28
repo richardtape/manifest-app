@@ -8,10 +8,11 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
+import { BuildingScreen } from '../building/building.js'
 import { NameIt } from '../name-it/name-it.js'
 import { PlanScreen } from '../plan/plan.js'
 import { countOf, countProp, LIMITS, tooLong } from '../limits.js'
-import { SupportReference } from '../reference.js'
+import { SupportReference, useReported } from '../reference.js'
 import { rememberIntakeSession } from './memory.js'
 import { intakeRefused } from './model.js'
 
@@ -393,10 +394,7 @@ export function Describing({
 
   // Made, and its token ours: Making it's three lines, then the plan (moments 4's end and 5).
   if (
-    (state === 'making' ||
-      state === 'planning' ||
-      state === 'plan-ready' ||
-      state === 'agreed') &&
+    (state === 'making' || state === 'planning' || state === 'plan-ready') &&
     view.conversation !== undefined &&
     intake !== undefined
   )
@@ -416,8 +414,33 @@ export function Describing({
       />
     )
 
-  if (state !== undefined && state !== 'describing')
-    return <p className="body-lead">{words.refused.body}</p>
+  // Agreed, and the round started at once (F3 Decision 11): moment 6, layout C.
+  if (
+    (state === 'agreed' ||
+      state === 'building' ||
+      state === 'paused' ||
+      state === 'built') &&
+    view.conversation !== undefined &&
+    intake !== undefined
+  )
+    return (
+      <BuildingScreen
+        key={view.conversation.id}
+        platform={platform}
+        ours={ours}
+        conversation={view.conversation}
+        intake={intake}
+        round={view.round ?? null}
+        thread={view.thread ?? []}
+        connecting={view.status === 'connecting'}
+        expire={expire}
+        now={now}
+        timeZone={timeZone}
+      />
+    )
+
+  // A state no screen draws: said, with a reference (F3 Decision 12), never a bare sentence.
+  if (state !== undefined && state !== 'describing') return <Undrawn state={state} />
 
   // THEIR WORDS: typed here, or, once sent, theirs as they wrote them.
   const theirs = view.conversation?.description ?? text
@@ -464,6 +487,26 @@ export function Describing({
       </div>
       <Card title={words.describe.asideTitle} className="describe__aside">
         <p className="body-lead">{words.describe.aside}</p>
+      </Card>
+    </div>
+  )
+}
+
+/**
+ * A CONVERSATION IN A STATE NO SCREEN DRAWS (F3 Decision 12, F2's deferred Minor): our generic
+ * words, with a reference reported once. The state is the report's operation, camel-cased, since
+ * our server refuses one with a hyphen (and a refused report leaves a reference nobody can find).
+ */
+function Undrawn({ state }: { state: string }) {
+  const reference = useReported({
+    code: 'STATE_NOT_DRAWN',
+    operation: state.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase()),
+  })
+  return (
+    <div role="alert">
+      <Card tone="attention">
+        <p className="body-lead">{words.refused.body}</p>
+        <SupportReference reference={reference} />
       </Card>
     </div>
   )

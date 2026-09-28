@@ -150,6 +150,17 @@ export interface Ours {
     id: string,
     agreement: { version: number; answers: Record<string, string> },
   ): Promise<void>
+  /**
+   * MOMENT 6 (F3 Task 11): Carry on and Try again are `{}`; Try a different way is
+   * `{ way: 'different' }`. Our server refuses TOKEN_MISSING when a restart forgot the token.
+   */
+  build(id: string, way?: 'different'): Promise<void>
+  /** Their words while it works: the lead reads them at its next step. */
+  message(id: string, words: string): Promise<void>
+  /** An answer, kept as they typed it: a secret's goes to their app alone. */
+  answer(id: string, questionId: string, words: string): Promise<void>
+  /** Stop: whatever the draft address has, it keeps. */
+  stop(id: string): Promise<void>
   events(id: string): StreamSource
 }
 
@@ -189,6 +200,18 @@ export function createOurs(): Ours {
         projectId: made.projectId,
         token: made.token,
       })
+    },
+    build: async (id, way) => {
+      await call('POST', at(id, '/build'), way === undefined ? {} : { way })
+    },
+    message: async (id, words) => {
+      await call('POST', at(id, '/messages'), { words })
+    },
+    answer: async (id, questionId, words) => {
+      await call('POST', at(id, '/answers'), { questionId, words })
+    },
+    stop: async (id) => {
+      await call('POST', at(id, '/stop'), {})
     },
     events: conversationEvents,
   }

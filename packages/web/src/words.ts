@@ -222,8 +222,6 @@ export const words = {
     notQuite: 'Not quite — let me correct it',
     /** Rich's (2026-09-27): the one sentence box. */
     correctionLabel: 'In a sentence, what should change',
-    /** Until F3 builds it: the plan's own words. */
-    agreed: 'Agreed. Building it arrives next.',
     /** Rich's (after F2 sitting 1): whose allowance, and when it resets, in their own time. */
     allowanceUsed: (amount: string, when: string) =>
       `You've used your ${amount} AI allowance for this month. It resets at ${when}. Nothing is lost; this plan will be here.`,
@@ -238,6 +236,152 @@ export const words = {
     couldntSave: "We couldn't save the plan with your app just now. Nothing is lost.",
     /** A window behind said yes to a plan corrected in another (a deferred Minor). */
     changedElsewhere: 'The plan changed in another window. Read it again, then say yes.',
+  },
+  /**
+   * MOMENT 6, WATCHING IT GET BUILT (F3 Task 11): the walk-through's words, and Rich's; ours
+   * where neither has any, marked "ours".
+   */
+  building: {
+    /** The five steps (Decision 5), each ticking on its own signal. */
+    steps: {
+      pages: 'Writing the pages',
+      holds: 'Checking it holds together',
+      build: 'Building it',
+      draft: 'Putting it on your draft address',
+      answers: 'Checking it answers',
+    },
+    /** "Building it (second try)": the failures so far. Three tries, then it asks. */
+    tries: (failures: number) =>
+      failures >= 2 ? ' (third try)' : failures === 1 ? ' (second try)' : '',
+    /** The state chip: one of the five states, named. */
+    chip: {
+      /** The design system's own example of a working label. */
+      working: 'Working, a few minutes',
+      paused: 'Paused, waiting for you',
+      needsYou: 'Needs you',
+      /** Ours: stopped by them, and still. */
+      stopped: 'Stopped',
+      /** Ours: the round is done. */
+      built: 'Built',
+      /** Ours: every wait names its owner. */
+      waitingOn: {
+        platform: 'Waiting on Manifest',
+        model: 'Waiting on the model we build with',
+        admin: 'Waiting on a Manifest administrator',
+      },
+    },
+    /** Rich's (option A, 2026-09-28): only what is true; F6 adds email. */
+    leave:
+      'A few minutes. You can leave: it keeps going, and this page shows where it got to when you come back.',
+    /** Never "It works" (FE-3). */
+    startedAndAnswered: 'It started and answered.',
+    /** A message of theirs waits for the lead. */
+    gotIt: 'Got it, after this step.',
+    /** Decision 4 (Rich: carry on, and say so), once a round. */
+    fallback:
+      "Our usual model can't be reached just now, so we're carrying on with a smaller one. It may take a few more tries.",
+    whatChanged: 'What changed',
+    exactChanges: 'The exact changes, for whoever you ask for help',
+    exactWords: 'The exact words, for whoever you ask for help',
+    draftAddress: 'Your draft address',
+    /** Two facts, never one (TwoFacts): while a draft attempt fails. */
+    facts: {
+      serving: 'Serving right now',
+      servingLastGood: 'The last version that worked',
+      servingNothing: 'Nothing yet',
+      attempt: 'The last attempt',
+      /** The design system's word for an instance that failed (10-language.md). */
+      attemptFailed: 'It never answered',
+    },
+    /** "$0.40 so far · $9.60 left this month", or either alone. */
+    cost: (soFar: string | null, left: string | null) =>
+      [
+        soFar === null ? null : `${soFar} so far`,
+        left === null ? null : `${left} left this month`,
+      ]
+        .filter((part) => part !== null)
+        .join(' · '),
+    stop: 'Stop',
+    stopNote: 'Nothing is lost. Your draft address keeps whatever was last put there.',
+    stopHere: 'Stop here',
+    carryOn: 'Carry on',
+    tryDifferent: 'Try a different way',
+    tryAgain: 'Try again',
+    /** One card for each thing a round needs of them. */
+    needs: {
+      tries: (step: 'build' | 'draft', servingBefore: boolean) =>
+        `${
+          step === 'build'
+            ? "We couldn't get it to build after three tries."
+            : /* ours: the walk-through's "the same three tries", for the draft */
+              "We couldn't get it to answer on your draft address after three tries."
+        } Nothing is broken: ${
+          servingBefore
+            ? 'your draft address still has the last version that worked.'
+            : 'your draft address is still empty.'
+        }`,
+      checkpoint: (cap: string, monthLeft: string | null) =>
+        `This piece of work has used what we allow in one go. Carry on? It can use up to ${cap} more${
+          monthLeft === null ? '' : ` of the ${monthLeft} you have this month`
+        }.`,
+      /** In their own time: the month resets at the first, 00:00 UTC. */
+      month: (when: string) =>
+        `Your AI allowance for this month is used up, part-way through. What's done is kept. It comes back at ${when}.`,
+      conflict: 'Someone else changed the app while we worked. Nothing of yours is lost.',
+      moves: 'This is taking longer than it should. Nothing is lost.',
+      unreachable: {
+        platform: "We can't reach Manifest just now. Nothing is lost.",
+        model: "We can't reach the model we build with just now. Nothing is lost.",
+      },
+      /** FE-32: `what` is the lead's own plain words. */
+      cannot: (what: string) =>
+        `We can't add ${what} yet: it needs a piece we can't install. Everything else is built.`,
+      /** Ours, after Rich's for the plan: the model is not ours to switch on. */
+      waitingOnAdmin: 'Building is waiting on a Manifest administrator. Nothing is lost.',
+      /** Ours: after Stop. */
+      stopped:
+        'Stopped. Nothing is lost: your draft address keeps whatever was last put there.',
+      /** Ours: our server restarted while it worked (Review Focus 3). */
+      interrupted:
+        'We were interrupted part-way through. Nothing is lost: carry on, and we pick up where we were.',
+    },
+    question: {
+      /** A question the work cannot go past. */
+      waiting: 'It is waiting, not failing.',
+      /** Ours: a question with our default, which the work goes on with. */
+      meanwhile: (fallback: string) => `Until you say: ${fallback}`,
+      answer: 'Answer',
+      /** Ours: a secret the app needs. */
+      secretHint: 'We set it where your app reads it, and never show it again.',
+      /** The platform refuses a value under 6 characters (M1): said before it is sent. */
+      secretShort: 'At least 6 characters.',
+    },
+    thread: {
+      /** Ours: the two halves of layout C, named for a screen reader. */
+      label: 'The conversation',
+      /** Ours: their words from moment 3, at the top. */
+      asked: 'What you asked for',
+      /** Ours: whose words, never by colour alone. */
+      you: 'You',
+      /** Ours: a secret they gave, never echoed. */
+      secretGiven: 'Given. We set it where your app reads it, and never show it.',
+      /** An earlier round, folded: "Built and put on your draft address · 28 Sep, 9:12am". */
+      built: (when: string) => `Built and put on your draft address · ${when}`,
+      messageLabel: 'Add a message',
+      /** The lead reads it at its next step. */
+      messageHint: 'We read it at the next step.',
+      send: 'Send',
+      /** Decision 16: a change is F4's moment 8. */
+      changeNext: 'Asking for a change arrives next.',
+    },
+    /** Ours: quietly, while the page's stream reopens. */
+    reconnecting: 'Reconnecting…',
+    /** Ours: the other half of layout C. */
+    workLabel: 'The work',
+    /** Ours: Carry on just after Stop, while the stopped work finishes (409 CONVERSATION_BUSY). */
+    busy: "We're still finishing what we were doing. Try again in a moment.",
+    /** Ours: a press our server did not take. */
+    couldntPress: "We couldn't do that just now. Nothing is lost.",
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
   /** How much we read at once, near and past a limit (F2's deferred Minor, Rich: say it). */

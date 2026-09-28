@@ -67,3 +67,35 @@ describe('FormField, with a count', () => {
     )
   })
 })
+
+/**
+ * OUR SECOND EXTENSION (F3 Task 11): a field for a secret the app needs, such as a key. Its
+ * value is never shown as it is typed, and the browser neither offers nor keeps it.
+ */
+describe('FormField, for a secret', () => {
+  it('is a password input the browser does not fill in', () => {
+    const input = dom(
+      React.createElement(FormField, {
+        id: 's',
+        label: 'The key the app uses',
+        value: 'abcdef',
+        onChange: () => undefined,
+        secret: true,
+      }),
+    ).querySelector('input')!
+    expect(input.type).toBe('password')
+    expect(input.getAttribute('autocomplete')).toBe('off')
+  })
+
+  it('without it, a text input, as the reference draws it', () => {
+    const input = dom(
+      React.createElement(FormField, {
+        id: 't',
+        label: 'Why?',
+        onChange: () => undefined,
+      }),
+    ).querySelector('input')!
+    expect(input.type).toBe('text')
+    expect(input.hasAttribute('autocomplete')).toBe(false)
+  })
+})

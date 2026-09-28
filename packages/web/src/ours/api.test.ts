@@ -180,6 +180,37 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
       '/api/conversations/c-1/plan/agree',
       { version: 2, answers: { late: 'Closed.' } },
     ],
+    // F3 Task 11: moment 6's four, as api/build.ts reads them.
+    [
+      'build (Carry on, Try again)',
+      (o: ReturnType<typeof createOurs>) => o.build('c-1'),
+      '/api/conversations/c-1/build',
+      {},
+    ],
+    [
+      'build (Try a different way)',
+      (o: ReturnType<typeof createOurs>) => o.build('c-1', 'different'),
+      '/api/conversations/c-1/build',
+      { way: 'different' },
+    ],
+    [
+      'message',
+      (o: ReturnType<typeof createOurs>) => o.message('c-1', 'Also add a word count.'),
+      '/api/conversations/c-1/messages',
+      { words: 'Also add a word count.' },
+    ],
+    [
+      'answer',
+      (o: ReturnType<typeof createOurs>) => o.answer('c-1', 'q-1', '  kept as typed '),
+      '/api/conversations/c-1/answers',
+      { questionId: 'q-1', words: '  kept as typed ' },
+    ],
+    [
+      'stop',
+      (o: ReturnType<typeof createOurs>) => o.stop('c-1'),
+      '/api/conversations/c-1/stop',
+      {},
+    ],
   ] as const)('%s posts to its route', async (_, call, url, body) => {
     const fetch = answer(202)
     vi.stubGlobal('fetch', fetch)

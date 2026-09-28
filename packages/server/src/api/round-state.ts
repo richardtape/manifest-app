@@ -1,5 +1,5 @@
 import type { Run, RunDetail, Store } from '../store/db.js'
-import type { BuildStep, RoundView } from './progress.js'
+import type { BuildStep, RoundView, Said } from './progress.js'
 
 /**
  * THE ROUND, FROM WHAT WAS SAVED (F3 Task 8), as `intake-state.ts` folds the intake: the
@@ -125,4 +125,51 @@ export function roundOf(store: Store, conversationId: string): RoundView | null 
     draft: detail.draft,
     cost: detail.cost,
   }
+}
+
+/**
+ * WHAT EVERY ROUND SAID, OLDEST FIRST (F3 Task 11): each message a round kept, as the page draws
+ * it. An answer carries its question; a folded round carries what changed, from its run.
+ */
+export function threadOf(store: Store, conversationId: string): Said[] {
+  const runs = new Map(store.listRuns(conversationId).map((run) => [run.round, run]))
+  const thread: Said[] = []
+  for (const { body, at } of store.listMessages(conversationId)) {
+    const said = body as RoundSaid
+    switch (said.kind) {
+      case 'message':
+        thread.push({ kind: 'message', round: said.round, text: said.text, at })
+        break
+      case 'answer':
+        thread.push({
+          kind: 'answer',
+          round: said.round,
+          ask: store.getQuestion(said.questionId)?.ask ?? '',
+          text: said.text,
+          at,
+        })
+        break
+      case 'explained':
+        thread.push({
+          kind: 'explained',
+          round: said.round,
+          step: said.step,
+          sentence: said.sentence,
+          at,
+        })
+        break
+      case 'fallback':
+        thread.push({ kind: 'fallback', round: said.round, at })
+        break
+      case 'built':
+        thread.push({
+          kind: 'built',
+          round: said.round,
+          changed: runs.get(said.round)?.detail?.steps.pages?.changed ?? null,
+          cannot: said.cannot,
+          at,
+        })
+    }
+  }
+  return thread
 }

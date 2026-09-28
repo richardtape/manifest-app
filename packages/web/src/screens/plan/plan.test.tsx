@@ -144,6 +144,10 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     plan: record('plan') as Ours['plan'],
     correct: record('correct') as Ours['correct'],
     agree: record('agree') as Ours['agree'],
+    build: record('build') as Ours['build'],
+    message: record('message') as Ours['message'],
+    answer: record('answer') as Ours['answer'],
+    stop: record('stop') as Ours['stop'],
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -166,6 +170,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
       intake: INTAKE,
       plan,
       round: null,
+      thread: [],
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))
@@ -375,7 +380,7 @@ describe('the plan (moment 5)', () => {
     expect(s.called('agree')).toEqual([])
   })
 
-  it('Yes, build that: their answers go with it; saving, then agreed', async () => {
+  it('Yes, build that: their answers go with it; saving, then agreed, which is the building screen (F3)', async () => {
     const s = stage()
     await planReady(s)
     fireEvent.change(screen.getByLabelText(PLAN.onlyYouKnow[0]!.ask), {
@@ -390,7 +395,9 @@ describe('the plan (moment 5)', () => {
     expect(screen.queryByRole('button', { name: words.plan.yes })).toBeNull()
     s.say({ kind: 'step', step: 'agreeing', state: 'done' })
     s.state({ state: 'agreed' }, { version: 1, plan: PLAN })
-    expect(screen.getByText(words.plan.agreed)).toBeTruthy()
+    // The round starts at once (F3 Decision 11): its steps, and no "arrives next".
+    expect(screen.getByText(words.building.steps.pages)).toBeTruthy()
+    expect(screen.queryByText(/arrives next/)).toBeNull()
   })
 
   it('a commit refused: said, with its reference, and Try again sends the same answers', async () => {
