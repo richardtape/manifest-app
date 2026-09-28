@@ -26,7 +26,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **After the enablement plan, first** | **FE-6**, **FE-25** | The launch path: the three clocks' drafts and state, the staging registration as a tracked object, and an owner's *"please sign this off"* | **The first of the front-end's asks** |
 | **Then** | **FE-19**–**FE-22**, **FE-7**, **FE-3** | Toolkits, integrations, Qdrant, course material; events after a cursor; the sandbox's pretend people (with FE-24's plan) | ordered after the launch path |
 | **Phase 4, as specified** | **FE-4** | Noticing a live app that died | **Phase 4's reconciler (D10)**; the front-end watches meanwhile |
-| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30**, **FE-31** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log; a test fixture offered by `listBlueprints` | **Rich's to carry**. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits; FE-31 was met on the real platform (2026-09-28). None blocks the platform's sitting 8 |
+| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30**, **FE-31**, **FE-32** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log; a test fixture offered by `listBlueprints`; a way for an agent to get a `package-lock.json` | **Rich's to carry**. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits; FE-31 was met on the real platform (2026-09-28). None blocks the platform's sitting 8 |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -786,6 +786,37 @@ Measured. Not yet carried to the platform session.*
     platform's tests alone, by a setting.
   - (b) `Blueprint.purpose: 'people' | 'testing'`, and clients filter.
 - **When:** before faculty use it for real. Either is small.
+
+### FE-32 — An agent cannot add a dependency: nothing regenerates `package-lock.json`
+
+*Found 2026-09-28 while preparing F3, from reading, against manifest `9c54bc3`. Not measured. Not yet carried to
+the platform session.*
+
+- **Screen and moment:** moment 6 (building it), and every change after it (moments 8 and 17), whenever what the
+  person asked for needs a package the blueprint's skeleton does not already have.
+- **What we would call:** `createCommit` with `package.json` changed **and** the regenerated `package-lock.json`,
+  then `startBuild`.
+- **What is missing:**
+  - The build runs `npm ci`, which fails without a lockfile that matches `package.json` (the knowledge pack,
+    `blueprints/node-ts-mongo/agents/AGENTS.md:10-13` ✓: *"Adding a dependency means adding it to
+    `package.json` **and** committing the regenerated `package-lock.json`"*).
+  - An agent working over the API cannot regenerate one: it has no `exec`, and cannot run `npm` (Phase 3's
+    sandboxes, `journey.md` ✓). Writing a lockfile by hand means inventing every transitive version and
+    integrity hash, which a model cannot do correctly.
+  - So the lead can build only with what the skeleton (or its starter) already depends on.
+- **Why it matters:**
+  - The fixed stack covers the walk-through's app, so F3 is not blocked.
+  - But the first request that needs a package (rendering Markdown, reading a spreadsheet, making a PDF) can
+    only be answered *"we can't add that yet"*. Or the lead tries, and every build fails three times at `npm ci`.
+- **What we do meanwhile** (not a workaround): the lead is told the stack is fixed, never adds a dependency, and
+  says so plainly when a request needs one.
+- **Options:**
+  - **(a) Recommended:** an operation that resolves a lockfile. The agent sends a `package.json`, and the platform
+    answers the `package-lock.json` resolved through its own mirror, for the agent to commit.
+  - (b) The build regenerates the lockfile itself when every dependency is on the mirror's allowlist, and records
+    what it resolved.
+  - (c) Wait for Phase 3's `exec`.
+- **When:** before a change after launch meets it (moments 8 and 17). F3 is not blocked.
 
 ---
 
