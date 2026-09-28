@@ -14,11 +14,14 @@ says which plan is current. This file states where things stand and the rules. I
   - It passed against the mock, where Rich clicked it, and against the platform, where Rich signed in as
     `instructor` at `https://app.manifest.internal`.
   - Its findings, sitting by sitting, are the record. Read them before touching what they touch.
-- **Next: F2's sitting 1**, [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  It re-measures what F1 and the platform made. The platform's sitting 7 has landed (manifest `e6a5f70`):
-  - agent sessions and intake sessions (FE-1), and `AgentSession.spentUsd` (FE-23);
-  - its contract changes are listed in manifest's ORIENTATION §7e, for Rich to relay;
-  - it also asks for a marker path on 7105 that its `make doctor` could ask (its F12).
+- **F2 is under way**, in [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
+  **Sitting 1, the measurements, is done** (2026-09-27, against manifest `e6a5f70`).
+  - The platform's intake sessions (FE-1) and agent sessions, with `spentUsd` (FE-23), have landed.
+  - **No Decision broke.** Tasks 2–10 are amended to the contract as it landed, each marked *Amended by
+    sitting 1*. Read the plan's sitting-1 entry before building.
+  - **Three proposed sentences wait on Rich** (listed in that entry). Sittings 4 and 5 need them; sitting 2
+    does not.
+- **Next: F2's sitting 2**, Tasks 2 and 3: storage, our guarded API, and the progress stream.
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
@@ -28,10 +31,14 @@ says which plan is current. This file states where things stand and the rules. I
     against the platform on 7100.
   - **The gates:** `pnpm test` (141 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
     `scripts/check-slice.sh`.
-- **Findings not yet carried to the platform session:**
-  - FE-26: the mock accepts any session;
-  - FE-27: the mock answers from the document's example;
-  - FE-28: the session cookie is not `__Host-`, and apps live on sibling hosts.
+- **Findings not yet carried to the platform session** (Rich's to carry; none blocks its sitting 8):
+  - FE-26: the mock accepts any session, and a token where only a session may go;
+  - FE-27: the mock answers from the document's examples, now including everything sitting 7 added;
+  - FE-28: the session cookie is not `__Host-`, and apps live on sibling hosts;
+  - FE-29: a replayed start names its session only in the message.
+- **The platform's request to us, Rich's to answer:** a path on 7105 that its `make doctor` can ask, so our
+  server stops reading as a foreign claim on its ports (its F12). We would propose `GET /api/__doctor`,
+  answering `manifest-app`.
 
 ---
 

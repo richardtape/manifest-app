@@ -18,14 +18,15 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | When | Finding | What is asked | Rich decided |
 |---|---|---|---|
 | **Sitting 6, and the guide in 11** | **FE-2** | The front-end's server may replay the session cookie it receives to `GET /v1/me`, to learn who it serves, and for nothing else | **(a) Allow the replay**, and write the rule down in *Building a front-end* |
-| **Sitting 7** | **FE-1** | An *intake* session with no project, platform-paid, on one model an administrator names | **Approved in principle; into sitting 7.** The spec words go to Rich to read before they are applied |
-| | **FE-23** | `AgentSession.spentUsd` | **Into sitting 7** |
+| **Sitting 7** | **FE-1** | An *intake* session with no project, platform-paid, on one model an administrator names | **Approved in principle; into sitting 7.** **Landed** (`3cb6c82`), measured by F2's sitting 1 |
+| | **FE-23** | `AgentSession.spentUsd` | **Into sitting 7.** **Landed** (`313075d`), measured by F2's sitting 1 |
 | **A decision to plan** | *the model* | A capable model behind the same LiteLLM, beside `qwen3.5:4b`, which stays the offline floor | **Add a capable model option**; the provider is UBC's call |
 | **Spec now; code in sitting 10** | **FE-24** | Staging is UBC's real staging world (IdP, Canvas, academic API). On the laptop, staging keeps the fake sign-in. Recent output becomes sandbox-only | **Spec words now**, for Rich to read; `getInstanceOutput` refuses staging **in sitting 10** |
 | **Sittings 10–11** | **FE-17**, **FE-18**, **FE-5** (its guide sentence) | A page, not JSON, for a browser refused at `/auth/*`; `@manifest/contract` consumable from a sibling repository; the canonical body hash published | **Fold these three in** |
 | **After the enablement plan, first** | **FE-6**, **FE-25** | The launch path: the three clocks' drafts and state, the staging registration as a tracked object, and an owner's *"please sign this off"* | **The first of the front-end's asks** |
 | **Then** | **FE-19**–**FE-22**, **FE-7**, **FE-3** | Toolkits, integrations, Qdrant, course material; events after a cursor; the sandbox's pretend people (with FE-24's plan) | ordered after the launch path |
 | **Phase 4, as specified** | **FE-4** | Noticing a live app that died | **Phase 4's reconciler (D10)**; the front-end watches meanwhile |
+| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a replayed start's session named only in its message | **Rich's to carry**. FE-28 matters most. None blocks the platform's sitting 8 |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -35,7 +36,17 @@ the point where a finding is cheap.
 
 ## Needed before a remaining sitting is built
 
-### FE-1 — A model before a project exists ⏰ *before sitting 7* — **APPROVED BY RICH IN PRINCIPLE, 2026-09-27**
+### FE-1 — A model before a project exists ⏰ *before sitting 7* — **APPROVED BY RICH IN PRINCIPLE, 2026-09-27** — **LANDED in sitting 7**
+
+**Landed** in manifest `3cb6c82`, and measured by F2's sitting 1 (2026-09-27, M1):
+- `startIntakeSession` and `endIntakeSession`, **both for a signed-in person only**;
+- one model, the platform's `MANIFEST_INTAKE_MODEL`, which is `default-chat` (`qwen3.5:4b`) on the laptop;
+- a key of cents and minutes, a few a person a day, inside a platform month;
+- the codes `INTAKE_DAILY_LIMIT_REACHED`, `INTAKE_BUDGET_EXHAUSTED`, `INTAKE_MODEL_UNAVAILABLE` and
+  `INTAKE_SESSION_ALREADY_STARTED`.
+
+Because ending one is session only, **the browser ends it, not our server** (F2, Tasks 6 and 7). The finding as
+raised follows.
 
 - **Screen and moment:** *Describe* (walk-through moments 3–4). A faculty member writes what they need in a
   paragraph. The agent answers with what it understood and a few names to choose from; they pick one or edit it.
@@ -449,7 +460,11 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
   - (a) The platform states the rule for material given to an agent session: it is governed by the project's
     classification, and the front-end asks before sending anything that looks personal.
 
-### FE-23 — What one piece of work has cost ⏰ *before sitting 7*
+### FE-23 — What one piece of work has cost ⏰ *before sitting 7* — **LANDED in sitting 7**
+
+**Landed** in manifest `313075d`, as option (a): `AgentSession.spentUsd`, `number | null`, with `spentUnavailable`
+saying why when it is null. `listAgentSessions` answers it, and so do `startAgentSession` and `endAgentSession`.
+Measured by F2's sitting 1 (M1). F3's allowance line reads it. The finding as raised follows.
 
 - **Screen and moment:** every conversation, always (walk-through moment 6). Rich chose, 2026-09-27, that
   faculty see the allowance as money, *always visible*: *"$0.40 so far · $9.60 left this month"*.
@@ -568,6 +583,13 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
   sibling. F1 designs around both meanwhile.
 - **The platform itself refuses a nonsense session** (F1 sitting 5, `MODE=edge bash scripts/check-slice.sh`,
   step 7), so this gap is the mock's alone.
+- **Added by F2's sitting 1 (M2, 2026-09-27): the mock does not check which credential an operation takes.**
+  - `startIntakeSession` with a delegated token alone (`Authorization: Bearer mft_…`, no cookie) answers `201`
+    and a key.
+  - The platform refuses it `403 TOKEN_CREDENTIAL_REFUSED`: intake is session only, *"because intake belongs to
+    no project"* (`openapi.json`, `security: [{ session: [] }]` ✓).
+  - So a front-end that started intake with the wrong credential would pass every mock-backed check.
+  - Same remedy: the mock refuses what the operation's `security` does not list.
 
 ### FE-27 — `manifest-mock` answers `listInstances` and `getRelease` from the document's example, whatever is asked
 
@@ -602,6 +624,22 @@ session.*
     contract gives it the exact value it needs: `Environment.instance`, *"the instance the hostname reaches"*
     (F1 Task 7, amended).
   - F6's needs-you band, which reads the last attempt, meets this finding head on.
+- **Added by F2's sitting 1 (M2, 2026-09-27): the same holds for everything sitting 7 added.** Measured with
+  `pnpm mock`:
+  - `startAgentSession` for `mock-app` (`22222222-…`), named *"Writing the plan"*, answers a session on project
+    `c58a9190-…`, named *"Build the bulletin board"*: the document's example.
+  - `listAgentSessions` answers another project's sessions. `endAgentSession` and `endIntakeSession` answer
+    `200` for an id that does not exist, with a different id in the body.
+  - `createProject` answers `mock-app` whatever slug is asked. `mintToken` answers its fixture token, with its
+    own name and three capabilities, whatever is asked.
+  - `createCommit` answers `src/app.js` as the change, whatever is sent. It does refuse a stale `baseCommit`
+    `409 SOURCE_CONFLICT`, naming itself.
+  - `checkSlug` holds one taken slug, `mock-app`. Every other slug is available, `edge` and `Bad Name`
+    included, so `SLUG_RESERVED` and `SLUG_INVALID` are never answered (`packages/mock/src/server.ts:243-250` ✓,
+    by design: *"so the create form's check-as-you-type has both answers"*).
+  - **Why it matters:** F2 tests every one of these against its own fakes, and its acceptance asserts what our
+    server sent, never what the mock answered. The same remedy, (a), keyed on what names each answer, as the
+    mock already does for `getFile`.
 
 ### FE-28 — The session cookie is not `__Host-`, and apps live on sibling hosts
 
@@ -635,6 +673,31 @@ platform session.*
     choosing one.
 - **When:** before faculty apps share the zone with real people. Sittings 10–11 at the latest, beside FE-18 and
   FE-26.
+
+### FE-29 — A replayed start names its session only in the message
+
+*Found by F2's sitting 1 (M1), 2026-09-27, against manifest `e6a5f70`, from reading. Not yet carried to the
+platform session. Small.*
+
+- **Screen and moment:** moment 5, when our server starts an agent session to write the plan. Later, every
+  conversation in F3.
+- **What we would call:** `startAgentSession` (and `startIntakeSession`, from the browser). If the answer is lost
+  in transit, the retry with the same `Idempotency-Key` is answered `409 AGENT_SESSION_ALREADY_STARTED`
+  (`INTAKE_SESSION_ALREADY_STARTED`). Its remedy is to end the session it names and start another.
+- **What is missing:**
+  - It names the session only in `message`: *"this request already started the agent session '<name>' (<id>)…"*
+    (`packages/control-plane/src/api/routes/agents.ts:221` ✓; the intake's is the same, `routes/intake.ts:77` ✓).
+  - The envelope says of `message`: *"For a person. Never parse it; switch on `code`."* ✓
+  - The envelope has no field for it, as it has `pendingAction` for `TOKEN_ACTION_PENDING` ✓.
+- **Why it matters:**
+  - A client cannot follow the remedy without parsing prose.
+  - `listAgentSessions` by name is a guess when two starts share a name.
+  - The cost is small: the orphaned key was never received, so it spends nothing, and it expires at its
+    `expiresAt` (60 minutes by default). We let it expire.
+- **Options:**
+  - **(a) Recommended:** the refusal carries the session, as `error.session: { id, name }`, beside `message`.
+  - (b) The remedy text says to list the sessions instead.
+- **When:** whenever the error envelope is next touched; it adds a field, so it is additive.
 
 ---
 
