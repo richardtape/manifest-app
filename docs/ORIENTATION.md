@@ -35,6 +35,10 @@ says which plan is current. This file states where things stand and the rules. I
 - **Next: F2's sitting 6, Task 10, alone and last.**
   - The acceptance script against the mock, and Rich's clicked half.
   - Then the real platform, **which needs Rich and the platform session**.
+    - **Wait for the platform session's "closed" message** (its sitting 9 is still running tests that truncate
+      the database and restart the edge).
+    - Then we start the control plane ourselves, with Rich's agreement, on an empty database. The plan's sitting 5
+      entry has the rest.
   - The whole-branch review is owed then.
 - **The platform:**
   - **Its sitting 8 (archive and restore) has landed**, relayed by Rich. It is F6's, and the roadmap says so.

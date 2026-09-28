@@ -1614,3 +1614,26 @@ fine"*):**
 - Rich's clicked half: moments 3–5 now click whole at `http://127.0.0.1:7105/new`.
 - The real platform (step 3) is Rich's and the platform session's to start.
 - The six words are Rich's (agreed after the sitting's close).
+
+**After the close, the platform session's answer** (manifest-5e, relayed by message at Rich's request, 2026-09-27):
+- **Its sitting 9 (delete) is not closed.** It still runs `pnpm test:docker` (restarts the edge, truncates the
+  database), perhaps a fix pass that may touch the control plane or the contract, `pnpm test` twice, and its
+  close-out. **Wait for its "closed" message**, with the final contract list, before any window.
+- The contract at `3349b6c`: 1.4.0, additive. 66 operations (`deleteProject`), 90 schemas (`DeletedProject`), 126
+  codes (`PROJECT_LAUNCHED_NOT_DELETABLE`), 46 event types (`project.deleted`). A deleted project is `404` on every
+  route, and its slug is free again. A token of a deleted project is `401`.
+- **After "closed", the window is ours.** Nothing of the platform's runs, and sitting 9a is a separate session Rich
+  starts.
+  - We start the control plane ourselves, per its RUNBOOK's *Running the control plane*, with Rich's agreement.
+  - **The control database will be empty**: create everything F2 needs inside the window.
+  - Six `mf-launch-app-*` containers will be running with no rows behind them. **Leave them alone.**
+- **The capable model is its sitting 9a**, which Rich starts. With `MANIFEST_CAPABLE_MODEL` set:
+  - `default-chat-large` is registered at `internal`;
+  - `session.models` lists it only on an `internal` or `public` project, never a `confidential` one (D17);
+  - `MANIFEST_INTAKE_MODEL` may name it (Rich's setting; the default stays `default-chat`).
+
+  Our plan agent then takes it with `MANIFEST_APP_PLAN_MODEL=default-chat-large`. Sitting 6 must check the new
+  project's classification allows it.
+- **The laptop's limits:**
+  - a person's agent month is $10, and a session's cap $2;
+  - an intake key is $0.25 and 30 minutes, 10 a person a Vancouver day, and $50 a month for everyone.
