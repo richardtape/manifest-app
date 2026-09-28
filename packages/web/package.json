@@ -1,0 +1,25 @@
+{
+  "name": "@manifest-app/web",
+  "private": true,
+  "type": "module",
+  "description": "The faculty front-end's single-page app. Only src/platform/ calls the platform (Decision 3).",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@manifest-app/ui": "workspace:*",
+    "@manifest/contract": "link:../../../manifest/packages/contract",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@manifest/mock": "link:../../../manifest/packages/mock",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "jsdom": "29.1.1",
+    "vite": "8.3.0"
+  }
+}

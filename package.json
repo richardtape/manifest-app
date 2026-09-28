@@ -1,0 +1,30 @@
+{
+  "name": "manifest-app",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "mock": "tsx scripts/mock.ts",
+    "dev": "pnpm --filter @manifest-app/server dev",
+    "dev:mock": "MANIFEST_APP_MODE=mock pnpm --filter @manifest-app/server dev",
+    "build": "pnpm --filter @manifest-app/web build"
+  },
+  "devDependencies": {
+    "@manifest/mock": "link:../manifest/packages/mock",
+    "@types/node": "24.13.3",
+    "eslint": "9.39.5",
+    "prettier": "3.9.6",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.68.0",
+    "vitest": "2.1.9"
+  }
+}

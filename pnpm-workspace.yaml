@@ -1,0 +1,11 @@
+packages:
+  - packages/*
+
+# pnpm 11 refuses a dependency's install script unless it is named here (manifest's
+# pnpm-workspace.yaml has the measurement). Allowing one is a supply-chain decision, so
+# each entry carries its reason.
+#
+#   esbuild: Vitest 2.1.9's bundler (esbuild 0.21.5). Its postinstall fetches the
+#   platform binary; without it Vitest cannot start.
+allowBuilds:
+  esbuild: true

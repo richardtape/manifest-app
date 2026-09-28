@@ -1,0 +1,15 @@
+# Prettier owns the TypeScript workspace and nothing else, as in manifest (its
+# .prettierignore has the measurement). Without this file `prettier --check .` fails on
+# 13 prose files before a line of code exists (F1 sitting 1).
+#
+# Prose whose line breaks are deliberate.
+docs/
+CLAUDE.md
+# Generated.
+pnpm-lock.yaml
+# VENDORED FROM MANIFEST AND NEVER EDITED: the parity test compares against it byte for
+# byte, so `pnpm format` must never rewrite it (Decision 2).
+packages/ui/reference/
+# The harness's own settings and scratch.
+.claude/
+.superpowers/
