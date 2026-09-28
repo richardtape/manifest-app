@@ -5,11 +5,17 @@ import { useEffect, useState, type MouseEvent } from 'react'
  * deep link survives a sign-in (`returnTo` is a path). Our server hands every non-API path
  * to the app, and Vite answers it with `index.html` (appType `spa`).
  */
-export type Route = { name: 'your-apps' } | { name: 'signed-out' } | { name: 'unknown' }
+export type Route =
+  | { name: 'your-apps' }
+  | { name: 'signed-out' }
+  /** Describe what you need: not built until F2, and the page says so. */
+  | { name: 'new' }
+  | { name: 'unknown' }
 
 export function parse(pathname: string): Route {
   if (pathname === '/') return { name: 'your-apps' }
   if (pathname === '/signed-out') return { name: 'signed-out' }
+  if (pathname === '/new') return { name: 'new' }
   return { name: 'unknown' }
 }
 

@@ -65,14 +65,13 @@ describe('the five reads F1 makes, against manifest-mock', () => {
     })
   })
 
-  it('listInstances on staging answers one serving instance, and getRelease its date', async () => {
+  it('the staging address reaches an instance, and getRelease answers its date', async () => {
     await withMock(async (origin) => {
       const p = platform(origin)
-      const serving = (await p.listInstances(fixtures.STAGING_ID)).instances.filter(
-        (i) => i.serving,
-      )
-      expect(serving).toHaveLength(1)
-      const release = await p.getRelease(serving[0]!.releaseId)
+      const project = await p.getProject(fixtures.PROJECT_ID)
+      const staging = project.environments?.find((e) => e.kind === 'staging')
+      expect(staging?.instance?.state).toBe('healthy')
+      const release = await p.getRelease(staging!.instance!.releaseId)
       expect(release.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/)
       expect(Number.isNaN(Date.parse(release.createdAt))).toBe(false)
     })

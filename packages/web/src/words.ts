@@ -42,5 +42,48 @@ export const words = {
   notFound: {
     body: "There's nothing here.",
     link: 'Your apps',
+    /** On the path Describe what you need leads to, until F2 builds it. */
+    describingNext: 'Describing an app arrives next.',
+  },
+  /** Moments 2 and 16. */
+  yourApps: {
+    empty: "Nothing yet. Tell us what your course needs, and we'll build it.",
+    describe: 'Describe what you need',
+    /** Rich's wording, 2026-09-27: the lead time, known before anyone needs it (§13). */
+    leadTime:
+      'Making an app takes an afternoon. Letting your students in takes a little longer, while we move it through the steps that keep the app, and their data, safe and secure.',
+    forStudents: 'For your students',
+    draft: 'Your draft',
+    tryingOut: 'For trying out',
+  },
+  /**
+   * WHAT AN ADDRESS IS DOING, in the product's five states and never the platform's words
+   * (C3). The working ones are the deploy's own stations (moment 9).
+   */
+  facts: {
+    notLive: 'Not live yet',
+    answering: 'Answering',
+    versionFrom: 'the version from',
+    waitingItsTurn: 'Waiting its turn',
+    makingRoom: 'Making room',
+    startingUp: 'Starting up',
+    wakingUp: 'Waking up',
+    neverAnswered: 'It never answered',
+    asleep: 'Asleep until somebody opens it',
+    switchedOff: 'Switched off',
+    cantTell: "We can't tell right now",
+  },
+  /** §24's two answers, in words. */
+  audience: {
+    scale: {
+      solo: 'just you',
+      class: 'one class',
+      large_course: 'a large course',
+      public: 'anyone at all',
+    },
+    burst: {
+      steady: 'coming and going',
+      synchronised: 'all arriving at once',
+    },
   },
 } as const

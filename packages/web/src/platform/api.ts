@@ -12,9 +12,12 @@ import { createManifestClient, unwrap, type Schemas } from '@manifest/contract'
 export interface Platform {
   getMe(): Promise<Schemas['Me']>
   listProjects(): Promise<Schemas['ProjectList']>
-  /** Always `?expand=environments` (D23.1's one expansion): a card needs its three. */
+  /**
+   * Always `?expand=environments` (D23.1's one expansion): a card needs its three, and each
+   * one's `instance`, *"the instance the hostname reaches"*. No `listInstances` in F1: its
+   * value is the last attempt (FE-13), which F1 does not show (FE-27).
+   */
   getProject(projectId: string): Promise<Schemas['Project']>
-  listInstances(environmentId: string): Promise<Schemas['InstanceList']>
   getRelease(releaseId: string): Promise<Schemas['Release']>
 }
 
@@ -33,14 +36,6 @@ export function createPlatform(options: { origin: string; session?: string }): P
           params: { path: { projectId }, query: { expand: 'environments' } },
         }),
         'getProject',
-      )
-    },
-    async listInstances(environmentId) {
-      return unwrap(
-        await client.GET('/v1/environments/{environmentId}/instances', {
-          params: { path: { environmentId } },
-        }),
-        'listInstances',
       )
     },
     async getRelease(releaseId) {

@@ -65,7 +65,8 @@ export function App({ platform }: { platform: Platform }) {
   }
 
   let page: ReactNode
-  if (route.name === 'your-apps') page = <YourApps platform={platform} expire={expire} />
+  if (route.name === 'your-apps')
+    page = <YourApps platform={platform} me={session.me} expire={expire} />
   else if (route.name === 'signed-out')
     page = (
       <>
@@ -79,9 +80,14 @@ export function App({ platform }: { platform: Platform }) {
     )
   else
     page = (
-      <p className="body-lead">
-        {words.notFound.body} <a {...linkTo('/')}>{words.notFound.link}</a>
-      </p>
+      <>
+        {route.name === 'new' ? (
+          <p className="body-lead">{words.notFound.describingNext}</p>
+        ) : null}
+        <p className="body-lead">
+          {words.notFound.body} <a {...linkTo('/')}>{words.notFound.link}</a>
+        </p>
+      </>
     )
 
   return (

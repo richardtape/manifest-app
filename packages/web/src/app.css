@@ -175,3 +175,64 @@ a:hover {
   border: 1px solid var(--border-subtle);
   color: var(--ink-secondary);
 }
+
+/* Your apps: the empty state (moment 2), and one card per app (moment 16). */
+.your-apps__empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 60ch;
+}
+.your-apps__empty p {
+  margin: 0;
+}
+.your-apps__empty .caption {
+  color: var(--ink-subtle);
+}
+.app-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.app-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.app-card__name,
+.app-card__audience,
+.app-card__students {
+  margin: 0;
+}
+.app-card__audience {
+  color: var(--ink-muted);
+}
+.app-card__students {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.app-card__addresses {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.app-card__address {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.app-card__address dt {
+  min-width: 110px;
+  color: var(--ink-muted);
+}
+.app-card__address dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.app-card .mono {
+  color: var(--ink-secondary);
+}

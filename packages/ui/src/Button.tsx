@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 import { cx } from './cx.js'
 
 export interface ButtonProps {
@@ -6,7 +6,8 @@ export interface ButtonProps {
   size?: 'sm'
   /** Renders an <a> instead of a <button>. */
   href?: string
-  onClick?: () => void
+  /** The bundle hands this to the element, so it receives the click (index.d.ts says `() => void`). */
+  onClick?: (event: MouseEvent<HTMLElement>) => void
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
   children?: ReactNode
