@@ -47,7 +47,7 @@ import it (Task 2).
 | 3 | 4, 5 | The model client; the three intake agents, tested against a scripted model | **done 2026-09-27.** A client that takes only structured answers; the three agents, with checks after parsing ruled on from M3; `/intake`, `/names` and `/blueprint`, with the intake carried in the state frame. 300 tests |
 | 4 | 6, 7 | The intake adapter; the *Describe* and *Name it* screens and their components | **done 2026-09-27.** The adapters on the contract as it landed; the intake key handed over; *Describe it* and *Name it*, walked in headless Chrome against the mock, where two defects were found and fixed. 395 tests |
 | 5 | 8, 9 | Making the project and handing over its tokens; the plan, corrected and agreed, committed as `docs/plan.md` | **done 2026-09-27.** *Make it* in the person's session, the token checked and held in memory; *Making it*'s three lines; the plan on an agent session, corrected, agreed and committed; Review Focus 4 and 5 pinned. Walked in headless Chrome against the mock, moments 3–5 whole. 503 tests. Six words proposed for Rich |
-| 6 | 10 | **The acceptance**: against the mock with a scripted model; against the real platform where sittings 7 and 10 have landed. **Alone, and last** | |
+| 6 | 10 | **The acceptance**: against the mock with a scripted model; against the real platform where sittings 7 and 10 have landed. **Alone, and last** | **done 2026-09-28, but for Rich's clicked half.** The mock half 17/17 (`scripts/check-describing.sh`). The real platform walked whole in headless Chrome (signed in as the IdP's test user, at Rich's word), and `docs/plan.md` committed for real. The whole-branch review's 2 Critical and 8 Important fixed, and four defects found only on the real platform fixed. 524 tests. **Rich's click is owed** |
 
 **Every sitting ends as F1's do:**
 1. the four gates, `pnpm test` twice;
@@ -1637,3 +1637,175 @@ fine"*):**
 - **The laptop's limits:**
   - a person's agent month is $10, and a session's cap $2;
   - an intake key is $0.25 and 30 minutes, 10 a person a Vancouver day, and $50 a month for everyone.
+
+### 2026-09-28 — Sitting 6 (Task 10): the acceptance, the final review, and the real platform
+
+*In the same session as sitting 5, at Rich's word: "yes to both — start it when they say closed". He then went to
+bed, and permitted a sign-in as the laptop IdP's test user `instructor`, and no other password ("Yes, test user
+only").*
+
+**Commits:**
+- `8d9012b`: the acceptance against the mock, `scripts/check-describing.sh`, and what was sent to `createCommit`
+  kept in the conversation;
+- `aaa95a4`: the final review's findings;
+- `11cc1a9`, `3a7b95e`, `a247054`: the defects found on the real platform (below), and FE-31.
+
+**Step 1, against the mock** (`bash scripts/check-describing.sh`; `pnpm mock` and `pnpm dev:mock` first). Our API,
+driven as the browser drives it, **17/17**, before and after every fix:
+1. a conversation, and its intake key handed over;
+2. round 1's three questions; round 2 asks none;
+3. three names; the blueprint;
+4. the project and its token made in the person's session, then handed over;
+5. the plan; a correction marking one row; agreed;
+6. `createCommit`'s dry run, then the commit, each with `docs/plan.md` alone. This is read from what the
+   conversation records: `commitPlan` now answers every call it made, recorded from the request body itself;
+7. a student app's post, `403 ORIGIN_REFUSED`;
+8. a refusal, with its reference and its row;
+9. no `mft_` and no `sk-` in any table. It matches where a key can begin, since *"risk-free"* is a word.
+
+- **Five negative controls, each red:** the `Origin` check dropped; a second change in the commit; the token kept
+  in a message; no row marked; a refusal without its row.
+- **The token control wrote the mock's token into the dev database**, so step 9 stayed red after the code was
+  restored. The one leaked row was deleted. A control that writes state leaves it behind.
+
+**The whole-branch review** (a fresh reviewer, read-only, over `b8cf030..8d9012b`): *"With fixes"*: 2 Critical, 8
+Important, 9 Minor. Every Critical and Important was reproduced by a test that failed first, fixed, and given a
+negative control:
+- **Critical:**
+  - a correction our server refused offered a *Carry on* that **agreed the uncorrected plan**;
+  - a browser that reconnected by itself kept a step *now* after a restart (Review Focus 5).
+- **Important:**
+  - *Name it*'s wait for names never ended after a restart or a refusal;
+  - answers were sent to questions a corrected plan no longer asked;
+  - a refused blueprint renewed an intake key, and a skip was posted from naming, so a daily limit was said as
+    *"Something went wrong"*;
+  - the blueprint agent was refused as busy beside the names, so it never ran through the edge;
+  - round 2's audience was checked against the description alone;
+  - one conversation's state carried into the next;
+  - renewal was allowed once per page, not once per failure. The naive reset *"on any done step"* then looped, and
+    a second test holds that;
+  - a conversation that was not there was a blank page.
+- **Nine Minors are deferred, for Rich:**
+  - the input limits are not said;
+  - `/plan/agree` carries no version;
+  - two tabs making one conversation's project;
+  - a comment about the intake key's reuse;
+  - a fallback without a reference;
+  - a silent disabled *Make it*;
+  - Vancouver's midnight on the two changeover days;
+  - the FE-20 check reads only *Who gets in*.
+
+  They and the eleven lines the reviewer declined to judge, each ruled on, are in the ledger.
+
+**Step 3, the real platform.** The window opened at the platform session's *"CLOSED"* (manifest `4738abb`, sitting
+9: 66 operations, 1.4.0, additive; our typecheck and tests pass against it).
+- **We started the control plane**, per its RUNBOOK word for word: Docker driver; origins console and app; *"ai":
+  "enabled"*; an empty database.
+- **Our server** ran on 7105 in edge mode.
+- **Found and stopped: twelve idle `tsx watch` copies of our own server**, orphaned by F1's sittings (18:22–19:48).
+  One of them, in mock mode, could have taken 7105 at the next edit.
+- **Walked in headless Chrome at `https://app.manifest.internal`**, signed in at the IdP:
+  - **walk 1** stopped at the plan (defects 1 and 2 below);
+  - **walk 2 went whole, at 1440.** `docs/plan.md` was committed for real, as `reading.git` `8eaf787`, *"The
+    plan we agreed"*, `docs/plan.md` its only change: the sha our record holds. But it met defect 3;
+  - walk 3 stopped because of my script, not the product;
+  - **walk 4 went whole, at 375.** The agent chose `node-ts-mongo@1` with the proof-app starter, *Make it* waited
+    for it, and the plan was committed as `bfd5d24`. That walk found defect 4.
+  - No console error, no failed request, and no overflow in any walk.
+
+**Four defects found only on the real platform**, each fixed test-first with a control:
+1. **_Make it_ did not wait for the blueprint agent** (D3).
+   - On the platform the list's first is `fixture-node@1`, so a project was made from a fixture.
+   - The intake session was ended under the agent, which was still using its key.
+   - *Make it* now waits for the agent's answer, or its refusal. Its step's *done* comes before the state
+     carrying the choice, so *done* alone is still waiting.
+2. **The plan was asked while the blueprint agent held the conversation's one piece of work.** `409
+   CONVERSATION_BUSY` was said as *"Something went wrong on our side"*. It now waits, and asks again, without a
+   word.
+3. **When the 4B model failed the blueprint agent twice, the fallback was that fixture.** Its
+   `auth_providers: [none]` means no CWL sign-in, while *Making it* said *"A starting point with CWL sign-in is in
+   place."* Now:
+   - the agent's answer must provide CWL when any blueprint does;
+   - the fallback is the first that provides it.
+
+   Both read `provides`, never a name. **FE-31** is filed: nothing marks a blueprint as a test fixture.
+4. **A correction asked new questions under the old ids** (`"1"`, `"2"`). An answer would have been committed
+   under a question it was not typed for. An answer is now kept by its question's id and words.
+
+**What the laptop's model wrote, verbatim** (`default-chat`, `qwen3.5:4b` with thinking off; the first evidence of
+the model question, as Task 10 asks):
+- **Questions.** Walks 1, 2 and 4 asked none. Walk 3 asked, in round 1:
+  - *"Who should see the posts, just your class or anyone on the internet?"* [your class · anyone];
+  - *"Do you need to show students each other's answers before they post their own?"* [before posting · after
+    posting].
+
+  In round 2 it asked *"How many sections of your class should use this page?"* [Just one section · Multiple
+  sections].
+- **What we understood:** *"A page where your students post a response to the week's reading."*, every time.
+- **The audience,** guessed:
+  - large course, coming and going, *"from 'About 200 students.'"*;
+  - one class, all at once, *"from 'week's reading'"*;
+  - one class, coming and going, *"from 'About 200'"*.
+- **Names:** addresses, not names:
+  - *"student-readings"*, *"read-response-log"*, *"reading-write-page"*;
+  - *"reading"*, *"respond"*, *"notes"*;
+  - *"reading-reponses"* (misspelt, at `reading-responses`), *"student-readings"*, *"course-reads"*.
+- **The blueprint:** `node-ts-mongo@1` with `proof-app`, *"We chose this starter because it lets students log in
+  with a single sign-in while keeping their responses private, which fits your need for easy classroom
+  submissions."* Walk 2's answer failed its checks twice.
+- **Walk 4's plan, version 1:**
+  - *What students see*: *"A form to enter their answer, which only appears once they have posted something."*
+  - *What you see*: *"A list of names and answers that are all yours alone until the night before class."*
+  - *What it keeps*: *"Who each person is, and what they wrote about this week's reading."*
+  - *Who gets in*: *"Any student with a CWL account can sign in to see their own post."*
+  - *AI*: *"We do not ask an AI model anything unless you specifically request it."*
+  - *Things we assumed*: *"You skipped questions about your name, so we assume your course code is fixed for
+    now."* and two more like it.
+  - *Two things only you know*: *"Do you have a specific deadline for when posts must be submitted??"* and *"Do
+    you need to know which student wrote each answer to verify their identity??"*
+- **Corrected** with *"My TA should see everything I see."*, it changed:
+  - *What you see* to *"…until the night before class, or what your TA sees after you log out."*;
+  - *Who gets in* to *"…or anyone who has been given access by the instructor to see all posts."*
+
+  It changed both questions too.
+- **Walk 2's `docs/plan.md`**, as committed:
+  - *Who gets in*: *"Anyone holding a CWL credential can log in. Students see only their own submission first;
+    instructors see all submissions."*
+  - an assumption *"We assume CWL credentials grant access to all enrolled students."*: a class-only promise in
+    *Things we assumed*, which the FE-20 check does not read (a deferred Minor).
+- **The shape was always right, and the checks held.** What it says is weak, and sometimes wrong. That is Rich's
+  capable-model decision (the platform's sitting 9a), not a defect here. Our plan agent takes it with
+  `MANIFEST_APP_PLAN_MODEL=default-chat-large` once `session.models` lists it (`internal` or `public` projects
+  only).
+
+**Negative controls:**
+- the acceptance's five;
+- the review's fixes, sixteen;
+- the real platform's six.
+
+Each was red, then restored.
+
+**Could not fail:** none claimed. The headless walks show a path works, not how it feels to a person, so **Rich's
+clicked half (Task 10, step 2) is owed**.
+
+**Gates, from the root:**
+- `pnpm test` twice: 524/524 each time;
+- `pnpm lint` 0;
+- `pnpm typecheck` 0, against manifest `4738abb`;
+- `pnpm format:check` clean;
+- `check-slice` 7 passed (mock) and 4 passed (edge; 4–6 need a sign-in);
+- `check-describing` 17/17.
+
+**The machine at the close, left for Rich's clicks:**
+- **the control plane running on 7100**, started by us (PID 83687; log in the session's scratchpad);
+- our server on 7105 in edge mode, with one watcher;
+- the mock on 7102.
+- The platform's sitting 9a may stop or restart the control plane, or truncate, and tell Rich first. The platform
+  session recorded this in its ORIENTATION §7e.
+- On the platform: the projects the walks made (`student-readings` from the fixture, `reading` from the fixture,
+  `reading-responses`), all the test user's. The mf-launch-app-* containers are untouched.
+
+**For Rich, in the morning:**
+- Open `https://app.manifest.internal/new`, sign in as `instructor` / `instructor`, and click moments 3–5.
+- Then F2 is executed, and F3 is next, to be written.
+- The Minors, FE-31, and the capable model are his to decide.
