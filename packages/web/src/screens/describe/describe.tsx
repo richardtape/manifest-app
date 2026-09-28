@@ -356,6 +356,7 @@ export function Describing({
         intake={intake}
         working={view.steps.filter((s) => s.state === 'now').map((s) => s.step)}
         naming={view.steps.find((s) => s.step === 'naming')}
+        blueprintStep={view.steps.find((s) => s.step === 'blueprint')}
         suggest={notice?.then !== 'naming' && !selfNamed.current}
         notice={noticeCard}
         expire={expire}

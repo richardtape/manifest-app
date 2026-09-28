@@ -213,6 +213,19 @@ export function PlanScreen({
     }
   }
 
+  /**
+   * OTHER WORK FIRST (found on the real platform): the plan, asked while another piece of
+   * work finishes on our server (one at a time), is asked again once nothing is at work,
+   * without a word. Three times at most; then it is said.
+   */
+  const [whenFree, setWhenFree] = useState<(() => void) | undefined>()
+  const busyTries = useRef(0)
+  useEffect(() => {
+    if (whenFree === undefined || steps.some((s) => s.state === 'now')) return
+    setWhenFree(undefined)
+    whenFree()
+  }, [whenFree, stepsKey])
+
   /** A press: sent to our server, which answers on the stream. */
   const send = async (
     operation: string,
@@ -223,9 +236,19 @@ export function PlanScreen({
     setPressed(true)
     try {
       await call()
+      busyTries.current = 0
     } catch (error) {
       if (error instanceof OurRefusal && RENEW.has(error.code) && !renewed.current)
         return renewThen(call, operation, during)
+      if (
+        error instanceof OurRefusal &&
+        error.code === 'CONVERSATION_BUSY' &&
+        busyTries.current < 3
+      ) {
+        busyTries.current++
+        setWhenFree(() => () => void send(operation, call, during))
+        return
+      }
       failed(error, operation, during, () => void send(operation, call, during))
     }
   }

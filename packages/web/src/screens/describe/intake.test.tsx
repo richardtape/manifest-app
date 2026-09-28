@@ -764,7 +764,13 @@ describe('Name it (moment 4, before Make it)', () => {
     await naming(s)
     s.state(
       { state: 'naming' },
-      { round: 1, understood: UNDERSTOOD, names: NAMES, namesAsked: 1 },
+      {
+        round: 1,
+        understood: UNDERSTOOD,
+        names: NAMES,
+        namesAsked: 1,
+        blueprint: { blueprint: 'node-ts-mongo@1', starter: null, why: 'x' },
+      },
     )
     const make = screen.getByRole('button', {
       name: words.nameIt.makeIt,
@@ -855,9 +861,42 @@ describe('Make it (moment 4’s end, F2 Task 8)', () => {
     expect(s.called('endIntakeSession')).toEqual([[STARTED.session.id]])
   })
 
-  it('a blueprint the agent never chose is the list’s first, from its skeleton; an empty why is not sent', async () => {
+  it('D3, found on the real platform: Make it waits for the blueprint agent, and makes the project with its choice, never the list’s first', async () => {
     const s = stage()
-    await press(await readyToMake(s, { blueprint: null }))
+    const FIXTURE = { ...BLUEPRINT, ref: 'fixture-node@1', name: 'fixture-node' }
+    s.platform.listBlueprints = () => Promise.resolve([FIXTURE, BLUEPRINT])
+    const make = await readyToMake(s, { blueprint: null })
+    await waitFor(() => expect(s.called('blueprint')).toHaveLength(1))
+    s.say({ kind: 'step', step: 'blueprint', state: 'now' })
+    await press(make)
+    // Making, but not made: the agent is still choosing, and its intake key is still in use.
+    expect(screen.getByText(words.making.yours('Reading responses'))).toBeTruthy()
+    expect(s.called('createProject')).toEqual([])
+    expect(s.called('endIntakeSession')).toEqual([])
+    s.say({ kind: 'step', step: 'blueprint', state: 'done' })
+    s.state(
+      { state: 'naming' },
+      {
+        round: 1,
+        understood: UNDERSTOOD,
+        names: NAMES,
+        namesAsked: 1,
+        blueprint: CHOSEN,
+      },
+    )
+    await waitFor(() => expect(s.called('createProject')).toHaveLength(1))
+    const [[body]] = s.called('createProject') as [[Schemas['CreateProjectRequest']]]
+    expect([body.blueprint, body.starter]).toEqual(['node-ts-mongo@1', 'proof-app'])
+    expect(s.called('endIntakeSession')).toHaveLength(1)
+  })
+
+  it('a blueprint the agent could not choose (its step halted) is the list’s first, from its skeleton; an empty why is not sent', async () => {
+    const s = stage()
+    const make = await readyToMake(s, { blueprint: null })
+    await waitFor(() => expect(s.called('blueprint')).toHaveLength(1))
+    s.say({ kind: 'step', step: 'blueprint', state: 'now' })
+    s.say({ kind: 'step', step: 'blueprint', state: 'halted' })
+    await press(make)
     await waitFor(() => expect(s.called('createProject')).toHaveLength(1))
     const [[body]] = s.called('createProject') as [[Schemas['CreateProjectRequest']]]
     expect(body.blueprint).toBe(BLUEPRINT.ref)

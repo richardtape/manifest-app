@@ -78,6 +78,7 @@ export function NameIt({
   intake,
   working,
   naming,
+  blueprintStep,
   suggest,
   notice,
   expire,
@@ -91,6 +92,8 @@ export function NameIt({
   working: StepKey[]
   /** The naming step at its latest: a new object with each of its frames, whatever its state. */
   naming?: Step | undefined
+  /** The blueprint step at its latest, likewise. */
+  blueprintStep?: Step | undefined
   /** False when the intake is paused or failed: no names are asked for. */
   suggest: boolean
   notice?: ReactNode
@@ -176,14 +179,38 @@ export function NameIt({
 
   // THE BLUEPRINT, ONCE THE NAMES HAVE SETTLED: our server does one piece of work per
   // conversation at a time, so asked beside the names it was refused as busy (the final
-  // review). Refused or not, Make it falls back to the list's first.
-  const blueprintAsked = useRef(false)
+  // review). Only if its agent cannot choose does Make it fall back to the list's first.
+  const [blueprintAsked, setBlueprintAsked] = useState(false)
+  const [blueprintAsking, setBlueprintAsking] = useState(false)
   useEffect(() => {
-    if (list === undefined || waitingForNames || blueprintAsked.current) return
+    if (list === undefined || waitingForNames || blueprintAsked) return
     if (intake.blueprint !== null) return
-    blueprintAsked.current = true
-    void ours.blueprint(id, list).catch(() => undefined)
+    setBlueprintAsked(true)
+    setBlueprintAsking(true)
+    void ours.blueprint(id, list).catch(() => setBlueprintAsking(false))
   }, [list, waitingForNames])
+  useEffect(() => {
+    if (blueprintStep !== undefined) setBlueprintAsking(false)
+  }, [blueprintStep])
+  /**
+   * D3, FOUND ON THE REAL PLATFORM: an agent chooses the blueprint, so Make it waits for its
+   * answer (seconds), or its refusal. Pressed before, the list's first was a test fixture, and
+   * the agent was still using the intake key the press ended.
+   */
+  const waitingForBlueprint =
+    list !== undefined &&
+    intake.blueprint === null &&
+    (!blueprintAsked ||
+      blueprintAsking ||
+      // At work, or done with its answer not yet here: the state follows the step.
+      blueprintStep?.state === 'now' ||
+      blueprintStep?.state === 'done')
+  const [queued, setQueued] = useState(false)
+  useEffect(() => {
+    if (!queued || waitingForBlueprint) return
+    setQueued(false)
+    void make()
+  }, [queued, waitingForBlueprint])
 
   // EVERY SUGGESTION CHECKED BEFORE IT IS SHOWN. Keyed on the names themselves, not the
   // frame: a later frame (the blueprint) must not check them, or ask, again.
@@ -350,6 +377,12 @@ export function NameIt({
   /** MAKE IT (walk-through moment 4), in the person's session: the project, then its token. */
   const make = async () => {
     if (busy.current || slug === undefined) return
+    // The blueprint agent is still choosing: making, and made once it has answered.
+    if (waitingForBlueprint) {
+      setMaking(true)
+      setQueued(true)
+      return
+    }
     busy.current = true
     setMakeNotice(undefined)
     setMaking(true)

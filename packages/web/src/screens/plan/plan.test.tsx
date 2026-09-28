@@ -384,6 +384,29 @@ describe('the plan (moment 5)', () => {
   })
 })
 
+describe('found on the real platform', () => {
+  it('the plan asked while other work finishes is asked again once it has, without a word', async () => {
+    const s = stage()
+    const plans: string[] = []
+    s.ours.plan = (id) => {
+      plans.push(id)
+      return plans.length === 1
+        ? Promise.reject(new OurRefusal('CONVERSATION_BUSY', 409))
+        : Promise.resolve()
+    }
+    await open(s)
+    s.state({ state: 'making' })
+    s.say({ kind: 'step', step: 'blueprint', state: 'now' })
+    await waitFor(() => expect(s.watches).toHaveLength(1))
+    await act(async () => s.watches[0]!.ready())
+    await waitFor(() => expect(plans).toHaveLength(1))
+    expect(screen.queryByRole('alert')).toBeNull()
+    s.say({ kind: 'step', step: 'blueprint', state: 'done' })
+    await waitFor(() => expect(plans).toHaveLength(2))
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+})
+
 describe('the final review’s findings on the plan', () => {
   it('Critical 1: a correction our server refused is tried again as a correction, never agreed', async () => {
     const s = stage()
