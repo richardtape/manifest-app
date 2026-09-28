@@ -52,7 +52,7 @@ lands.
 | 2 | 2, 3 | The workspace and its four gates; the design system's harness and the four components the slice needs | **done 2026-09-27**: 16/16 twice, four gates green; the plan's boundary regex fixed |
 | 3 | 4, 5 | One place that calls the platform; our server on 7105, with `/api/me` and the mock proxy | **done 2026-09-27**: 47/47 twice, four gates green; FE-27 found, Task 7 amended |
 | 4 | 6, 7 | Sign-in, the shell, sign-out; *Your apps*, empty and with apps | **done 2026-09-27**: 94/94 twice, four gates green; the feed ruled (`Environment.instance`) |
-| 5 | 8 | **The acceptance**: a headless check, and Rich clicking it. **Alone, and last** | ← next |
+| 5 | 8 | **The acceptance**: a headless check, and Rich clicking it. **Alone, and last** | **done 2026-09-27**: check-slice green twice (mock) and in edge mode; Rich clicked it against the mock and signed in on the platform; the final review's fixes in. **F1 executed** |
 
 **Every sitting ends the same way:**
 1. **The four gates, from the root:** `pnpm test` (twice, because a suite that is not repeatable has a state
@@ -75,6 +75,15 @@ first and alone; Task 8 stays last and alone.
   was approved on 2026-09-27 (*"I agree with the walkthrough"*).
 - **FE-2: our server may replay the session cookie to `GET /v1/me`, and for nothing else.**
 - **The product's voice is *we*, everywhere. The prototype's words are a starting point, not a script.**
+- **Sitting 5, after his click-through:**
+  - **The design system is ours, and is fixed at source** (*"no, I don't want a fixes.css file. Let's fix it
+    at source. We're making something new, we control the whole plane."*).
+    - Its stylesheets live in `packages/ui/src` and change in place, each change with its reason.
+    - `reference/` keeps `bundle.js` and `index.d.ts`, which the parity test renders against.
+  - **Below 900px the rail folds to its icons, and the person is an icon that opens their profile, built in
+    F1.**
+  - **An app's name on its card links to its own page**, which says it arrives next until a later plan
+    builds it.
 
 ## Decisions this plan makes, and why
 
@@ -95,6 +104,11 @@ first and alone; Task 8 stays last and alone.
    - **For Rich's review, not blocking:** where the design system lives from now on. The vendored copy records
      the manifest commit it came from; the port is ours to change; manifest's copy stays the reference until he
      says otherwise.
+   - **Decided by Rich in sitting 5: it lives here.**
+     - The stylesheets are no longer vendored verbatim. They are `packages/ui/src/{tokens,base,components}.css`,
+       fixed at source.
+     - The parity test still holds the four components' markup to `bundle.js`. SideNav's two props of ours
+       (`collapsible`, `userHref`) are held by their own test.
 3. **Only `web/src/platform/` calls the API**, as the console's `api.ts` is its one caller. A boundary test
    enforces it. `web` imports nothing from `manifest` except `@manifest/contract`.
 4. **One process on 7105.**
@@ -887,7 +901,7 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
 **Sitting 5, alone.** **Files:** Create `scripts/check-slice.sh`. Modify `docs/ORIENTATION.md` (*how to run it*),
 `docs/plans/roadmap.md`, and this plan.
 
-- [ ] **Step 1: `scripts/check-slice.sh`** (bash 3.2, BSD tools). It asserts BODIES, never a status alone.
+- [x] **Step 1: `scripts/check-slice.sh`** (bash 3.2, BSD tools). It asserts BODIES, never a status alone.
   - It starts nothing itself. It checks that 7102 answers the mock's `GET /v1/openapi.json`, and that 7105
     answers `/`.
     - **Amended by sitting 1:** without a cookie, the mock answers `/v1/openapi.json` with
@@ -911,8 +925,8 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
       - the negative control watches **step 3** go red (no cookie, and `whoIs` answers a person anyway).
     - *"A nonsense session is refused"* is proved where a fake can refuse it: Task 5's `identity.test.ts`, whose
       fake control plane answers `401`.
-- [ ] **Step 2: Green twice**, from a fresh `pnpm install` and from a re-use. Record both.
-- [ ] **Step 3: The clicked half, Rich's.**
+- [x] **Step 2: Green twice**, from a fresh `pnpm install` and from a re-use. Record both.
+- [x] **Step 3: The clicked half, Rich's.**
   1. Stage it: the mock on 7102 (`pnpm mock`), `pnpm dev:mock` on 7105.
   2. Ask once, with this list.
   3. **Rich opens `http://127.0.0.1:7105/`** and checks:
@@ -927,7 +941,7 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
      - he tabs through every control and sees focus on each;
      - he signs out.
   4. Record what the screens said.
-- [ ] **Step 4, only if the platform's sitting 6 has landed** (M7 reads `UNAUTHENTICATED`, not the wildcard) **and
+- [x] **Step 4, only if the platform's sitting 6 has landed** (M7 reads `UNAUTHENTICATED`, not the wildcard) **and
   Rich agrees to start the control plane:**
   - **Sitting 1 found the edge half landed** (M7, manifest `f1e3908`).
     - `app.manifest.internal` is its own site now, and the wildcard answers differently.
@@ -939,7 +953,7 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
     password.**
   - *Your apps* shows the platform's projects.
   - Otherwise, write it down as the first step of F2.
-- [ ] **Step 5: The close-out**, for a plan EXECUTED:
+- [x] **Step 5: The close-out**, for a plan EXECUTED:
   - this plan's table and its findings;
   - the roadmap (F1 executed; F2 next, to be written);
   - ORIENTATION's *Where things stand*, replaced, and a section *Running it* with the commands;
@@ -1396,3 +1410,156 @@ The contract's source was unchanged in manifest's working tree during the sittin
 **The machine at the close:**
 - nothing on 7102 or 7105;
 - manifest's working tree touched only by the platform session.
+
+### 2026-09-27 — Sitting 5 (Task 8): the acceptance
+
+**Commits:**
+- `d97072b`: `scripts/check-slice.sh`, and two dev-server fixes;
+- `859c3c7`: what Rich's click-through found, and the design system's CSS made ours.
+
+**The contract moved at the start of the sitting.** The platform landed agent sessions (`313075d`) and the intake
+key (`3cb6c82`), adding about 1,500 lines to `openapi.json`. Our typecheck and all 94 tests passed against it
+unchanged: additive, as D23.8 promises.
+
+**Step 1: `scripts/check-slice.sh`** (bash 3.2, BSD tools):
+- it starts nothing, asserts bodies, and says what it asked, wanted and got;
+- mock mode runs steps 1–6;
+- step 7 is skipped with its reason (FE-26);
+- edge mode runs steps 1–3 and 7, because signing in is a person's;
+- with nothing running, it names what to start and exits `2`.
+
+**The negative control:** `whoIs` answering a fixed person turned step 3 red (`got 200` with no cookie).
+Restored, 7 passed.
+
+**Step 2, green twice.**
+- **Defect: an offline install failed after the lockfile changed.**
+  - `pnpm install --offline --frozen-lockfile` into no `node_modules` exited `1`: *"Lockfile failed supply-chain
+    policy check … ERR_PNPM_NO_OFFLINE_META ansi-regex"*. All 275 packages had been added first.
+  - pnpm 11 re-verifies a changed lockfile against full registry metadata, and sitting 3's edits had changed it.
+  - One `pnpm install --frozen-lockfile --prefer-offline` re-verified it (metadata only, no tarballs).
+  - After that, the offline install from nothing exits `0` (*"Lockfile passes supply-chain policies"*).
+- **Run 1**, from that fresh install: 7 passed. **Run 2**, re-used: 7 passed. The gates passed twice.
+- **Two dev-server defects, found and fixed:**
+  - `tsx watch` watched Vite's temporary compiled config, and restarted our server three more times after one
+    edit. Now `--exclude '../web/**'`.
+  - Vite 8 warned that `server.hmr` is deprecated. It is `server.ws` now, and HMR is re-verified.
+
+**Step 3, Rich's click-through against the mock:**
+- *Sign in*, *Continue with CWL*, *Your apps* with Mock course app, and *Sign out*: **all worked.**
+- He found, and each is now fixed and measured in headless Chrome:
+
+| Found | Cause | Fixed, and measured |
+|---|---|---|
+| Continue with CWL's text vanished on hover | our `a:hover` (then `:where(a):hover`) outranked `.mf-btn--primary`'s white | `:where(a:hover)`, specificity 0: **15.40:1** hovered (it was **1.24:1**) |
+| Tab ran down the rail and out of the page | nothing in the page could take focus | *Skip to content* first, `<main id="main" tabindex="-1">`, and the card's name a link. Order: skip, mark, *Your apps*, *Start something new*, the person, *Sign out*, *Mock course app* |
+| Rail items touching | the design system gave adjacent items no gap | 2px, in `components.css`, as the prototype's second item had |
+| No hover on the card | nothing in it was interactive | its name links to `/apps/<slug>` (*"An app's own page arrives next."*), and the card lifts while it is hovered |
+| Chips squeezed into circles at about 900px | a chip could shrink | a chip keeps one line, takes its own, or wraps only when even that is too narrow; each address wraps in its own column; hostnames break after a dot |
+| A horizontal scrollbar below about 750px | a fixed 240px rail, and Sign in's 620px panel | the rail folds to 64px of icons below 900px, Sign in stacks below 960px: **no overflow from 1440 down to 320** |
+
+- **And two things Rich chose to add now:**
+  - the rail folds to icons below 900px, through SideNav's `collapsible` (ours): labels hidden visually and kept
+    for screen readers, each with a `title`;
+  - the person is an icon linking to a new profile page, with name, email and *Sign out*. `Me` has no CWL login
+    yet.
+- **Then Rich: "fix it at source".** The stylesheets left `reference/` for `packages/ui/src` (`tokens.css`,
+  `components.css`, and a new `base.css`). No override layer.
+- **Tests added:**
+  - `SideNav.test.tsx`, 6 tests (`collapsible`, `userHref`), watched failing first;
+  - 3 more screen tests (the skip link, the card's link, the profile).
+  - Parity passes: the four components' default markup is unchanged.
+- **Rich re-checked:** *"hover state is good. Menu collapse is good. Skip to content is good. Seemingly much
+  better across the board."*
+
+**Preparing Step 4 while the control plane was busy** (the platform session's docker tests and `pnpm test`
+truncate its database; it said *"Not yet"*, and would message).
+- **`whoIs`'s origin, predicted from the control plane's code.**
+  - A session is a signed cookie with no origin in it (`identity/session.ts`, `verifySession`).
+  - The same-origin check guards only mutations (`api/server.ts`, the `MUTATING` hook).
+  - A request to `127.0.0.1:7100` is taken as the console's origin (`api/origins.ts`, `originOf`).
+  - **Prediction: our server's `GET http://127.0.0.1:7100/v1/me` with a session made on `app.manifest.internal`
+    answers `200`**, so `Config.platformOrigin` stays 7100.
+- **Edge mode through the real edge, with the control plane down.** `pnpm dev`, then
+  `https://app.manifest.internal`:
+  - `/` is ours (`200`);
+  - `/api/me` is ours (`401`);
+  - `/v1/me` and `/auth/login` are the edge's empty `502`;
+  - `MODE=edge bash scripts/check-slice.sh`: steps 1 and 3 pass, and 2 and 7 fail only for want of the control
+    plane;
+  - headless Chrome shows *"We can't reach Manifest just now. Nothing of yours has changed."* with *Try again*,
+    which is Review Focus 2 against the edge's real `502`;
+  - an edit hot-updated through `wss://app.manifest.internal:443`, with the page's marker kept.
+- **The RUNBOOK's block, read before use.** Its `dev` compiles into manifest's `packages/control-plane/dist`
+  (git-ignored). The platform session asked for that block *"exactly as written"*, and Rich agreed to its call.
+  Each start makes a new `MANIFEST_SESSION_SECRET`, so no earlier session survives a restart.
+
+**Step 4, against the platform** (the platform session said yes at `e6a5f70`, *"I'm running nothing"*; Rich had
+agreed).
+- **Started:** the RUNBOOK's block, verbatim, from manifest.
+  - `db:migrate` applied nothing.
+  - The boot line: `"driver":"docker"`, `"origins":["https://console.manifest.internal","https://app.manifest.internal"]`,
+    `"ai":"enabled"`, `"control plane ready"`.
+- `https://app.manifest.internal/v1/me` → `401 UNAUTHENTICATED`, with the platform's message and hint: the
+  discriminator.
+- **`MODE=edge bash scripts/check-slice.sh`: 4 passed, 0 failed.**
+  - **Step 7 passes against the real platform**: a nonsense session is refused, which the mock could never show
+    (FE-26).
+- **Rich signed in at `https://app.manifest.internal` as `instructor`, typing the password:** *"Worked well."*
+- ***Your apps* was empty,** correctly: `instructor` owns no project there.
+  - Rich: the lead-time sentence was *"really small and kinda just...floating there"*.
+  - Fixed (`72cf685`): the sentence, the button and the lead time are one card, and the lead time is a note
+    with a clock, in the style of Sign in's.
+  - The walk-through's *"in caption"* gives way to Rich's eye; the words are unchanged.
+- **`whoIs`'s origin, measured.**
+  - Rich's `https://app.manifest.internal/api/me` answered
+    `{"id":"0a3bdab4-90b4-41e6-ba9d-c1f8e0295e2b","displayName":"Test Instructor"}`.
+  - That is our server replaying a session minted on the app origin to `http://127.0.0.1:7100/v1/me` directly.
+    **The prediction held, and `Config.platformOrigin` stays 7100.**
+- **Signing out:** *"Clicking the sign out button signs me out and clicking the sign in button asks me to sign in
+  again"*. The IdP's session ended too (P6b F10).
+- **Stopped:** the control plane, then the platform session told so. Manifest's tree is as it was at `e6a5f70`.
+
+**The final whole-branch review** (a fresh reviewer, `16cabbb..859c3c7`, 13 commits).
+- **Verdict: no Critical findings. "With fixes."**
+- It checked each Review Focus class, FE-2's cookie boundary, C3 and accessibility.
+- **Fixed** (`2ab3b98`), each watched failing, then passing, then the suite (107/107 twice):
+
+| # | Found | Fixed |
+|---|---|---|
+| 1 | **Review Focus 5 was not as the plan says it.** Every non-401 refusal read *"We can't reach Manifest"*, which is untrue, since we did reach it. No code reached the console | *"Something went wrong on our side. Nothing of yours has changed."*, the code to `console.warn`; a `refused` session state; one `TroubleNotice`. **Two rulings of sittings 4 and 5 are reversed** |
+| 2 | **With the mock down, our proxy answered `500`** with its own `connect ECONNREFUSED …`, and the page read it as a refusal (the ruling in 1 hid it) | the proxy's `onError` answers an empty `502`, as the edge does. Checked with the mock stopped: *"We can't reach Manifest"* |
+| 3 | **A platform that took the connection and never answered left a blank page for ever** | a 15-second deadline on every read (`AbortSignal.timeout`, through the contract's `fetch` option); a timeout is unreachable |
+| 5 | **Focus stayed on the rail**, or fell to `<body>`, after an in-app navigation. Graded Minor, re-graded Important: accessibility is a legal requirement here | focus moves to `<main>` after a navigation, not on first load |
+
+- **Also fixed** (`3bd7836`): comments that still named `fixes.css`, and a `tokens.css` header saying to
+  regenerate it from manifest's copy, which would have undone every change made at source (#6).
+- **Filed:** FE-28. The session cookie has no `__Host-` prefix, and apps live on sibling hosts, so cookie
+  tossing is possible. That comes from reading, and was not measured.
+- **Deferred minors**, for Rich:
+  - one failed read hides every app (`Promise.all`);
+  - a test that cannot fail on the CSS risk it names;
+  - `signOut`'s redirect check accepts `/\evil.example`;
+  - no top-level error boundary;
+  - the machinery check does not render every screen;
+  - web's `vite.config.ts` alias is untested;
+  - small cleanups;
+  - no `prefers-reduced-motion` guard on the pulse.
+
+**Close-out.**
+- **Gates, from the root:**
+  - `pnpm test` twice: 107/107 each time (`ui` 10, `web` 75, `server` 22);
+  - `pnpm lint` 0;
+  - `pnpm typecheck` 0;
+  - `pnpm format:check` clean;
+  - `check-slice` 7 passed (mock) and 4 passed (edge).
+- **Commits this sitting:** `d97072b`, `859c3c7`, `2ab3b98`, `3bd7836`, `72cf685`, and this close-out.
+- **F1 is executed.** The acceptance passed in both its halves, and against the platform too.
+- **For F2's sitting 1:**
+  - the platform's sitting 7 contract changes (ORIENTATION §7e in manifest, for Rich to relay);
+  - its request for a marker path on 7105, which `make doctor` could ask (its F12);
+  - FE-26, FE-27 and FE-28, not yet carried;
+  - the review's deferred minors, above.
+- **The machine at the close:**
+  - the mock on 7102 and our server on 7105 in mock mode, for Rich;
+  - the control plane stopped;
+  - manifest untouched by us.

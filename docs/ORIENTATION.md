@@ -9,30 +9,29 @@ says which plan is current. This file states where things stand and the rules. I
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
   ([`api-findings.md`](./api-findings.md), [`2026-09-27-to-the-platform-session.md`](./2026-09-27-to-the-platform-session.md)).
-- **F1 is being executed: sittings 1–4 of 5 are done**, and **sitting 5 is next**: Task 8, the acceptance, a
-  headless check and Rich clicking it, in [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
-  - Read its *What executing this plan found* first. Task 8 carries amendments marked *Amended by sitting 1*
-    and *4*.
-- **The slice runs against the mock:** `pnpm mock`, then `pnpm dev:mock`, then open `http://127.0.0.1:7105/`.
-  - *Sign in* (the mock fakes CWL), then *Your apps*, with Mock course app led by what its students get.
-  - Then *Sign out*.
-- **The workspace:** `packages/ui` (the design system's first four components, held markup-identical to the
-  prototype's bundle), `web` (the app), and `server` (7105).
-  - **The four gates run from the root:** `pnpm test` (94 tests), `pnpm lint`, `pnpm typecheck` and
-    `pnpm format:check`.
-  - `pnpm mock` starts `manifest-mock` on 7102 from source. Never use manifest's own `dev` script, which builds
-    inside manifest.
-  - `@manifest/contract` resolves to its `src/index.ts` in Vitest, Vite and `tsx`, and a test holds each.
-- **Only `packages/web/src/platform` calls the platform:** five reads, and refusals by kind and code, never by
-  message. *Your apps* reads each address's own `Environment.instance` (FE-27).
-- **Our server on 7105** learns who it serves from `GET /v1/me` and nothing else (FE-2). In mock mode it proxies
-  `/v1` (its WebSocket too) and `/auth` to the mock.
-- **FE-26 and FE-27 are new:** the mock accepts any session value, and answers `listInstances` and `getRelease` from
-  the document's example, whatever is asked. Neither is carried to the platform session yet.
-- **The platform's sitting 6 has landed at the edge, and closed** (manifest `64ff35c`); its sitting 7 is under
-  way (`b3d22f4`, agent keys). `app.manifest.internal` is its own site, with the control plane down when
-  measured. F1's Task 8 Step 4 is therefore possible, if Rich agrees to start the control plane.
-- [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md) follows F1.
+- **F1 is executed** (2026-09-27), in [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md):
+  sign-in, the shell, *Your apps*, and a profile.
+  - It passed against the mock, where Rich clicked it, and against the platform, where Rich signed in as
+    `instructor` at `https://app.manifest.internal`.
+  - Its findings, sitting by sitting, are the record. Read them before touching what they touch.
+- **Next: F2's sitting 1**, [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
+  It re-measures what F1 and the platform made. The platform's sitting 7 has landed (manifest `e6a5f70`):
+  - agent sessions and intake sessions (FE-1), and `AgentSession.spentUsd` (FE-23);
+  - its contract changes are listed in manifest's ORIENTATION §7e, for Rich to relay;
+  - it also asks for a marker path on 7105 that its `make doctor` could ask (its F12).
+- **How to run it** is §6, below.
+- **The workspace:**
+  - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
+    `src/`, and `reference/bundle.js` holds the four components' markup by the parity test.
+  - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
+  - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2); measured
+    against the platform on 7100.
+  - **The gates:** `pnpm test` (107 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
+    `scripts/check-slice.sh`.
+- **Findings not yet carried to the platform session:**
+  - FE-26: the mock accepts any session;
+  - FE-27: the mock answers from the document's example;
+  - FE-28: the session cookie is not `__Host-`, and apps live on sibling hosts.
 
 ---
 
@@ -130,3 +129,35 @@ that runs.
   4. the roadmap.
 
   The next sitting is a different agent who believes these documents.
+
+## 6. Running it
+
+**Against the mock** (no platform needed), in two terminals, then open `http://127.0.0.1:7105/`:
+
+```bash
+pnpm mock        # manifest-mock on 7102, from source (never manifest's own `dev`, which builds in manifest)
+pnpm dev:mock    # our server on 7105: the app, /api/*, and /v1 + /auth proxied to the mock
+```
+
+- The mock fakes CWL, so *Continue with CWL* signs you straight in as Instructor One.
+- It accepts any session value (FE-26), and answers `listInstances` from the document's example (FE-27).
+
+**Against the platform, through the edge** (the control plane on 7100, started per manifest's RUNBOOK, *Running the
+control plane*; ask Rich first, and check with the platform session):
+
+```bash
+pnpm dev         # our server on 7105, edge mode; open https://app.manifest.internal
+```
+
+**The checks:**
+
+```bash
+pnpm test && pnpm lint && pnpm typecheck && pnpm format:check   # the four gates (run test twice at a sitting's end)
+bash scripts/check-slice.sh                                     # the headless acceptance, mock mode (starts nothing)
+MODE=edge bash scripts/check-slice.sh                           # the same, through the edge
+```
+
+**Installing:**
+- `pnpm install --offline --frozen-lockfile` works from the store, **unless the lockfile has changed since it was
+  last verified**. pnpm 11 then wants registry metadata to re-check it.
+- Once, `pnpm install --frozen-lockfile --prefer-offline` fetches metadata only.

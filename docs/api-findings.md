@@ -125,6 +125,12 @@ the point where a finding is cheap.
     assertion.
 - **When:** sitting 6 builds the `app` origin and its edge site, which is where (b) would live. Sitting 11 writes
   the guide that (a) needs.
+- **Measured by F1** (sitting 5, 2026-09-27, against manifest `e6a5f70`).
+  - Rich signed in on `https://app.manifest.internal`.
+  - Our server's replay of that session to `http://127.0.0.1:7100/v1/me` answered `200`, the same person.
+  - A session carries no origin (`identity/session.ts`), and reads are not origin-checked, so the replay needs
+    no edge.
+  - A nonsense session is refused `401`.
 
 ### FE-3 — Trying an app out on its draft address means signing in as a pretend person, and nothing says which ⏰ *before sitting 11*
 
@@ -560,6 +566,8 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
     repository's `resolve-ts.mjs` already does elsewhere), so starting the mock writes nothing.
 - **When:** sittings 10–11, beside FE-18, which is the same subject: the platform's packages consumed from a
   sibling. F1 designs around both meanwhile.
+- **The platform itself refuses a nonsense session** (F1 sitting 5, `MODE=edge bash scripts/check-slice.sh`,
+  step 7), so this gap is the mock's alone.
 
 ### FE-27 — `manifest-mock` answers `listInstances` and `getRelease` from the document's example, whatever is asked
 
@@ -594,6 +602,39 @@ session.*
     contract gives it the exact value it needs: `Environment.instance`, *"the instance the hostname reaches"*
     (F1 Task 7, amended).
   - F6's needs-you band, which reads the last attempt, meets this finding head on.
+
+### FE-28 — The session cookie is not `__Host-`, and apps live on sibling hosts
+
+*Raised by F1's final review (sitting 5), 2026-09-27, from reading, and **not measured**. Not yet carried to the
+platform session.*
+
+- **Screen and moment:** every signed-in request.
+  - That includes our server's *"who is this?"* (FE-2's `whoIs`), which replays the first `manifest_session` it
+    finds.
+  - It also includes the platform's own sessions.
+- **What is missing:**
+  - `manifest_session` is host-only, `HttpOnly`, `SameSite=Lax`, `Path=/` and Secure by origin ✓
+    (`packages/control-plane/src/api/routes/auth.ts`, `sessionCookie`).
+  - But its name has no `__Host-` prefix, so nothing stops **another host under `manifest.internal`** from
+    setting a cookie of the same name with `Domain=manifest.internal`.
+  - Faculty apps are such hosts: production answers at `<slug>.manifest.internal`, beside `app.` and
+    `console.`.
+  - The browser would then send both cookies to `app.manifest.internal`, and which one comes first depends on
+    path and age. That is *cookie tossing*.
+- **Why it matters:**
+  - An app's author, or anything that compromises an app, could plant their own valid session in a colleague's
+    browser.
+  - The colleague would then act, and describe apps, as that author.
+  - Our server would file the colleague's conversations under that author, which is FE-2's boundary crossed
+    from outside.
+- **Options:**
+  - **(a) Recommended:** name the cookie `__Host-manifest_session`. The browser then refuses any version of it
+    set from another host, or with a `Domain`. It needs Secure and `Path=/`, which the https origins already
+    have.
+  - (b) As well, on our side: `whoIs` refuses a request carrying two `manifest_session` cookies, rather than
+    choosing one.
+- **When:** before faculty apps share the zone with real people. Sittings 10–11 at the latest, beside FE-18 and
+  FE-26.
 
 ---
 
