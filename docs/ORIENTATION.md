@@ -9,25 +9,24 @@ says which plan is current. This file states where things stand and the rules. I
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
   ([`api-findings.md`](./api-findings.md), [`2026-09-27-to-the-platform-session.md`](./2026-09-27-to-the-platform-session.md)).
-- **F1 is being executed: sittings 1–3 of 5 are done**, and **sitting 4 is next** (Tasks 6 and 7: sign-in,
-  the shell, and *Your apps*), in [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
-  - Read its *What executing this plan found* first. Tasks ahead carry amendments marked *Amended by sitting 1*,
-    *2* or *3*.
-  - **Sitting 4 rules first on Task 7's feed** (FE-27).
-- **The workspace exists:** `packages/ui`, `web` and `server`.
-  - **The four gates run from the root:** `pnpm test` (47 tests), `pnpm lint`, `pnpm typecheck` and
+- **F1 is being executed: sittings 1–4 of 5 are done**, and **sitting 5 is next**: Task 8, the acceptance, a
+  headless check and Rich clicking it, in [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
+  - Read its *What executing this plan found* first. Task 8 carries amendments marked *Amended by sitting 1*
+    and *4*.
+- **The slice runs against the mock:** `pnpm mock`, then `pnpm dev:mock`, then open `http://127.0.0.1:7105/`.
+  - *Sign in* (the mock fakes CWL), then *Your apps*, with Mock course app led by what its students get.
+  - Then *Sign out*.
+- **The workspace:** `packages/ui` (the design system's first four components, held markup-identical to the
+  prototype's bundle), `web` (the app), and `server` (7105).
+  - **The four gates run from the root:** `pnpm test` (94 tests), `pnpm lint`, `pnpm typecheck` and
     `pnpm format:check`.
   - `pnpm mock` starts `manifest-mock` on 7102 from source. Never use manifest's own `dev` script, which builds
     inside manifest.
-  - `@manifest/contract` resolves to its `src/index.ts` in Vitest and under `tsx`, and a test holds each.
-- **The design system's first four components are ported:** StateChip, Button, Card and SideNav, held
-  markup-identical to the prototype's bundle by `packages/ui/src/parity.test.tsx`.
-- **One place calls the platform** (`packages/web/src/platform`): five reads, and refusals by kind and code,
-  never by message.
-- **Our server runs on 7105** (`pnpm dev:mock` with `pnpm mock`, or `pnpm dev` for the edge).
-  - `/api/me` learns who it serves from `GET /v1/me` and nothing else (FE-2).
-  - In mock mode it proxies `/v1` (its WebSocket too) and `/auth` to the mock.
-  - There is no page yet: that is Task 6.
+  - `@manifest/contract` resolves to its `src/index.ts` in Vitest, Vite and `tsx`, and a test holds each.
+- **Only `packages/web/src/platform` calls the platform:** five reads, and refusals by kind and code, never by
+  message. *Your apps* reads each address's own `Environment.instance` (FE-27).
+- **Our server on 7105** learns who it serves from `GET /v1/me` and nothing else (FE-2). In mock mode it proxies
+  `/v1` (its WebSocket too) and `/auth` to the mock.
 - **FE-26 and FE-27 are new:** the mock accepts any session value, and answers `listInstances` and `getRelease` from
   the document's example, whatever is asked. Neither is carried to the platform session yet.
 - **The platform's sitting 6 has landed at the edge, and closed** (manifest `64ff35c`); its sitting 7 is under

@@ -51,8 +51,8 @@ lands.
 | 1 | 1 | **The measurements this plan rests on**. Throwaway code in the scratchpad; nothing committed but the findings. **Alone, and first** | **done 2026-09-27**: no Decision breaks; seven task details amended (*What executing this plan found*) |
 | 2 | 2, 3 | The workspace and its four gates; the design system's harness and the four components the slice needs | **done 2026-09-27**: 16/16 twice, four gates green; the plan's boundary regex fixed |
 | 3 | 4, 5 | One place that calls the platform; our server on 7105, with `/api/me` and the mock proxy | **done 2026-09-27**: 47/47 twice, four gates green; FE-27 found, Task 7 amended |
-| 4 | 6, 7 | Sign-in, the shell, sign-out; *Your apps*, empty and with apps | ← next: **rule on Task 7's feed first** |
-| 5 | 8 | **The acceptance**: a headless check, and Rich clicking it. **Alone, and last** | |
+| 4 | 6, 7 | Sign-in, the shell, sign-out; *Your apps*, empty and with apps | **done 2026-09-27**: 94/94 twice, four gates green; the feed ruled (`Environment.instance`) |
+| 5 | 8 | **The acceptance**: a headless check, and Rich clicking it. **Alone, and last** | ← next |
 
 **Every sitting ends the same way:**
 1. **The four gates, from the root:** `pnpm test` (twice, because a suite that is not repeatable has a state
@@ -920,6 +920,10 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
      - *Continue with CWL* returns him signed in (the mock fakes it);
      - he sees *Your apps* with `mock-app`, led by *"For your students · Not live yet"*, and its trying-out
        address *Answering*;
+       - **Amended by sitting 4:** the card is titled with `Project.name`, *"Mock course app"*, and `mock-app`
+         appears only in its two addresses.
+       - The trying-out fact reads *"Answering · the version from 18 September, 2:00am"*: the fixture's
+         09:00 UTC, in Vancouver.
      - he tabs through every control and sees focus on each;
      - he signs out.
   4. Record what the screens said.
@@ -1288,6 +1292,97 @@ Against manifest `3c38199` for the contract. The platform session committed `b3d
 - **`vite.config.ts` must carry the contract's alias.** `main.ts` hands Vite `packages/web` as its root, and
   without `web/vite.config.ts` the page would load the contract's `dist/`.
 - **The HMR settings for edge mode** go in that file. `main.ts` passes only `hmr.server`, and Vite merges the two.
+
+**The machine at the close:**
+- nothing on 7102 or 7105;
+- manifest's working tree touched only by the platform session.
+
+### 2026-09-27 — Sitting 4 (Tasks 6 and 7): sign-in, the shell, and *Your apps*
+
+**Commits:**
+- `f823b9d`: sign-in, the shell, sign-out, and a session that ends;
+- `40b4862`: *Your apps*.
+
+The contract's source was unchanged in manifest's working tree during the sitting.
+
+**Task 6: sign-in, the shell and sign-out.**
+- **Moment 1 in the walk-through's words** (`words.ts`), drawn with the design system's tokens (`app.css`).
+  - *Continue with CWL* is a real link to `/auth/login?returnTo=<path and query>`.
+  - It is the one screen with no rail.
+- **The shell:** SideNav with *Your apps* current, the person's name, and *Sign out*.
+  - SideNav's *Sign out* is an `<a>` in the design system, and its markup is held by parity. So its plain click
+    is caught, and it `POST`s `/auth/logout` with the console's assertions.
+  - Its `href`, `/signed-out`, is a page with a real button, so a middle-click signs nobody out.
+- **A session that ends:** the notice, and *Sign in again* back to this page.
+  - The `expired` state carries the person, so the page behind is kept (a ruling: the interface had none).
+- **Unreachable:** our words, and *Try again*.
+- **Every tab has a title:** *Sign in to Manifest*, *Your apps*, or *Manifest*.
+- **`app.css` adds a visible focus ring to every link, white on the rail.** `bundle.css` has none for links.
+- **`auth.test.ts` was added** (10 cases, `signOut`'s shape). The brief listed none, and `signOut` takes an
+  injectable `go` so a test can see where it would go.
+- **Fonts, measured here as Task 6 was amended to do:**
+  - online, Instrument Sans loads (Plex only once mono text appears);
+  - with `fonts.googleapis.com` and `fonts.gstatic.com` blocked and the cache off, no web face loads. The page
+    renders in the system face and works. The hero measures 341px wide against 354.6px.
+- **In headless Chrome against the mock:**
+  - signed out, *Sign in* shows, with no rail;
+  - *Continue with CWL* returns to `/apps?x=1` signed in (the not-found page, correctly);
+  - the rail's *Sign out* `POST`s and lands on *Sign in*.
+
+**Task 7: *Your apps*.**
+- **The feed, ruled first (FE-27):** each address's fact is its own `Environment.instance`, *"the instance the
+  hostname reaches"*, then `getRelease` for an answering one's date.
+  - `listInstances` left `Platform` and its test.
+  - One `getProject` per app, and one `getRelease` per distinct release: FE-10's N+1, named in the code.
+- **`mine` follows the walk-through, not the plan's test.** It filters by owner for an administrator only,
+  because a member's `listProjects` is already theirs.
+- **The working states' words are moment 9's deploy stations:** *Waiting its turn*, *Making room*, *Starting
+  up*, *Waking up*. `destroying` and `gone` read *Switched off*. An unknown state reads *"We can't tell right
+  now"*.
+- **The card is moment 16's, without its band and history:**
+  - the name, or the slug before it has one;
+  - the audience in words;
+  - *For your students* and its chip, first;
+  - then *Your draft* and *For trying out*, each with its hostname in mono and its own chip.
+- **The empty state** (moment 2): *Describe what you need* goes to `/new`, which says *"Describing an app arrives
+  next."*
+- **`ButtonProps.onClick` now receives the click**, as the bundle's element does, so an in-app link can keep its
+  navigation in the page. The markup is unchanged, and parity passes.
+- **Defect found by the plan's own negative control.**
+  - The screen-level machinery check read `textContent`, which runs a label into its chip (*"outhealthy"*). So a
+    raw `healthy` on screen passed the whole-word check.
+  - Text nodes are now joined with a space, and the control goes red naming `healthy`.
+- **In headless Chrome against the mock, at 1440×900** (screenshots in the session's scratchpad): *"Mock course
+  app · one class, all arriving at once · For your students · Not live yet · Your draft
+  mock-app.sandbox.manifest.internal · Not live yet · For trying out mock-app.staging.manifest.internal ·
+  Answering · the version from 18 September, 2:00am"*.
+
+**Negative controls.** Each was red, then restored and green.
+
+| Control | Red |
+|---|---|
+| `expire()` a no-op (the plan's) | the expired case |
+| the rail's *Sign out* not caught | *the rail's Sign out POSTs…* |
+| `retry` a no-op | *Try again asks again* |
+| `signOut` navigating without `go` | `auth.test.ts`'s two navigation cases |
+| a raw `instance.state` in a fact (the plan's) | at first only the model's tests. **The screen check missed it**, and after the fix it names `healthy` in three screen cases |
+| a working state's words made `provisioning` | the model's C3 case |
+| no administrator filter | the model's and the screen's Review Focus 3 cases |
+| the platform's code appended to the page | Review Focus 5's case |
+
+**Could not fail, until fixed:** the screen-level machinery check, as above.
+
+**Gates, from the root:**
+- `pnpm test` twice: 94/94 each time (`ui` 4, `web` 69, `server` 21);
+- `pnpm lint` 0;
+- `pnpm typecheck` 0 (after `onClick`'s type was widened);
+- `pnpm format:check` clean;
+- `pnpm build`: ok.
+
+**For sitting 5, the acceptance:**
+- Task 8's expectation is amended: the card is *Mock course app*, and `mock-app` appears in its addresses.
+- The console shows a `404` for `/favicon.ico`; there is no icon yet.
+- The final whole-branch review belongs after Task 8.
 
 **The machine at the close:**
 - nothing on 7102 or 7105;
