@@ -150,6 +150,9 @@ export const words = {
     addressHint: 'Lower case, hyphens between words. This becomes its web address.',
     /** Rich's (2026-09-27): free now, and not yet theirs. */
     addressFree: (address: string) => `Free. It will live at ${address}.`,
+    /** The address could not be checked: ours or the platform's, never theirs (a deferred Minor). */
+    couldntCheck: "We couldn't check that address just now.",
+    checkAgain: 'Check it again',
     /** Added to SLUG_TAKEN when the platform gives no hint of its own. */
     takenExtra: 'Pick another, or ask its owner to add you.',
     whoTitle: 'Who is going to use it?',

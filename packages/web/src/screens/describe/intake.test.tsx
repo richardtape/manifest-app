@@ -759,6 +759,43 @@ describe('Name it (moment 4, before Make it)', () => {
     expect(address.className).toContain('mf-field__input--mono')
   })
 
+  it('an address we could not check: said under it, with a reference and Try again, never a silent Make it (deferred Minor, Rich: fix it)', async () => {
+    const s = stage()
+    const check = s.platform.checkSlug
+    let failures = 1
+    s.platform.checkSlug = (slug) => {
+      if (failures-- > 0) return Promise.reject(new TypeError('Failed to fetch'))
+      return check(slug)
+    }
+    await naming(s, {
+      names: [],
+      namesAsked: 2,
+      blueprint: { blueprint: 'node-ts-mongo@1', starter: null, why: 'x' },
+    })
+    fireEvent.click(await screen.findByLabelText(words.nameIt.somethingElse))
+    fireEvent.change(screen.getByLabelText(words.nameIt.nameLabel), {
+      target: { value: 'Reading log' },
+    })
+    const said = await screen.findByText(words.nameIt.couldntCheck, {}, { timeout: 2000 })
+    const field = said.closest('.mf-field') as HTMLElement
+    const reference = /quote ([0-9A-F]{4}-[0-9A-F]{4})\./.exec(
+      field.textContent ?? '',
+    )?.[1]
+    expect(reference).toBeDefined()
+    expect(reports).toContainEqual(
+      expect.objectContaining({ reference, code: 'UNREACHABLE', operation: 'checkSlug' }),
+    )
+    const make = screen.getByRole('button', {
+      name: words.nameIt.makeIt,
+    }) as HTMLButtonElement
+    expect(make.disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: words.nameIt.checkAgain }))
+    expect(
+      await screen.findByText(words.nameIt.addressFree('reading-log.manifest.internal')),
+    ).toBeTruthy()
+    expect(screen.queryByText(words.nameIt.couldntCheck)).toBeNull()
+  })
+
   it('Make it waits for a name, a free address and both answers; pressed, it ends the intake session', async () => {
     const s = stage()
     await naming(s)

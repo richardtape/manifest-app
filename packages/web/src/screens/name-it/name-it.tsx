@@ -272,21 +272,66 @@ export function NameIt({
   // A suggestion as it was offered is already checked; anything typed is checked here.
   const needsCheck =
     slug !== undefined && slug !== '' && (choice === ELSE || edited !== undefined)
+  // AN ADDRESS WE COULD NOT CHECK is said under it, with its reference and a way to check it
+  // again: never a silent Make it (a deferred Minor, Rich's word).
+  const [checkFailed, setCheckFailed] = useState<{ slug: string; reference: string }>()
+  const [rechecks, setRechecks] = useState(0)
   useEffect(() => {
     if (!needsCheck) return
     let live = true
     const timer = setTimeout(() => {
       void platform.checkSlug(slug).then(
         (found) => live && setCheck(found),
-        () => undefined,
+        (error: unknown) => {
+          if (!live) return
+          const refusal = refusalOf(error)
+          if (refusal.kind === 'signed-out') return expire()
+          setCheckFailed({
+            slug,
+            reference: reportProblem({
+              code: refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE',
+              operation: 'checkSlug',
+              ...(refusal.kind === 'refused' ? { status: refusal.status } : {}),
+            }),
+          })
+        },
       )
     }, SETTLE_MS)
     return () => {
       live = false
       clearTimeout(timer)
     }
-  }, [slug, needsCheck])
+  }, [slug, needsCheck, rechecks])
   const checked = needsCheck && check?.slug === slug ? check : undefined
+  const uncheckable =
+    needsCheck && checked === undefined && checkFailed?.slug === slug
+      ? checkFailed
+      : undefined
+  /** What the address field says: the platform's refusal, its check, or that we could not. */
+  const addressMessage: FieldMessage | undefined =
+    checked !== undefined
+      ? messageFor(checked)
+      : uncheckable !== undefined
+        ? {
+            tone: 'attention',
+            title: words.nameIt.couldntCheck,
+            body: words.reference.line(uncheckable.reference),
+          }
+        : undefined
+  const checkAgain =
+    uncheckable === undefined ? null : (
+      <div>
+        <Button
+          kind="tertiary"
+          onClick={() => {
+            setCheckFailed(undefined)
+            setRechecks((n) => n + 1)
+          }}
+        >
+          {words.nameIt.checkAgain}
+        </Button>
+      </div>
+    )
   const refusedHere =
     slugRefused !== undefined && slugRefused.slug === slug
       ? slugRefused.message
@@ -562,10 +607,11 @@ export function NameIt({
               label={words.nameIt.nameLabel}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              {...(!changing && checked !== undefined
-                ? { message: messageFor(checked) }
+              {...(!changing && addressMessage !== undefined
+                ? { message: addressMessage }
                 : {})}
             />
+            {changing ? null : checkAgain}
           </div>
         ) : null}
         {choice !== undefined && !changing ? (
@@ -585,11 +631,12 @@ export function NameIt({
             onChange={(e) => setEdited(e.target.value)}
             {...(refusedHere !== undefined
               ? { message: refusedHere }
-              : checked !== undefined
-                ? { message: messageFor(checked) }
+              : addressMessage !== undefined
+                ? { message: addressMessage }
                 : {})}
           />
         ) : null}
+        {changing && refusedHere === undefined ? checkAgain : null}
       </section>
 
       <section className="name-it__section">
