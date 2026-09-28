@@ -369,7 +369,10 @@ export function NameIt({
     if (intake.blueprint !== null) return intake.blueprint
     const list = listed.current ?? (await platform.listBlueprints())
     listed.current = list
-    const first = list[0]
+    // Found on the real platform: its list's first is a test fixture with no CWL sign-in, and
+    // Making it then says "A starting point with CWL sign-in is in place". The first that
+    // provides CWL, by what the contract says it provides; the list's first only if none does.
+    const first = list.find((b) => b.provides.authProviders.includes('cwl')) ?? list[0]
     if (first === undefined) throw new OurRefusal('NO_BLUEPRINT', null)
     return { blueprint: first.ref, starter: null }
   }

@@ -890,6 +890,25 @@ describe('Make it (moment 4’s end, F2 Task 8)', () => {
     expect(s.called('endIntakeSession')).toHaveLength(1)
   })
 
+  it('found on the real platform: a blueprint the agent could not choose falls back to the first with CWL sign-in, never a fixture without it', async () => {
+    const s = stage()
+    const FIXTURE = {
+      ...BLUEPRINT,
+      ref: 'fixture-node@1',
+      name: 'fixture-node',
+      provides: { ...BLUEPRINT.provides, authProviders: ['none' as const] },
+    }
+    s.platform.listBlueprints = () => Promise.resolve([FIXTURE, BLUEPRINT])
+    const make = await readyToMake(s, { blueprint: null })
+    await waitFor(() => expect(s.called('blueprint')).toHaveLength(1))
+    s.say({ kind: 'step', step: 'blueprint', state: 'now' })
+    s.say({ kind: 'step', step: 'blueprint', state: 'halted' })
+    await press(make)
+    await waitFor(() => expect(s.called('createProject')).toHaveLength(1))
+    const [[body]] = s.called('createProject') as [[Schemas['CreateProjectRequest']]]
+    expect(body.blueprint).toBe('node-ts-mongo@1')
+  })
+
   it('a blueprint the agent could not choose (its step halted) is the list’s first, from its skeleton; an empty why is not sent', async () => {
     const s = stage()
     const make = await readyToMake(s, { blueprint: null })

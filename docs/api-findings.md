@@ -26,7 +26,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **After the enablement plan, first** | **FE-6**, **FE-25** | The launch path: the three clocks' drafts and state, the staging registration as a tracked object, and an owner's *"please sign this off"* | **The first of the front-end's asks** |
 | **Then** | **FE-19**–**FE-22**, **FE-7**, **FE-3** | Toolkits, integrations, Qdrant, course material; events after a cursor; the sandbox's pretend people (with FE-24's plan) | ordered after the launch path |
 | **Phase 4, as specified** | **FE-4** | Noticing a live app that died | **Phase 4's reconciler (D10)**; the front-end watches meanwhile |
-| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log | **Rich's to carry**. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits. None blocks the platform's sitting 8 |
+| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30**, **FE-31** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log; a test fixture offered by `listBlueprints` | **Rich's to carry**. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits; FE-31 was met on the real platform (2026-09-28). None blocks the platform's sitting 8 |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -750,6 +750,38 @@ carried to the platform session.*
     operation and the code. We record the id beside our reference.
   - (b) At least the header, and a log line for every `5xx`.
 - **When:** before faculty use it for real. It adds a header and a field, so it is additive.
+
+### FE-31 — `listBlueprints` offers a test fixture, with no CWL sign-in, to every client
+
+*Found 2026-09-28 in F2's sitting 6, walking moments 3–5 on the real platform, against manifest `4738abb`.
+Measured. Not yet carried to the platform session.*
+
+- **Screen and moment:** moment 4, *Make it*. D3 says an agent chooses the blueprint from `listBlueprints`, and the
+  walk-through says the choice is trivial today: *"one blueprint, `node-ts-mongo@1`"*.
+- **What happened:**
+  - The platform lists **two**: `fixture-node@1` first, then `node-ts-mongo@1`.
+  - `fixture-node@1` is a test fixture: `blueprints/fixture-node/blueprint.yaml` ✓ declares
+    `auth_providers: [none]` and `ai: false`.
+  - The laptop's 4B model answered the blueprint agent badly twice in one of two walks (`MODEL_ANSWER_INVALID`,
+    reference `C3E6-ED02`). *Make it* then fell back to the list's first, and a faculty member's project,
+    `reading`, was made from the fixture. Moment 4 then said *"A starting point with CWL sign-in is in place."*,
+    which was untrue.
+- **What we did** (F2 sitting 6, `fix:` after this finding):
+  - the blueprint agent's answer must provide CWL when any blueprint does, or it is refused and retried;
+  - the fallback is the first blueprint whose `provides.authProviders` includes `cwl`.
+
+  Both read what the contract says a blueprint provides. Neither guesses from a name.
+- **What is missing:** nothing in `Blueprint` (`ref, name, majorVersion, language, defaultPort, healthPath,
+  schemaVersions, provides, starters` ✓) says that one is for the platform's own tests and not for people.
+- **Why it matters:**
+  - A client that trusts the list offers a fixture to a faculty member, or starts from it.
+  - Our rule holds only while every real blueprint provides CWL. A future blueprint without CWL, rightly offered
+    for a public app, would be skipped by our fallback.
+- **Options:**
+  - **(a) Recommended:** `listBlueprints` lists only blueprints meant for people. The fixtures are served to the
+    platform's tests alone, by a setting.
+  - (b) `Blueprint.purpose: 'people' | 'testing'`, and clients filter.
+- **When:** before faculty use it for real. Either is small.
 
 ---
 

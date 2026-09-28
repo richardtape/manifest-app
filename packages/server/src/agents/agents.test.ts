@@ -284,6 +284,23 @@ describe('chooseBlueprint (moment 4, D3)', () => {
     expect(user!.content).toContain('proof-app')
   })
 
+  it('found on the real platform: when any blueprint signs students in with CWL, one that cannot (a fixture) is refused, retried once, then MODEL_ANSWER_INVALID', async () => {
+    const fixture = {
+      ...BLUEPRINTS[0]!,
+      ref: 'fixture-node@1',
+      name: 'fixture-node',
+      provides: { services: ['mongodb'], authProviders: ['none' as const], ai: false },
+      starters: [],
+    }
+    const pick = { blueprint: 'fixture-node@1', starter: null, why: 'It is simple.' }
+    const model = scripted({ blueprint: [pick, pick] })
+    expect(
+      await refusedWith(
+        chooseBlueprint(model, UNDERSTOOD.restatement, [fixture, ...BLUEPRINTS]),
+      ),
+    ).toBe('MODEL_ANSWER_INVALID')
+  })
+
   it('its prompt carries what each blueprint offers, and no machinery (no port, no health path)', async () => {
     const model = scripted({
       blueprint: [{ blueprint: 'node-ts-mongo@1', starter: 'proof-app', why: 'x' }],

@@ -25,6 +25,10 @@ function checkedAgainst(blueprints: Schemas['BlueprintList']): Check<Chosen> {
   return ({ blueprint, starter }) => {
     const chosen = blueprints.find((b) => b.ref === blueprint)
     if (chosen === undefined) return 'a blueprint it was not given'
+    // Students sign in with CWL: the product's premise, and what Making it says. When any
+    // blueprint provides it, one that does not (the platform's test fixture) is refused.
+    const cwl = (b: Schemas['Blueprint']) => b.provides.authProviders.includes('cwl')
+    if (!cwl(chosen) && blueprints.some(cwl)) return 'a blueprint without CWL sign-in'
     if (starter !== null && !chosen.starters.some((s) => s.name === starter))
       return 'a starter its blueprint does not have'
     return null
