@@ -4,7 +4,7 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F2 executed)*:
+**Where things stand** *(2026-09-28, F2 executed, and its deferred Minors ruled on)*:
 - The faculty experience is designed moment by moment and **approved by Rich**
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
@@ -18,12 +18,17 @@ says which plan is current. This file states where things stand and the rules. I
   - *Make it* in the person's session, the conversation's token handed to our server;
   - the plan, written on the person's agent session, corrected in a sentence, agreed, and committed into the app
     as `docs/plan.md`.
-  - The acceptance passed three ways: against the mock (`scripts/check-describing.sh`, 17/17), walked whole on
-    the real platform in headless Chrome, and **clicked by Rich** (*"it looks great"*).
+  - The acceptance passed three ways: against the mock (`scripts/check-describing.sh`, then 17/17, now 18/18),
+    walked whole on the real platform in headless Chrome, and **clicked by Rich** (*"it looks great"*).
   - **The laptop model's plans** (sitting 6's entry, verbatim): the shape always right, what it says weak. The
     capable model is for that.
-  - **For Rich to decide:** nine Minors deferred by the review (the plan's sitting 6 entry, and the ledger), and
-    FE-31.
+  - **The review's deferred Minors are ruled on by Rich and done** (the plan's last entry). There were eight, not
+    nine:
+    - six fixed: the limits said, an address we could not check, a window behind at Yes, two windows at *Make
+      it*, the changeover nights, a comment;
+    - the FE-20 check deferred, because a sign-in limited to a class is coming (Rich);
+    - one carried into F3.
+  - **For Rich to decide:** FE-31.
 - **The capable model is being built**: the platform's sitting 9a, which Rich started on 2026-09-28.
   - **Rich chose `openai/gpt-6-luna`**, with `openai/gpt-6-sol` if that does not work. The platform's ruling:
     one setting, `MANIFEST_CAPABLE_MODEL`, and moving to sol is a one-line change and a restart.
@@ -37,12 +42,15 @@ says which plan is current. This file states where things stand and the rules. I
     what moved in the contract.
 - **Next: F3 (building it)**, to be written **once 9a has landed**. Do not start it before the platform session's
   message. Then re-read `openapi.json`, re-run `pnpm typecheck`, and write F3 from what 9a actually built.
+  - **F3 must draw `paused` and `failed`** (its *Stop*) on every screen that can meet them, each problem with its
+    reference. The Describe screen's fallback shows neither today (a deferred Minor of F2's).
 - **The machine** *(2026-09-28)*:
   - **the control plane on 7100 is stopped**, by the platform session for 9a, with Rich's word. Its first Vitest
     run truncates the database, so **the F2 walk's projects are gone**. Bring the control plane back only per
     manifest's RUNBOOK, after 9a, and ask Rich first;
-  - our server on 7105 in edge mode, with nothing behind it until then. The platform's `make doctor` asks it
-    `/api/__doctor`;
+  - **our server on 7105 in mock mode**, switched for the Minors' walk. The platform's `make doctor` asks it
+    `/api/__doctor`, in either mode. To go back to the edge once the control plane runs: stop its whole process
+    tree, then `pnpm dev`;
   - the mock on 7102.
   - To go back to the mock: stop our server's whole process tree, then `pnpm dev:mock`.
 - **The platform:** sittings 8 (archive and restore) and 9 (delete, `4738abb`) have landed, both F6's. 66
@@ -50,7 +58,8 @@ says which plan is current. This file states where things stand and the rules. I
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
-    `src/`, and `reference/bundle.js` holds the four components' markup by the parity test.
+    `src/`, and `reference/bundle.js` holds the four components' markup by the parity test. Our extensions
+    (SideNav's two, FormField's `count` and `FieldCount`) have tests of their own.
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2).
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
@@ -62,9 +71,9 @@ says which plan is current. This file states where things stand and the rules. I
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session.
   - **The gates:**
-    - `pnpm test` (526 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (546 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
-    - `scripts/check-describing.sh` (F2's, mock mode).
+    - `scripts/check-describing.sh` (F2's, mock mode, 18 checks).
 - **Findings not yet carried to the platform session** (Rich's to carry):
   - FE-26 to FE-30, as before;
   - **FE-31**: `listBlueprints` offers a test fixture with no CWL sign-in, and nothing marks it.

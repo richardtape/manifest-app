@@ -1685,7 +1685,8 @@ negative control:
   - renewal was allowed once per page, not once per failure. The naive reset *"on any done step"* then looped, and
     a second test holds that;
   - a conversation that was not there was a blank page.
-- **Nine Minors are deferred, for Rich:**
+- **Nine Minors are deferred, for Rich:** *(eight: the ninth, step 9's pattern, was re-graded Important and
+  fixed. Corrected 2026-09-28, when Rich ruled on them: the last entry.)*
   - the input limits are not said;
   - `/plan/agree` carries no version;
   - two tabs making one conversation's project;
@@ -1849,3 +1850,62 @@ clicked half (Task 10, step 2) is owed**.
   - `pnpm format:check` clean.
 - **Still for Rich:** the nine deferred Minors, FE-31, and carrying FE-26 to FE-31 to the platform session.
 - **Next: F3**, written once the platform session tells us 9a has landed.
+
+### 2026-09-28 — After F2: the deferred Minors, ruled on by Rich
+
+- **Eight, not nine.** The review graded nine Minor, and one (step 9's pattern, which read *"risk-free"* as a key)
+  was re-graded Important and fixed at sitting 6. The sitting 6 entry said nine, and now says why.
+- **Rich's rulings, and what was done**, one commit each, each test red before its code:
+  1. **The FE-20 check reads only *Who gets in*: deferred.** Rich: *"We actually WILL have a way to do this
+     (either via the Academic API or via Canvas, both of which we can run locally (as fake local services))."* A
+     sign-in limited to a class is coming, so the check is not widened now. Recorded at FE-20.
+  2. **The limits, said** (`401b124`). A quiet count from nine tenths of each limit; past it, words, and the send
+     waits. The four fields: their words (4,000), a typed answer, a correction, an answer to what only they know
+     (500 each).
+     - **Decided here, not asked:** no `maxLength`. Option A said *"the box stops at the limit"*, but `maxLength`
+       cuts a paste off without a word, and a pasted brief is the likeliest way to reach 4,000. Their text is
+       kept whole instead. Changing course costs one attribute per field.
+     - The limits are `LIMITS` in `progress.ts`. The page imports that file for types only (Decision 4), so it
+       keeps a copy, and `limits.test.ts` holds the two equal.
+     - The design system gains `FieldCount`, and FormField a `count`. Without one, the markup is the reference's
+       (parity).
+     - **No words for a refusal of length**, though option A named them: with the same numbers on both sides, the
+       page never sends past a limit, and our `*_INVALID` codes cover more than length, so none of them means
+       *"too long"*.
+  3. **An address we could not check** (`248381e`) is said under its field, with its reference and *Check it
+     again*, and reported as `checkSlug`.
+  4. **A window behind at Yes** (`5bf7544`). `/plan/agree` carries the `version` on screen. Any other is `409
+     PLAN_CHANGED`, compared before the answers, and nothing is committed. The page says *"The plan changed in
+     another window. Read it again, then say yes."*: not a fault, and nothing reported. `check-describing`'s
+     step 6c proves it against the mock.
+  5. **Two windows pressing *Make it*: the first wins** (`7ec6a82`). The handover reads the conversation again
+     after its await, so the second is `409 PROJECT_MISMATCH`, and its token is never kept. Its window says
+     *"This was already made in another window. We're carrying on with that one."*, with nothing to press, and
+     the stream carries it on. The second window's empty app remains, the person's to delete (F6).
+  6. **The nights the clocks change** (`f2d27ad`): tomorrow's midnight, on tomorrow's clock.
+     - **Rich:** British Columbia has just passed legislation ending the change, so from this year the clocks do
+       not change. The fix is right either way.
+     - **Measured:** Node 24.12's time-zone data (`2025b`) does not know yet. It still has Vancouver falling back
+       on 1 November 2026. Until the data catches up (Node's, the browsers', the platform's), a Vancouver time
+       after 1 November will be shown an hour off, here and everywhere. There is nothing in our code to fix.
+  7. **The intake comment** (`7d623f9`): a new key for every attempt, and why.
+  8. **The fallback without a reference: carried into F3**, which brings *Stop*, and with it the states
+     `paused` and `failed`. F3's plan must draw them on every screen that can meet them, each problem with its
+     reference.
+- **Negative controls, each red then restored:**
+  - every fix's test, red before its code;
+  - the page's copy of a limit changed to 400;
+  - agreeing from a window behind whose questions had changed. It was `400 AGREE_INVALID` until the version was
+    compared first.
+- **Walked in headless Chrome against the mock, at 1440 and 375** (our server switched to mock mode, since the
+  control plane is stopped for the platform's 9a):
+  - a pasted 4,200 characters kept whole, said, and *Carry on* waiting;
+  - the address check failed by the walk, then checked again;
+  - a plan answer and a correction past 500;
+  - a `PLAN_CHANGED` answered by the walk, then agreed.
+  - No console error, no failed request, no overflow.
+  - The mock's questions are all choices, so the typed answer was covered by its screen test alone.
+  - **Two cosmetic things, left:** at 375 a reference in a field's message breaks at its hyphen (a non-breaking
+    one would stop a copied reference matching); the window-behind notice has space beneath its one line.
+- **The mock acceptance:** `check-describing` **18/18** (step 6c added).
+- **Gates:** `pnpm test` twice, 546/546 each time (526 before these fixes); `pnpm lint` 0; `pnpm typecheck` 0; `pnpm format:check` clean.

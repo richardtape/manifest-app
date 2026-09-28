@@ -430,6 +430,10 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
     platform.
 - **Why it matters:** *"connect to Canvas"* is among the first things a faculty member will ask for. Today the
   honest answer is *"we can't yet"*.
+- **Rich (2026-09-28):** *"We actually WILL have a way to do this (either via the Academic API or via Canvas,
+  both of which we can run locally (as fake local services))."* A sign-in limited to a class is coming. So the
+  plan agent's honesty check, which reads only *Who gets in* (a deferred Minor of F2's), is deferred rather than
+  widened. It changes when the class-limited sign-in lands.
 
 ### FE-21 — A RAG app needs a blueprint that offers Qdrant
 
