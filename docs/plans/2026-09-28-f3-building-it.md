@@ -7,8 +7,8 @@
 **Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
 sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
 whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1–4 are done (2026-09-28, in one session at
-Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 5 is done (2026-09-28, a new session).
-Sitting 6 is next.**
+Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 5 is done (2026-09-28, a new session), and so is sitting 6 (2026-09-28, another). Sitting 7, the acceptance,
+is next.**
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
@@ -58,7 +58,7 @@ moment 6, which hands over to F4's *Seeing it*.
 | 3 | 4, 5 | The platform calls, and the project's event stream | **done 2026-09-28**, in the same session at Rich's word, beside the platform's sitting 10 (the dated entry below) |
 | 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | **done 2026-09-28**, in the same session at Rich's word (the dated entry below) |
 | 5 | 8, 9 | The round of work, our API's building routes, the building frames, and the new tables | **done 2026-09-28**, in a new session (`manifest-app-6a`), beside the platform's sitting 10 (the dated entry below) |
-| 6 | 10, 11 | The design system's additions, and the building screen, layout C | not started |
+| 6 | 10, 11 | The design system's additions, and the building screen, layout C | **done 2026-09-28**, in a new session (`manifest-app-c4`), beside the platform's sitting 10's close and its sitting 11 (the dated entry below) |
 | 7 | 12 | **The acceptance:** against the mock with a scripted model; on the real platform with the capable model; Rich's click. **Alone, and last** | not started |
 
 **Every sitting ends as F2's did:**
@@ -1162,6 +1162,21 @@ export function Disclosure(props: { summary: string; count?: number; children: R
 
 ## Task 12: The acceptance (sitting 7, alone)
 
+**What sitting 6 built that this task stands on** (its dated entry has why):
+- **The building screen** (`screens/building/`) draws `agreed`, `building`, `paused` and `built` from the state frame
+  alone, and a state no screen draws is said with a reference (`STATE_NOT_DRAWN`). Step 2's walk reads it by its
+  words (`words.building`), and its regions are named *The work* and *The conversation*.
+- **Every state frame now carries `thread`**, what the rounds said (`Said`, in `progress.ts`), folded from the store.
+  A folded round's *What changed* is that round's pages' `changed`.
+- **The walk already ran against the mock**, twice, from describe to built (sitting 6's `walk.mjs`, in its
+  scratchpad: headless Chrome over the DevTools protocol, Chrome killed on exit): at 1440 and 375, a message sent
+  mid-round, and *Stop* mid-build then *Carry on*. Step 2 walks the same on the real platform, with the deliberate
+  break.
+- **Seen in that walk, for this task to judge on the real platform:** the line under *Building it* is the lead's last
+  (*"The pages are written."*), since the round keeps the lead's line through the build, the draft and the answers;
+  and a *Stop* the person chose halts the step red (the round folds it `halted`), under a card that says nothing is
+  lost. Rich's eye decides both at his click.
+
 - [ ] **Step 1: Against the mock.** `scripts/check-building.sh`, beside `check-describing.sh`, drives our API as the
   browser does, with the scripted model. It asserts **what our server sent**, read from the trace, whose platform
   entries say what each call named (Task 2). *(M2: the mock's `main` never moves, so every commit's base is
@@ -1742,3 +1757,122 @@ with every call as Task 12 will assert it (Task 12's note has the trace).
 - `scripts/check-slice.sh` 8/8.
 
 Our dev database migrated live to version 3.
+
+### 2026-09-28 — Sitting 6 (Tasks 10 and 11): the design system's additions, and the building screen
+
+*In a new session (`manifest-app-c4`), taking over from `manifest-app-6a`, one agent natively as Rich chose. The
+platform's sitting 10 (`manifest-82`) closed during it (`5a952f5`, docs only), and its sitting 11 (the guides,
+`manifest-7c`) opened. Nothing of ours used 7100; the round's tests use our own fakes, and the walk used the mock.*
+
+**Commits:**
+- `76f2ffc`: Task 10, `LiveSteps`' line and detail; `InverseSurface`, `LogPane` and `TwoFacts` ported with parity;
+  a `Disclosure` of ours;
+- `a8ffc87`: our test following the platform's mock at `8ef685d` (a taken slug's reason now says *slug*);
+- `4fefd9b`: Task 11, the building screen in layout C, and the state frame's `thread`.
+
+**What was built:**
+- **The design system** (Task 10):
+  - `LiveSteps` draws a `line` under the step at work only, in a polite live region, and a `detail` inside any step
+    given one. Without either, its markup is still the reference's, byte for byte;
+  - `InverseSurface`, `LogPane` and **`TwoFacts`** are ported, each with parity cases. `TwoFacts` is the design
+    system's own component for *serving right now* beside *the last attempt*;
+  - `Disclosure` is ours: a native `<details>`, shut by default, its summary counting the lines inside. Machine text
+    sits on the inverse surface, and the summary never does;
+  - a log line wraps anywhere, and a step holding a disclosure may shrink, so machine text never widens the page;
+  - `FormField` gains `secret`: a password field the browser does not fill in (Task 11).
+- **The building screen** (Task 11), for `agreed`, `building`, `paused` and `built`:
+  - **the work, on the right**, which stays in view:
+    - the chip, one of the five states, naming who has a wait (*Waiting on Manifest*, *…on the model we build with*,
+      *…on a Manifest administrator*);
+    - one card for each thing a round needs of them, a problem's with its reference: three tries, the checkpoint,
+      the month (its reset in their own time), a conflict, too many moves, unreachable, what we cannot add, a
+      refusal; and a stopped or interrupted round's own;
+    - the five steps, with the lead's line under the one at work (*"Got it, after this step."* while a message
+      waits), each try and its note, *What changed* with the exact changes behind it, and the platform's own words
+      shut on the inverse surface;
+    - the permission to leave, *"It started and answered."* once built, the draft address in mono, the two facts
+      while a draft attempt fails, the cost, and *Stop*;
+  - **the conversation, on the left**: their words from moment 3; their messages and answers, a secret's never
+    echoed; our sentences and the fallback line; each round folded, *"Built and put on your draft address · 28 Sep,
+    9:12am · What changed"*; the questions as *needs you* cards; the message box, until built, when *"Asking for a
+    change arrives next."*;
+  - **a token our server no longer holds** is minted and handed over without a word, once, and the press sent again.
+    Refused again straight after, it is said;
+  - *"Reconnecting…"* quietly while the page's stream reopens.
+- **F2's fallback, gone:** a conversation past *Yes* is moment 6, and a state no screen draws is said with a reference
+  (`STATE_NOT_DRAWN`, reported). F2's *"Agreed. Building it arrives next."* is removed.
+- **The state frame carries `thread`**, what every round said, folded from the store as the round is. Sitting 5 stored
+  it, and nothing carried it to the page.
+
+**Rulings** (the ledger has each with its cost):
+1. Task 10 also ports `TwoFacts`.
+2. The state frame gains `thread` (`Said`, in `progress.ts`); a folded round carries its own pages' `changed`.
+3. `detail` is drawn on any step given one, not only a finished one: a try that failed carries the platform's words.
+4. A step with a detail is a block that may shrink; one without keeps the reference's `<span>`.
+5. `Disclosure` says its count itself; `.mf-log` wraps anywhere.
+6. `FormField` gains `secret`.
+7. The page's order is the work, then the conversation. Wide, a grid puts the conversation left (layout C); on a phone
+   the work comes first, and focus never jumps back.
+8. `agreed` is drawn by the building screen, with every step to come.
+9. The chip: a stopped round is *attention* without the pulse; a wait names its owner; paused is *"Paused, waiting for
+   you"*.
+10. `needs: refused` words the administrator's two codes as a wait, and anything else as F2's generic words.
+11. The month's reset is said in their own time (*"5pm on 30 September"*), not the walk-through's *"1 October"*.
+12. Carry on refused `CONVERSATION_BUSY`, just after a *Stop*, is said plainly with *Try again*, and no reference.
+13. An interrupted round's card carries a reference of the page's own.
+14. The fallback reports its state camel-cased, since our server refuses an operation with a hyphen.
+15. F2's stream tests and three fixtures gain `thread: []`.
+16. The folded time is written from en-US's parts: Node's en-GB writes *"Sept"*.
+17. A waiting message's *"Got it, after this step."* replaces the lead's line.
+18. The work panel is sticky on a wide screen, with its own scroll.
+
+**Test-first, throughout.**
+- Every test ran red before its code: 2 server, 5 of our API's, 1 of the hook's, 1 of `FormField`'s, 13 of Task 10's
+  and the screen's 50.
+- Three of the screen's first passed on a blank page, since they asserted absences. Each gained an anchor that the
+  screen is drawn, and went red.
+- One test, a state from a newer server, was written after the code it holds. It was watched red by removing that
+  code.
+
+**Negative controls**, each red, then restored:
+- **Task 10 (17):** a line on every step; a line not live; a detail dropped, or before the words; every step's words a
+  `div`; the disclosure open; its summary out of the tab order; no count; `machine` ignored; the summary on the
+  inverse surface; no warning mark; old lines not muted; numbers unpadded; the foot dropped; the attempt tinted
+  steady; the log unwrapped; a step body that may not shrink.
+- **Task 11 (44)**, among them: the thread without an answer's question; the frame without `thread`; building to the
+  fallback, and the fallback without a reference; *"Got it"* never said; no second try; the exact words not machine
+  text; *Stop* offered when stopped; *Try a different way* sending `{}`; the month in another time zone; a problem card
+  without its reference; `TOKEN_MISSING` said, not answered; a token renewed at every frame; a 401 not the session
+  ending; a secret kept on the page, or sent short; answered questions asked again; the message box after built;
+  machine text out of its disclosure (C3).
+- **Four stayed green at first, and each was a finding about a test:**
+  - *the permission to leave once built*: the done branch wins by design, so the stopped round's test now holds it;
+  - *a checkpoint given a reference*: the fixture carried none, so every card's frame now carries one;
+  - *a token renewed at every frame*: the test repeated the frame while the renewal was in flight, where the in-flight
+    guard answers it. It now repeats it after, too.
+  - Removing that effect's dependencies made a render loop that hung Vitest inside `act`. The harness, killed, left
+    the file broken until it was restored by hand. The realistic bug, a dependency on the whole round, is red.
+
+**The walk** (headless Chrome over the DevTools protocol, from the scratchpad, Chrome killed on exit), against the mock
+at 1440 and 375, twice, from describe to built:
+- once with a message sent mid-round, and once with *Stop* mid-build, the stopped card, and *Carry on*;
+- no overflow at either width, with every disclosure shut and then opened;
+- no console error and no failed request of moment 6's. The only ones were F1's: the signed-out check (`/v1/me`
+  `401` before sign-in, by design), and `favicon.ico` `404` (*"there is no icon yet"*, F1 sitting 4).
+- **Seen, for Task 12 and Rich's click:**
+  - the line under *Building it* is the lead's last, since the round keeps it through the build;
+  - a *Stop* the person chose halts the step red.
+
+**The platform, meanwhile:**
+- **Its sitting 10 closed** (`5a952f5`, docs only). The contract is still 1.4.0, 66 operations. Our typecheck and tests
+  pass against it, and the landing is recorded in `api-findings.md` and the roadmap.
+- **Its sitting 11 committed published text under `packages/contract` and `packages/mock`**: `8ef685d`, `08df532` and
+  `e90de38`, with no operation, field, code or event moved. The mock's `SLUG_TAKEN` now reads *"a project already has
+  this slug"*. **F2's *Name it* shows that reason verbatim**, so a faculty member now reads *slug*: for Rich.
+- We restarted our mock between the tasks and the close.
+
+**Gates:**
+- `pnpm test` **853/853, twice** (779 + 74);
+- `pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass;
+- `scripts/check-slice.sh` 8/8;
+- `scripts/check-describing.sh` 18/18, its round 1 running to `done` as in sitting 5.
