@@ -26,7 +26,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **After the enablement plan, first** | **FE-6**, **FE-25** | The launch path: the three clocks' drafts and state, the staging registration as a tracked object, and an owner's *"please sign this off"* | **The first of the front-end's asks** |
 | **Then** | **FE-19**–**FE-22**, **FE-7**, **FE-3** | Toolkits, integrations, Qdrant, course material; events after a cursor; the sandbox's pretend people (with FE-24's plan) | ordered after the launch path |
 | **Phase 4, as specified** | **FE-4** | Noticing a live app that died | **Phase 4's reconciler (D10)**; the front-end watches meanwhile |
-| **Not yet carried** | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30**, **FE-31**, **FE-32** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log; a test fixture offered by `listBlueprints`; a way for an agent to get a `package-lock.json` | **Rich's to carry**. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits; FE-31 was met on the real platform (2026-09-28). None blocks the platform's sitting 8 |
+| **Carried 2026-09-28**, at Rich's word | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30**, **FE-31**, **FE-32** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log; a test fixture offered by `listBlueprints`; a way for an agent to get a `package-lock.json` | **Decided by Rich (2026-09-28), each its option (a)**: FE-28, FE-31 and FE-30 before faculty use it for real; FE-29 when the envelope is next touched; FE-32 before a change after launch meets it; FE-27 before our F6, and FE-26 with FE-18. Our half of FE-28 is done. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits; FE-31 was met on the real platform (2026-09-28). None blocks the platform's sitting 8 |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -557,7 +557,7 @@ Measured by F2's sitting 1 (M1). F3's allowance line reads it. The finding as ra
 
 ### FE-26 — `manifest-mock` accepts any session, and starts only by building inside manifest
 
-*Found by F1's sitting 1 (M5), 2026-09-27, against manifest `8bb6b22`. Not yet carried to the platform session.*
+*Found by F1's sitting 1 (M5), 2026-09-27, against manifest `8bb6b22`. **Carried to the platform session 2026-09-28**, at Rich's word (to `manifest-b1`).*
 
 - **Screen and moment:** every signed-in screen, as the mock serves it. And our server's *"who is this?"* (FE-2),
   which is the one place a wrong answer lets one person see another's conversations.
@@ -597,8 +597,7 @@ Measured by F2's sitting 1 (M1). F3's allowance line reads it. The finding as ra
 
 ### FE-27 — `manifest-mock` answers `listInstances` and `getRelease` from the document's example, whatever is asked
 
-*Found by F1's sitting 3 (Task 4), 2026-09-27, against manifest `3c38199`. Not yet carried to the platform
-session.*
+*Found by F1's sitting 3 (Task 4), 2026-09-27, against manifest `3c38199`. **Carried to the platform session 2026-09-28**, at Rich's word (to `manifest-b1`).*
 
 - **Screen and moment:** *Your apps* (moments 2 and 16), and anything else that reads what an address is running.
 - **What we would call:** `listInstances` on each of `mock-app`'s three environments, then `getRelease` for the
@@ -653,8 +652,7 @@ session.*
 
 ### FE-28 — The session cookie is not `__Host-`, and apps live on sibling hosts
 
-*Raised by F1's final review (sitting 5), 2026-09-27, from reading, and **not measured**. Not yet carried to the
-platform session.*
+*Raised by F1's final review (sitting 5), 2026-09-27, from reading, and **not measured**. **Carried to the platform session 2026-09-28**, at Rich's word (to `manifest-b1`).*
 
 - **Screen and moment:** every signed-in request.
   - That includes our server's *"who is this?"* (FE-2's `whoIs`), which replays the first `manifest_session` it
@@ -681,14 +679,15 @@ platform session.*
     have.
   - (b) As well, on our side: `whoIs` refuses a request carrying two `manifest_session` cookies, rather than
     choosing one.
+    **Done, 2026-09-28, at Rich's word.** Until the platform renames the cookie, a planted one signs the person
+    out of our app, visibly, rather than in as someone else.
 - **When:** before faculty apps share the zone with real people. Sittings 10–11 at the latest, beside FE-18 and
   FE-26.
 
 ### FE-29 — A refusal's facts are only in its message
 
 *Found by F2's sitting 1 (M1), 2026-09-27, against manifest `e6a5f70`, from reading. Widened the same day at
-Rich's word: a limit is to be said plainly, whose it is and when it resets. Not yet carried to the platform
-session.*
+Rich's word: a limit is to be said plainly, whose it is and when it resets. **Carried to the platform session 2026-09-28**, at Rich's word (to `manifest-b1`).*
 
 - **Screen and moment:**
   - moments 3 and 4, when describing is paused;
@@ -727,8 +726,7 @@ session.*
 
 ### FE-30 — Nothing lets a support report meet the platform's log
 
-*Raised 2026-09-27 at Rich's word, after F2's sitting 1, against manifest `e6a5f70`. Read, not measured. Not yet
-carried to the platform session.*
+*Raised 2026-09-27 at Rich's word, after F2's sitting 1, against manifest `e6a5f70`. Read, not measured. **Carried to the platform session 2026-09-28**, at Rich's word (to `manifest-b1`).*
 
 - **Screen and moment:** every problem a faculty member is shown. Rich: *"if the member of faculty gets in touch
   with support, they will copy and paste the error and it will at least have an identifier so we can see what the
@@ -758,7 +756,7 @@ carried to the platform session.*
 ### FE-31 — `listBlueprints` offers a test fixture, with no CWL sign-in, to every client
 
 *Found 2026-09-28 in F2's sitting 6, walking moments 3–5 on the real platform, against manifest `4738abb`.
-Measured. Not yet carried to the platform session.*
+Measured. **Carried to the platform session 2026-09-28**, at Rich's word (to `manifest-b1`).*
 
 - **Screen and moment:** moment 4, *Make it*. D3 says an agent chooses the blueprint from `listBlueprints`, and the
   walk-through says the choice is trivial today: *"one blueprint, `node-ts-mongo@1`"*.
@@ -789,8 +787,7 @@ Measured. Not yet carried to the platform session.*
 
 ### FE-32 — An agent cannot add a dependency: nothing regenerates `package-lock.json`
 
-*Found 2026-09-28 while preparing F3, from reading, against manifest `9c54bc3`. Not measured. Not yet carried to
-the platform session.*
+*Found 2026-09-28 while preparing F3, from reading, against manifest `9c54bc3`. Not measured. **Carried to the platform session 2026-09-28**, at Rich's word (to `manifest-b1`).*
 
 - **Screen and moment:** moment 6 (building it), and every change after it (moments 8 and 17), whenever what the
   person asked for needs a package the blueprint's skeleton does not already have.

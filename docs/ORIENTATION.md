@@ -73,9 +73,9 @@ says which plan is current. This file states where things stand and the rules. I
     - `pnpm test` (546 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
     - `scripts/check-describing.sh` (F2's, mock mode, 18 checks).
-- **Findings not yet carried to the platform session** (Rich's to carry):
-  - FE-26 to FE-30, as before, and **FE-32**: an agent cannot add a dependency, because nothing regenerates `package-lock.json`;
-  - **FE-31**: `listBlueprints` offers a test fixture with no CWL sign-in, and nothing marks it.
+- **FE-26 to FE-32 are carried to the platform session** (2026-09-28, at Rich's word, to `manifest-b1`), each
+  with its option (a), and FE-20's news: a sign-in limited to a class is coming (the Academic API or Canvas). **Our
+  half of FE-28 is done:** a request carrying two `manifest_session` cookies is signed out here.
 - **The platform's request to us is answered** (2026-09-28): `GET /api/__doctor` on 7105 answers
   `{"name":"manifest-app"}`, with no session, so its `make doctor` can tell our server from a stray process (its
   F12). The platform session has been told. **Keep that path and that answer.** The platform's doctor matches
