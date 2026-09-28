@@ -1,0 +1,18 @@
+# The roadmap — the faculty front-end's plans, in order
+
+*This file outranks every other document on which plan is current. Each plan is written when the one before it
+is executed, so it can argue from what was actually built. Written 2026-09-27.*
+
+| Plan | Delivers (walk-through moments) | Waits on the platform | Status |
+|---|---|---|---|
+| **F1 — Foundations and the first clickable slice** | The repository; the design system ported to React 19; one place that calls the platform; our server on 7105; **sign-in → *Your apps*** (moments 1, 2, and 16's card) against the mock, and against the real platform once sitting 6 lands | nothing (sitting 6 for the optional real-platform step) | **written 2026-09-27; not started** — [`2026-09-27-f1-foundations.md`](./2026-09-27-f1-foundations.md) |
+| **F2 — Describing it** | Moments 3–5: intake (understanding, naming, blueprint), creating the project, minting the tokens, the plan; our server's storage | **FE-1** (intake session) and agent sessions: **sitting 7** | not written |
+| **F3 — Building it** | Moment 6 in layout C: the lead agent's loop over the authoring API, conversations, the steps and the line, questions, the checkpoint, *Stop*; `agents.md`'s specialists as far as the blueprint allows | sitting 7 (**FE-23** for the spend line); the capable-model decision | not written |
+| **F4 — Seeing and changing it** | Moments 7–9: the Preview's three worlds, pretend people, a change as its own conversation (one at a time), putting a version on trying-out | **FE-3** (the logins are ours meanwhile); **FE-24** in sitting 10 | not written |
+| **F5 — Going live** | Moments 10–15: the clocks (honest about FE-6), the checklist in our words, the dry run, waiting on sign-off (FE-25), step-up, the address handed over | FE-6 and FE-25 for the full version; the rest is built | not written |
+| **F6 — Running it** | Moments 16–20: *since you were last here*, the watch token, emails, the live-address watch and *Start it again*, a change after launch, People, switch off, back on, delete | sittings 5 (built), 8, 9; a mail sink on the laptop | not written |
+
+**Rules for this file:**
+- A plan moves to *executed* only when its acceptance passes.
+- **A platform finding that moves** (Rich relays a sitting's close-out) is recorded in `api-findings.md` and
+  reflected here the same day.

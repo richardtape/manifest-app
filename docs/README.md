@@ -4,12 +4,14 @@ The product faculty members use: they describe an app, an agent builds it, and M
 at `https://app.manifest.internal` on the laptop, from this repository's server on port 7105. It is a separate
 project from the platform (`../manifest`, spec §5), and consumes its API through `@manifest/contract`.
 
+**Start at [`ORIENTATION.md`](./ORIENTATION.md).** It is the entry point for a cold agent.
+
 **Where things stand (2026-09-27, end of the first session):** no code yet, by design.
 - **The walk-through is drafted end to end** (20 moments, with Rich's decisions recorded), and awaits his
   review as a whole.
 - **The API findings are listed** (FE-1 to FE-25), with what to carry to the platform session first.
-- **Next:** Rich's review of the walk-through, then a plan in sittings (`superpowers:writing-plans`), then the
-  first clickable slice against the mock.
+- **The walk-through is approved by Rich**, and **plan F1 is written** ([`plans/`](./plans)). Next: Rich's review
+  of F1, then its sitting 1.
 
 | Read | For |
 |---|---|
