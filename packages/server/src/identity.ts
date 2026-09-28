@@ -13,16 +13,21 @@ import {
  */
 export type Person = { id: string; displayName: string }
 
-/** The value of `manifest_session` in a Cookie header, and nothing else from it. */
+/**
+ * The value of `manifest_session` in a Cookie header, and nothing else from it. **Two are
+ * none** (FE-28): the cookie is not `__Host-`, so a sibling host, a faculty app among them, can
+ * plant one for the whole zone, and choosing either could file one person's conversations
+ * under another. Until the platform renames it, a planted cookie signs the person out here,
+ * visibly, rather than in as someone else.
+ */
 function sessionIn(cookieHeader: string | undefined): string | undefined {
-  for (const part of (cookieHeader ?? '').split(';')) {
-    const at = part.indexOf('=')
-    if (at !== -1 && part.slice(0, at).trim() === SESSION_COOKIE) {
-      const value = part.slice(at + 1).trim()
-      return value === '' ? undefined : value
-    }
-  }
-  return undefined
+  const values = (cookieHeader ?? '')
+    .split(';')
+    .map((part) => [part.slice(0, part.indexOf('=')).trim(), part] as const)
+    .filter(([name, part]) => part.includes('=') && name === SESSION_COOKIE)
+    .map(([, part]) => part.slice(part.indexOf('=') + 1).trim())
+  if (values.length !== 1) return undefined
+  return values[0] === '' ? undefined : values[0]
 }
 
 /** Who the session belongs to; `undefined` when there is none, or the platform refuses it. */

@@ -111,6 +111,17 @@ describe('whoIs: the only reader of the session (FE-2)', () => {
     expect(f.seen).toEqual([])
   })
 
+  it('two sessions in one header are none, and it asks nobody (FE-28: a sibling host can plant one)', async () => {
+    const f = await fake(200)
+    expect(
+      await whoIs('manifest_session=A; theme=dark; manifest_session=B', f.origin),
+    ).toBeUndefined()
+    expect(
+      await whoIs('manifest_session=A; manifest_session=A', f.origin),
+    ).toBeUndefined()
+    expect(f.seen).toEqual([])
+  })
+
   it('a 401 is undefined', async () => {
     const { signedOut } = await everyCase('S')
     expect(signedOut).toBeUndefined()
