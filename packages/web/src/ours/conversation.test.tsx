@@ -68,10 +68,12 @@ const NOTHING_YET: Intake = {
 const state = (
   patch: Partial<Conversation> = {},
   intake: Intake = NOTHING_YET,
+  plan: Extract<Progress, { kind: 'state' }>['plan'] = null,
 ): Progress => ({
   kind: 'state',
   conversation: { ...CONVERSATION, ...patch },
   intake,
+  plan,
 })
 
 beforeEach(() => {
@@ -90,8 +92,36 @@ describe('useConversation', () => {
     expect(result.current).toEqual({
       conversation: CONVERSATION,
       intake: NOTHING_YET,
+      plan: null,
       steps: [],
       status: 'live',
+    })
+  })
+
+  it('keeps the plan the state carries, and whose allowance a refusal names (F2 Task 9)', () => {
+    const plan = {
+      studentsSee: 'a',
+      youSee: 'b',
+      itKeeps: 'c',
+      whoGetsIn: 'd',
+      ai: 'e',
+      assumed: [],
+      onlyYouKnow: [],
+      changed: ['youSee' as const],
+    }
+    const { result } = renderHook(() => useConversation('c-1', open))
+    last().send(state({ state: 'plan-ready' }, NOTHING_YET, { version: 2, plan }))
+    expect(result.current.plan).toEqual({ version: 2, plan })
+    last().send({
+      kind: 'refusal',
+      code: 'MODEL_BUDGET_EXHAUSTED',
+      reference: '7F3A-9C21',
+      allowance: { monthlyUsd: 10, resetsAt: '2026-10-01T00:00:00.000Z' },
+    })
+    expect(result.current.refusal).toEqual({
+      code: 'MODEL_BUDGET_EXHAUSTED',
+      reference: '7F3A-9C21',
+      allowance: { monthlyUsd: 10, resetsAt: '2026-10-01T00:00:00.000Z' },
     })
   })
 
@@ -106,6 +136,7 @@ describe('useConversation', () => {
     expect(result.current).toEqual({
       conversation: { ...CONVERSATION, state: 'naming' },
       intake: NOTHING_YET,
+      plan: null,
       steps: [
         { step: 'understanding', state: 'done' },
         { step: 'naming', state: 'now' },

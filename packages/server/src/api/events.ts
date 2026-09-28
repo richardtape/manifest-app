@@ -3,9 +3,9 @@ import type { FastifyInstance } from 'fastify'
 import type { Config } from '../config.js'
 import type { Conversation, Store } from '../store/db.js'
 import { guard } from './guard.js'
-import { intakeOf } from './intake-state.js'
+import { intakeOf, planOf } from './intake-state.js'
 import { problem } from './problems.js'
-import type { Progress } from './progress.js'
+import type { Allowance, Progress } from './progress.js'
 
 /**
  * ONE PROGRESS STREAM PER CONVERSATION (F2 Decision 4): Server-Sent Events, the whole state
@@ -16,14 +16,29 @@ import type { Progress } from './progress.js'
 export interface Hub {
   publish(conversationId: string, frame: Progress): void
   subscribe(conversationId: string, listener: (frame: Progress) => void): () => void
+  /**
+   * The steps at work now, each as its `now` frame (Review Focus 5): a connection made after a
+   * step began hears it, so a reconnect mid-step shows it working. After a restart there are
+   * none, and the page offers Carry on.
+   */
+  working(conversationId: string): Progress[]
 }
 
 export function createHub(): Hub {
   const listeners = new Map<string, Set<(frame: Progress) => void>>()
+  const working = new Map<string, Map<string, Progress>>()
   return {
     publish(conversationId, frame) {
+      if (frame.kind === 'step') {
+        const now = working.get(conversationId) ?? new Map<string, Progress>()
+        if (frame.state === 'now') now.set(frame.step, frame)
+        else now.delete(frame.step)
+        if (now.size === 0) working.delete(conversationId)
+        else working.set(conversationId, now)
+      }
       for (const listener of [...(listeners.get(conversationId) ?? [])]) listener(frame)
     },
+    working: (conversationId) => [...(working.get(conversationId)?.values() ?? [])],
     subscribe(conversationId, listener) {
       const set = listeners.get(conversationId) ?? new Set()
       listeners.set(conversationId, set.add(listener))
@@ -35,13 +50,19 @@ export function createHub(): Hub {
   }
 }
 
-/** Every change of state is published whole: the conversation, and its intake so far. */
-export function publishState(hub: Hub, store: Store, conversation: Conversation): void {
-  hub.publish(conversation.id, {
+/** The whole state: the conversation, its intake so far, and its latest plan. */
+export function stateFrame(store: Store, conversation: Conversation): Progress {
+  return {
     kind: 'state',
     conversation,
     intake: intakeOf(store, conversation.id),
-  })
+    plan: planOf(store, conversation.id),
+  }
+}
+
+/** Every change of state is published whole. */
+export function publishState(hub: Hub, store: Store, conversation: Conversation): void {
+  hub.publish(conversation.id, stateFrame(store, conversation))
 }
 
 /**
@@ -55,7 +76,13 @@ export function publishRefusal(
     conversation,
     code,
     operation,
-  }: { conversation: Conversation; code: string; operation: string },
+    allowance,
+  }: {
+    conversation: Conversation
+    code: string
+    operation: string
+    allowance?: Allowance | undefined
+  },
   write?: (line: string) => void,
 ): string {
   const reference = problem(
@@ -70,7 +97,12 @@ export function publishRefusal(
     },
     write,
   )
-  hub.publish(conversation.id, { kind: 'refusal', code, reference })
+  hub.publish(conversation.id, {
+    kind: 'refusal',
+    code,
+    reference,
+    ...(allowance === undefined ? {} : { allowance }),
+  })
   return reference
 }
 
@@ -118,9 +150,8 @@ export function registerEvents(
       })
       // THE STATE FIRST, then each change: nothing can be published between the two lines,
       // which run without a pause between them.
-      response.write(
-        data({ kind: 'state', conversation, intake: intakeOf(store, conversation.id) }),
-      )
+      response.write(data(stateFrame(store, conversation)))
+      for (const frame of hub.working(conversation.id)) response.write(data(frame))
       const unsubscribe = hub.subscribe(conversation.id, (frame) => {
         response.write(data(frame))
       })

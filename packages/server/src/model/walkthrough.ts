@@ -1,7 +1,7 @@
 import { answered, type Message, type Model } from './client.js'
 
 /**
- * MOCK MODE'S MODEL (F2 Decision 7): the mock has none, so every intake agent is answered
+ * MOCK MODE'S MODEL (F2 Decision 7): the mock has none, so every agent is answered
  * from the walk-through's example, through the same parse, checks and single retry as a real
  * answer. It reads only what a prompt must carry: whether answers came back (round 2), which
  * addresses are taken, and which blueprints were offered. A mock, and simpler than it looks:
@@ -65,11 +65,41 @@ function blueprint(user: string): unknown {
   }
 }
 
+/** The prototype's worked example (moment 5), in our voice, and honest about who gets in (FE-20). */
+const PLAN = {
+  studentsSee:
+    "One page listing the weeks. Click a week and you get a box to write in. Once you've posted, the same page fills up with everyone else's, and not before.",
+  youSee:
+    "Every response for a week on one page, sorted by name, printable. A count of who hasn't posted.",
+  itKeeps:
+    'The text students write, their name, and when they posted it. Nothing else. No email, no student number.',
+  whoGetsIn:
+    "Anyone with a CWL can sign in. We can't limit it to your class yet, so it only shows each student their own work until they post.",
+  ai: "None. You didn't ask for it, and it needs a budget and a chosen model. Easy to add later.",
+  assumed: [
+    'Twelve weeks, matching a standard term',
+    'No word limit, but a warning past 500',
+    "Students can't delete a response once posted",
+  ],
+  onlyYouKnow: [
+    { id: 'late', ask: 'Is a late post still a post, or does it close at the deadline?' },
+    { id: 'ta', ask: 'Should a TA see everything you see?' },
+  ],
+}
+
+/** The plan; corrected, "What you see" changes, whatever the correction said. A mock. */
+function plan(user: string): unknown {
+  return user.includes('Their correction:')
+    ? { ...PLAN, youSee: `${PLAN.youSee} We changed this as you asked.` }
+    : PLAN
+}
+
 export function walkthroughModel(): Model {
   const answers: Record<string, (user: string) => unknown> = {
     understanding,
     naming,
     blueprint,
+    plan,
   }
   return {
     complete(agent, schema, messages: Message[], check) {

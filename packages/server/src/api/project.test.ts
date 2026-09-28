@@ -69,6 +69,7 @@ async function setUp() {
     origin: ORIGIN,
     platformOrigin: platform.origin,
     modelGateway: 'http://127.0.0.1:7106/v1',
+    planModel: 'default-chat',
   }
   const app = buildServer(config, () => undefined, { store, hub, tokens, intakeKeys })
   cleanups.push(

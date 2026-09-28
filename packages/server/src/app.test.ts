@@ -50,6 +50,7 @@ const mock = (platformOrigin: string): Config => ({
   origin: 'http://127.0.0.1:7105',
   platformOrigin,
   modelGateway: 'http://127.0.0.1:7106/v1',
+  planModel: 'default-chat',
 })
 const edge = (platformOrigin: string): Config => ({
   mode: 'edge',
@@ -57,6 +58,7 @@ const edge = (platformOrigin: string): Config => ({
   origin: 'https://app.manifest.internal',
   platformOrigin,
   modelGateway: 'http://127.0.0.1:7106/v1',
+  planModel: 'default-chat',
 })
 const SESSION = { cookie: 'theme=dark; manifest_session=mock-session' }
 const json = async (response: Response) =>
@@ -70,6 +72,7 @@ describe('readConfig', () => {
       origin: 'https://app.manifest.internal',
       platformOrigin: 'http://127.0.0.1:7100',
       modelGateway: 'http://127.0.0.1:7106/v1',
+      planModel: 'default-chat',
     })
   })
   it('is mock when asked, served on 7105 itself, asking manifest-mock', () => {
@@ -79,7 +82,13 @@ describe('readConfig', () => {
       origin: 'http://127.0.0.1:7105',
       platformOrigin: 'http://127.0.0.1:7102',
       modelGateway: 'http://127.0.0.1:7106/v1',
+      planModel: 'default-chat',
     })
+  })
+  it('writes plans on the model it is told, default-chat unless told otherwise (Task 9)', () => {
+    expect(readConfig({ MANIFEST_APP_PLAN_MODEL: 'capable-chat' }).planModel).toBe(
+      'capable-chat',
+    )
   })
   it('refuses a mode it does not know, loudly', () => {
     expect(() => readConfig({ MANIFEST_APP_MODE: 'production' })).toThrow(

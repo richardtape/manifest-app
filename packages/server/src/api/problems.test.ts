@@ -41,6 +41,7 @@ function setUp(): { store: Store; file: string; config: Config } {
       origin: ORIGIN,
       platformOrigin: platform.origin,
       modelGateway: 'http://127.0.0.1:7106/v1',
+      planModel: 'default-chat',
     },
   }
 }

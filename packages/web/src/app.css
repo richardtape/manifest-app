@@ -416,6 +416,99 @@
   color: var(--ink-secondary);
 }
 
+/* Moment 4's end and moment 5's waits: a name, lines ticking, and what to press. */
+.making,
+.plan-wait {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 760px;
+}
+
+/* Moment 5: the plan, and the decision beside it (the prototype's Draft). */
+.plan {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+}
+.plan__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 760px;
+}
+.plan__main .page-title,
+.plan__main .moment {
+  margin: 0;
+}
+.plan__aside {
+  flex: 0 0 300px;
+  position: sticky;
+  top: var(--space-6);
+}
+/* Five labelled rows: the label, then what it will be. */
+.plan__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+}
+.plan__row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.plan__row + .plan__row {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+}
+.plan__label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-weight: 600;
+  color: var(--ink);
+}
+.plan__text {
+  margin: 0;
+  color: var(--ink-secondary);
+  line-height: 1.55;
+}
+/* A row a correction changed: a word, never a colour alone. */
+.plan__changed {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 600;
+}
+.plan__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.plan__assumed {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--ink-secondary);
+  line-height: 1.6;
+}
+.plan__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.plan__correction {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
 @media (max-width: 959px) {
   .describe {
     flex-direction: column;
@@ -423,5 +516,17 @@
   .describe__aside {
     flex-basis: auto;
     align-self: stretch;
+  }
+  .plan {
+    flex-direction: column;
+  }
+  .plan__aside {
+    position: static;
+    flex-basis: auto;
+    align-self: stretch;
+  }
+  .plan__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
   }
 }

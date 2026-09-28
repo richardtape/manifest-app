@@ -1,9 +1,10 @@
 import type { Chosen } from '../agents/blueprint.js'
+import { Plan } from '../agents/plan.js'
 import type { Named } from '../agents/naming.js'
 import type { Understood } from '../agents/understanding.js'
 import type { Made } from '../platform/project.js'
 import type { Store } from '../store/db.js'
-import type { Intake } from './progress.js'
+import type { Intake, PlanView } from './progress.js'
 
 /**
  * THE INTAKE SO FAR, FROM WHAT WAS SAID (F2 Task 5). Each message's body is one of these;
@@ -19,6 +20,15 @@ export type Said =
   | { kind: 'blueprint'; chosen: Chosen }
   /** The project Make it made, as its token's `getProject` answered (Task 8). */
   | { kind: 'project'; project: Made }
+  /** Their sentence, correcting the plan whose version it follows (Task 9). */
+  | { kind: 'correction'; text: string; after: number }
+  /** The plan agreed, with their answers, and the commit that put it in the app (Task 9). */
+  | {
+      kind: 'agreed'
+      version: number
+      answers: Record<string, string>
+      commitSha: string
+    }
 
 export const NOTHING_YET: Intake = {
   round: null,
@@ -61,4 +71,33 @@ export function intakeOf(store: Store, conversationId: string): Intake {
     }
   }
   return intake
+}
+
+/**
+ * THE LATEST PLAN, PARSED ON THE WAY OUT (F2 Task 2's ruling): a stored plan that no longer
+ * parses is no plan, never a crash.
+ */
+export function planOf(
+  store: Store,
+  conversationId: string,
+): { version: number; plan: PlanView } | null {
+  const latest = store.latestPlan(conversationId)
+  if (latest === undefined) return null
+  const parsed = Plan.safeParse(latest.plan)
+  return parsed.success ? { version: latest.version, plan: parsed.data } : null
+}
+
+/** A correction not yet written into a plan: the last one, if it follows the latest plan. */
+export function pendingCorrection(
+  store: Store,
+  conversationId: string,
+): string | undefined {
+  const version = store.latestPlan(conversationId)?.version
+  let pending: string | undefined
+  for (const { body } of store.listMessages(conversationId)) {
+    const said = body as Said
+    if (said.kind === 'correction')
+      pending = said.after === version ? said.text : undefined
+  }
+  return pending
 }

@@ -59,7 +59,7 @@ function timeWords(at: Date, timeZone: string | undefined): string {
 }
 
 /** "5pm on 30 September". */
-function whenWords(at: Date, timeZone: string | undefined): string {
+export function whenWords(at: Date, timeZone: string | undefined): string {
   const day = new Intl.DateTimeFormat('en-GB', {
     ...(timeZone === undefined ? {} : { timeZone }),
     day: 'numeric',

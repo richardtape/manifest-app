@@ -4,11 +4,16 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import { registerConversations } from './api/conversations.js'
 import { createHub, registerEvents, type Hub } from './api/events.js'
 import { registerIntake } from './api/intake.js'
+import { registerPlan } from './api/plan.js'
 import { registerProblems } from './api/problems.js'
 import { registerProject } from './api/project.js'
+import { createWork } from './api/work.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
-import { notAvailable, type Model } from './model/client.js'
+import { notAvailable, openAiCompatible, type Model } from './model/client.js'
+import { walkthroughModel } from './model/walkthrough.js'
+import { platformAgentSessions, type AgentSessions } from './platform/agent-sessions.js'
+import { platformAuthoring, type Authoring } from './platform/authoring.js'
 import { createIntakeKeys, type IntakeKeys } from './platform/intake.js'
 import {
   createConversationTokens,
@@ -58,6 +63,9 @@ export function buildServer(
     intakeKeys = createIntakeKeys(),
     tokens = createConversationTokens(),
     projects = platformProjects(config.platformOrigin),
+    sessions = platformAgentSessions(config.platformOrigin),
+    authoring = platformAuthoring(config.platformOrigin),
+    planModel = planModelFor(config),
   }: {
     store: Store
     hub?: Hub
@@ -68,8 +76,14 @@ export function buildServer(
     intakeKeys?: IntakeKeys
     /** Each conversation's token, handed over at Make it: in memory only (Decision 1). */
     tokens?: ConversationTokens
-    /** `getProject` with a conversation's token (Task 8). */
+    /** `getProject` and `getKnowledgePack` with a conversation's token (Tasks 8 and 9). */
     projects?: Projects
+    /** The person's agent sessions, with a conversation's token (Task 9). */
+    sessions?: AgentSessions
+    /** The tree and the plan's commit, with a conversation's token (Task 9). */
+    authoring?: Authoring
+    /** The plan's model, on an agent session's key (Task 9). */
+    planModel?: (key: string) => Model
   },
 ): FastifyInstance {
   const app = Fastify({
@@ -100,8 +114,20 @@ export function buildServer(
   registerConversations(app, { config, store })
   registerProblems(app, { config, store })
   registerEvents(app, { config, store, hub, heartbeatMs })
-  registerIntake(app, { config, store, hub, intakeModel, intakeKeys })
+  // One piece of work per conversation at a time, whichever route began it.
+  const work = createWork(hub, store)
+  registerIntake(app, { config, store, work, intakeModel, intakeKeys })
   registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
+  registerPlan(app, {
+    config,
+    store,
+    work,
+    tokens,
+    sessions,
+    projects,
+    authoring,
+    planModel,
+  })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to
@@ -131,4 +157,18 @@ export function buildServer(
   }
 
   return app
+}
+
+/**
+ * EACH MODE'S PLAN MODEL (F2 Task 9). Through the edge, Config's plan model on our own
+ * gateway, with the agent session's key. Against the mock, which has no model, the
+ * walk-through's plan (Decision 7): the mock's session and its key are still asked for.
+ */
+export function planModelFor(config: Config): (key: string) => Model {
+  if (config.mode === 'mock') {
+    const walkthrough = walkthroughModel()
+    return () => walkthrough
+  }
+  return (key) =>
+    openAiCompatible({ baseUrl: config.modelGateway, key, model: config.planModel })
 }

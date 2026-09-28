@@ -1,6 +1,8 @@
 import type {
+  Allowance,
   Conversation,
   Intake,
+  PlanView,
   Progress,
   StepKey,
 } from '@manifest-app/server/progress'
@@ -13,10 +15,12 @@ export interface ConversationView {
   conversation?: Conversation
   /** Moments 3 and 4 so far: the understanding, the answers, the names, the blueprint. */
   intake?: Intake
+  /** Moment 5: the latest plan and its version, once one is written. */
+  plan?: { version: number; plan: PlanView } | null
   /** Each step at its latest, in the order they began. */
   steps: Step[]
-  /** Our code, and the reference the person may quote (Decision 11). */
-  refusal?: { code: string; reference: string }
+  /** Our code, and the reference the person may quote (Decision 11); whose allowance, if spent. */
+  refusal?: { code: string; reference: string; allowance?: Allowance }
   /** Never a terminal "closed" while the page is mounted: a closed stream is reopened. */
   status: 'connecting' | 'live'
 }
@@ -33,6 +37,7 @@ function apply(view: ConversationView, frame: Progress): ConversationView {
         ...view,
         conversation: frame.conversation,
         intake: frame.intake,
+        plan: frame.plan,
         status: 'live',
       }
     case 'step': {
@@ -47,7 +52,14 @@ function apply(view: ConversationView, frame: Progress): ConversationView {
       }
     }
     case 'refusal':
-      return { ...view, refusal: { code: frame.code, reference: frame.reference } }
+      return {
+        ...view,
+        refusal: {
+          code: frame.code,
+          reference: frame.reference,
+          ...(frame.allowance === undefined ? {} : { allowance: frame.allowance }),
+        },
+      }
   }
 }
 

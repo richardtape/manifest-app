@@ -161,6 +161,24 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
       '/api/conversations/c-1/names',
       { taken: ['mock-app'] },
     ],
+    [
+      'plan',
+      (o: ReturnType<typeof createOurs>) => o.plan('c-1'),
+      '/api/conversations/c-1/plan',
+      {},
+    ],
+    [
+      'correct',
+      (o: ReturnType<typeof createOurs>) => o.correct('c-1', 'My TA too.'),
+      '/api/conversations/c-1/plan/correction',
+      { correction: 'My TA too.' },
+    ],
+    [
+      'agree',
+      (o: ReturnType<typeof createOurs>) => o.agree('c-1', { late: 'Closed.' }),
+      '/api/conversations/c-1/plan/agree',
+      { answers: { late: 'Closed.' } },
+    ],
   ] as const)('%s posts to its route', async (_, call, url, body) => {
     const fetch = answer(202)
     vi.stubGlobal('fetch', fetch)

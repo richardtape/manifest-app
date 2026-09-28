@@ -239,6 +239,9 @@ function stage(
     names: record('names') as Ours['names'],
     blueprint: record('blueprint') as Ours['blueprint'],
     handProject: record('handProject') as Ours['handProject'],
+    plan: record('plan') as Ours['plan'],
+    correct: record('correct') as Ours['correct'],
+    agree: record('agree') as Ours['agree'],
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -257,6 +260,7 @@ function stage(
       kind: 'state',
       conversation: { ...CONVERSATION, ...patch },
       intake: { ...NOTHING_YET, ...intake },
+      plan: null,
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))

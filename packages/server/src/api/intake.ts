@@ -4,13 +4,12 @@ import { chooseBlueprint } from '../agents/blueprint.js'
 import { suggestNames } from '../agents/naming.js'
 import { understand } from '../agents/understanding.js'
 import type { Config } from '../config.js'
-import { ModelError, type Model } from '../model/client.js'
+import type { Model } from '../model/client.js'
 import type { Conversation, ConversationState, Store } from '../store/db.js'
-import { publishRefusal, publishState, type Hub } from './events.js'
 import { intakeKeyFrom, type IntakeKeys } from '../platform/intake.js'
 import { guard } from './guard.js'
 import { intakeOf, type Said } from './intake-state.js'
-import type { StepKey } from './progress.js'
+import type { Work } from './work.js'
 
 /**
  * MOMENTS 3 AND 4 ON OUR SERVER (F2 Task 5): the three intake agents, wired to a
@@ -71,84 +70,24 @@ export function registerIntake(
   {
     config,
     store,
-    hub,
+    work,
     intakeModel,
     intakeKeys,
   }: {
     config: Config
     store: Store
-    hub: Hub
+    work: Work
     intakeModel: (conversation: Conversation) => Model
     intakeKeys: IntakeKeys
   },
 ): void {
   const check = guard(config)
-  const working = new Set<string>()
-
-  const step = (
+  const { mine, moveTo } = work
+  const run = (
     conversation: Conversation,
-    key: StepKey,
-    state: 'now' | 'done' | 'halted',
-  ) => hub.publish(conversation.id, { kind: 'step', step: key, state })
-
-  const moveTo = (conversation: Conversation, state: ConversationState) =>
-    publishState(hub, store, store.setState(conversation.id, state))
-
-  /** The conversation as it is now, whoever last changed it. */
-  const now = (conversation: Conversation) =>
-    store.getConversation(conversation.id, conversation.personId) ?? conversation
-
-  /**
-   * ONE PIECE OF WORK, IN THE BACKGROUND. A model's refusal halts the step and is published
-   * with its reference; anything else unexpected is ours, said as INTERNAL, with its stack
-   * to the output for whoever is looking. The conversation stays where it was, so the
-   * person can try again, or name it themselves.
-   */
-  function run(
-    conversation: Conversation,
-    key: StepKey,
-    work: () => Promise<ConversationState | undefined>,
-  ) {
-    working.add(conversation.id)
-    step(conversation, key, 'now')
-    void work()
-      .then(
-        (next) => {
-          step(conversation, key, 'done')
-          if (next === undefined) publishState(hub, store, now(conversation))
-          else moveTo(conversation, next)
-        },
-        (error: unknown) => {
-          step(conversation, key, 'halted')
-          if (!(error instanceof ModelError)) console.error(error)
-          publishRefusal(hub, store, {
-            conversation,
-            code: error instanceof ModelError ? error.code : 'INTERNAL',
-            operation: `conversation ${key}`,
-          })
-        },
-      )
-      .finally(() => working.delete(conversation.id))
-  }
-
-  /**
-   * The person's conversation in one of `states`, not already working; else it has replied.
-   * Synchronous on purpose: nothing may run between its busy check and `run`'s claim, or two
-   * presses at once would both pass.
-   */
-  function mine(
-    request: { params: { id: string } },
-    reply: FastifyReply,
-    who: { person: { id: string } },
-    states: ConversationState[],
-  ): Conversation | undefined {
-    const conversation = store.getConversation(request.params.id, who.person.id)
-    if (conversation === undefined) return void refuse(reply, 404, 'NOT_FOUND')
-    if (working.has(conversation.id)) return void refuse(reply, 409, 'CONVERSATION_BUSY')
-    if (!states.includes(conversation.state))
-      return void refuse(reply, 409, 'CONVERSATION_STATE')
-    return conversation
-  }
+    key: 'understanding' | 'naming' | 'blueprint',
+    job: () => Promise<ConversationState | undefined>,
+  ) => work.run(conversation, key, job)
 
   const say = (conversation: Conversation, from: 'person' | 'we', said: Said) =>
     store.addMessage(conversation.id, from, said)

@@ -140,6 +140,12 @@ export interface Ours {
    * in the person's session, for our server to check and hold in memory.
    */
   handProject(id: string, made: { projectId: string; token: string }): Promise<void>
+  /** MOMENT 5 (Task 9): write the plan, after Make it, or Carry on. */
+  plan(id: string): Promise<void>
+  /** Not quite: one sentence of theirs. */
+  correct(id: string, correction: string): Promise<void>
+  /** Yes, build that: with their answers to what only they know. */
+  agree(id: string, answers: Record<string, string>): Promise<void>
   events(id: string): StreamSource
 }
 
@@ -164,6 +170,15 @@ export function createOurs(): Ours {
     },
     blueprint: async (id, blueprints) => {
       await call('POST', at(id, '/blueprint'), { blueprints })
+    },
+    plan: async (id) => {
+      await call('POST', at(id, '/plan'), {})
+    },
+    correct: async (id, correction) => {
+      await call('POST', at(id, '/plan/correction'), { correction })
+    },
+    agree: async (id, answers) => {
+      await call('POST', at(id, '/plan/agree'), { answers })
     },
     handProject: async (id, made) => {
       await call('POST', at(id, '/project'), {

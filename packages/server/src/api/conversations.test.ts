@@ -34,6 +34,7 @@ async function serve(): Promise<{ base: string; store: Store; file: string }> {
     origin: ORIGIN,
     platformOrigin: platform.origin,
     modelGateway: 'http://127.0.0.1:7106/v1',
+    planModel: 'default-chat',
   }
   const app: FastifyInstance = buildServer(config, (_, response) => response.end(), {
     store,

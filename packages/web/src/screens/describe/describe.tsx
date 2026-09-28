@@ -8,8 +8,8 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { navigate } from '../../router.js'
 import { words } from '../../words.js'
-import { Making } from '../making/making.js'
 import { NameIt } from '../name-it/name-it.js'
+import { PlanScreen } from '../plan/plan.js'
 import { SupportReference } from '../reference.js'
 import { rememberIntakeSession } from './memory.js'
 import { intakeRefused } from './model.js'
@@ -217,6 +217,10 @@ export function Describing({
   useEffect(() => {
     const refusal = view.refusal
     if (refusal === undefined || id === undefined) return
+    // Moments 3 and 4 only: from Make it on, a refusal is the plan's (PlanScreen).
+    const at = view.conversation?.state
+    if (at !== undefined && at !== 'describing' && at !== 'questions' && at !== 'naming')
+      return
     unpress()
     if (RENEWABLE.has(refusal.code) && !renewed.current) {
       renewed.current = true
@@ -328,12 +332,33 @@ export function Describing({
       />
     )
 
-  // Made, and its token ours: Making it's three lines (moment 4's end).
-  if (state === 'making' && intake?.project !== null && intake?.project !== undefined)
-    return <Making key={intake.project.id} platform={platform} project={intake.project} />
+  // Made, and its token ours: Making it's three lines, then the plan (moments 4's end and 5).
+  if (
+    (state === 'making' ||
+      state === 'planning' ||
+      state === 'plan-ready' ||
+      state === 'agreed') &&
+    view.conversation !== undefined &&
+    intake !== undefined
+  )
+    return (
+      <PlanScreen
+        key={view.conversation.id}
+        platform={platform}
+        ours={ours}
+        conversation={view.conversation}
+        intake={intake}
+        plan={view.plan ?? null}
+        steps={view.steps}
+        refusal={view.refusal}
+        expire={expire}
+        now={now}
+        timeZone={timeZone}
+      />
+    )
 
   if (state !== undefined && state !== 'describing')
-    return <p className="body-lead">{words.nameIt.makingNext}</p>
+    return <p className="body-lead">{words.refused.body}</p>
 
   // THEIR WORDS: typed here, or, once sent, theirs as they wrote them.
   const theirs = view.conversation?.description ?? text

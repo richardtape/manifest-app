@@ -26,6 +26,12 @@ export interface Config {
    * platform's `MANIFEST_AGENT_LLM_URL` default, and the mock's example.
    */
   modelGateway: string
+  /**
+   * THE MODEL THE PLAN IS WRITTEN ON (F2 Task 9), and only if the agent session offers it:
+   * never another. `default-chat` on the laptop; `MANIFEST_APP_PLAN_MODEL` names another,
+   * such as the capable model once the platform offers it.
+   */
+  planModel: string
 }
 
 const PLATFORM = { mock: 'http://127.0.0.1:7102', edge: 'http://127.0.0.1:7100' } as const
@@ -44,5 +50,6 @@ export function readConfig(env: NodeJS.ProcessEnv): Config {
     origin: ORIGIN[mode],
     platformOrigin: PLATFORM[mode],
     modelGateway: 'http://127.0.0.1:7106/v1',
+    planModel: env['MANIFEST_APP_PLAN_MODEL'] ?? 'default-chat',
   }
 }

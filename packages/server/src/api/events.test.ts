@@ -54,6 +54,7 @@ async function serve(
     origin: ORIGIN,
     platformOrigin: platform.origin,
     modelGateway: 'http://127.0.0.1:7106/v1',
+    planModel: 'default-chat',
   }
   const app = buildServer(config, (_, response) => response.end(), {
     store,
@@ -122,6 +123,35 @@ async function open(base: string, id: string, cookie = AS_ALICE) {
   return { response, frames, comments, until, abort }
 }
 
+describe('Review Focus 5: a step at work is heard by a connection made after it began (F2 Task 9)', () => {
+  it('connecting while a step works gets the state, then that step, now; once it is done, the state alone', async () => {
+    const f = file()
+    const { base, store, hub, app } = await serve(f)
+    closers.push(
+      () => app.close(),
+      () => store.close(),
+    )
+    store.rememberPerson(ALICE)
+    const made = store.createConversation(ALICE.id, WORDS)
+    hub.publish(made.id, { kind: 'step', step: 'understanding', state: 'now' })
+
+    const during = await open(base, made.id)
+    await during.until(() => during.frames.length >= 2)
+    expect(during.frames.map((frame) => frame.kind)).toEqual(['state', 'step'])
+    expect(during.frames[1]).toEqual({
+      kind: 'step',
+      step: 'understanding',
+      state: 'now',
+    })
+
+    hub.publish(made.id, { kind: 'step', step: 'understanding', state: 'done' })
+    const after = await open(base, made.id)
+    await after.until(() => after.frames.length >= 1)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(after.frames.map((frame) => frame.kind)).toEqual(['state'])
+  })
+})
+
 describe('GET /api/conversations/:id/events', () => {
   it('connecting gets the state frame first: the whole conversation', async () => {
     const f = file()
@@ -142,6 +172,7 @@ describe('GET /api/conversations/:id/events', () => {
       kind: 'state',
       conversation: made,
       intake: NOTHING_YET,
+      plan: null,
     })
   })
 
@@ -168,6 +199,7 @@ describe('GET /api/conversations/:id/events', () => {
           kind: 'state',
           conversation: expect.objectContaining({ state: 'questions' }),
           intake: NOTHING_YET,
+          plan: null,
         },
       ])
     }
@@ -297,6 +329,7 @@ describe('Review Focus 5, the stream’s half: our server restarts', () => {
       kind: 'state',
       conversation: expect.objectContaining({ id: made.id, state: 'planning' }),
       intake: NOTHING_YET,
+      plan: null,
     })
   })
 })

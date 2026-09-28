@@ -20,7 +20,18 @@ const OURS = createOurs()
  * (seconds, and no spinners: 20-states.md). Signed out is the sign-in screen, the only
  * one without a rail. Signed in, every screen sits beside the rail.
  */
-export function App({ platform, ours = OURS }: { platform: Platform; ours?: Ours }) {
+export function App({
+  platform,
+  ours = OURS,
+  now,
+  timeZone,
+}: {
+  platform: Platform
+  ours?: Ours
+  /** For a test: the clock and the zone the limits' times are said in. */
+  now?: () => Date
+  timeZone?: string
+}) {
   const { session, retry, expire } = useSession(platform)
   const { route, here } = useRoute()
   const [signOutFailed, setSignOutFailed] = useState(false)
@@ -113,6 +124,8 @@ export function App({ platform, ours = OURS }: { platform: Platform; ours?: Ours
         platform={platform}
         ours={ours}
         expire={expire}
+        {...(now === undefined ? {} : { now })}
+        {...(timeZone === undefined ? {} : { timeZone })}
         {...(route.name === 'conversation' ? { id: route.id } : {})}
         {...(from === undefined ? {} : { from })}
       />

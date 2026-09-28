@@ -22,6 +22,7 @@ import {
   type MadeProject,
 } from '../describe/memory.js'
 import { MakingSteps } from '../making/making.js'
+import { mintRequest } from '../making/token.js'
 import { SupportReference } from '../reference.js'
 import {
   addressOf,
@@ -40,21 +41,6 @@ const SETTLE_MS = 400
 type Scale = 'solo' | 'class' | 'large_course' | 'public'
 type Burst = 'steady' | 'synchronised'
 
-/**
- * THE CONVERSATION'S TOKEN (walk-through moment 4; sitting 1's M1): everything building
- * needs, and nothing a delegated token may never hold. Seven days, named after the
- * conversation, so `AgentSession.via` names the thread.
- */
-const CAPABILITIES: Schemas['MintTokenRequest']['capabilities'] = [
-  'project:read',
-  'source:write',
-  'secret:write',
-  'build:create',
-  'release:create',
-  'release:deploy',
-  'output:read',
-  'agent:session',
-]
 const SLUG_REFUSALS = new Set(['SLUG_TAKEN', 'SLUG_RESERVED', 'SLUG_INVALID'])
 
 /** A problem Make it met, with its reference (Decision 11), and the one way on. */
@@ -271,11 +257,7 @@ export function NameIt({
       try {
         minted = await platform.mintToken(
           project.id,
-          {
-            name: `Building — ${conversation.title}`.slice(0, 64),
-            capabilities: CAPABILITIES,
-            expiresInDays: 7,
-          },
+          mintRequest(conversation.title),
           crypto.randomUUID(),
         )
       } catch (error) {

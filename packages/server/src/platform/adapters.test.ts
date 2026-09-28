@@ -5,6 +5,7 @@ import { z } from 'zod/v4'
 import { understand } from '../agents/understanding.js'
 import { suggestNames } from '../agents/naming.js'
 import { chooseBlueprint } from '../agents/blueprint.js'
+import { writePlan } from '../agents/plan.js'
 import { buildServer } from '../app.js'
 import type { Config } from '../config.js'
 import { ModelError, type Model } from '../model/client.js'
@@ -23,6 +24,7 @@ import {
   intakeKeyFrom,
   intakeModelFor,
 } from './intake.js'
+import { platformProjects } from './project.js'
 import { PlatformRefusal } from './refusal.js'
 
 /**
@@ -217,6 +219,56 @@ describe('platformAgentSessions (sitting 7, as it landed)', () => {
   })
 })
 
+describe('platformProjects.knowledgePack: how apps like this are built (moment 5)', () => {
+  const file = (path: string, content: string) => ({
+    path,
+    mediaType: 'text/markdown',
+    sha256: '0'.repeat(64),
+    content,
+  })
+
+  it('reads the blueprint’s pack with the conversation’s token, and answers it as text, each file under its path', async () => {
+    const fake = await fakePlatform(() => ({
+      status: 200,
+      body: {
+        blueprint: 'node-ts-mongo@1',
+        files: [
+          file('AGENTS.md', 'Read me first.'),
+          file('manifest.md', 'Pages and a database.'),
+        ],
+      },
+    }))
+    const text = await platformProjects(fake.origin).knowledgePack(
+      TOKEN,
+      'node-ts-mongo@1',
+    )
+    expect(text).toBe(
+      '## AGENTS.md\n\nRead me first.\n\n## manifest.md\n\nPages and a database.',
+    )
+    expect(fake.seen[0]!.url).toBe('/v1/blueprints/node-ts-mongo%401/knowledge-pack')
+    expect(fake.seen[0]!.headers.authorization).toBe(`Bearer ${TOKEN}`)
+    expect(fake.seen[0]!.headers.cookie).toBeUndefined()
+  })
+
+  it('a pack longer than a small model can read is cut, and says so', async () => {
+    const fake = await fakePlatform(() => ({
+      status: 200,
+      body: { blueprint: 'b@1', files: [file('AGENTS.md', 'x'.repeat(50_000))] },
+    }))
+    const text = await platformProjects(fake.origin).knowledgePack(TOKEN, 'b@1')
+    expect(text.length).toBeLessThanOrEqual(24_000)
+    expect(text.endsWith('(The rest is left out.)')).toBe(true)
+  })
+
+  it('a refusal is its code, never its message', async () => {
+    const fake = await fakePlatform(() => refusal(404, 'NOT_FOUND', 'no pack at /srv/x'))
+    const error = await failure(platformProjects(fake.origin).knowledgePack(TOKEN, 'b@1'))
+    expect(error).toBeInstanceOf(PlatformRefusal)
+    expect((error as PlatformRefusal).code).toBe('NOT_FOUND')
+    expect(error.message).not.toContain('/srv/x')
+  })
+})
+
 describe('platformAuthoring: the plan’s first commit (Decision 9)', () => {
   const TREE = (sha: string) => ({
     status: 200,
@@ -318,6 +370,7 @@ describe('the intake key (FE-1, as it landed)', () => {
     origin: 'https://app.manifest.internal',
     platformOrigin: 'http://127.0.0.1:7100',
     modelGateway: 'http://127.0.0.1:7106/v1',
+    planModel: 'default-chat',
   }
   const later = new Date(Date.now() + 30 * 60_000).toISOString()
   const HANDED = {
@@ -418,6 +471,7 @@ describe('each mode’s intake model', () => {
       origin: 'https://app.manifest.internal',
       platformOrigin: 'http://127.0.0.1:7100',
       modelGateway: `${gateway.origin}/v1`,
+      planModel: 'default-chat',
     }
     const keys = createIntakeKeys()
     keys.put('c-1', {
@@ -443,6 +497,7 @@ describe('each mode’s intake model', () => {
       origin: 'http://127.0.0.1:7105',
       platformOrigin: 'http://127.0.0.1:7102',
       modelGateway: 'http://127.0.0.1:7106/v1',
+      planModel: 'default-chat',
     }
     const keys = createIntakeKeys()
     const model = intakeModelFor(config, keys)({ id: 'c-1' })
@@ -493,6 +548,7 @@ describe('POST /api/conversations/:id/intake-key: the handover', () => {
       origin: ORIGIN,
       platformOrigin: platform.origin,
       modelGateway: 'http://127.0.0.1:7106/v1',
+      planModel: 'default-chat',
     }
     const understood = {
       questions: [],
@@ -639,6 +695,30 @@ describe('the walk-through model (mock mode: Decision 7)', () => {
       'reading-circle',
       'week-by-week',
     ])
+  })
+
+  it('writes the walk-through’s plan; a correction changes one row, and only that row is marked (Task 9)', async () => {
+    const input = {
+      description: WORDS,
+      restatement: 'A page where your students post.',
+      answers: {},
+      skipped: [],
+      knowledgePack: '# guide',
+      tree: ['package.json'],
+    }
+    const first = await writePlan(model, input)
+    expect(first.whoGetsIn).toMatch(/^Anyone with a CWL can sign in\./)
+    expect(first.onlyYouKnow.map((q) => q.ask)).toEqual([
+      'Is a late post still a post, or does it close at the deadline?',
+      'Should a TA see everything you see?',
+    ])
+    expect(first.changed).toEqual([])
+    const corrected = await writePlan(model, {
+      ...input,
+      previous: first,
+      correction: 'My TA should see everything too.',
+    })
+    expect(corrected.changed).toEqual(['youSee'])
   })
 
   it('chooses the first blueprint it is given, with no starter', async () => {

@@ -69,14 +69,55 @@ export interface Intake {
   project: { id: string; name: string; slug: string; blueprint: string } | null
 }
 
+/** One of the plan's five rows (moment 5). */
+export type PlanRow = 'studentsSee' | 'youSee' | 'itKeeps' | 'whoGetsIn' | 'ai'
+
+/** The plan, as the page shows it (moment 5; F2 Task 9). */
+export interface PlanView {
+  studentsSee: string
+  youSee: string
+  itKeeps: string
+  whoGetsIn: string
+  ai: string
+  /** "Things we assumed": three at most. */
+  assumed: string[]
+  /** "Two things only you know": each answered where it is asked. */
+  onlyYouKnow: { id: string; ask: string }[]
+  /** The rows a correction changed, which the page marks. */
+  changed: PlanRow[]
+}
+
+/** Whose allowance is used up, and when it resets (Rich): null before a first session. */
+export interface Allowance {
+  monthlyUsd: number
+  resetsAt: string | null
+}
+
 /** What each step is; the page words it (words.ts holds every sentence). */
-export type StepKey = 'understanding' | 'naming' | 'blueprint'
+export type StepKey =
+  | 'understanding'
+  | 'naming'
+  | 'blueprint'
+  /** Moment 5: "Reading how apps like this are built", then "Writing the plan". */
+  | 'reading'
+  | 'writing'
+  /** The plan agreed, and committed as docs/plan.md. */
+  | 'agreeing'
 
 /** One frame of `GET /api/conversations/:id/events`, as `data: <json>`. */
 export type Progress =
   /** The whole state: first on every connection, and again on every change. */
-  | { kind: 'state'; conversation: Conversation; intake: Intake }
+  | {
+      kind: 'state'
+      conversation: Conversation
+      intake: Intake
+      /** The latest plan and its version: null until one is written (Task 9). */
+      plan: { version: number; plan: PlanView } | null
+    }
   /** A step, by its key, ticking on real completion. */
   | { kind: 'step'; step: StepKey; state: 'now' | 'done' | 'halted' }
-  /** Our code, and the support reference the person may quote (Decision 11). */
-  | { kind: 'refusal'; code: string; reference: string }
+  /**
+   * Our code, and the support reference the person may quote (Decision 11); a spent
+   * allowance says whose it is and when it resets (Rich).
+   */
+  | { kind: 'refusal'; code: string; reference: string; allowance?: Allowance }

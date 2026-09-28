@@ -125,6 +125,11 @@ export const words = {
     understanding: 'Reading it',
     naming: 'Thinking of names',
     blueprint: 'Choosing how to build it',
+    /** Moment 5's two, the walk-through's. */
+    reading: 'Reading how apps like this are built',
+    writing: 'Writing the plan',
+    /** Proposed (F2 sitting 5), for Rich: the agreed plan committed as docs/plan.md. */
+    agreeing: 'Saving the plan with your app',
   },
   /** MOMENT 4, NAME IT (F2): the walk-through's words, with sitting 5's two things. */
   nameIt: {
@@ -170,8 +175,6 @@ export const words = {
     footer:
       "Who it's for sets how much room we give it. You can't change that yet. Ask us and we'll do it by hand.",
     makeIt: 'Make it',
-    /** Until F2's Task 8 builds it. Rich's (2026-09-27). */
-    makingNext: 'Making it arrives next.',
   },
   /**
    * MOMENT 4'S END, MAKING IT (F2 Task 8): three lines, each ticking on its real event from
@@ -185,6 +188,48 @@ export const words = {
     madeNotStarted: (name: string) =>
       `${name} is made, but we couldn't start work on it. Nothing is lost.`,
     startBuilding: 'Start building',
+  },
+  /**
+   * MOMENT 5, THE PLAN (F2 Task 9): the walk-through's words; Rich's for the allowance and
+   * for what the plan waits on (2026-09-27); and a few proposed in sitting 5, marked.
+   */
+  plan: {
+    title: "Here's what we'd build",
+    lead: 'Read it as a description of the finished thing, not as instructions. Anything wrong, say so in a sentence.',
+    rows: {
+      studentsSee: 'What students see',
+      youSee: 'What you see',
+      itKeeps: 'What it keeps',
+      whoGetsIn: 'Who gets in',
+      ai: 'AI',
+    },
+    /** Proposed (sitting 5): a row a correction changed. */
+    changed: 'Changed',
+    assumedTitle: 'Things we assumed',
+    /** The walk-through's "Two things only you know"; the one-question form proposed (sitting 5). */
+    onlyYouKnow: (count: number) =>
+      count === 1 ? 'One thing only you know' : 'Two things only you know',
+    yesTitle: 'Say yes and this happens',
+    yesBody:
+      'We build it on your draft address, and you watch. You can leave; it keeps going.',
+    yes: 'Yes, build that',
+    notQuite: 'Not quite — let me correct it',
+    /** Proposed (sitting 5): the one sentence box. */
+    correctionLabel: 'In a sentence, what should change',
+    /** Until F3 builds it: the plan's own words. */
+    agreed: 'Agreed. Building it arrives next.',
+    /** Rich's (after F2 sitting 1): whose allowance, and when it resets, in their own time. */
+    allowanceUsed: (amount: string, when: string) =>
+      `You've used your ${amount} AI allowance for this month. It resets at ${when}. Nothing is lost; this plan will be here.`,
+    /** Rich's, agreed 2026-09-27. */
+    waitingOnAdmin:
+      'Writing plans is waiting on a Manifest administrator. Nothing is lost.',
+    /** Rich's, agreed 2026-09-27. */
+    couldntWrite: "We couldn't write the plan just now. Nothing is lost.",
+    /** The walk-through's: the plan came back malformed twice. */
+    didntComeOut: "The plan didn't come out right. Try again. Nothing was built.",
+    /** Proposed (sitting 5): the agreed plan could not be committed. */
+    couldntSave: "We couldn't save the plan with your app just now. Nothing is lost.",
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
   reference: {

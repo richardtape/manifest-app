@@ -1,0 +1,113 @@
+import type { FastifyReply } from 'fastify'
+import { ModelError } from '../model/client.js'
+import { PlatformRefusal } from '../platform/refusal.js'
+import type { Conversation, ConversationState, Store } from '../store/db.js'
+import { publishRefusal, publishState, type Hub } from './events.js'
+import type { Allowance, StepKey } from './progress.js'
+
+/**
+ * A STEP'S OWN REFUSAL, by our code: what the step itself decided, with what the person must
+ * be told (a spent allowance says whose it is and when it resets).
+ */
+export class Refused extends Error {
+  constructor(
+    readonly code: string,
+    readonly allowance?: Allowance,
+  ) {
+    super(code)
+    this.name = 'Refused'
+  }
+}
+
+/**
+ * ONE PIECE OF WORK PER CONVERSATION, IN THE BACKGROUND (F2 Tasks 5 and 9), shared by every
+ * route that works on one, so no two run at once.
+ */
+export interface Work {
+  /**
+   * The person's conversation in one of `states`, not already working; else it has replied.
+   * Synchronous on purpose: nothing may run between its busy check and `run`'s claim, or two
+   * presses at once would both pass.
+   */
+  mine(
+    request: { params: { id: string } },
+    reply: FastifyReply,
+    who: { person: { id: string } },
+    states: ConversationState[],
+  ): Conversation | undefined
+  /**
+   * The work, from its first step: `next` ends one step and begins another. Its answer is the
+   * state to move to, or none; a refusal halts the step it met, and is published with its
+   * reference. Anything unexpected is ours, said as INTERNAL, with its stack to the output.
+   * The conversation stays where it was, so the person can carry on.
+   */
+  run(
+    conversation: Conversation,
+    first: StepKey,
+    work: (next: (key: StepKey) => void) => Promise<ConversationState | undefined>,
+  ): void
+  moveTo(conversation: Conversation, state: ConversationState): Conversation
+}
+
+const refuse = (reply: FastifyReply, status: number, code: string) =>
+  reply.code(status).send({ error: { code } })
+
+export function createWork(hub: Hub, store: Store): Work {
+  const working = new Set<string>()
+  const step = (id: string, key: StepKey, state: 'now' | 'done' | 'halted') =>
+    hub.publish(id, { kind: 'step', step: key, state })
+  const moveTo = (conversation: Conversation, state: ConversationState) => {
+    const moved = store.setState(conversation.id, state)
+    publishState(hub, store, moved)
+    return moved
+  }
+  /** The conversation as it is now, whoever last changed it. */
+  const now = (conversation: Conversation) =>
+    store.getConversation(conversation.id, conversation.personId) ?? conversation
+
+  return {
+    moveTo,
+    mine(request, reply, who, states) {
+      const conversation = store.getConversation(request.params.id, who.person.id)
+      if (conversation === undefined) return void refuse(reply, 404, 'NOT_FOUND')
+      if (working.has(conversation.id))
+        return void refuse(reply, 409, 'CONVERSATION_BUSY')
+      if (!states.includes(conversation.state))
+        return void refuse(reply, 409, 'CONVERSATION_STATE')
+      return conversation
+    },
+    run(conversation, first, work) {
+      working.add(conversation.id)
+      let current = first
+      step(conversation.id, current, 'now')
+      const next = (key: StepKey) => {
+        step(conversation.id, current, 'done')
+        current = key
+        step(conversation.id, current, 'now')
+      }
+      void work(next)
+        .then(
+          (state) => {
+            step(conversation.id, current, 'done')
+            if (state === undefined) publishState(hub, store, now(conversation))
+            else moveTo(conversation, state)
+          },
+          (error: unknown) => {
+            step(conversation.id, current, 'halted')
+            const known =
+              error instanceof ModelError ||
+              error instanceof PlatformRefusal ||
+              error instanceof Refused
+            if (!known) console.error(error)
+            publishRefusal(hub, store, {
+              conversation,
+              code: known ? error.code : 'INTERNAL',
+              operation: `conversation ${current}`,
+              allowance: error instanceof Refused ? error.allowance : undefined,
+            })
+          },
+        )
+        .finally(() => working.delete(conversation.id))
+    },
+  }
+}
