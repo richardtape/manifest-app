@@ -43,7 +43,7 @@ import it (Task 2).
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements**: what the platform has landed since F1; structured output through the local model; storage. **Alone, and first** | **done 2026-09-27.** No Decision breaks. Intake and agent sessions have both landed, and Tasks 2–10 are amended to the contract. Three proposed sentences wait on Rich |
-| 2 | 2, 3 | Storage and our API: conversations, the person, `Origin`, the progress stream | |
+| 2 | 2, 3 | Storage and our API: conversations, the person, `Origin`, the progress stream | **done 2026-09-27.** Storage, the guard, conversations and support references; the progress stream, reopened by the page when the browser gives up. 213 tests |
 | 3 | 4, 5 | The model client; the three intake agents, tested against a scripted model | |
 | 4 | 6, 7 | The intake adapter; the *Describe* and *Name it* screens and their components | |
 | 5 | 8, 9 | Making the project and handing over its tokens; the plan, corrected and agreed, committed as `docs/plan.md` | |
@@ -1137,3 +1137,115 @@ sitting 4 (Task 7) and sitting 5 (Task 9), not before.
 
 **One constraint moved:** the plan step shows money once, in the allowance's amount when it is used up. That is
 Rich's wording.
+
+### 2026-09-27 — Sitting 2 (Tasks 2 and 3): storage, our API, and the progress stream
+
+**Commits:**
+- `f3c4c19`: storage with no credential in it, our API guarded by person and `Origin`, conversations, and support
+  references;
+- `889c6c4`: one progress stream per conversation;
+- `0222447`: a comment corrected by measurement (below).
+
+The contract and the mock were unchanged in manifest's working tree during the sitting. The platform session
+worked in `packages/control-plane` only.
+
+**Task 2: storage, the guard, conversations, and Decision 11's server half.**
+- **`store/`:** one SQLite file, `packages/server/.data/app.sqlite`, git-ignored.
+  - `node:sqlite` is loaded by `createRequire`, as M4 found it must be. WAL mode, foreign keys on.
+  - Tables: `persons`, `conversations`, `messages`, versioned `plans`, and `problems`.
+  - Its one reader is `openStore`.
+- **`api/guard`:** `Origin` first, for every change, then *who* (FE-2).
+  - A forged request never costs a question to the platform.
+  - `{ person: 'optional' }` is for problem reports. It also passes when the platform cannot be reached, because
+    the platform may be the problem.
+- **`api/conversations`:** `POST` and `GET`. Another person's conversation is `404`, exactly as one that does not
+  exist.
+- **`api/problems`:** `newReference`, `problem()` (a row and one JSON line), and `POST /api/problems`.
+  - Anything but `{ reference, code, operation, status, at }` is `400 PROBLEM_INVALID`: a `message`, a body
+    over 1 KB, or anything that is not JSON.
+  - A server reference that collides with one already recorded is drawn again, never lost.
+- **`Config` gains `origin`:** `http://127.0.0.1:7105` in mock mode, `https://app.manifest.internal` in edge mode.
+- **The no-credential run** goes through our API with a session, `Authorization: Bearer mft_test_x` and a
+  `sk-test-y` header. A dump of every table holds none of them. Tasks 8 and 9 extend the run when a token is
+  first handed over.
+- **The FE-2 control:** the fake control plane shared by the whole conversations file saw a `Cookie` only on
+  `/v1/me`, and never an `Authorization`.
+- **Rulings** (in the ledger):
+  - plans are `unknown` until Task 9;
+  - `rememberPerson`;
+  - only the tables used;
+  - `Config.origin`;
+  - `Origin` before *who*;
+  - an optional person passes when the platform is down;
+  - `buildServer`'s third argument;
+  - the no-credential run's shape;
+  - the column `place`.
+
+**Task 3: the progress stream.**
+- **Server:**
+  - `GET /api/conversations/:id/events` sends the whole conversation first, then each published frame;
+  - a hub per server, not the interface's module-level `publish`;
+  - a comment line every 25 seconds;
+  - never ended while the server runs, and ended in `preClose`, which Fastify's close would otherwise wait on
+    for ever;
+  - `publishRefusal` writes the problem's row, then sends the frame with its reference.
+- **`api/progress.ts`**, our contract with the page:
+  - it imports nothing, and owns `Conversation`;
+  - web takes it as `import type` from `@manifest-app/server/progress`, a workspace devDependency. The lockfile
+    gained three lines, and nothing was downloaded.
+- **Web:**
+  - `ours/api.ts` is the one caller of `/api/*`, and the boundary test now holds that.
+  - `reportProblem` answers a reference at once, posts with `keepalive`, and cannot throw.
+  - `useConversation`:
+    - **reopens a stream the browser gave up on** (`CLOSED`), after 1, 2, 4 and 8 s, then every 15 s;
+    - resets the wait once a frame arrives;
+    - lets the browser retry by itself when it will (`CONNECTING`);
+    - clears the steps on each connection's first frame, so a restart leaves nothing working;
+    - guards every handler, as the console does.
+  - Its `status` is `'connecting' | 'live'`: the interface's `'closed'` could never be observed (a ruling).
+- **Two things found:**
+  - **A `<StrictMode>` wrapper around `renderHook` ran the effect once**, measured with a probe. Testing Library's
+    own `reactStrictMode: true` mounts, unmounts and mounts, as a page does. The StrictMode test uses the option.
+  - **My comment said a request's `close` fires as soon as its body is read.** Measured on Node 24.12, it fires
+    with the response's, at disconnect. The comment is corrected (`0222447`), and the code, which listens on the
+    response, stands.
+- **Live, on the running `dev:mock`:**
+  - `POST /api/conversations` answered `201`, in `describing`;
+  - a student app's `Origin` answered `403 ORIGIN_REFUSED`;
+  - the stream answered `200 text/event-stream`, with the state frame first.
+
+**Negative controls.** Each was red, then restored and green.
+
+| Control | Red |
+|---|---|
+| the guard's `Origin` check dropped | 9: the guard's six, the optional person's, conversations' and problems' cross-origin cases |
+| `getConversation` ignoring the person | 2: the store's and the API's |
+| a route that keeps its request's headers in a message | the no-credential run (`mft_`, `sk-` and the session found) |
+| a `message` accepted in a problem report | the unknown-key case |
+| the on-connect `state` frame skipped | 6, **the restart case** among them |
+| a refusal published before its row | the refusal's row, missing when the frame was sent |
+| a closed stream never reopened | 3: the reopen, the cap, and the steps cleared on reconnect |
+| the `live` guard removed | the StrictMode case |
+| an `/api/` path outside `ours/api.ts` | the boundary |
+
+**Could not fail:** nothing claimed rests on a check that could not fail.
+
+**Gates, from the root:**
+- `pnpm test` twice: 213/213 each time (`ui` 14, `web` 121, `server` 78);
+- `pnpm lint` 0;
+- `pnpm typecheck` 0;
+- `pnpm format:check` clean;
+- `check-slice` 7 passed (mock mode).
+
+**The machine at the close:**
+- the mock on 7102 and our server on 7105 in mock mode, for Rich;
+- `packages/server/.data/app.sqlite` holding the two conversations made by the live checks;
+- the control plane stopped;
+- manifest's working tree touched only by the platform session.
+
+**For sitting 3 (Tasks 4 and 5):**
+- the model client, and the three intake agents against a scripted model;
+- Task 4's request sends no reasoning settings (amended by sitting 1);
+- Task 5 carries M3's evidence and a proposed check after parsing, to rule on;
+- `zod` 3.25.76 arrives with Task 4, an install with the network allowed;
+- publish refusals with `publishRefusal`, never `hub.publish` directly, so each carries its reference.

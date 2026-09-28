@@ -15,14 +15,16 @@ says which plan is current. This file states where things stand and the rules. I
     `instructor` at `https://app.manifest.internal`.
   - Its findings, sitting by sitting, are the record. Read them before touching what they touch.
 - **F2 is under way**, in [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  **Sitting 1, the measurements, is done** (2026-09-27, against manifest `e6a5f70`).
-  - The platform's intake sessions (FE-1) and agent sessions, with `spentUsd` (FE-23), have landed.
-  - **No Decision broke.** Tasks 2–10 are amended to the contract as it landed, each marked *Amended by
-    sitting 1*. Read the plan's sitting-1 entry before building.
+  Sittings 1 and 2 are done (2026-09-27).
+  - **Sitting 1** measured what the platform landed: intake sessions (FE-1) and agent sessions, with
+    `spentUsd` (FE-23). No Decision broke, and Tasks 2–10 are amended to the contract, each marked *Amended by
+    sitting 1*.
   - **After it, at Rich's word:** every problem shown carries a support reference (Decision 11), and a limit
-    says whose it is and when it resets. Three sentences are still proposed, for Rich; sittings 4 and 5 need
-    them, and sitting 2 does not.
-- **Next: F2's sitting 2**, Tasks 2 and 3: storage, our guarded API, and the progress stream.
+    says whose it is and when it resets. Three sentences are still proposed, for Rich. Sittings 4 and 5 need
+    them.
+  - **Sitting 2** built our server's storage and its own API: conversations, support references, and one
+    progress stream per conversation, which the page reopens when the browser gives up.
+- **Next: F2's sitting 3**, Tasks 4 and 5: the model client, and the three intake agents against a scripted model.
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
@@ -30,7 +32,10 @@ says which plan is current. This file states where things stand and the rules. I
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2); measured
     against the platform on 7100.
-  - **The gates:** `pnpm test` (141 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
+    - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
+    - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract
+      with the page is `api/progress.ts`.
+  - **The gates:** `pnpm test` (213 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
     `scripts/check-slice.sh`.
 - **Findings not yet carried to the platform session** (Rich's to carry; none blocks its sitting 8):
   - FE-26: the mock accepts any session, and a token where only a session may go;
