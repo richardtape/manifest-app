@@ -4,6 +4,10 @@
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 > **Read [`../ORIENTATION.md`](../ORIENTATION.md) first. F2 is executed; this plan starts from it.**
 
+**Status: written 2026-09-28, for Rich's review.** Nothing is built until he approves it and chooses how it is
+executed (the earlier session recommended subagent-driven). Whoever hears his yes replaces this line, and the
+roadmap's row, with his words and the date.
+
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
 it answers. The person watches moment 6 in layout C. They can answer questions, add a message, and stop. Walk-through

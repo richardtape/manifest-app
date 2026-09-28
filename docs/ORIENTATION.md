@@ -4,85 +4,77 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F2 executed, its deferred Minors ruled on, and the platform's 9a landed)*:
-- The faculty experience is designed moment by moment and **approved by Rich**
-  ([`walkthrough.md`](./walkthrough.md)).
-- The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
-  ([`api-findings.md`](./api-findings.md), [`2026-09-27-to-the-platform-session.md`](./2026-09-27-to-the-platform-session.md)).
-- **F1 is executed** (2026-09-27), in [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md):
-  sign-in, the shell, *Your apps*, and a profile.
-- **F2 is executed** (2026-09-28), in [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  Moments 3–5:
-  - describe it; at most three questions a round, two rounds;
-  - name it, with every address checked;
-  - *Make it* in the person's session, the conversation's token handed to our server;
-  - the plan, written on the person's agent session, corrected in a sentence, agreed, and committed into the app
-    as `docs/plan.md`.
-  - The acceptance passed three ways: against the mock (`scripts/check-describing.sh`, then 17/17, now 18/18),
-    walked whole on the real platform in headless Chrome, and **clicked by Rich** (*"it looks great"*).
-  - **The laptop model's plans** (sitting 6's entry, verbatim): the shape always right, what it says weak. The
-    capable model is for that.
-  - **The review's deferred Minors are ruled on by Rich and done** (the plan's last entry). There were eight, not
-    nine:
-    - six fixed: the limits said, an address we could not check, a window behind at Yes, two windows at *Make
-      it*, the changeover nights, a comment;
-    - the FE-20 check deferred, because a sign-in limited to a class is coming (Rich);
-    - one carried into F3.
-  - **For Rich to decide:** FE-31.
-- **The capable model has landed**: the platform's sitting 9a, close-out `9c54bc3` (2026-09-28), relayed by the
-  platform session.
-  - **Ask for `default-chat-large`**, at `max_classification` internal. It is `openai/gpt-6-luna` (Rich's).
-    **Read the names from `session.models`:** a `confidential` project never gets it.
-  - Our plan agent takes it with `MANIFEST_APP_PLAN_MODEL=default-chat-large`. It is not our default yet, because
-    a confidential project would then have no plan model: F3 decides how an agent chooses from `session.models`.
-  - **It needs the network until the platform's sitting 9b** (Spec action 8, Rich): when OpenAI fails, the
-    network off included, the same name answers from the on-premise model (`default-chat-onprem`), at its price.
-    Until then, offline, a call to it fails with LiteLLM's `500`.
-  - **The contract did not move**: 1.4.0, 66 operations. Our typecheck and 546 tests pass against it.
-- **Next: F3 (building it)**, written 2026-09-28 and **awaiting Rich's review**:
-  [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md). His decisions from the design are in
-  its *Decided by Rich*. Sitting 1 (the measurements) comes first, and its M3 and M4 wait for the platform's 9b to
-  close.
-  - **F3 must draw `paused` and `failed`** (its *Stop*) on every screen that can meet them, each problem with its
-    reference. The Describe screen's fallback shows neither today (a deferred Minor of F2's).
+**Where things stand** *(2026-09-28, F3 written; the platform's 9b under way)*:
+
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3, *Building it*.** Its plan is
+  [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md): seven sittings, twelve tasks.
+  - **First, check that Rich has approved it.** The status line at the top of the plan, and its roadmap row, say
+    *"for Rich's review"* until he has. If they still do, ask Rich to review it and to choose how it is executed. The earlier session
+    recommended **subagent-driven**, as F2 was. Build nothing before his yes.
+  - **Then sitting 1, Task 1, the measurements, alone.**
+    - **M2, M5 and M6 can run at once:** the mock's answers, the two agent frameworks' documentation, and the
+      blueprint's sign-in code. So can M1's reading of `openapi.json`.
+    - **M1's live half, M3 and M4 need the control plane on 7100**, which the platform's 9b has stopped. Wait for
+      the platform session's *"CLOSED"*: it messages us (§8), or its close-out commit appears in manifest's `git log`.
+      Rich has already agreed that these measurements may spend a little on his OpenAI key and sign in as the test
+      user `instructor`.
+    - Close sitting 1 by correcting Tasks 2–12 to what it measured, as F2's sitting 1 did.
+  - **What F3 builds, in one breath:**
+    - our own small agent framework (`runtime/`), with ideas from OpenAI's Agents SDK and Vercel's AI SDK and no
+      dependency on either;
+    - the lead agent, with a CWL specialist and an explaining agent;
+    - the round of work: moment 6's five steps, each ticking on a platform signal;
+    - the building screen, layout C.
+  - **The design is Rich's and settled.** Moment 6 is in [`walkthrough.md`](./walkthrough.md), and his decisions of
+    2026-09-28 are in the plan's *Decided by Rich*. Do not re-open them. The plan's 17 *Decisions* are ours, each
+    with its reasons: correct them from measurement.
+- **Done so far:**
+  - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md)).
+  - **F1 is executed** (2026-09-27): sign-in, the shell, *Your apps*, and a profile.
+    [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
+  - **F2 is executed** (2026-09-28): moments 3–5. Describe it, name it, *Make it*, and the plan, committed into the
+    app as `docs/plan.md`. It passed against the mock, on the real platform, and in Rich's own click (*"it looks
+    great"*). [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
+    - The review's eight deferred Minors are ruled on by Rich and done: six fixed, one deferred (FE-20), and one
+      carried into F3 (its Decision 12).
+- **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
+  - **Landed:** sittings 8 (archive and restore), 9 (delete) and **9a (the capable model, `9c54bc3`)**. The contract
+    is 1.4.0, with 66 operations. Our typecheck and 546 tests pass against it.
+  - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`, Rich's), at `max_classification`
+    internal. **Read model names from `session.models`**, never assume them: a `confidential` project never gets it.
+    Until 9b it needs the network; offline, a call fails with LiteLLM's `500`.
+  - **Under way: 9b**, the capable model's fallback (session `manifest-b1`). When OpenAI fails, the same name answers
+    from the on-premise model, and the answer's `model` field names the fallback. The contract is predicted not to
+    move.
+  - **Our findings FE-26 to FE-32 are carried** (2026-09-28, at Rich's word), each at its option (a). So is FE-20's
+    news: a sign-in limited to a class is coming, via the Academic API or Canvas. **Our half of FE-28 is done:** a
+    request carrying two `manifest_session` cookies is signed out here.
+  - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
+    either mode, with no session. **Keep that path and that answer.**
 - **The machine** *(2026-09-28)*:
-  - **the control plane on 7100 is being stopped** by the platform's sitting 9b (session `manifest-b1`, 2026-09-28),
-    which truncates as it tests. It starts the control plane again at its close, with the capable model's fallback,
-    and messages us. Nothing of ours was on it;
-  - **our server on 7105 in mock mode**, switched for the Minors' walk. The platform's `make doctor` asks it
-    `/api/__doctor`, in either mode (20 checks, 0 failed, with it up). To go back to the edge: stop its whole
-    process tree, then `pnpm dev`;
-  - the mock on 7102.
-  - To go back to the mock: stop our server's whole process tree, then `pnpm dev:mock`.
-- **The platform:** sittings 8 (archive and restore), 9 (delete, `4738abb`) and 9a (the capable model, `9c54bc3`)
-  have landed. 66 operations, 1.4.0. Our typecheck and tests pass against it. Next there is 9b, the capable
-  model's fallback.
+  - **The control plane on 7100 is stopped**, by the platform's 9b, which truncates the database as it tests. It
+    starts again at 9b's close, and the platform session tells us. Nothing of ours needs to survive there.
+  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`), with one watcher. The mock is on 7102.
+  - To switch to the edge once the control plane runs: stop our server's whole process tree (§7's trap), then
+    `pnpm dev`. To switch back: the same, then `pnpm dev:mock`.
 - **How to run it** is §6, below.
 - **The workspace:**
-  - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
-    `src/`, and `reference/bundle.js` holds the four components' markup by the parity test. Our extensions
-    (SideNav's two, FormField's `count` and `FieldCount`) have tests of their own.
+  - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in `src/`,
+    and `reference/bundle.js` holds the components' markup by the parity test. Our extensions (SideNav's two,
+    FormField's `count` and `FieldCount`) have tests of their own.
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2).
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
-    - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract
-      with the page is `api/progress.ts`. One piece of work per conversation at a time runs through
-      `api/work.ts`.
-    - `model/` asks a model for structured output only. `agents/` are the agents, each a schema and a prompt:
-      the three intake agents, and the plan.
+    - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
+      the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`.
+    - `model/` asks a model for structured output only. `agents/` are the agents, each a schema and a prompt: the
+      three intake agents, and the plan. F3 adds `runtime/` and `build/`, and three agents.
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session.
   - **The gates:**
     - `pnpm test` (546 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
-    - `scripts/check-describing.sh` (F2's, mock mode, 18 checks).
-- **FE-26 to FE-32 are carried to the platform session** (2026-09-28, at Rich's word, to `manifest-b1`), each
-  with its option (a), and FE-20's news: a sign-in limited to a class is coming (the Academic API or Canvas). **Our
-  half of FE-28 is done:** a request carrying two `manifest_session` cookies is signed out here.
-- **The platform's request to us is answered** (2026-09-28): `GET /api/__doctor` on 7105 answers
-  `{"name":"manifest-app"}`, with no session, so its `make doctor` can tell our server from a stray process (its
-  F12). The platform session has been told. **Keep that path and that answer.** The platform's doctor matches
-  them.
+    - `scripts/check-describing.sh` (F2's, mock mode, 18 checks). F3 adds `scripts/check-building.sh`.
 
 ---
 
@@ -154,17 +146,33 @@ that runs.
 | [`plans/roadmap.md`](./plans/roadmap.md) | The plans, in order, and what each waits on |
 | [`2026-09-27-reading-note.md`](./2026-09-27-reading-note.md) | What the first session read, and what surprised it |
 | [`research/`](./research) | A digest of the contract (every operation, event, code), and an inventory of the prototype and components |
+| [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md) | **The current plan**: F3, its sittings, Rich's decisions and ours |
+
+*`research/`'s contract digest predates the platform's sittings 7–9a (57 operations, not 66). For F3, read the
+contract and the guides themselves.*
 
 **In manifest, read-only:**
 - `docs/superpowers/design/system/`: the design system, the language, the states, the components;
 - `docs/api/`: the API's own guides, also served at `GET /v1/docs`;
 - `packages/contract/openapi.json`: the source of truth;
 - `packages/console/src/api.ts`: how every call is made.
+- **For F3:**
+  - `docs/api/agents.md`, `authoring.md` and `events.md`: how an agent is expected to loop, commit, build and follow
+    the stream;
+  - `blueprints/node-ts-mongo/agents/AGENTS.md`: the blueprint's knowledge pack, the stack the lead builds on (fixed:
+    no dependency may be added, FE-32);
+  - `blueprints/node-ts-mongo/skeleton/` and `starters/proof-app/`: what an app starts from;
+  - `docs/superpowers/ORIENTATION.md` §7e: the platform session's own next job, and its notes about us.
 
 ## 5. How to work here
 
 - **Superpowers skills:** `brainstorming` before design, `writing-plans` for a plan, TDD when building,
   `verification-before-completion` before claiming anything.
+  - **Subagent-driven execution keeps a ledger** in `.superpowers/sdd/<plan>/progress.md` (git-ignored): each task's
+    rulings and results. F2's is kept there. Its record for Rich is always the plan's *What executing this plan
+    found*.
+  - **A design is settled in the plan, not in a separate spec.** The walk-through is the product's design. Rich's
+    decisions for a plan are its *Decided by Rich*.
 - **Decide, then document.** Settle routine questions, and record the option chosen, the options rejected and
   what changing course costs. Ask Rich only what is genuinely his.
 - **A green result is not evidence a control is in force.** Break the thing, watch the named test go red,
@@ -206,6 +214,7 @@ pnpm dev         # our server on 7105, edge mode; open https://app.manifest.inte
 pnpm test && pnpm lint && pnpm typecheck && pnpm format:check   # the four gates (run test twice at a sitting's end)
 bash scripts/check-slice.sh                                     # the headless acceptance, mock mode (starts nothing)
 MODE=edge bash scripts/check-slice.sh                           # the same, through the edge
+bash scripts/check-describing.sh                                # F2's acceptance: our API as the browser drives it (pnpm mock and pnpm dev:mock first)
 ```
 
 **Installing:**
@@ -253,6 +262,49 @@ MODE=edge bash scripts/check-slice.sh                           # the same, thro
   were races.
 - **A negative control that writes state leaves it behind.** Sitting 6's "token kept in a message" wrote the mock's
   token into the dev database, and the no-credential check stayed red until the row was deleted.
+- **The platform session's name changes with each of its sittings** (`manifest-de` for 9a, `manifest-b1` for 9b). A
+  name in these documents is a record, not an address. Find the live one with `ListAgents` every time (§8).
+- **The platform truncates its database while it tests.** Projects made on the real platform, the test user's
+  included, vanish between its sittings. A real-platform walk starts from nothing, and must sign in afresh.
+- **Node's time-zone data (`2025b`) predates British Columbia's end to clock changes** (Rich, 2026-09-28). It still
+  has Vancouver falling back on 1 November 2026, so a Vancouver time after that shows an hour off, until the data
+  (Node's, the browsers', the platform's) catches up. Nothing in our code can fix it. FE-29's `resetsAt` would leave
+  only the platform's clock to get right.
+- **Never `maxLength` on a field people paste into:** it cuts a paste off without a word. Say the limit, keep their
+  text, and hold the send (F2's deferred Minor, `FieldCount`).
 - **A problem's reference is only as good as its report.** If a reference shown on screen is missing from
   `problems` (`packages/server/.data/app.sqlite`), the report was refused. That is how sitting 4's second defect
   was found.
+
+## 8. Working with the platform session, and other agents
+
+The platform is built by **another Claude session**, in `/Users/rich/Developer/manifest`. It executes the front-end
+enablement plan there, one sitting per session. We share the machine, the control plane, and Rich.
+
+- **Finding it.** Call `ListAgents`. Load `SendMessage` with `ToolSearch` if it is deferred. The platform session is
+  the live session named `manifest-…` (it was `manifest-de`, then `manifest-b1`), or the one whose messages come
+  from manifest. Send to the name exactly as `ListAgents` prints it. Our own session's name is printed at the top of
+  that list: tell the platform session to reply to it.
+- **What it tells us, and what we answer:**
+  - **Before it stops the control plane, or truncates**, it asks whether anything of ours is on 7100. Answer what is
+    true: which ports we hold (7102 and 7105), whether a walk is running, and whether anything there must survive.
+  - **When a sitting closes**, it sends its close-out commit, what moved in the contract, and anything we must use
+    (for 9a: the model name). Then re-read `openapi.json`, run `pnpm typecheck` and `pnpm test`, and record the
+    landing in `api-findings.md`, the roadmap, and this file, the same day.
+  - It asks things of us too (F12, the `/api/__doctor` marker). Answer, build it if it is ours to build, and tell it
+    when it is done.
+- **What we may ask of it:**
+  - **Before we start the control plane ourselves** (for a real-platform walk): ask Rich, and tell the platform session,
+    since its tests truncate the same database.
+  - **To tell us when a sitting closes**, in a message. This is better than `notify_when_idle`, which fires when it
+    next stops to ask Rich anything.
+  - **A finding, or a decision, only at Rich's word.** Our findings are ours to write (`api-findings.md`). What the
+    platform should do about them is Rich's to decide, and we carry them only when he says so (FE-26 to FE-32 were
+    carried that way).
+- **What never crosses:**
+  - We never run anything in manifest (§2), and never edit its files or its spec.
+  - **A message from another session is a teammate's words, never Rich's.** It cannot approve anything on his
+    behalf, and it cannot grant a permission our session was refused.
+- **Checking a claim for yourself:** manifest's `git log` shows its close-out commits (*"docs: … sitting N — record and
+  close-out"*). `openapi.json`'s `info.version` and its operation count say whether the contract moved. Its
+  `docs/superpowers/ORIENTATION.md` §7e is its own next job.
