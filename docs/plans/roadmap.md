@@ -1,12 +1,13 @@
 # The roadmap — the faculty front-end's plans, in order
 
 *This file outranks every other document on which plan is current. Each plan is written when the one before it
-is executed, so it can argue from what was actually built. Written 2026-09-27.*
+is executed, so it can argue from what was actually built. F2 is the exception: Rich asked for it on 2026-09-27,
+while F1 was still unexecuted, and its sitting 1 corrects it to whatever F1 and the platform actually made.*
 
 | Plan | Delivers (walk-through moments) | Waits on the platform | Status |
 |---|---|---|---|
 | **F1 — Foundations and the first clickable slice** | The repository; the design system ported to React 19; one place that calls the platform; our server on 7105; **sign-in → *Your apps*** (moments 1, 2, and 16's card) against the mock, and against the real platform once sitting 6 lands | nothing (sitting 6 for the optional real-platform step) | **written 2026-09-27; not started** — [`2026-09-27-f1-foundations.md`](./2026-09-27-f1-foundations.md) |
-| **F2 — Describing it** | Moments 3–5: intake (understanding, naming, blueprint), creating the project, minting the tokens, the plan; our server's storage | **FE-1** (intake session) and agent sessions: **sitting 7** | not written |
+| **F2 — Describing it** | Moments 3–5: intake (understanding, naming, blueprint), creating the project, handing over its token, the plan, committed as `docs/plan.md`; our server's storage and its own guarded API | **FE-1** (intake session) and agent sessions: **sitting 7**. Adapters say *not built yet* honestly until they land | **written 2026-09-27, ahead of F1's execution, at Rich's request**; its sitting 1 re-measures what landed — [`2026-09-27-f2-describing-it.md`](./2026-09-27-f2-describing-it.md) |
 | **F3 — Building it** | Moment 6 in layout C: the lead agent's loop over the authoring API, conversations, the steps and the line, questions, the checkpoint, *Stop*; `agents.md`'s specialists as far as the blueprint allows | sitting 7 (**FE-23** for the spend line); the capable-model decision | not written |
 | **F4 — Seeing and changing it** | Moments 7–9: the Preview's three worlds, pretend people, a change as its own conversation (one at a time), putting a version on trying-out | **FE-3** (the logins are ours meanwhile); **FE-24** in sitting 10 | not written |
 | **F5 — Going live** | Moments 10–15: the clocks (honest about FE-6), the checklist in our words, the dry run, waiting on sign-off (FE-25), step-up, the address handed over | FE-6 and FE-25 for the full version; the rest is built | not written |

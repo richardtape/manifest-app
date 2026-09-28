@@ -9,7 +9,9 @@ says which plan is current. This file states where things stand and the rules. I
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
   ([`api-findings.md`](./api-findings.md), [`2026-09-27-to-the-platform-session.md`](./2026-09-27-to-the-platform-session.md)).
-- **The first plan is written and not yet executed** ([`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md)).
+- **F1 and F2 are written, and neither is executed yet**:
+  [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md) is next, and
+  [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md) follows it.
 - No product code exists yet.
 
 ---
