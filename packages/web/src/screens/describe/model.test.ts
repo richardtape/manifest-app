@@ -23,6 +23,16 @@ describe('when the limits reset', () => {
       '2026-12-02T08:00:00.000Z',
     )
   })
+  it("the changeover nights: tomorrow's midnight on tomorrow's clock (deferred Minor, Rich: fix it)", () => {
+    // 1:30am on the night the clocks went forward: the next midnight is PDT's, never 1am.
+    expect(vancouverMidnightAfter(new Date('2025-03-09T09:30:00Z')).toISOString()).toBe(
+      '2025-03-10T07:00:00.000Z',
+    )
+    // 12:30am on the night they went back, before the change: PST's midnight, never 11pm.
+    expect(vancouverMidnightAfter(new Date('2025-11-02T07:30:00Z')).toISOString()).toBe(
+      '2025-11-03T08:00:00.000Z',
+    )
+  })
 })
 
 describe('intakeRefused', () => {

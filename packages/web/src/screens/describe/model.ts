@@ -11,35 +11,51 @@ export function monthResetsAt(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
 }
 
-/** A person's day resets at midnight in Vancouver (the contract's rule). */
-export function vancouverMidnightAfter(now: Date): Date {
+/** Vancouver's wall clock at an instant, read as if it were UTC's. */
+function vancouverWall(at: Date): {
+  wall: number
+  year: number
+  month: number
+  day: number
+} {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Vancouver',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hourCycle: 'h23',
+  }).formatToParts(at)
   const part = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(
-      new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Vancouver',
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        hourCycle: 'h23',
-      })
-        .formatToParts(now)
-        .find((p) => p.type === type)?.value,
-    )
-  // Vancouver's wall clock now, and how far it is from UTC's: the next midnight on that clock.
+    Number(parts.find((p) => p.type === type)?.value)
+  const [year, month, day] = [part('year'), part('month'), part('day')]
   const wall = Date.UTC(
-    part('year'),
-    part('month') - 1,
-    part('day'),
+    year,
+    month - 1,
+    day,
     part('hour'),
     part('minute'),
     part('second'),
   )
-  const offset = wall - Math.floor(now.getTime() / 1000) * 1000
-  const nextMidnight = Date.UTC(part('year'), part('month') - 1, part('day') + 1)
-  return new Date(nextMidnight - offset)
+  return { wall, year, month, day }
+}
+
+/** How far Vancouver's clock is from UTC's at an instant. */
+const vancouverOffset = (at: Date) =>
+  vancouverWall(at).wall - Math.floor(at.getTime() / 1000) * 1000
+
+/**
+ * A person's day resets at midnight in Vancouver (the contract's rule). TOMORROW'S midnight
+ * on TOMORROW'S clock: on the nights the clocks change, now's offset is an hour off at
+ * midnight (the final review's Minor, fixed at Rich's word).
+ */
+export function vancouverMidnightAfter(now: Date): Date {
+  const { year, month, day } = vancouverWall(now)
+  const nextMidnight = Date.UTC(year, month - 1, day + 1)
+  const guess = new Date(nextMidnight - vancouverOffset(now))
+  return new Date(nextMidnight - vancouverOffset(guess))
 }
 
 /** "5pm", "5:30pm", or "midnight", in the person's own zone. */
