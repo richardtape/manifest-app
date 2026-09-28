@@ -27,6 +27,10 @@ lands.
   `@manifest/mock` (the same way, dev only).
 - New packages, fetched once with Rich's standing permission: `jsdom`, `@testing-library/react`, and the Fastify
   plugins Task 1 chooses. **Exact versions recorded in Task 2.**
+  - **Measured by M6:** `jsdom` **29.1.1** (30.x wants Node `^24.15.0`), `@testing-library/react` **16.3.3**,
+    `@testing-library/dom` **10.4.2**, `@fastify/http-proxy` **11.6.3**, and `tsx` **4.23.13** (already in the
+    store). `@fastify/middie` is not needed. `@fastify/static` **10.1.5** was fetched for Task 5's built files,
+    and nothing has measured it yet.
 
 **Spec** (this plan argues from these; read the ones a task names):
 - [`../walkthrough.md`](../walkthrough.md): moments 1, 2 and 16, and *Throughout*;
@@ -44,8 +48,8 @@ lands.
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1 | **The measurements this plan rests on**. Throwaway code in the scratchpad; nothing committed but the findings. **Alone, and first** | ← next |
-| 2 | 2, 3 | The workspace and its four gates; the design system's harness and the four components the slice needs | |
+| 1 | 1 | **The measurements this plan rests on**. Throwaway code in the scratchpad; nothing committed but the findings. **Alone, and first** | **done 2026-09-27**: no Decision breaks; seven task details amended (*What executing this plan found*) |
+| 2 | 2, 3 | The workspace and its four gates; the design system's harness and the four components the slice needs | ← next |
 | 3 | 4, 5 | One place that calls the platform; our server on 7105, with `/api/me` and the mock proxy | |
 | 4 | 6, 7 | Sign-in, the shell, sign-out; *Your apps*, empty and with apps | |
 | 5 | 8 | **The acceptance**: a headless check, and Rich clicking it. **Alone, and last** | |
@@ -99,7 +103,8 @@ first and alone; Task 8 stays last and alone.
    - In **mock** mode it also proxies `/v1` and `/auth`, WebSocket included, to 7102.
    - One port, because the edge sends everything to one (the enablement plan's Decision 19).
    - **How the one process is assembled is Task 1's M4 to decide:** Fastify's `serverFactory` dispatching to
-     Vite's middlewares, or `@fastify/middie`.
+     Vite's middlewares, or `@fastify/middie`. **M4 decided (2026-09-27): `serverFactory`**, with the mock proxy
+     by `@fastify/http-proxy`, because Vite's own proxy carries no WebSocket in middleware mode.
 5. **The contract is consumed from its SOURCE.**
    - `@manifest/contract`'s `exports` give types from `src/index.ts` but a runtime from an unbuilt, git-ignored
      `dist/` (FE-18).
@@ -128,6 +133,10 @@ first and alone; Task 8 stays last and alone.
 - **Never change anything in `/Users/rich/Developer/manifest`**, and never run its tests, `make reset`,
   `make demo*`, `pnpm contract:write` or a `build`. `pnpm --dir ../manifest --filter @manifest/mock dev` (7102) is
   allowed.
+  - **Amended by sitting 1:** that script runs `tsc` first and writes `packages/mock/dist` inside manifest.
+  - **Start the mock from source instead**, from our side: `createMockServer()` imported from `@manifest/mock`
+    (our `link:`), listening on 7102, run by `tsx`. M5 ran it that way.
+  - Task 2 gives it a root script, `pnpm mock`.
 - **Ports: 7105 is ours.** The mock is 7102; the platform owns 7100–7199; Valet owns 80/443/53 and `.test`.
 - **C3**, as Decision 9 enforces. **Five states only**: working · waiting · attention (*needs you*) · steady ·
   not yet. Their classes are `mf-is-<state>`.
@@ -221,7 +230,7 @@ manifest-app/
 plan's *What executing this plan found*.** Each measurement records its command, its output and its date, and
 says which decision it confirms or breaks.
 
-- [ ] **M1: the contract from a sibling repository, from source.**
+- [x] **M1: the contract from a sibling repository, from source.**
   - In a scratch Vite + Vitest project, alias `@manifest/contract` to
     `/Users/rich/Developer/manifest/packages/contract/src/index.ts`.
   - Import `createManifestClient`, `unwrap`, `ManifestApiError` and `type Schemas`.
@@ -230,14 +239,14 @@ says which decision it confirms or breaks.
   - Record: whether `.js`-suffixed imports inside `src/` resolve to `.ts` in both; whether `tsc --noEmit` with
     `moduleResolution: bundler` accepts it; **whether `erasableSyntaxOnly` must stay off** (FE-18).
   - Confirms or breaks Decision 5.
-- [ ] **M2: the bundle under React 19.**
+- [x] **M2: the bundle under React 19.**
   - Load the vendored `bundle.js` with Node's `vm`, giving it `{ window: { React }, React }` with React 19.3.0.
   - Render `StateChip`, `Button`, `Card` and `SideNav` with a preview's props through `renderToStaticMarkup`.
   - Record: does it throw, does it warn (keys), and does `window.Manifest` hold all 18 exports?
   - Confirms or breaks Decision 2's proof.
-- [ ] **M3: `node:sqlite` on Node 24.12.** Open a file database, write, reopen, read, and record the warning text.
+- [x] **M3: `node:sqlite` on Node 24.12.** Open a file database, write, reopen, read, and record the warning text.
   A candidate for F2 only.
-- [ ] **M4: one process on 7105.**
+- [x] **M4: one process on 7105.**
   - Build both candidates:
     - (a) Fastify with `serverFactory`, whose handler sends `/api/*` to Fastify and everything else to
       `vite.middlewares` (Vite `server.middlewareMode: true`);
@@ -249,22 +258,22 @@ says which decision it confirms or breaks.
     - a WebSocket upgrade to `/v1/projects/<id>/events` is **proxied to the mock on 7102**, by Vite's
       `server.proxy` with `ws: true` or `@fastify/http-proxy`, and a frame arrives.
   - Choose the simpler that passes all four. Records Decision 4's *how*.
-- [ ] **M5: the mock's sign-in through M4's proxy.**
+- [x] **M5: the mock's sign-in through M4's proxy.**
   - With the mock running (`pnpm --dir /Users/rich/Developer/manifest --filter @manifest/mock dev`), go to
     `http://127.0.0.1:7105/auth/login?returnTo=/`.
   - Record the cookie the mock sets (name, flags), where it redirects, and that `GET /v1/me` then answers `200`
     **and `GET /api/me` can read the same cookie**.
   - Then `POST /auth/logout`: record its answer's shape (`{ redirectTo }`?).
-- [ ] **M6: the install.**
+- [x] **M6: the install.**
   - `pnpm install --offline` for the Tech Stack's packages: record what the store lacks.
   - Then one networked install (Rich's standing permission): record every package fetched and its exact version.
-- [ ] **M7: the edge today.** `curl -sk https://app.manifest.internal/v1/me` and `/`. Record the body, never only
+- [x] **M7: the edge today.** `curl -sk https://app.manifest.internal/v1/me` and `/`. Record the body, never only
   the status:
   - `manifest OK host=…` means the wildcard answered, and sitting 6 has not landed;
   - `UNAUTHENTICATED` means it has.
 
   Read-only; start nothing.
-- [ ] **Close:** write the dated sitting-1 entry. **If any measurement breaks a decision, stop and tell Rich
+- [x] **Close:** write the dated sitting-1 entry. **If any measurement breaks a decision, stop and tell Rich
   before sitting 2.** Commit the plan file only:
 
 ```bash
@@ -320,6 +329,17 @@ packages:
   - `web` and `server`: `"@manifest/contract": "link:../../../manifest/packages/contract"`.
   - `web` also, dev only: `"@manifest/mock": "link:../../../manifest/packages/mock"`.
   - Record, in the commit message, every package the install fetched.
+  - **Amended by sitting 1:**
+    - `pnpm-workspace.yaml` needs `allowBuilds: { esbuild: true }`, as manifest's does, because pnpm 11 refuses an
+      unapproved install script.
+    - Add a root script `"mock": "tsx scripts/mock.ts"`, which starts `createMockServer()` on 7102 from source.
+      It needs `@manifest/mock` linked at the root as a dev dependency (Global Constraints).
+    - **The first install needs the network.** Without a lockfile, `--offline` fails on a transitive version the
+      store lacks (M6). After it, `pnpm install --offline --frozen-lockfile` works from an empty `node_modules`.
+    - **A `.prettierignore`, as manifest's has.** It lists `docs/`, `CLAUDE.md`, `pnpm-lock.yaml`, and
+      `packages/ui/reference/`, which is vendored and never edited, so `pnpm format` must never rewrite it.
+      - Otherwise `prettier --check .` fails on 13 prose files before a line of code exists (measured with
+        Prettier 3.9.6).
 - [ ] **Step 2: TypeScript.** In `tsconfig.base.json`:
 
   ```json
@@ -332,12 +352,24 @@ packages:
     "target": "es2023",
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
-    "skipLibCheck": false
+    "skipLibCheck": true
   }
   ```
 
+  - **`skipLibCheck` is `true`, as the platform's is (amended by sitting 1, M1).** `false` cannot pass, because
+    Vitest 2.1.9 brings its own Vite 5.4.21, whose types fail in two places:
+    - against rollup 4.63.5's types under `exactOptionalPropertyTypes` (TS2430 on `Plugin.load`);
+    - against Vite 8's `vite/client` in the same program (TS2430 on `ViteRuntimeImportMeta`).
+
+    Our own `.ts` files are checked either way.
   - `paths`: `@manifest/contract` → the contract's `src/index.ts`.
-  - **Not** `erasableSyntaxOnly` (FE-18: the contract's `errors.ts` needs it off).
+    - **`tsx` reads this too, and our server relies on it (M5).**
+    - Without it, `tsx` and plain `node` both load manifest's git-ignored `dist/index.js`, which another session
+      rebuilds when it likes. So does Vitest without its alias.
+    - **Nothing fails when the alias is missing** (M1's control), so add a test that proves where the contract is
+      resolved from: its `src/index.ts`.
+  - **Not** `erasableSyntaxOnly` (FE-18). M1 measured it: the contract's `errors.ts:14-16` fails it, and so does
+    the mock's `server.ts:76-81` once a test imports the mock.
 - [ ] **Step 3: The boundary test, written to fail first.**
 
 ```ts
@@ -501,6 +533,10 @@ describe('the design system is the prototype’s, byte for byte (Decision 2)', (
   - load them from Google Fonts, as the gallery does;
   - **record in Task 1's findings whether they render offline**. If they don't, the system's own fallback stacks
     apply, which is a visual difference to state, not to hide.
+  - **Sitting 1:** neither font is installed on this Mac (`~/Library/Fonts` and `/Library/Fonts`).
+    - Offline, they render only if the browser has cached them from an online load.
+    - Otherwise `system-ui` and `ui-monospace` apply (`tokens.css:83-84`).
+    - Confirm it in a browser here.
 - [ ] **Step 7: The gates; commit.**
 
 ```bash
@@ -613,9 +649,22 @@ export function buildServer(config: Config, web: WebHandler): FastifyInstance   
     edge mode they are not ours to answer (`404`, and the edge never sends them here).
   - Implement `app.ts` with M4's chosen assembly. `main.ts` reads config, builds and listens on
     `127.0.0.1:7105`, and **fails loudly** if 7105 is taken, never choosing another port.
+  - **M4's assembly (sitting 1):**
+    - `Fastify({ serverFactory })`, whose handler sends `/api/*`, `/v1/*` and `/auth/*` to Fastify, and
+      everything else to `vite.middlewares`.
+    - Vite: `createServer({ appType: 'spa', server: { middlewareMode: true, hmr: { server: app.server } } })`.
+    - **Fastify must own `/v1` and `/auth` in both modes.** In mock mode they reach `@fastify/http-proxy`
+      (`websocket: true` on `/v1`). In edge mode they get Fastify's `404`, so Vite's SPA fallback never answers
+      them with `index.html`.
+    - **Not Vite's `server.proxy`.** In middleware mode it proxies HTTP and never the WebSocket: 0 frames in M4.
+  - **`whoIs` in edge mode was not measured.** It needs the control plane.
+    - The control plane keeps a session per origin: *"no session crosses between them"* (its `auth.ts`,
+      `arrival`).
+    - So whether our server asks `http://127.0.0.1:7100` directly, or `https://app.manifest.internal` through the
+      edge, is measured first in Task 8 Step 4, and `Config.platformOrigin` follows it.
 - [ ] **Step 6:**
-  - **Mock mode, by hand:** start the mock and `pnpm dev:mock`, then `curl -si http://127.0.0.1:7105/api/me`
-    answers `401`.
+  - **Mock mode, by hand:** start the mock (`pnpm mock`) and `pnpm dev:mock`, then
+    `curl -si http://127.0.0.1:7105/api/me` answers `401`.
   - Sign in through `/auth/login` (M5's flow) with a cookie jar. **`/api/me` answers the mock's person, and
     `/v1/me` answers the same `id`.**
 - [ ] **Step 7: The gates; commit.**
@@ -812,6 +861,10 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
 - [ ] **Step 1: `scripts/check-slice.sh`** (bash 3.2, BSD tools). It asserts BODIES, never a status alone.
   - It starts nothing itself. It checks that 7102 answers the mock's `GET /v1/openapi.json`, and that 7105
     answers `/`.
+    - **Amended by sitting 1:** without a cookie, the mock answers `/v1/openapi.json` with
+      `401 UNAUTHENTICATED`.
+    - That is the contract's own rule: the operation inherits the document's global `security`.
+    - So the probe accepts that envelope as proof that a Manifest API is there, or sends any cookie (FE-26).
   - Then, with a fresh cookie jar:
     1. `GET /` → `200`, and the body holds `<div id="root">`.
     2. `GET /v1/me` → `401`, and the body holds `UNAUTHENTICATED`, which the proxy passed through.
@@ -822,9 +875,16 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
     7. `GET /api/me` with a jar whose `manifest_session` is `nonsense` → `401`.
   - **Negative control:** make `whoIs` ignore the cookie and return a fixed person, and see step 7 go red. Restore
     it.
+  - **Amended by sitting 1 (M5, FE-26): step 7 cannot pass against the mock.**
+    - The mock accepts **any** `manifest_session` value, even an empty one, and answers Instructor One.
+    - So against the mock:
+      - step 7 is **skipped, and the script says why**; it runs in edge mode (Step 4);
+      - the negative control watches **step 3** go red (no cookie, and `whoIs` answers a person anyway).
+    - *"A nonsense session is refused"* is proved where a fake can refuse it: Task 5's `identity.test.ts`, whose
+      fake control plane answers `401`.
 - [ ] **Step 2: Green twice**, from a fresh `pnpm install` and from a re-use. Record both.
 - [ ] **Step 3: The clicked half, Rich's.**
-  1. Stage it: the mock on 7102, `pnpm dev:mock` on 7105.
+  1. Stage it: the mock on 7102 (`pnpm mock`), `pnpm dev:mock` on 7105.
   2. Ask once, with this list.
   3. **Rich opens `http://127.0.0.1:7105/`** and checks:
      - he sees *Sign in*;
@@ -836,6 +896,12 @@ git commit -m "feat(web): Your apps — empty, and each app led by what its stud
   4. Record what the screens said.
 - [ ] **Step 4, only if the platform's sitting 6 has landed** (M7 reads `UNAUTHENTICATED`, not the wildcard) **and
   Rich agrees to start the control plane:**
+  - **Sitting 1 found the edge half landed** (M7, manifest `f1e3908`).
+    - `app.manifest.internal` is its own site now, and the wildcard answers differently.
+    - Its `/v1/me` read an **empty `502` with the site's own headers**, because nothing listened on 7100. That is
+      a third reading, which the rule above did not foresee.
+    - **With the control plane started**, the discriminator is the body: `UNAUTHENTICATED`.
+  - **Measure first:** where `whoIs` must ask, 7100 directly or the edge (Task 5's note).
   - `pnpm dev` in edge mode, then Rich signs in at `https://app.manifest.internal` as `instructor`. **He types the
     password.**
   - *Your apps* shows the platform's projects.
@@ -858,7 +924,9 @@ Named, so F2 inherits a list and not a surprise:
 - **Storage**: conversations are F2/F3's, where Decision 7 is decided.
 - **The other fourteen components.** Each is ported, with its parity cases, by the plan whose screen needs it:
   `FormField`, `Choice`, `SegmentedControl`, `LiveSteps`, `Timeline`, `TwoFacts`, `ClockItem`, `ProgressBar`,
-  `InverseSurface`, `BrowserFrame`, `InteractionStates`, `Cover`, `AppBar`, `ProjectBar`, `LogPane`.
+  `InverseSurface`, `BrowserFrame`, `LockedRow`, `AppBar`, `ProjectBar`, `LogPane`.
+  - That is `window.Manifest`'s 18 exports less F1's four (M2).
+  - `InteractionStates` and `Cover`, named here before sitting 1, are gallery pages with no export.
 - **The event stream.** F1 reads; F3 subscribes.
 - ***Your apps*' needs-you band and *Since you were last here***: F6's watch token and history.
 - **Sign-in on the real platform**, unless sitting 6 has landed in time (Task 8, Step 4).
@@ -866,5 +934,159 @@ Named, so F2 inherits a list and not a surprise:
 
 ## What executing this plan found
 
-*Empty until sitting 1. Each sitting adds a dated entry: tasks, defects with the measurement that found each,
-negative controls (and any that could not fail, and why), the gate numbers, and the machine's state at the close.*
+*Each sitting adds a dated entry: tasks, defects with the measurement that found each, negative controls (and any
+that could not fail, and why), the gate numbers, and the machine's state at the close.*
+
+### 2026-09-27 — Sitting 1 (Task 1): the measurements
+
+**Against manifest `8bb6b22`.**
+- The platform session committed `25e7445` and `3c38199` during the sitting (17:43–17:44). It regenerated
+  `openapi.json` and `schema.d.ts`, and rebuilt the contract's git-ignored `dist/`.
+- **The contract moved under us mid-sitting, and nothing measured changed.**
+- All code was throwaway, in the session's scratchpad, run by Node 24.12.0 and pnpm 11.24.0.
+- **Nothing was written inside manifest.** `find packages/contract packages/mock -newer <marker>` lists only the
+  platform session's files, timed to its commit, and none under `packages/mock`.
+
+**Verdict: no Decision breaks. Seven details of later tasks do, and each is amended in place, marked *Amended by
+sitting 1*:**
+1. `skipLibCheck: true`;
+2. `jsdom` 29.1.1;
+3. the mock started from source;
+4. M4's assembly;
+5. Task 8's probe and its step 7;
+6. the list of the other fourteen components;
+7. a `.prettierignore`, or the format gate fails on the prose docs.
+
+| | Result | Decision |
+|---|---|---|
+| **M1** | The contract from source works in Vitest, in a browser page served by Vite 8, in `vite build`, and in `tsc --noEmit` (bundler) | **5 confirmed, and extended** to the server's runtime |
+| **M2** | The bundle loads under React 19.3.0 with no throw and no warning, server- and client-rendered; `window.Manifest` holds 18 exports | **2 confirmed** |
+| **M3** | `node:sqlite` writes, reopens and reads. `ExperimentalWarning` on every process | 7: a candidate for F2 |
+| **M4** | Both candidates pass all four checks once Vite is kept off Fastify's paths. **`serverFactory` chosen** | **4 decided** |
+| **M5** | The mock's sign-in, `getMe` and `/api/me` work through the proxy, and logout's shape is recorded. **The mock accepts any session** | FE-26; Task 8 amended |
+| **M6** | The pins are in the store. **Without a lockfile, offline fails.** With one, offline works from nothing | **6 confirmed**, with one pin forced (jsdom) |
+| **M7** | **The edge half of sitting 6 has landed.** 7100 is down, so `/v1/me` reads an empty `502` | Task 8 Step 4 is possible |
+
+**M1: the contract from source.**
+- **Vitest 2.1.9**, alias to `…/contract/src/index.ts`, against an in-process `createMockServer()`:
+  - `getMe` answers `{"id":"1111…","displayName":"Instructor One","role":"member",…}`;
+  - a session-less `getMe` throws `ManifestApiError`, `401`, `UNAUTHENTICATED`;
+  - 2/2 pass;
+  - the `.js`-suffixed imports inside `src/` resolve to `.ts`.
+- **Control:**
+  - `DEBUG=vite:resolve` shows `@manifest/contract -> …/src/index.ts` with the alias, and `-> …/dist/index.js`
+    without it.
+  - **Both runs pass**, and that `dist/` is the one the platform session rebuilt at 17:09, and again at 17:43.
+  - **A missing alias fails nothing**, so Task 2 now asks for a test that says where the contract is resolved
+    from.
+- **A browser**, headless Chrome driven over the DevTools protocol, page served by Vite 8.3.0 on 7105, the
+  proxy to the mock:
+  - signed out, the page reads `M1-REFUSED 401 UNAUTHENTICATED`;
+  - after `/auth/login?returnTo=/`, it reads `M1-OK {…"displayName":"Instructor One"…}`;
+  - Vite served the sibling repository's files with no `server.fs.allow`, because they are reached by import;
+  - it pre-bundled `openapi-fetch` into *our* `node_modules/.vite`;
+  - `vite build` compiles it (8.41 kB).
+- **`tsc --noEmit`**, strict, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `moduleResolution:
+  bundler`, `paths`:
+
+  | `skipLibCheck` | Other | Errors |
+  |---|---|---|
+  | `false` | `types: [node, vite/client]` | 2, both in Vitest's own `vite@5.4.21` types: `Plugin.load` against `rollup@4.63.5` (`exactOptionalPropertyTypes`), and `ViteRuntimeImportMeta` against Vite 8's `vite/client` |
+  | `false` | `types: [node]` | 1, the rollup one |
+  | `true` | | **0** |
+  | `true` | `erasableSyntaxOnly: true` | 7: the contract's `errors.ts:14-16`, the mock's `server.ts:76-81` |
+
+  So **`erasableSyntaxOnly` stays off** (FE-18 confirmed), and **`skipLibCheck` must be `true`**, as the
+  platform's is.
+  - *Rejected:* separate test and app programs, which still fail on the rollup error.
+  - *Rejected:* a Vitest built on Vite 8, which leaves the platform's pin (Decision 6).
+  - *Changing course* is one flag.
+- **The server's runtime** (found in M5):
+  - `import.meta.resolve('@manifest/contract')` under `tsx` with the tsconfig's `paths` gives `src/index.ts`;
+  - with no `paths`, `tsx` gives `dist/index.js`, and so does plain `node`;
+  - Decision 5's *"Vite and Vitest resolve…"* therefore extends to **`tsx` via `paths`**.
+
+**M2: the bundle under React 19.**
+- `runInNewContext(bundle.js, { window: { React }, React })` with React 19.3.0 does not throw.
+- `window.Manifest` holds **18** exports:
+  - F1's four: `StateChip`, `Button`, `Card` and `SideNav`;
+  - fourteen more, among them **`LockedRow`**, which the plan's list had missed.
+- `renderToStaticMarkup` of every preview's props for the four, including SideNav with six project items: **no
+  `console.error` or `warn`**.
+- A client render in jsdom 29 under `NODE_ENV=development`: no key warning, and `aria-current` sits on
+  *Going live*.
+- `NAV_ICONS` keys: `apps, overview, preview, talk, live, people, agent, plus`. The parity cases take them from
+  here.
+
+**M3: `node:sqlite`.**
+- `DatabaseSync` on a file: create, insert, close, reopen, select.
+- It answers `[{"id":1,"body":"hello from M3"}]`, SQLite 3.50.4, journal mode `delete`.
+- Warning, on every process: `ExperimentalWarning: SQLite is an experimental feature and might change at any
+  time`.
+
+**M4: one process on 7105.** One check script ran against each candidate, with the mock from source on 7102.
+
+| | `/api/ping` (also with `Accept: text/html`) | Unknown path | HMR (edit `App.tsx`; the page's marker survives) | WS `/v1/projects/<id>/events` |
+|---|---|---|---|---|
+| **(a) `serverFactory` + `@fastify/http-proxy`** | Fastify, both | `200`, `index.html` with `@vite/client` | `HMR-V1` → `HMR-V2`, `marker=kept` | **14 frames**, from `project.created` |
+| (a) with Vite's `server.proxy` (`ws: true`) | Fastify | ✓ | ✓ | **0 frames**: *"closed before the connection is established"* |
+| (b) middie, skipping Fastify's paths | Fastify | ✓ | ✓ | 14 frames |
+| (b) middie, **no skip** (control) | **`index.html`**, both | ✓ | | |
+
+- **Chosen: (a).**
+  - Both candidates need the same rule: `/api`, `/v1` and `/auth` belong to Fastify, and the control shows Vite's
+    SPA fallback answers `/api/ping` otherwise.
+  - (a) states that rule once, at the front door, with no extra plugin.
+  - **Vite's proxy is out**, because middleware mode has no server for its WebSocket upgrade.
+  - `@fastify/http-proxy` claims only upgrades under its own prefixes when Vite's HMR also listens
+    (`isUpgradeWithinPrefixes`), so the two coexist.
+
+**M5: the mock's sign-in, through M4's (a).**
+- `GET /auth/login?returnTo=/` → `302`, `location: /`,
+  `set-cookie: manifest_session=mock-session; Path=/; HttpOnly; SameSite=Lax`, passed through unchanged.
+- `returnTo=//evil.example` → `/`. `returnTo=/deep/path?x=1` → `/deep/path?x=1`.
+- `GET /v1/me` → `200`, Instructor One, `id 11111111-…`.
+- **`GET /api/me` reads the same cookie** → `200`, **the same `id`**.
+  - It replays only `manifest_session` to `getMe`.
+  - It resolved the contract from `src/index.ts`.
+- `POST /auth/logout` → `200`, `content-type: application/json`, `set-cookie: manifest_session=; Path=/;
+  Max-Age=0`, body `{"redirectTo":"/"}`.
+- After it, `/v1/me` and `/api/me` both answer `401`.
+- **Defect, filed as FE-26:** `manifest_session=nonsense`, and even `manifest_session=` (empty), answer Instructor
+  One.
+  - The mock checks only that a cookie is present (`packages/mock/src/server.ts:778-791`).
+  - Task 8's step 7 and its negative control **could not fail** against the mock. Amended.
+
+**M6: the install.**
+- `pnpm install --offline`, with no lockfile, for the Tech Stack's pins, fails:
+  `ERR_PNPM_NO_OFFLINE_TARBALL brace-expansion-1.1.21` (under `eslint → minimatch@3.1.5`; the store has 1.1.18).
+  - **Every direct pin is in the store**; transitive ranges resolve past it.
+- One networked install fetched **84 packages** (76 on the first try, 8 on the jsdom re-pin):
+  - **new:** `@fastify/http-proxy@11.6.3`, `@fastify/middie@9.3.4`, `@fastify/static@10.1.5`,
+    `@testing-library/react@16.3.3`, `@testing-library/dom@10.4.2`, `jsdom@29.1.1`, and their dependencies;
+  - **newer transitive versions than the store's:** `rolldown@1.2.11` with its darwin-arm64 binding,
+    `rollup@4.63.5`, `brace-expansion@1.1.21`/`5.0.12`, `ws@8.22.0`, `undici@7.30.0`/`8.11.2`.
+- **`jsdom@30.1.1`** (the current release) warns `Unsupported engine … wanted: {"node":"^22.22.2 || ^24.15.0 ||
+  >=26.0.0"}`. **Pinned 29.1.1**, the last whose engines accept 24.12.0, with no warnings.
+- Then `rm -rf node_modules && pnpm install --offline --frozen-lockfile` → exit 0, in 1.5 s.
+
+**M7: the edge today** (17:39 PDT, read-only; nothing started).
+- `curl -sk https://app.manifest.internal/v1/me`, `/` and `/auth/login` → **`HTTP/2 502`, empty body**, with
+  `content-security-policy: frame-ancestors 'none'` and HSTS: **the app site's own headers**.
+- `https://nosuch-f1probe.manifest.internal/` → `200 manifest OK host=… listener=public`: the wildcard.
+- So sitting 6 has landed at the edge (manifest `f1e3908`, Caddyfile `app.manifest.internal`), and nothing
+  listens on 7100 or 7105.
+- An empty-body `502` is what `refusalOf` must read as `unreachable` (Review Focus 2): here it is, in the wild.
+
+**Negative controls.**
+- M1's alias: resolved from `dist/`, and the test still passed. That is why Task 2 gains a test.
+- M4's skip rule: `/api/ping` became `index.html`.
+- M4's proxy choice: Vite's WebSocket gave 0 frames.
+- **Could not fail:** Task 8's step 7, against the mock (FE-26).
+
+**Gates:** none to run. There is no workspace until Task 2.
+
+**The machine at the close:**
+- the mock (from source) stopped; nothing on 7102 or 7105; the scratchpad's servers stopped;
+- the edge up, the control plane down;
+- manifest's working tree untouched by us.

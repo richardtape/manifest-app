@@ -364,6 +364,11 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
 `workspace:*`, inside the monorepo, where none of this bites):
 
 - **Its runtime is `dist/index.js`, which git ignores.** A sibling that links it must build it first.
+  - **Measured by F1's sitting 1 (M1, 2026-09-27): it is worse than a missing build.**
+  - The platform session rebuilds `dist/` in its own working tree (17:09, and again at 17:43 that day).
+  - A sibling that forgets its alias, or runs plain `node`, or `tsx` without `paths`, **silently runs whichever
+    build is there, and every test still passes.**
+  - We resolve to `src/` in Vite, Vitest and `tsx`, and F1's Task 2 adds a test that holds it there.
 - **Its `dist/*.d.ts` are broken**: `schema.d.ts` is never copied into `dist/`. A consumer takes the types from
   `src/`, which needs `moduleResolution: bundler` (or `nodenext`).
 - **`src/errors.ts` uses constructor parameter properties**, which `erasableSyntaxOnly` refuses. Recent
@@ -524,6 +529,37 @@ The research pass, confirmed in part by the console's own `package.json` ✓ (it
 - **Options:**
   - (a) An owner's request for sign-off on the release serving staging: an event on the stream, and a row in
     §26's queue. It is D31's queue *"of things blocked on a human"*, fed from the side that is blocked.
+
+### FE-26 — `manifest-mock` accepts any session, and starts only by building inside manifest
+
+*Found by F1's sitting 1 (M5), 2026-09-27, against manifest `8bb6b22`. Not yet carried to the platform session.*
+
+- **Screen and moment:** every signed-in screen, as the mock serves it. And our server's *"who is this?"* (FE-2),
+  which is the one place a wrong answer lets one person see another's conversations.
+- **What we would call:** `GET /v1/me` with a session the platform never issued, expecting
+  `401 UNAUTHENTICATED`, as the platform answers.
+- **What is missing:**
+  - **The mock checks only that a `manifest_session` cookie is present, never its value**
+    (`packages/mock/src/server.ts:778-791` ✓).
+    - `manifest_session=nonsense` answers Instructor One, and so does `manifest_session=` (empty) (measured).
+    - Only the value its own `/auth/login` sets, `mock-session` (`:613-621` ✓), should.
+  - **Its only start script builds inside manifest.** `dev` is `pnpm run build && node dist/main.js`: `tsc`
+    writes `packages/mock/dist` (its `package.json` ✓).
+    - A sibling repository must not build there.
+    - We run `createMockServer()` from source with `tsx` instead, which works because the mock imports only
+      *types* from the contract.
+- **Why it matters:**
+  - A front-end cannot prove against the mock that it refuses a session it should not trust. F1's acceptance
+    wanted to: its Task 8, step 7.
+  - A bug where our server ignores the cookie would pass every mock-backed check. We prove it instead against a
+    fake control plane of our own (F1 Task 5), and against the real one in edge mode.
+- **Options:**
+  - **(a) Recommended:** the mock answers `401 UNAUTHENTICATED` for any session other than the one it issued,
+    and says so in its header comment.
+  - (b) As well: a start script that runs from source (`node --import <a .ts resolver> src/main.ts`, as the
+    repository's `resolve-ts.mjs` already does elsewhere), so starting the mock writes nothing.
+- **When:** sittings 10–11, beside FE-18, which is the same subject: the platform's packages consumed from a
+  sibling. F1 designs around both meanwhile.
 
 ---
 

@@ -9,9 +9,18 @@ says which plan is current. This file states where things stand and the rules. I
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
   ([`api-findings.md`](./api-findings.md), [`2026-09-27-to-the-platform-session.md`](./2026-09-27-to-the-platform-session.md)).
-- **F1 and F2 are written, and neither is executed yet**:
-  [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md) is next, and
-  [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md) follows it.
+- **F1 is being executed: sitting 1 of 5 (the measurements) is done**, and **sitting 2 is next**
+  ([`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md)). Its findings entry holds every
+  measurement:
+  - no Decision broke;
+  - seven task details were amended in place, marked *Amended by sitting 1*: `skipLibCheck: true`, `jsdom` 29.1.1,
+    the mock started from source (`pnpm mock`, never manifest's own `dev` script, which builds), the one process
+    on 7105 as Fastify's `serverFactory` with `@fastify/http-proxy`, Task 8's probe and step 7, the list of the
+    other fourteen components, and a `.prettierignore` for the prose docs.
+- **FE-26 is new:** the mock accepts any session value. It is not yet carried to the platform session.
+- **The platform's sitting 6 has landed at the edge.** `app.manifest.internal` is its own site, with the control
+  plane down when measured. F1's Task 8 Step 4 is therefore possible, if Rich agrees to start the control plane.
+- [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md) follows F1.
 - No product code exists yet.
 
 ---
