@@ -4,31 +4,29 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F3's sittings 1–3 done, in one session at Rich's word)*:
+**Where things stand** *(2026-09-28, F3's sittings 1–4 done, in one session at Rich's word)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3's sitting 4, Tasks 6 and 7.** These are the guards (the app's files
-  only, no Dockerfile, no new dependency, no secret, plain words, only staff the person named, and imports that hold)
-  and the three agents (the lead, the CWL specialist and the explaining agent), with the lead's five moves. The plan
-  is [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3's sitting 5, Tasks 8 and 9.** These are the round of work (moment 6's
+  five steps on their own signals, three tries, the checkpoint and the clock, *Stop*, messages, questions, a restart
+  resumed) and our API's building routes. The plan is
+  [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md). **This is the largest sitting.**
   - **Rich chose how it runs:** one agent, natively (superpowers:executing-plans), not subagent-driven, one sitting
-    per session (he waived that for sittings 2 and 3). The whole-branch review is done by one fresh reviewer at the
-    end.
+    per session (he waived that for sittings 2–4). The whole-branch review is done by one fresh reviewer at the end.
   - **Read first:**
-    - the plan's dated entries for sittings 1–3;
+    - the plan's dated entries for sittings 1–4;
     - the ledger's rulings (`.superpowers/sdd/2026-09-28-f3-building-it/progress.md`);
-    - Tasks 6 and 7 as they now read, with their *From sitting 2* notes. Trust them over anything older.
-  - **What sittings 2 and 3 left for you:**
-    - `runtime/` (agents, moves, the runner, the trace), and `store/`'s `runs` and `trace` at `user_version` 2;
+    - **Task 8's *What sittings 2, 3 and 4 built that this task stands on***, and Task 9's two notes on F2's
+      `work.ts`. Trust them over anything older.
+  - **Everything the round calls now exists:**
+    - `runtime/`;
     - `model/client.ts`'s `onAnswer` and `modelFor`;
-    - `platform/`'s source, builds, releases, instances, secrets, members and sessions;
-    - the project's event stream (`platform/stream.ts`).
-    - **`deploy` and `output` take the project and find its sandbox themselves.**
-  - **The platform is running its sitting 10 beside us** (`manifest-82`: the console, the mock, FE-24, FE-17 and
-    FE-18; FE-26 and FE-27 await Rich). What was agreed:
-    - it truncates 7100 as it tests, and we tell it **before** using 7100;
-    - it messages at the mock's commit: then restart `pnpm mock` between tasks, and re-record its answers (M2's are
-      at `346cd9e`);
-    - it messages at each contract commit: then rerun `pnpm typecheck` and `pnpm test`.
+    - `platform/`'s calls and its stream;
+    - `build/guards.ts` and `imports.ts`;
+    - `agents/lead.ts`, `cwl.ts` and `explaining.ts`;
+    - `build/moves.ts` with its `RoundContext`, which the round implements.
+  - **The platform's sitting 10** (`manifest-82`) committed FE-24's code (`bb32fa6`), FE-18 (`46399c5`) and its mock
+    (`18f3214`, FE-26 and FE-27). **Our mock runs `18f3214`**, and our tests follow it. It has not yet closed. When it
+    does, record the landing (§8). Tell it **before** using 7100.
   - **Rich decided in sitting 1:** when the fallback answers, **carry on, and say so** once in the conversation. What
     the lead sees is capped at 48,000 characters (Decisions 3 and 4).
   - **What F3 builds, in one breath:**
@@ -45,8 +43,8 @@ says which plan is current. This file states where things stand and the rules. I
     [`plans/2026-09-27-f1-foundations.md`](./plans/2026-09-27-f1-foundations.md).
   - **F2 is executed** (2026-09-28): moments 3–5. Describe it, name it, *Make it*, and the plan, committed into the
     app as `docs/plan.md`. [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  - **F3's sittings 1–3 are done** (2026-09-28): the measurements, the runtime and the model client, then the
-    platform calls and the event stream, each recorded in the plan's dated entry. New findings:
+  - **F3's sittings 1–4 are done** (2026-09-28): the measurements; the runtime and the model client; the platform
+    calls and the event stream; the guards and the three agents. Each is recorded in the plan's dated entry. New findings:
     **FE-33** (a revoked token keeps its open event stream) and **FE-34** (the fallback also answers a request OpenAI
     refused). Neither is carried; that is Rich's word.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
@@ -54,15 +52,16 @@ says which plan is current. This file states where things stand and the rules. I
     - sittings 8 (archive and restore), 9 (delete), 9a (the capable model, `9c54bc3`) and **9b (its fallback,
       close-out `346cd9e`)**;
     - the contract is still **1.4.0, 66 operations**;
-    - our typecheck and 625 tests pass against it.
+    - our typecheck and 705 tests pass against it (and against sitting 10's commits so far).
   - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`, Rich's, $0.10/$0.50 a million tokens),
     at `max_classification` internal. **Read model names from `session.models`**, never assume them: a
     `confidential` project never gets it.
     - **When OpenAI cannot answer, the same name answers from `default-chat-onprem`** (`ollama_chat/qwen3.5:4b`, 16k
       context, $1/$3 a million), with the header `x-litellm-attempted-fallbacks: 1`.
     - **It also does so for a request OpenAI refused as malformed** (FE-34): always read the header.
-  - **Under way there: its sitting 10, the console and the mock** (FE-24, FE-17, FE-18; FE-26 and FE-27 await Rich).
-    **The mock's answers will change**: F3's M2 recorded them at `346cd9e`.
+  - **Under way there: its sitting 10, the console and the mock.** Committed so far: FE-24's code (`bb32fa6`), FE-18
+    (`46399c5`), and the mock (`18f3214`, FE-26 and FE-27). **The mock changed**: re-measured at `18f3214` (Task 12's
+    note). Our mock runs it.
   - **Our findings FE-26 to FE-32 are carried** (2026-09-28, at Rich's word), each at its option (a). **Our half of
     FE-28 is done.**
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
@@ -85,12 +84,12 @@ says which plan is current. This file states where things stand and the rules. I
       the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`.
     - `model/` asks a model for structured output only, and says which model answered (`onAnswer`). `agents/` are
       the agents, each a schema and a prompt: the three intake agents, and the plan.
-    - **`runtime/` is our own agent framework** (F3 sitting 2): it knows no platform. F3 adds `build/` and three
-      agents next.
+    - **`runtime/` is our own agent framework** (F3 sitting 2): it knows no platform. `build/` holds the lead's guards
+      and moves (sitting 4), and the round next. `agents/` gained the lead, the CWL specialist and the explaining agent.
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session.
   - **The gates:**
-    - `pnpm test` (625 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (705 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's);
     - `scripts/check-describing.sh` (F2's, mock mode, 18 checks). F3 adds `scripts/check-building.sh`.
 

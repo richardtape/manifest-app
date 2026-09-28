@@ -6,8 +6,8 @@
 
 **Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
 sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
-whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1–3 are done (2026-09-28, in one session at
-Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 4 is next.**
+whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1–4 are done (2026-09-28, in one session at
+Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 5 is next.**
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
@@ -55,7 +55,7 @@ moment 6, which hands over to F4's *Seeing it*.
 | 1 | 1 | **The measurements.** The capable model's structured answers; the mock's build and deploy answers; the platform's stream from a server; a round by hand on the real platform; the two frameworks' current documentation; the blueprint's sign-in code. **Alone, and first.** M3 and M4 need the control plane, which the platform's 9b has stopped: they wait for its *"CLOSED"* | **done 2026-09-28** (the dated entry below) |
 | 2 | 2, 3 | The runtime: agents, moves, the runner, its stop conditions, guards, the trace, saved runs. And the model client recording which model answered, and its usage | **done 2026-09-28**, in sitting 1's session at Rich's word (the dated entry below) |
 | 3 | 4, 5 | The platform calls, and the project's event stream | **done 2026-09-28**, in the same session at Rich's word, beside the platform's sitting 10 (the dated entry below) |
-| 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | not started |
+| 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | **done 2026-09-28**, in the same session at Rich's word (the dated entry below) |
 | 5 | 8, 9 | The round of work, our API's building routes, the building frames, and the new tables | not started |
 | 6 | 10, 11 | The design system's additions, and the building screen, layout C | not started |
 | 7 | 12 | **The acceptance:** against the mock with a scripted model; on the real platform with the capable model; Rich's click. **Alone, and last** | not started |
@@ -879,6 +879,20 @@ brief is `check: (input) => …` (the CWL specialist's emails).
 - `agentSessions.start(…, { capUsd: 2, durationMinutes: 240 })` answers `capUsd`; `agentSessions.list` answers each
   session's `spentUsd`, `null` kept.
 
+**What sitting 4 built that this task stands on:**
+- **`RoundContext` has three members beyond the plan's**, which the round implements:
+  - `paths()`: the tree's paths as the round last knew them;
+  - `wrote(changes)`: a landed commit's changes, so `paths()` and `packageJson()` follow;
+  - `keep(files)`: a read's files, for the view, newest first.
+- The lead's `LeadView.files` is newest first. Its report of a read is one line in the view, since the files are in
+  `files`.
+- The lead's moves report, and count, the refusals the lead can answer (`SPEC_INVALID` with its details,
+  `SOURCE_SECRET_DETECTED`, `SOURCE_PATH_CONFLICT`…), and throw `SOURCE_CONFLICT` for the round.
+- `ask_cwl` reports, and counts, `INSTRUCTOR_NOT_FOUND` and `CWL_ANSWER_INVALID`. It stops the run as `refused` on any
+  other model error of the specialist's.
+- **Mock mode's walk-through model answers the lead, the specialist and the explaining agent.** Its lead reads
+  `server.js`, commits `public/weeks.html`, and is done.
+
 **Interfaces:**
 
 ```ts
@@ -1122,9 +1136,18 @@ export function Disclosure(props: { summary: string; count?: number; children: R
   entries say what each call named (Task 2). *(M2: the mock's `main` never moves, so every commit's base is
   `c2ac2119…`; its build is `4444…` of its own commit; its `deploy` and `getInstanceOutput` answer staging's instance;
   and its stream plays `build.started` at 1 s, `build.succeeded` at 14 s and `instance.healthy` at 20.6 s, once per
-  connection, whatever was started. So the round ticks on ids, and this check reads what was sent. **The platform's
-  sitting 10 is the mock's (FE-26, FE-27)**: if it has landed by sitting 7, measure the mock again before trusting
-  this note.)*
+  connection, whatever was started. So the round ticks on ids, and this check reads what was sent.)*
+  *(**Re-measured at manifest `18f3214`**, the platform's sitting 10, FE-26 and FE-27, in F3's sitting 4:
+  - **a deploy to the sandbox now answers the sandbox's own instance**, `…661` healthy, and `listInstances` of the
+    sandbox lists it serving, beside a failed `…662`;
+  - `getInstanceOutput` reads `…661`; `…662` is `409 INSTANCE_OUTPUT_UNAVAILABLE`; staging's `…666` is `403
+    INSTANCE_OUTPUT_STAGING`;
+  - sessions list `default-chat-large`, and carry the name and cap asked for;
+  - **any id the mock does not hold is `404`**, so the round must use the ids the mock answers: project `2222…`,
+    commit base `c2ac2119…`;
+  - only `manifest_session=mock-session` is a session, though a Bearer of any value is taken;
+  - **unchanged:** the build is `4444…` of its own commit `5f3c…`, the scripted stream, and `createCommit`'s fixture.
+  The round's sandbox-only calls (sitting 3) therefore find a sandbox instance to read.)*
   1. the round starts when the plan's commit lands;
   2. the commits' dry runs, then the commits;
   3. `startBuild` names the last commit;
@@ -1447,3 +1470,101 @@ scan now reading `runs` and `trace` too.
 
 **Gates:** `pnpm test` **625/625, twice** (580 + 31 platform + 14 stream); `pnpm lint`, `pnpm typecheck` (against the
 platform's uncommitted sitting-10 tree) and `pnpm format:check` pass; `scripts/check-describing.sh` 18/18.
+
+### 2026-09-28 — Sitting 4 (Tasks 6 and 7): the guards, and the three agents
+
+*In the same session again, at Rich's word ("ok, let's go with sitting 4!"), while the platform's sitting 10 went on.
+Its commits reached us mid-sitting:*
+- *`bb32fa6`, FE-24's code: a staging instance's output is `403 INSTANCE_OUTPUT_STAGING`;*
+- *`46399c5`, FE-18: the contract's `dist/` types stand alone;*
+- *`18f3214`, its mock, FE-26 and FE-27.*
+
+*The contract stayed 1.4.0 and 66 operations, with 127 codes. The mock broke two of our web tests while its changes
+were still uncommitted: our tests read `@manifest/mock` live. At our agreement, we told it and changed nothing until
+it committed. Between Task 7 and this close, we restarted the mock and followed it.*
+
+**Commits:**
+- `aeed3ff`: Task 6, the guards;
+- `85183c6`: Task 7, the three agents and the lead's moves;
+- `9278ff8`: our tests following the mock at `18f3214`.
+
+**What was built:**
+- **The guards** (Review Focus 1), each harm its own case:
+  - **`commit`** refuses:
+    - a path outside the app;
+    - a `Dockerfile` or `.npmrc` anywhere, or a `runtime.build` block, in block or flow style, with no YAML
+      dependency;
+    - any change to `dependencies`, `devDependencies` or `overrides`, removals included, while `scripts` may change;
+    - `package-lock.json` written or deleted (FE-32);
+    - a secret's shape (`mft_`, `sk-`, a PEM block, an AWS key id), never repeated in the reason;
+    - a delete of a file that is not there.
+  - **`words`** refuses F1's machinery list, the code the lead writes (`npm`, `git`, `commit`, `middleware`…), a file
+    or a path, and *"it works"*.
+  - **`staff`** refuses any email the person did not write, whole.
+  - **`importsHold`**: ES modules resolve exactly; bare names are built-ins or `dependencies`, since the build omits
+    dev; `public/` is not read; comments carry no imports.
+  - **Against the real proof-app seed** (manifest's blueprint, read-only): nothing missing, nothing refused.
+- **The lead:**
+  - its prompt, which the test holds to FE-32, the pack's build rule, plain words, and questions with defaults;
+  - its answer, `movesOf(leadMoves)`;
+  - its view, kept to `VIEW_CAP`, with the plan and the pack whole and the files newest first;
+  - **the five moves**, each guarded. `commit` also guards its `line` and `account`, and any `config/staff.json`
+    against the person's own words.
+- **The CWL specialist:** its check holds `config/staff.json` to exactly the instructor's PUID and the named emails.
+- **The explaining agent:** its check refuses machinery, codes, paths and the names in the platform's own words,
+  proved on M4's recorded words.
+- **Mock mode plays all three**, and one test runs a whole walk-through round through the runtime.
+
+**Rulings** (the ledger has each with its cost):
+1. The words guard adds the lead's code words and file shapes, since *"Running npm ci"* holds no machinery word.
+2. Any change to the locked sections of `package.json` is refused, removals included.
+3. The tree refuses a missing delete.
+4. `importsHold` counts `dependencies` only.
+5. The guards reuse F1's list from the web package, as the server's tests already do.
+6. `RoundContext` gains `paths()`, `wrote()` and `keep()`.
+7. The view shows a read as one line, cuts other reports at 12,000 characters, and shows a file that does not fit as
+   one line.
+8. The commit guard also checks words and staff.
+9. `ask_cwl`'s three outcomes.
+10. `CHANGE` is shared, from `moves.ts`.
+11. The explaining agent's check.
+
+**A discipline note:** Task 7's tests were written first, **but not run red before the implementation**. Each
+behaviour's negative control stands in for that.
+
+**Negative controls**, each red, then restored:
+- **Task 6 (15):**
+  - a path outside the app;
+  - a `Dockerfile` or `.npmrc`;
+  - the lockfile;
+  - a missing delete;
+  - secrets;
+  - `runtime.build`;
+  - a dependency;
+  - *"it works"*;
+  - machinery;
+  - files and paths;
+  - any staff;
+  - relative imports;
+  - any package;
+  - comments;
+  - `public/`.
+- **Task 7 (14):**
+  - the prompt forgets FE-32;
+  - a read keeps nothing;
+  - a commit leaves the base;
+  - `SPEC_INVALID` not counted;
+  - `SOURCE_CONFLICT` answered;
+  - no staff guard;
+  - the specialist not given the PUID;
+  - `ask_cwl` unguarded;
+  - a default still pauses;
+  - the view uncapped;
+  - the specialist unchecked;
+  - explaining lets names through;
+  - the walk-through lead never commits;
+  - a read of 21 paths.
+- **`check-slice.sh`'s test 7** now runs in mock mode. A nonsense session is `401`, and the mock's own is `200`.
+
+**Gates:** `pnpm test` **705/705, twice**; `pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass;
+`scripts/check-describing.sh` 18/18; `scripts/check-slice.sh` 8/8, where it was 7 with one skipped.
