@@ -1,0 +1,53 @@
+import { createManifestClient, unwrap, type Schemas } from '@manifest/contract'
+
+/**
+ * THE ONE PLACE THE FRONT-END CALLS THE PLATFORM (Decision 3; the console's api.ts is the
+ * pattern). Screens call these functions and never hold the client. `origin` is a
+ * parameter, so the browser passes its own and a test passes the mock's. A browser sends
+ * its own cookie and Origin, and `session` is for a Node caller only.
+ *
+ * `unwrap` throws a `ManifestApiError` carrying D23.7's envelope. `refusalOf` is the one
+ * thing that reads it.
+ */
+export interface Platform {
+  getMe(): Promise<Schemas['Me']>
+  listProjects(): Promise<Schemas['ProjectList']>
+  /** Always `?expand=environments` (D23.1's one expansion): a card needs its three. */
+  getProject(projectId: string): Promise<Schemas['Project']>
+  listInstances(environmentId: string): Promise<Schemas['InstanceList']>
+  getRelease(releaseId: string): Promise<Schemas['Release']>
+}
+
+export function createPlatform(options: { origin: string; session?: string }): Platform {
+  const client = createManifestClient(options)
+  return {
+    async getMe() {
+      return unwrap(await client.GET('/v1/me'), 'getMe')
+    },
+    async listProjects() {
+      return unwrap(await client.GET('/v1/projects'), 'listProjects')
+    },
+    async getProject(projectId) {
+      return unwrap(
+        await client.GET('/v1/projects/{projectId}', {
+          params: { path: { projectId }, query: { expand: 'environments' } },
+        }),
+        'getProject',
+      )
+    },
+    async listInstances(environmentId) {
+      return unwrap(
+        await client.GET('/v1/environments/{environmentId}/instances', {
+          params: { path: { environmentId } },
+        }),
+        'listInstances',
+      )
+    },
+    async getRelease(releaseId) {
+      return unwrap(
+        await client.GET('/v1/releases/{releaseId}', { params: { path: { releaseId } } }),
+        'getRelease',
+      )
+    },
+  }
+}
