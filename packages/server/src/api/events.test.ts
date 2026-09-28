@@ -52,6 +52,7 @@ async function serve(
     port: 7105,
     origin: ORIGIN,
     platformOrigin: platform.origin,
+    modelGateway: 'http://127.0.0.1:7106/v1',
   }
   const app = buildServer(config, (_, response) => response.end(), {
     store,

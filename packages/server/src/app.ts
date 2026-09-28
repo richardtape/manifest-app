@@ -8,6 +8,7 @@ import { registerProblems } from './api/problems.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
 import { notAvailable, type Model } from './model/client.js'
+import { createIntakeKeys, type IntakeKeys } from './platform/intake.js'
 import type { Conversation, Store } from './store/db.js'
 
 /** Whatever serves the app: Vite's middlewares while we develop (main.ts). */
@@ -47,12 +48,15 @@ export function buildServer(
     hub = createHub(),
     heartbeatMs = 25_000,
     intakeModel = () => notAvailable,
+    intakeKeys = createIntakeKeys(),
   }: {
     store: Store
     hub?: Hub
     heartbeatMs?: number
     /** The platform's intake key for this conversation, once the browser hands it over (Task 6). */
     intakeModel?: (conversation: Conversation) => Model
+    /** Where the handed-over intake keys are held, in memory only (Decision 1). */
+    intakeKeys?: IntakeKeys
   },
 ): FastifyInstance {
   const app = Fastify({
@@ -83,7 +87,7 @@ export function buildServer(
   registerConversations(app, { config, store })
   registerProblems(app, { config, store })
   registerEvents(app, { config, store, hub, heartbeatMs })
-  registerIntake(app, { config, store, hub, intakeModel })
+  registerIntake(app, { config, store, hub, intakeModel, intakeKeys })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to

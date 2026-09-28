@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { createServer as createVite } from 'vite'
 import { buildServer } from './app.js'
 import { readConfig } from './config.js'
+import { createIntakeKeys, intakeModelFor } from './platform/intake.js'
 import { openStore } from './store/db.js'
 
 /**
@@ -13,6 +14,8 @@ const WEB = fileURLToPath(new URL('../../web/', import.meta.url))
 const config = readConfig(process.env)
 // Decision 2: one SQLite file, git-ignored. Decision 1: no credential is ever written to it.
 const store = openStore(fileURLToPath(new URL('../.data/app.sqlite', import.meta.url)))
+// The intake keys the browser hands over, in memory only; each mode's model uses them (Task 6).
+const intakeKeys = createIntakeKeys()
 
 // The app is asked for only once we listen, which is after Vite exists: the closure reads
 // `vite` then, and Vite needs our HTTP server first, for its HMR socket (`server.ws`, which
@@ -20,7 +23,7 @@ const store = openStore(fileURLToPath(new URL('../.data/app.sqlite', import.meta
 const app = buildServer(
   config,
   (request, response) => vite.middlewares(request, response),
-  { store },
+  { store, intakeKeys, intakeModel: intakeModelFor(config, intakeKeys) },
 )
 const vite = await createVite({
   root: WEB,

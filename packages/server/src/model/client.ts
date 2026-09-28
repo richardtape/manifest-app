@@ -15,6 +15,10 @@ export type ModelCode =
   | 'MODEL_BUDGET_EXHAUSTED'
   | 'MODEL_UNREACHABLE'
   | 'MODEL_KEY_REFUSED'
+  /** No intake key handed over, or one lost to a restart (F2 Task 6). */
+  | 'INTAKE_KEY_MISSING'
+  /** An intake key past its `expiresAt`: dropped (F2 Task 6). */
+  | 'INTAKE_KEY_EXPIRED'
 
 /** A code and the gateway's status: never the key, the gateway's words, or the answer. */
 export class ModelError extends Error {

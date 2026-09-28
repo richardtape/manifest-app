@@ -691,7 +691,7 @@ export function needAnotherRound(offers: Offer[]): boolean   // fewer than 2 ava
       |---|---|
       | `INTAKE_DAILY_LIMIT_REACHED` | *"You've described as many new apps today as one person can. That resets at midnight. You can still name it yourself."* **Rich's.** Midnight is Vancouver's, said in the person's own zone |
       | `INTAKE_BUDGET_EXHAUSTED` | *"Describing new apps is paused for everyone until 5pm on 30 September, when this month's allowance resets. You can still name it yourself."* **Rich's.** The time follows the contract's rule, *"the first of the month, 00:00 UTC"*, until FE-29 answers it as a field |
-      | `INTAKE_MODEL_UNAVAILABLE`, `AI_CATALOGUE_DISABLED` | *"Describing new apps is waiting on a Manifest administrator. You can still name it yourself."* **Proposed, for Rich** |
+      | `INTAKE_MODEL_UNAVAILABLE`, `AI_CATALOGUE_DISABLED` | *"Describing new apps is waiting on a Manifest administrator. You can still name it yourself."* **Rich's** (agreed 2026-09-27) |
       | `AI_BACKEND_UNAVAILABLE`, or no answer in 15 seconds | the walk-through's *"We couldn't read that just now. Your words are kept. Try again, or name it yourself."* |
       | any other | F1's *"Something went wrong on our side…"* |
 
@@ -826,10 +826,11 @@ export function planMarkdown(title: string, plan: z.infer<typeof Plan>, onlyYouK
       this plan will be here."* The amount is `monthlyUsd`, and the time is `resetsAt`, in the person's own zone.
       It replaces the words above, and every refusal here carries its reference (Decision 11).
     - **`MODEL_NOT_AVAILABLE` now means the platform gives this app no model**: `AI_CATALOGUE_DISABLED` or
-      `AGENT_NO_MODEL_FOR_CLASSIFICATION`. *"Arrives soon"* would be untrue, since it has arrived. **Proposed,
-      for Rich:** *"Writing plans is waiting on a Manifest administrator. Nothing is lost."*, waiting on someone.
-    - `AI_BACKEND_UNAVAILABLE` from `start` is Task 4's `MODEL_UNREACHABLE`, with **[Carry on]**. **Proposed,
-      for Rich:** *"We couldn't write the plan just now. Nothing is lost."*
+      `AGENT_NO_MODEL_FOR_CLASSIFICATION`. *"Arrives soon"* would be untrue, since it has arrived. **Rich's**
+      (agreed 2026-09-27): *"Writing plans is waiting on a Manifest administrator. Nothing is lost."*, waiting on
+      someone.
+    - `AI_BACKEND_UNAVAILABLE` from `start` is Task 4's `MODEL_UNREACHABLE`, with **[Carry on]**. **Rich's**
+      (agreed 2026-09-27): *"We couldn't write the plan just now. Nothing is lost."*
     - The mock answers `startAgentSession` from its example (another project, another name) and
       `getAgentBudget` with `remainingUsd: 9.35`. So the tests use Task 6's fake, and mock mode uses `Scripted`.
   - **Review Focus 5:** a server restart during `planning` leaves the conversation in `planning` with no key in

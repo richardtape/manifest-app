@@ -7,6 +7,7 @@ import type { Config } from '../config.js'
 import { ModelError, type Model } from '../model/client.js'
 import type { Conversation, ConversationState, Store } from '../store/db.js'
 import { publishRefusal, publishState, type Hub } from './events.js'
+import { intakeKeyFrom, type IntakeKeys } from '../platform/intake.js'
 import { guard } from './guard.js'
 import { intakeOf, type Said } from './intake-state.js'
 import type { StepKey } from './progress.js'
@@ -72,11 +73,13 @@ export function registerIntake(
     store,
     hub,
     intakeModel,
+    intakeKeys,
   }: {
     config: Config
     store: Store
     hub: Hub
     intakeModel: (conversation: Conversation) => Model
+    intakeKeys: IntakeKeys
   },
 ): void {
   const check = guard(config)
@@ -154,6 +157,29 @@ export function registerIntake(
     errorHandler: (_error: unknown, _request: unknown, reply: FastifyReply) =>
       refuse(reply, 400, code),
   })
+
+  /**
+   * THE HANDOVER (F2 Task 6): the intake key the browser was answered, kept in memory only
+   * (Decision 1), and only with our own gateway's base URL. While the intake lasts.
+   */
+  app.post<{ Params: { id: string } }>(
+    '/api/conversations/:id/intake-key',
+    invalid('INTAKE_KEY_INVALID'),
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      const conversation = mine(request, reply, who, [
+        'describing',
+        'questions',
+        'naming',
+      ])
+      if (conversation === undefined) return reply
+      const key = intakeKeyFrom(request.body, config)
+      if ('refused' in key) return refuse(reply, 400, key.refused)
+      intakeKeys.put(conversation.id, key)
+      return reply.code(204).send()
+    },
+  )
 
   /** Round 1, round 2 with answers, or skipped: never a round 3 (moment 3). */
   app.post<{ Params: { id: string } }>(

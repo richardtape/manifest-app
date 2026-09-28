@@ -20,8 +20,7 @@ says which plan is current. This file states where things stand and the rules. I
     `spentUsd` (FE-23). No Decision broke, and Tasks 2–10 are amended to the contract, each marked *Amended by
     sitting 1*.
   - **After it, at Rich's word:** every problem shown carries a support reference (Decision 11), and a limit
-    says whose it is and when it resets. Three sentences are still proposed, for Rich. Sittings 4 and 5 need
-    them.
+    says whose it is and when it resets. Rich has agreed every proposed sentence (2026-09-27).
   - **Sitting 2** built our server's storage and its own API: conversations, support references, and one
     progress stream per conversation, which the page reopens when the browser gives up.
   - **Sitting 3** built a model client that takes only structured answers, and the three intake agents with

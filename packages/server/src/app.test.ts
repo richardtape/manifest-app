@@ -49,12 +49,14 @@ const mock = (platformOrigin: string): Config => ({
   port: 7105,
   origin: 'http://127.0.0.1:7105',
   platformOrigin,
+  modelGateway: 'http://127.0.0.1:7106/v1',
 })
 const edge = (platformOrigin: string): Config => ({
   mode: 'edge',
   port: 7105,
   origin: 'https://app.manifest.internal',
   platformOrigin,
+  modelGateway: 'http://127.0.0.1:7106/v1',
 })
 const SESSION = { cookie: 'theme=dark; manifest_session=mock-session' }
 const json = async (response: Response) =>
@@ -67,6 +69,7 @@ describe('readConfig', () => {
       port: 7105,
       origin: 'https://app.manifest.internal',
       platformOrigin: 'http://127.0.0.1:7100',
+      modelGateway: 'http://127.0.0.1:7106/v1',
     })
   })
   it('is mock when asked, served on 7105 itself, asking manifest-mock', () => {
@@ -75,6 +78,7 @@ describe('readConfig', () => {
       port: 7105,
       origin: 'http://127.0.0.1:7105',
       platformOrigin: 'http://127.0.0.1:7102',
+      modelGateway: 'http://127.0.0.1:7106/v1',
     })
   })
   it('refuses a mode it does not know, loudly', () => {

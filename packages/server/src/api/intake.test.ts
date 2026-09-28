@@ -80,6 +80,7 @@ async function setUp(model: Model | undefined) {
     port: 7105,
     origin: ORIGIN,
     platformOrigin: platform.origin,
+    modelGateway: 'http://127.0.0.1:7106/v1',
   }
   const app: FastifyInstance = buildServer(config, () => undefined, {
     store,

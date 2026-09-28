@@ -22,6 +22,7 @@ const config = (mode: Config['mode'] = 'edge'): Config => ({
   port: 7105,
   origin: mode === 'edge' ? EDGE_ORIGIN : 'http://127.0.0.1:7105',
   platformOrigin: platform.origin,
+  modelGateway: 'http://127.0.0.1:7106/v1',
 })
 
 /** An app with a guarded read and write, and a count of the times each handler went past its guard. */

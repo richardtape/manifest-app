@@ -35,7 +35,13 @@ function setUp(): { store: Store; file: string; config: Config } {
   return {
     store,
     file,
-    config: { mode: 'edge', port: 7105, origin: ORIGIN, platformOrigin: platform.origin },
+    config: {
+      mode: 'edge',
+      port: 7105,
+      origin: ORIGIN,
+      platformOrigin: platform.origin,
+      modelGateway: 'http://127.0.0.1:7106/v1',
+    },
   }
 }
 

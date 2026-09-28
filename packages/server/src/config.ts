@@ -19,6 +19,13 @@ export interface Config {
    * `app.manifest.internal` is Task 8 Step 4's first measurement.
    */
   platformOrigin: string
+  /**
+   * The model gateway, the one base URL our server calls with an intake or agent session's
+   * key (F2 Task 6). The browser hands over the key with the `baseUrl` the platform answered,
+   * and any other is refused: our server never calls a URL a browser chose. Both modes: the
+   * platform's `MANIFEST_AGENT_LLM_URL` default, and the mock's example.
+   */
+  modelGateway: string
 }
 
 const PLATFORM = { mock: 'http://127.0.0.1:7102', edge: 'http://127.0.0.1:7100' } as const
@@ -31,5 +38,11 @@ export function readConfig(env: NodeJS.ProcessEnv): Config {
   const mode = env['MANIFEST_APP_MODE'] ?? 'edge'
   if (mode !== 'mock' && mode !== 'edge')
     throw new Error(`MANIFEST_APP_MODE is 'mock' or 'edge', never '${mode}'`)
-  return { mode, port: 7105, origin: ORIGIN[mode], platformOrigin: PLATFORM[mode] }
+  return {
+    mode,
+    port: 7105,
+    origin: ORIGIN[mode],
+    platformOrigin: PLATFORM[mode],
+    modelGateway: 'http://127.0.0.1:7106/v1',
+  }
 }
