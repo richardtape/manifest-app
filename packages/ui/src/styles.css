@@ -1,0 +1,5 @@
+/* The design system's stylesheets, vendored verbatim (reference/SOURCE.md). Same markup
+   plus the same stylesheet is the same pixels (Decision 2). The fonts are loaded by the
+   page, with the gallery's <link> (packages/web/index.html). */
+@import '../reference/tokens.css';
+@import '../reference/bundle.css';
