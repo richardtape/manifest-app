@@ -82,6 +82,9 @@ importers:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
     devDependencies:
+      '@manifest-app/server':
+        specifier: workspace:*
+        version: link:../server
       '@manifest/mock':
         specifier: link:../../../manifest/packages/mock
         version: link:../../../manifest/packages/mock

@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import proxy from '@fastify/http-proxy'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { registerConversations } from './api/conversations.js'
+import { createHub, registerEvents, type Hub } from './api/events.js'
 import { registerProblems } from './api/problems.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
@@ -39,7 +40,11 @@ function decodable(url: string | undefined): boolean {
 export function buildServer(
   config: Config,
   web: WebHandler,
-  { store }: { store: Store },
+  {
+    store,
+    hub = createHub(),
+    heartbeatMs = 25_000,
+  }: { store: Store; hub?: Hub; heartbeatMs?: number },
 ): FastifyInstance {
   const app = Fastify({
     serverFactory: (handler) =>
@@ -68,6 +73,7 @@ export function buildServer(
   // Our own API (F2): every route guarded by the person and, for a change, by Origin.
   registerConversations(app, { config, store })
   registerProblems(app, { config, store })
+  registerEvents(app, { config, store, hub, heartbeatMs })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to

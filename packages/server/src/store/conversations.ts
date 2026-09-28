@@ -1,30 +1,8 @@
 import type { Person } from '../identity.js'
+import type { Conversation, ConversationState } from '../api/progress.js'
 
-/** Where a conversation is, from the person's words to the agreed plan (moments 3–5). */
-export type ConversationState =
-  | 'describing'
-  | 'questions'
-  | 'naming'
-  | 'making'
-  | 'planning'
-  | 'plan-ready'
-  | 'agreed'
-  | 'paused'
-  | 'failed'
-
-export interface Conversation {
-  id: string
-  personId: string
-  /** Null until moment 4 makes the project. */
-  projectId: string | null
-  /** "First build" for the first; F3 titles later ones. */
-  title: string
-  state: ConversationState
-  /** The person's own words, verbatim. */
-  description: string
-  createdAt: string
-  updatedAt: string
-}
+/** The page's contract owns these (Decision 4); the store keeps them. */
+export type { Conversation, ConversationState } from '../api/progress.js'
 
 export type Sender = 'person' | 'we'
 

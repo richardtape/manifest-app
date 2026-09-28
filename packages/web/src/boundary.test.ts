@@ -74,6 +74,14 @@ describe('the boundary (Decision 3)', () => {
       }
     }
   })
+  it('only src/ours/api.ts names an /api/ path: our own API has one caller (F2 Task 3)', () => {
+    for (const file of files(SRC)) {
+      if (relative(SRC, file) === join('ours', 'api.ts') || isTest(file)) continue
+      expect(/['`]\/api\//.test(readFileSync(file, 'utf8')), relative(SRC, file)).toBe(
+        false,
+      )
+    }
+  })
   it('only src/auth.ts names an /auth/ path', () => {
     for (const file of files(SRC)) {
       if (relative(SRC, file) === 'auth.ts' || isTest(file)) continue
