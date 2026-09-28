@@ -49,8 +49,8 @@ lands.
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements this plan rests on**. Throwaway code in the scratchpad; nothing committed but the findings. **Alone, and first** | **done 2026-09-27**: no Decision breaks; seven task details amended (*What executing this plan found*) |
-| 2 | 2, 3 | The workspace and its four gates; the design system's harness and the four components the slice needs | ← next |
-| 3 | 4, 5 | One place that calls the platform; our server on 7105, with `/api/me` and the mock proxy | |
+| 2 | 2, 3 | The workspace and its four gates; the design system's harness and the four components the slice needs | **done 2026-09-27**: 16/16 twice, four gates green; the plan's boundary regex fixed |
+| 3 | 4, 5 | One place that calls the platform; our server on 7105, with `/api/me` and the mock proxy | ← next |
 | 4 | 6, 7 | Sign-in, the shell, sign-out; *Your apps*, empty and with apps | |
 | 5 | 8 | **The acceptance**: a headless check, and Rich clicking it. **Alone, and last** | |
 
@@ -533,6 +533,8 @@ describe('the design system is the prototype’s, byte for byte (Decision 2)', (
   - load them from Google Fonts, as the gallery does;
   - **record in Task 1's findings whether they render offline**. If they don't, the system's own fallback stacks
     apply, which is a visual difference to state, not to hide.
+  - **Sitting 2:** `styles.css` is the two imports alone. The fonts' `<link>`, and the offline measurement, move
+    to Task 6, because there is no page until then (Task 6 is amended).
   - **Sitting 1:** neither font is installed on this Mac (`~/Library/Fonts` and `/Library/Fonts`).
     - Offline, they render only if the browser has cached them from an online load.
     - Otherwise `system-ui` and `ui-monospace` apply (`tokens.css:83-84`).
@@ -732,6 +734,14 @@ export function signOut(): Promise<void>                  // POST /auth/logout �
     - aliases `@manifest/contract` (Decision 5);
     - `server.allowedHosts: ['app.manifest.internal']`;
     - in edge mode, HMR through the edge (`clientPort: 443`, as the console's config does for its origin).
+  - **Amended by sitting 2 (Task 3, Step 6):**
+    - `index.html` loads the fonts with the gallery's own `<link>` (manifest's `gallery.html:6`), and imports
+      `@manifest-app/ui/styles.css`, which holds only the two vendored imports.
+    - **Then measure the offline question here, the first page there is.** Emulate offline with DevTools (the
+      `Network.emulateNetworkConditions` command), and record which face renders in *What executing this plan
+      found*.
+    - The `<link>`:
+      `https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap`
 - [ ] **Step 4:** pass. **Negative control:** make `expire()` a no-op, and see the expired case go red.
 - [ ] **Step 5: The gates; commit.**
 
@@ -1090,3 +1100,89 @@ sitting 1*:**
 - the mock (from source) stopped; nothing on 7102 or 7105; the scratchpad's servers stopped;
 - the edge up, the control plane down;
 - manifest's working tree untouched by us.
+
+### 2026-09-27 — Sitting 2 (Tasks 2 and 3): the workspace, its gates, and the design system
+
+**Commits:**
+- `59f6a96`: the workspace, the four gates, the contract linked from source;
+- `773fabf`: the design system's reference, the parity proof, and four components.
+
+Against manifest `3c38199`, and the platform session kept working throughout. It closed its sitting 6
+(`64ff35c`) and began sitting 7 in `packages/control-plane/src/ai`. The contract's source did not change during
+the sitting.
+
+**Task 2: the workspace.**
+- **The install was offline, and fetched nothing.** Sitting 1's scratch install had filled the store.
+  - The exact versions are Tech Stack's, with sitting 1's amendments, and are listed in the commit.
+  - `pnpm mock` answers on 7102 from source.
+  - A second `pnpm mock` exits `1`: `could not listen on 7102: listen EADDRINUSE`.
+- **Defect in the plan's boundary test, found by a self-test of its scanner.**
+  - Prettier writes no semicolons, so `^import\s+(?!type\b)[^;]*from…` ran one statement into the next.
+  - So `import { a } from './a'` followed by `import type { Schemas } from '@manifest/contract'` read as a value
+    import. So did a stylesheet import followed by a type import. And a bare `import '@manifest/contract'` was
+    missed.
+  - Six scanner cases: three red on the plan's regex. The rewritten scanner runs each statement from its
+    `import` to its first `from`, never past the next line that starts `import`: all green.
+- **The test's specifier scan missed a bare `import '…'` into manifest, and only lint caught it.** Widened, and
+  watched failing.
+- **Deviations** (each in the ledger as a ruling):
+  - test files ending `.test.tsx` are exempt from the boundary, like `.test.ts`;
+  - a root `tsconfig.json`, with `typecheck` being `tsc -p tsconfig.json && pnpm -r typecheck`, because
+    `scripts/mock.ts` belongs to no package;
+  - every F1 package's dependencies installed now, in one install.
+- **`contract-source.test.ts`, in `web` and `server`**, answers sitting 1's amendment.
+  - In Vitest, `@manifest/contract` must be *the same module* as `src/index.ts` imported by path.
+  - Under `tsx`, run from `packages/server`, `import.meta.resolve('@manifest/contract')` must be `src/index.ts`.
+
+**Task 3: the design system.**
+- `reference/` is byte-identical to manifest's `docs/superpowers/design/system` at `3c38199` (checked with `cmp`
+  after Prettier ran), and Prettier and ESLint ignore it.
+- **The parity cases** are:
+  - the plan's;
+  - every `preview.html` case;
+  - every `NAV_ICONS` key and an unknown one;
+  - rail items with no `href` or no `icon`;
+  - every naming prop of SideNav;
+  - `pulse` overridden both ways;
+  - `type="submit"`, and an `<a>` Button with `disabled`.
+
+  51 renders in all (StateChip 14, Button 19, Card 9, SideNav 9), in 4 tests.
+- **Watched failing first:** `StateChip is exported: expected undefined to be type of 'function'`, and the same
+  for the other three. Then all four passed on the first run of the ports, which is why the controls below
+  matter.
+- `ButtonProps` keeps `type`, which `index.d.ts` omits, because the bundle reads `props.type`.
+- **`styles.css` is the two imports alone.** The fonts' `<link>` and the offline measurement move to Task 6, the
+  first page there is, and Task 6 is amended.
+
+**Negative controls.** Each was red, then restored and green.
+
+| Control | Red |
+|---|---|
+| `src/leak.ts` value-imports `unwrap` | the boundary test names `leak.ts`, and ESLint `no-restricted-imports` fires on line 2 |
+| the same file with `import type` only | **both green**: types are allowed |
+| `export … from '../../../../manifest/…'` and a bare `import '../../../../manifest/…'` | ESLint twice, and the test (the bare import only after widening) |
+| the Vitest alias removed from `web/vitest.config.ts` | `contract-source`: two different `createManifestClient`s |
+| `paths` removed from `tsconfig.base.json` | the server's `tsx` case: it resolved `dist/` |
+| `Schemas['Me']` given `{ id: 1 }`; `{ a?: string }` given `{ a: undefined }` | `typecheck`: TS2322; TS2375 (`exactOptionalPropertyTypes`) |
+| `Card`: `mf-card--` → `mf-card-` | Card's case, both markups in the diff |
+| a rail item's `className` moved before `href` | SideNav's case: **attribute order is markup** |
+| `attention` no longer pulses by default | StateChip's case |
+
+**Could not fail:** nothing this sitting.
+
+**Gates, from the root:**
+- `pnpm test` twice: 16/16 each time (`ui` 4, `web` 10, `server` 2);
+- `pnpm lint` 0;
+- `pnpm typecheck` 0 (the root, then `ui`, `web`, `server`);
+- `pnpm format:check` clean.
+
+**For sitting 3, read but not measured:** `web`'s Vitest environment is `node` by default, and it must stay so
+for `api.test.ts`.
+- The contract decides it is in a browser by `typeof document` (`client.ts`, `inBrowser`), and then sends no
+  session header.
+- So a Task 4 test under jsdom would reach the mock without its cookie.
+- Task 6's screen tests opt in with `// @vitest-environment jsdom`, per file.
+
+**The machine at the close:**
+- nothing on 7102 or 7105;
+- manifest's working tree touched only by the platform session.
