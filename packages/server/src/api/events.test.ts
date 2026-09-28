@@ -9,6 +9,16 @@ import { createHub, publishRefusal, publishState, type Hub } from './events.js'
 import type { Progress } from './progress.js'
 import { ALICE, AS_ALICE, AS_BOB, fakeControlPlane } from './testing.js'
 
+const NOTHING_YET = {
+  round: null,
+  understood: null,
+  answers: {},
+  skipped: [],
+  names: null,
+  namesAsked: 0,
+  blueprint: null,
+}
+
 /**
  * DECISION 4: ONE STREAM PER CONVERSATION, the whole state first, then each change. Over
  * real HTTP, read as it arrives, because buffering is exactly what could break it.
@@ -126,7 +136,11 @@ describe('GET /api/conversations/:id/events', () => {
     expect(stream.response.headers.get('content-type')).toBe('text/event-stream')
     expect(stream.response.headers.get('cache-control')).toBe('no-cache')
     await stream.until(() => stream.frames.length >= 1)
-    expect(stream.frames[0]).toEqual({ kind: 'state', conversation: made })
+    expect(stream.frames[0]).toEqual({
+      kind: 'state',
+      conversation: made,
+      intake: NOTHING_YET,
+    })
   })
 
   it('a publish reaches two connected clients, in order', async () => {
@@ -142,13 +156,17 @@ describe('GET /api/conversations/:id/events', () => {
     await one.until(() => one.frames.length >= 1)
     await two.until(() => two.frames.length >= 1)
 
-    hub.publish(made.id, { kind: 'step', step: 'Reading it', state: 'now' })
-    publishState(hub, store.setState(made.id, 'questions'))
+    hub.publish(made.id, { kind: 'step', step: 'understanding', state: 'now' })
+    publishState(hub, store, store.setState(made.id, 'questions'))
     for (const s of [one, two]) {
       await s.until(() => s.frames.length >= 3)
       expect(s.frames.slice(1)).toEqual([
-        { kind: 'step', step: 'Reading it', state: 'now' },
-        { kind: 'state', conversation: expect.objectContaining({ state: 'questions' }) },
+        { kind: 'step', step: 'understanding', state: 'now' },
+        {
+          kind: 'state',
+          conversation: expect.objectContaining({ state: 'questions' }),
+          intake: NOTHING_YET,
+        },
       ])
     }
   })
@@ -165,11 +183,11 @@ describe('GET /api/conversations/:id/events', () => {
     const other = store.createConversation(ALICE.id, 'Something else')
     const stream = await open(base, mine.id)
     await stream.until(() => stream.frames.length >= 1)
-    hub.publish(other.id, { kind: 'step', step: 'Reading it', state: 'now' })
-    hub.publish(mine.id, { kind: 'step', step: 'Mine', state: 'done' })
+    hub.publish(other.id, { kind: 'step', step: 'understanding', state: 'now' })
+    hub.publish(mine.id, { kind: 'step', step: 'naming', state: 'done' })
     await stream.until(() => stream.frames.length >= 2)
     expect(stream.frames.slice(1)).toEqual([
-      { kind: 'step', step: 'Mine', state: 'done' },
+      { kind: 'step', step: 'naming', state: 'done' },
     ])
   })
 
@@ -259,7 +277,7 @@ describe('Review Focus 5, the stream’s half: our server restarts', () => {
     const made = first.store.createConversation(ALICE.id, WORDS)
     const before = await open(first.base, made.id)
     await before.until(() => before.frames.length >= 1)
-    publishState(first.hub, first.store.setState(made.id, 'planning'))
+    publishState(first.hub, first.store, first.store.setState(made.id, 'planning'))
     await before.until(() => before.frames.length >= 2)
 
     // The restart: the server closes (ending its streams) and a new one opens the same file.
@@ -276,6 +294,7 @@ describe('Review Focus 5, the stream’s half: our server restarts', () => {
     expect(after.frames[0]).toEqual({
       kind: 'state',
       conversation: expect.objectContaining({ id: made.id, state: 'planning' }),
+      intake: NOTHING_YET,
     })
   })
 })

@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify'
 import type { Config } from '../config.js'
 import type { Conversation, Store } from '../store/db.js'
 import { guard } from './guard.js'
+import { intakeOf } from './intake-state.js'
 import { problem } from './problems.js'
 import type { Progress } from './progress.js'
 
@@ -34,9 +35,13 @@ export function createHub(): Hub {
   }
 }
 
-/** Every change of state is published whole. */
-export function publishState(hub: Hub, conversation: Conversation): void {
-  hub.publish(conversation.id, { kind: 'state', conversation })
+/** Every change of state is published whole: the conversation, and its intake so far. */
+export function publishState(hub: Hub, store: Store, conversation: Conversation): void {
+  hub.publish(conversation.id, {
+    kind: 'state',
+    conversation,
+    intake: intakeOf(store, conversation.id),
+  })
 }
 
 /**
@@ -113,7 +118,9 @@ export function registerEvents(
       })
       // THE STATE FIRST, then each change: nothing can be published between the two lines,
       // which run without a pause between them.
-      response.write(data({ kind: 'state', conversation }))
+      response.write(
+        data({ kind: 'state', conversation, intake: intakeOf(store, conversation.id) }),
+      )
       const unsubscribe = hub.subscribe(conversation.id, (frame) => {
         response.write(data(frame))
       })

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { Conversation, Progress } from '@manifest-app/server/progress'
+import type { Conversation, Intake, Progress } from '@manifest-app/server/progress'
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { StreamSource } from './api.js'
@@ -55,9 +55,22 @@ const CONVERSATION: Conversation = {
   createdAt: '2026-09-27T20:00:00.000Z',
   updatedAt: '2026-09-27T20:00:00.000Z',
 }
-const state = (patch: Partial<Conversation> = {}): Progress => ({
+const NOTHING_YET: Intake = {
+  round: null,
+  understood: null,
+  answers: {},
+  skipped: [],
+  names: null,
+  namesAsked: 0,
+  blueprint: null,
+}
+const state = (
+  patch: Partial<Conversation> = {},
+  intake: Intake = NOTHING_YET,
+): Progress => ({
   kind: 'state',
   conversation: { ...CONVERSATION, ...patch },
+  intake,
 })
 
 beforeEach(() => {
@@ -75,6 +88,7 @@ describe('useConversation', () => {
     last().send(state())
     expect(result.current).toEqual({
       conversation: CONVERSATION,
+      intake: NOTHING_YET,
       steps: [],
       status: 'live',
     })
@@ -83,16 +97,17 @@ describe('useConversation', () => {
   it('keeps each step at its latest, in the order they began, and the refusal with its reference', () => {
     const { result } = renderHook(() => useConversation('c-1', open))
     last().send(state())
-    last().send({ kind: 'step', step: 'Reading it', state: 'now' })
-    last().send({ kind: 'step', step: 'Suggesting names', state: 'now' })
-    last().send({ kind: 'step', step: 'Reading it', state: 'done' })
+    last().send({ kind: 'step', step: 'understanding', state: 'now' })
+    last().send({ kind: 'step', step: 'naming', state: 'now' })
+    last().send({ kind: 'step', step: 'understanding', state: 'done' })
     last().send({ kind: 'refusal', code: 'MODEL_ANSWER_INVALID', reference: '7F3A-9C21' })
     last().send(state({ state: 'naming' }))
     expect(result.current).toEqual({
       conversation: { ...CONVERSATION, state: 'naming' },
+      intake: NOTHING_YET,
       steps: [
-        { step: 'Reading it', state: 'done' },
-        { step: 'Suggesting names', state: 'now' },
+        { step: 'understanding', state: 'done' },
+        { step: 'naming', state: 'now' },
       ],
       refusal: { code: 'MODEL_ANSWER_INVALID', reference: '7F3A-9C21' },
       status: 'live',
@@ -161,7 +176,7 @@ describe('useConversation', () => {
     vi.useFakeTimers()
     const { result } = renderHook(() => useConversation('c-1', open))
     last().send(state({ state: 'planning' }))
-    last().send({ kind: 'step', step: 'Writing the plan', state: 'now' })
+    last().send({ kind: 'step', step: 'blueprint', state: 'now' })
     last().fail(FakeSource.CLOSED)
     act(() => vi.advanceTimersByTime(1000))
     last().send(state({ state: 'planning' }))

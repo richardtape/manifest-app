@@ -3,10 +3,12 @@ import proxy from '@fastify/http-proxy'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { registerConversations } from './api/conversations.js'
 import { createHub, registerEvents, type Hub } from './api/events.js'
+import { registerIntake } from './api/intake.js'
 import { registerProblems } from './api/problems.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
-import type { Store } from './store/db.js'
+import { notAvailable, type Model } from './model/client.js'
+import type { Conversation, Store } from './store/db.js'
 
 /** Whatever serves the app: Vite's middlewares while we develop (main.ts). */
 export type WebHandler = (request: IncomingMessage, response: ServerResponse) => void
@@ -44,7 +46,14 @@ export function buildServer(
     store,
     hub = createHub(),
     heartbeatMs = 25_000,
-  }: { store: Store; hub?: Hub; heartbeatMs?: number },
+    intakeModel = () => notAvailable,
+  }: {
+    store: Store
+    hub?: Hub
+    heartbeatMs?: number
+    /** The platform's intake key for this conversation, once the browser hands it over (Task 6). */
+    intakeModel?: (conversation: Conversation) => Model
+  },
 ): FastifyInstance {
   const app = Fastify({
     serverFactory: (handler) =>
@@ -74,6 +83,7 @@ export function buildServer(
   registerConversations(app, { config, store })
   registerProblems(app, { config, store })
   registerEvents(app, { config, store, hub, heartbeatMs })
+  registerIntake(app, { config, store, hub, intakeModel })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to

@@ -1,11 +1,18 @@
-import type { Conversation, Progress } from '@manifest-app/server/progress'
+import type {
+  Conversation,
+  Intake,
+  Progress,
+  StepKey,
+} from '@manifest-app/server/progress'
 import { useEffect, useState } from 'react'
 import { conversationEvents, type StreamSource } from './api.js'
 
-export type Step = { step: string; state: 'now' | 'done' | 'halted' }
+export type Step = { step: StepKey; state: 'now' | 'done' | 'halted' }
 
 export interface ConversationView {
   conversation?: Conversation
+  /** Moments 3 and 4 so far: the understanding, the answers, the names, the blueprint. */
+  intake?: Intake
   /** Each step at its latest, in the order they began. */
   steps: Step[]
   /** Our code, and the reference the person may quote (Decision 11). */
@@ -22,7 +29,12 @@ const WAITS = [1000, 2000, 4000, 8000, 15_000]
 function apply(view: ConversationView, frame: Progress): ConversationView {
   switch (frame.kind) {
     case 'state':
-      return { ...view, conversation: frame.conversation, status: 'live' }
+      return {
+        ...view,
+        conversation: frame.conversation,
+        intake: frame.intake,
+        status: 'live',
+      }
     case 'step': {
       const step = { step: frame.step, state: frame.state }
       const at = view.steps.findIndex((s) => s.step === frame.step)
