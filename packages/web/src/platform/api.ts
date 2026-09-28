@@ -27,7 +27,10 @@ export interface Platform {
   getRelease(releaseId: string): Promise<Schemas['Release']>
   /**
    * MOMENT 3 (FE-1, as it landed): a model for describing an app, in the person's own
-   * session (a token is refused). One `Idempotency-Key` per press, reused on its retry.
+   * session (a token is refused). **A new `Idempotency-Key` for every attempt**: the key is in
+   * the first answer and nowhere else, and the same key again answers `409
+   * INTAKE_SESSION_ALREADY_STARTED` without it. So each *Try again* starts a new session and
+   * spends one of the person's few a day, even when the one before did land (the final review).
    */
   startIntakeSession(idempotencyKey: string): Promise<Schemas['IntakeSessionStarted']>
   /** Only the person can end it (F2 sitting 1): our server cannot, and never asks. */
