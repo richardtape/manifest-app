@@ -1,14 +1,14 @@
-import { createManifestClient, idempotencyKey, unwrap } from '@manifest/contract'
+import { createManifestClient, unwrap } from '@manifest/contract'
 import { PLATFORM_TIMEOUT_MS, refusalFrom } from './refusal.js'
+import { platformSource, type Sent } from './source.js'
+
+export type { Sent } from './source.js'
 
 /**
  * THE AUTHORING API, with the conversation's token (F2 Decision 9). The plan's first commit
  * is small and deliberate: `docs/plan.md`, and nothing else. It proves F3's path on a
  * harmless file.
  */
-/** One `createCommit` as it was sent: kept, so a conversation can say what went (Task 10). */
-export type Sent = { dryRun: boolean; baseCommit: string; paths: string[] }
-
 export interface Authoring {
   tree(token: string, projectId: string): Promise<{ commitSha: string; paths: string[] }>
   /** The commit, and every `createCommit` made on the way, in order. */
@@ -46,41 +46,26 @@ export function platformAuthoring(origin: string): Authoring {
     }
   }
 
-  /** A dry run, then the commit: each its own Idempotency-Key, both from `baseCommit`. */
-  async function attempt(
+  const source = platformSource(origin)
+  /** A dry run, then the commit (F3 Task 4's `source.commit`): one change, `docs/plan.md`. */
+  const attempt = async (
     token: string,
     projectId: string,
     baseCommit: string,
     markdown: string,
     sent: Sent[],
-  ) {
-    const commit = async (dryRun: boolean) => {
-      const body = {
+  ) => {
+    const { commitSha } = await source.commit(
+      token,
+      projectId,
+      {
         baseCommit,
         message: MESSAGE,
-        changes: [{ op: 'write' as const, path: PLAN, content: markdown }],
-        ...(dryRun ? { dryRun: true } : {}),
-      }
-      // Recorded from the body itself, so the record is what went.
-      sent.push({
-        dryRun,
-        baseCommit: body.baseCommit,
-        paths: body.changes.map((c) => c.path),
-      })
-      return unwrap(
-        await client(token).POST('/v1/projects/{projectId}/commits', {
-          params: {
-            path: { projectId },
-            header: { 'Idempotency-Key': idempotencyKey() },
-          },
-          body,
-        }),
-        'createCommit',
-      )
-    }
-    await commit(true)
-    const made = await commit(false)
-    return { commitSha: made.commitSha as string }
+        changes: [{ op: 'write', path: PLAN, content: markdown }],
+      },
+      sent,
+    )
+    return { commitSha }
   }
 
   return {

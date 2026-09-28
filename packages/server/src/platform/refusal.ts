@@ -1,4 +1,4 @@
-import { ManifestApiError } from '@manifest/contract'
+import { createManifestClient, ManifestApiError } from '@manifest/contract'
 
 /**
  * WHAT THE PLATFORM REFUSED, AS OUR SERVER CARRIES IT: its code and status, and never its
@@ -29,3 +29,46 @@ export function refusalFrom(error: unknown): PlatformRefusal {
 
 /** Every call our server makes to the platform has a deadline, as the page's reads do (F1). */
 export const PLATFORM_TIMEOUT_MS = 15_000
+/**
+ * DEPLOY HAS ITS OWN DEADLINE (F3 Decision 17): it answers when the instance is healthy or has
+ * failed. F3 M4 measured 8.9 s healthy, and 91 s for one that could not start.
+ */
+export const DEPLOY_TIMEOUT_MS = 120_000
+
+/**
+ * A COMMIT REFUSED WITH FACTS THE LEAD MAY READ (never the person): each of SPEC_INVALID's
+ * details, by its path, code and hint. Never the platform's message (FE-29).
+ */
+export class CommitRefused extends PlatformRefusal {
+  constructor(
+    code: string,
+    status: number | null,
+    readonly details: { path: string; code: string; hint: string | null }[],
+  ) {
+    super(code, status)
+    this.name = 'CommitRefused'
+  }
+}
+
+/** The conversation's token, and a deadline on every request. Never a cookie (FE-2). */
+export function tokenClient(
+  origin: string,
+  token: string,
+  timeoutMs = PLATFORM_TIMEOUT_MS,
+) {
+  return createManifestClient({
+    origin,
+    token,
+    fetch: (request) =>
+      globalThis.fetch(request, { signal: AbortSignal.timeout(timeoutMs) }),
+  })
+}
+
+/** A call's refusal as ours: its code and status, never its message. */
+export async function called<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call()
+  } catch (error) {
+    throw refusalFrom(error)
+  }
+}

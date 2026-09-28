@@ -12,19 +12,30 @@ export interface AgentSessions {
   budget(
     token: string,
   ): Promise<{ monthlyUsd: number; remainingUsd: number | null; resetsAt: string | null }>
-  /** One `Idempotency-Key` per start. The key is in this answer and never again. */
+  /**
+   * One `Idempotency-Key` per start. The key is in this answer and never again. F3's round
+   * states its cap and its clock (Decision 9: $2 and 240 minutes, both taken as sent, M1);
+   * F2's plan step states neither and takes the platform's.
+   */
   start(
     token: string,
     projectId: string,
     name: string,
+    options?: { capUsd: number; durationMinutes: number },
   ): Promise<{
     sessionId: string
     key: string
     baseUrl: string
     models: string[]
     expiresAt: string
+    capUsd: number
   }>
   end(token: string, sessionId: string): Promise<void>
+  /** Each of the project's sessions and what it has spent: `null` when the gateway did not say (F3 Decision 14). */
+  list(
+    token: string,
+    projectId: string,
+  ): Promise<{ id: string; spentUsd: number | null }[]>
 }
 
 /**
@@ -73,7 +84,7 @@ export function platformAgentSessions(origin: string): AgentSessions {
           resetsAt: budget.resetsAt,
         }
       }),
-    start: (token, projectId, name) =>
+    start: (token, projectId, name, options) =>
       asked(async () => {
         const started = unwrap(
           await client(token).POST('/v1/projects/{projectId}/agent-sessions', {
@@ -81,7 +92,7 @@ export function platformAgentSessions(origin: string): AgentSessions {
               path: { projectId },
               header: { 'Idempotency-Key': idempotencyKey() },
             },
-            body: { name },
+            body: { name, ...options },
           }),
           'startAgentSession',
         )
@@ -91,8 +102,18 @@ export function platformAgentSessions(origin: string): AgentSessions {
           baseUrl: started.baseUrl,
           models: started.session.models,
           expiresAt: started.session.expiresAt,
+          capUsd: started.session.capUsd,
         }
       }),
+    list: (token, projectId) =>
+      asked(async () =>
+        unwrap(
+          await client(token).GET('/v1/projects/{projectId}/agent-sessions', {
+            params: { path: { projectId } },
+          }),
+          'listAgentSessions',
+        ).sessions.map((session) => ({ id: session.id, spentUsd: session.spentUsd })),
+      ),
     end: (token, sessionId) =>
       asked(async () => {
         unwrap(

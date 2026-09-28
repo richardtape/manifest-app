@@ -142,6 +142,7 @@ describe('platformAgentSessions (sitting 7, as it landed)', () => {
       baseUrl: SESSION.baseUrl,
       models: ['default-chat', 'default-embed'],
       expiresAt: '2026-09-28T05:00:00.000Z',
+      capUsd: 2,
     })
     await sessions.start(TOKEN, PROJECT, 'First build')
     const [one, two] = fake.seen as [Seen, Seen]

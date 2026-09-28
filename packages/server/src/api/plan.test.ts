@@ -95,9 +95,11 @@ function fakes(
           baseUrl: GATEWAY,
           models: ['default-chat', 'default-embed'],
           expiresAt: '2026-09-28T05:00:00.000Z',
+          capUsd: 2,
         })
       )
     },
+    list: () => Promise.resolve([]),
     end: (token, sessionId) => {
       calls.push(['end', token, sessionId])
       return Promise.resolve()
@@ -394,6 +396,7 @@ describe('POST /api/conversations/:id/plan: written on the person’s agent sess
             baseUrl: GATEWAY,
             models: ['default-embed'],
             expiresAt: '2026-09-28T05:00:00.000Z',
+            capUsd: 2,
           }),
       },
       true,
@@ -409,6 +412,7 @@ describe('POST /api/conversations/:id/plan: written on the person’s agent sess
             baseUrl: 'https://elsewhere.example/v1',
             models: ['default-chat'],
             expiresAt: '2026-09-28T05:00:00.000Z',
+            capUsd: 2,
           }),
       },
       true,
