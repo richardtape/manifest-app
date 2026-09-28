@@ -84,8 +84,14 @@ export function registerProject(
       }
       if (made.id !== handed.projectId) return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT')
 
+      // THE FIRST WINS (a deferred Minor, Rich's word). Read again after the await: another
+      // window's handover may have tied it meanwhile. No await from here to the tie, so no
+      // second handover can come between.
+      const now = store.getConversation(conversation.id, who.person.id) ?? conversation
+      if (now.projectId !== null && now.projectId !== handed.projectId)
+        return refuse(reply, 409, 'PROJECT_MISMATCH')
       tokens.put(conversation.id, handed.token)
-      if (conversation.projectId === null) {
+      if (now.projectId === null) {
         store.addMessage(conversation.id, 'we', { kind: 'project', project: made })
         intakeKeys.drop(conversation.id)
         publishState(

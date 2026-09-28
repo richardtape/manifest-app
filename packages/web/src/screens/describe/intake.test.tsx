@@ -1027,6 +1027,19 @@ describe('Make it (moment 4’s end, F2 Task 8)', () => {
     expect(s.called('createProject')).toHaveLength(1)
   })
 
+  it('another window made it first (409 PROJECT_MISMATCH): said so, nothing to press, nothing minted again, and the project forgotten (deferred Minor, Rich: the first wins)', async () => {
+    const s = stage()
+    s.ours.handProject = () => Promise.reject(new OurRefusal('PROJECT_MISMATCH', 409))
+    await press(await readyToMake(s))
+    const notice = await screen.findByRole('alert')
+    expect(within(notice).getByText(words.making.madeElsewhere)).toBeTruthy()
+    expect(within(notice).queryByRole('button')).toBeNull()
+    expect(s.called('mintToken')).toHaveLength(1)
+    // Not a fault of ours: nothing reported. And a reload never offers to start this one.
+    expect(reports).toEqual([])
+    expect(sessionStorage.getItem('manifest-app.made.c-1')).toBeNull()
+  })
+
   it.each([
     ['SLUG_TAKEN', 'a project already has this name'],
     ['SLUG_RESERVED', 'chem is UBC’s course subject code for Chemistry'],

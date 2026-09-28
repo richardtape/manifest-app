@@ -187,6 +187,9 @@ export const words = {
     couldntMake: "We couldn't make it just now. Nothing was made. Try again.",
     madeNotStarted: (name: string) =>
       `${name} is made, but we couldn't start work on it. Nothing is lost.`,
+    /** Two windows pressed Make it, and the other's reached us first (a deferred Minor). */
+    madeElsewhere:
+      "This was already made in another window. We're carrying on with that one.",
     startBuilding: 'Start building',
   },
   /**

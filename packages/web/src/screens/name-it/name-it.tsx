@@ -45,7 +45,10 @@ type Burst = 'steady' | 'synchronised'
 const SLUG_REFUSALS = new Set(['SLUG_TAKEN', 'SLUG_RESERVED', 'SLUG_INVALID'])
 
 /** A problem Make it met, with its reference (Decision 11), and the one way on. */
-type MakeNotice = { words: string; reference: string; then: 'make' | 'start' }
+/** `none`: nothing to press, while the stream carries this window on (another window made it). */
+type MakeNotice =
+  | { words: string; reference: string; then: 'make' | 'start' }
+  | { words: string; then: 'none' }
 
 /** The platform's own words, as FormField shows them (never rewritten), or ours for a free one. */
 function messageFor(check: Schemas['SlugCheck']): FieldMessage {
@@ -299,7 +302,7 @@ export function NameIt({
   /** Said, with its reference, and reported (Decision 11). */
   const said = (
     text: string,
-    then: MakeNotice['then'],
+    then: 'make' | 'start',
     problem: { code: string; operation: string; status?: number | null },
   ) => {
     const { status, ...rest } = problem
@@ -349,6 +352,14 @@ export function NameIt({
         const ourRefusal =
           error instanceof OurRefusal ? error : new OurRefusal('UNEXPECTED', null)
         if (ourRefusal.status === 401) return expire()
+        // ANOTHER WINDOW'S MADE IT FIRST (a deferred Minor, Rich: the first wins). Nothing of
+        // ours failed: the stream carries this window on to that one. Never Start building,
+        // which would mint again for this project, and be refused again.
+        if (ourRefusal.code === 'PROJECT_MISMATCH') {
+          forgetMadeProject(id)
+          setMakeNotice({ words: words.making.madeElsewhere, then: 'none' })
+          return
+        }
         failure = {
           code: ourRefusal.code,
           operation: 'handProject',
@@ -457,18 +468,22 @@ export function NameIt({
       <div role="alert">
         <Card tone="attention">
           <p className="body-lead">{makeNotice.words}</p>
-          <SupportReference reference={makeNotice.reference} />
-          <div className="describe__actions">
-            {makeNotice.then === 'start' && made !== undefined ? (
-              <Button kind="primary" onClick={() => void startWork(made)}>
-                {words.making.startBuilding}
-              </Button>
-            ) : (
-              <Button kind="secondary" onClick={() => void make()}>
-                {words.describe.tryAgain}
-              </Button>
-            )}
-          </div>
+          {makeNotice.then === 'none' ? null : (
+            <>
+              <SupportReference reference={makeNotice.reference} />
+              <div className="describe__actions">
+                {makeNotice.then === 'start' && made !== undefined ? (
+                  <Button kind="primary" onClick={() => void startWork(made)}>
+                    {words.making.startBuilding}
+                  </Button>
+                ) : (
+                  <Button kind="secondary" onClick={() => void make()}>
+                    {words.describe.tryAgain}
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </Card>
       </div>
     )

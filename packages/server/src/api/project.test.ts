@@ -24,6 +24,8 @@ const GOOD = 'mft_test_x_the_conversations_token'
 const STRANGER = 'mft_test_x_another_projects_token'
 const LIAR = 'mft_test_x_answers_another_project'
 const DOWN = 'mft_test_x_the_platform_is_down'
+/** The token of ANOTHER: a second window's project, made at the same time. */
+const SECOND = 'mft_test_x_the_second_windows_token'
 
 const project = (id: string) => ({
   id,
@@ -46,6 +48,8 @@ beforeAll(async () => {
         body: { error: { code: 'NOT_FOUND', message: 'no such project' } },
       }
     }
+    if (seen.url === `/v1/projects/${ANOTHER}` && bearer === SECOND)
+      return { status: 200, body: project(ANOTHER) }
     return undefined
   })
 })
@@ -226,6 +230,29 @@ describe('POST /api/conversations/:id/project: the handover (moment 4’s end)',
     expect(answer.json()).toEqual({ error: { code: 'PROJECT_MISMATCH' } })
     expect(asked()).toHaveLength(before)
     expect(s.tokens.get(s.conversation.id)).toBe(GOOD)
+  })
+})
+
+describe('two windows made a project each, at once (deferred Minor, Rich: the first wins)', () => {
+  it('the first handover ties the conversation; the second is 409 PROJECT_MISMATCH, and its token is never kept', async () => {
+    const s = await setUp()
+    const [first, second] = await Promise.all([
+      s.hand({ projectId: PROJECT, token: GOOD }),
+      s.hand({ projectId: ANOTHER, token: SECOND }),
+    ])
+    const answers = [first, second].map((a) => a.statusCode)
+    expect(answers.sort()).toEqual([204, 409])
+    const [won, lost] = first.statusCode === 204 ? [first, second] : [second, first]
+    expect(lost.json()).toEqual({ error: { code: 'PROJECT_MISMATCH' } })
+    const winner =
+      won === first ? { id: PROJECT, token: GOOD } : { id: ANOTHER, token: SECOND }
+    expect(s.now()).toMatchObject({ state: 'making', projectId: winner.id })
+    expect(s.tokens.get(s.conversation.id)).toBe(winner.token)
+    // One project said in the conversation, the one it is tied to.
+    const said = s.store
+      .listMessages(s.conversation.id)
+      .filter((m) => (m.body as { kind?: string }).kind === 'project')
+    expect(said).toHaveLength(1)
   })
 })
 
