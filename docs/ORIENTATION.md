@@ -39,7 +39,10 @@ says which plan is current. This file states where things stand and the rules. I
     network off included, the same name answers from the on-premise model (`default-chat-onprem`), at its price.
     Until then, offline, a call to it fails with LiteLLM's `500`.
   - **The contract did not move**: 1.4.0, 66 operations. Our typecheck and 546 tests pass against it.
-- **Next: F3 (building it)**, being written from 2026-09-28, now that 9a has landed.
+- **Next: F3 (building it)**, written 2026-09-28 and **awaiting Rich's review**:
+  [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md). His decisions from the design are in
+  its *Decided by Rich*. Sitting 1 (the measurements) comes first, and its M3 and M4 wait for the platform's 9b to
+  close.
   - **F3 must draw `paused` and `failed`** (its *Stop*) on every screen that can meet them, each problem with its
     reference. The Describe screen's fallback shows neither today (a deferred Minor of F2's).
 - **The machine** *(2026-09-28)*:
