@@ -1,0 +1,62 @@
+import type { DatabaseSync } from 'node:sqlite'
+
+/**
+ * THE FILE'S VERSION (`pragma user_version`), and how an older one is brought up to it.
+ *
+ * - 0: F2 never set one, so every file it left is at 0. Its schema counts as version 1.
+ * - 2: F3 Decision 12. `conversations` gains `building` and `built`. SQLite cannot alter a
+ *   `check`, so the table is rebuilt.
+ *
+ * `schema.sql` runs first, and makes a new file's tables as they are now. Only an existing
+ * table keeps the definition it was made with, which is what this corrects.
+ */
+export const VERSION = 2
+
+/**
+ * The one definition of `conversations`, read out of `schema.sql` itself, so the rebuild can
+ * never disagree with it.
+ */
+function conversationsColumns(schema: string): string {
+  const found = /create table if not exists conversations \(([\s\S]*?)\n\);/.exec(schema)
+  if (found?.[1] === undefined)
+    throw new Error('schema.sql defines no conversations table')
+  return found[1]
+}
+
+const COLUMNS =
+  'id, person_id, project_id, title, state, description, created_at, updated_at'
+
+export function migrate(db: DatabaseSync, schema: string): void {
+  const { user_version: version } = db.prepare('pragma user_version').get() as {
+    user_version: number
+  }
+  if (version >= VERSION) return
+  // SQLITE'S OWN TWELVE STEPS (its "Making Other Kinds Of Table Schema Changes"). Foreign keys
+  // off, OUTSIDE the transaction, where the pragma is a no-op: `messages`, `plans` and `runs`
+  // reference `conversations`, and name it, so they reach the new table once it is renamed.
+  db.exec('pragma foreign_keys = off')
+  try {
+    db.exec('begin')
+    try {
+      db.exec(`create table conversations_next (${conversationsColumns(schema)}\n)`)
+      db.exec(
+        `insert into conversations_next (${COLUMNS}) select ${COLUMNS} from conversations`,
+      )
+      db.exec('drop table conversations')
+      db.exec('alter table conversations_next rename to conversations')
+      db.exec(
+        'create index if not exists conversations_by_person on conversations (person_id)',
+      )
+      const broken = db.prepare('pragma foreign_key_check').all()
+      if (broken.length > 0)
+        throw new Error('the rebuilt conversations broke a reference')
+      db.exec(`pragma user_version = ${VERSION}`)
+      db.exec('commit')
+    } catch (error) {
+      db.exec('rollback')
+      throw error
+    }
+  } finally {
+    db.exec('pragma foreign_keys = on')
+  }
+}

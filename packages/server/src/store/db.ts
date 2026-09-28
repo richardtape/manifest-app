@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
+import { migrate } from './migrate.js'
+import { runStatements } from './runs.js'
 import type {
   Conversation,
   ConversationState,
@@ -10,7 +12,14 @@ import type {
   Store,
 } from './conversations.js'
 
-export type { Conversation, ConversationState, Problem, Store } from './conversations.js'
+export type {
+  Conversation,
+  ConversationState,
+  Problem,
+  Run,
+  RunStatus,
+  Store,
+} from './conversations.js'
 
 /**
  * `node:sqlite` BY `createRequire`, NOT `import` (F2 sitting 1, M4). Vitest 2.1.9 cannot
@@ -57,6 +66,7 @@ export function openStore(file: string): Store {
   db.exec('pragma foreign_keys = on')
   db.exec('pragma busy_timeout = 5000')
   db.exec(SCHEMA)
+  migrate(db, SCHEMA)
 
   const now = () => new Date().toISOString()
   const readConversation = db.prepare('select * from conversations where id = ?')
@@ -67,6 +77,7 @@ export function openStore(file: string): Store {
   }
 
   return {
+    ...runStatements(db, now),
     rememberPerson(person) {
       db.prepare(
         `insert into persons (id, display_name, seen_at) values (?, ?, ?)

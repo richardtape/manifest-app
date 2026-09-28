@@ -25,6 +25,9 @@ export type ConversationState =
   | 'planning'
   | 'plan-ready'
   | 'agreed'
+  /** F3 Decision 12: a round of work is under way, or its questions wait; then it is built. */
+  | 'building'
+  | 'built'
   | 'paused'
   | 'failed'
 

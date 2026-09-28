@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { openStore, type Store } from './db.js'
-import { dumpAll, scratchDir } from './testing.js'
+import { dumpAll, execOn, pragmaOf, scratchDir } from './testing.js'
 
 /**
  * DECISION 2: ONE SQLITE FILE, AND ONE MODULE THAT READS IT. Decision 1 keeps every
@@ -165,5 +165,170 @@ describe('problems (Decision 11)', () => {
         platform_request_id: null,
       },
     ])
+  })
+})
+
+describe("a round's run and its trace (F3 Decision 10)", () => {
+  const RUN = {
+    id: 'run-1',
+    round: 1,
+    step: 'pages',
+    moves: 3,
+    tries: { build: 0, draft: 0, conflict: 0 },
+    status: 'working' as const,
+    sessionIds: ['557de0f4-59b4-435d-ad91-6c36b5fb8ae4'],
+    model: 'default-chat-large',
+    last: { kind: 'read', report: 'read server.js' },
+    sameRefusal: null,
+  }
+
+  it('saves a run, reads it back, and a second save replaces the first', () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const conversation = store.createConversation(ALICE.id, WORDS)
+    store.saveRun({ ...RUN, conversationId: conversation.id })
+    expect(store.getRun('run-1')).toMatchObject({
+      ...RUN,
+      conversationId: conversation.id,
+    })
+    store.saveRun({
+      ...RUN,
+      conversationId: conversation.id,
+      moves: 4,
+      sameRefusal: { reason: 'no Dockerfile', count: 1 },
+    })
+    expect(store.getRun('run-1')).toMatchObject({
+      moves: 4,
+      sameRefusal: { reason: 'no Dockerfile', count: 1 },
+    })
+    expect(store.getRun('no-such-run')).toBeUndefined()
+  })
+
+  it("lists a run's trace in order, each entry with its time, and never another run's", () => {
+    const { store } = fresh()
+    store.recordTrace('run-1', { kind: 'move', move: 'read', verdict: 'ran' })
+    store.recordTrace('run-2', { kind: 'move', move: 'done', verdict: 'ran' })
+    store.recordTrace('run-1', { kind: 'move', move: 'commit', verdict: 'ran' })
+    const rows = store.listTrace('run-1')
+    expect(rows.map((r) => (r.entry as { move: string }).move)).toEqual([
+      'read',
+      'commit',
+    ])
+    expect(rows[0]?.at).toMatch(/^\d{4}-\d\d-\d\dT/)
+  })
+
+  it('refuses a trace entry that carries anything shaped like a credential', () => {
+    const { store, file } = fresh()
+    const named = (n: string) => ({
+      kind: 'platform',
+      operation: 'x',
+      code: null,
+      named: n,
+    })
+    expect(() => store.recordTrace('run-1', named('mft_0123_abcd'))).toThrow(/credential/)
+    expect(() => store.recordTrace('run-1', named('key sk-abc123'))).toThrow(/credential/)
+    store.recordTrace('run-1', named('the task-list and a risk-free desk-top'))
+    expect(dumpAll(file)['trace']).not.toMatch(/mft_|sk-a/)
+  })
+
+  it('holds no credential in any table after a run and its trace are saved', () => {
+    const { store, file } = fresh()
+    store.rememberPerson(ALICE)
+    const conversation = store.createConversation(ALICE.id, WORDS)
+    store.saveRun({ ...RUN, conversationId: conversation.id })
+    store.recordTrace('run-1', {
+      kind: 'platform',
+      operation: 'deploy',
+      code: null,
+      named: 'sandbox',
+    })
+    const tables = dumpAll(file)
+    expect(Object.keys(tables)).toEqual(expect.arrayContaining(['runs', 'trace']))
+    expect(JSON.stringify(tables)).not.toMatch(/mft_|sk-/)
+  })
+})
+
+describe('the migration (F3 Decision 12: building and built)', () => {
+  /** What F2 left behind: its schema as it was, and no user_version (0). */
+  const F2 = `
+    create table persons (id text primary key, display_name text not null, seen_at text not null);
+    create table conversations (
+      id text primary key,
+      person_id text not null references persons (id),
+      project_id text,
+      title text not null,
+      state text not null check (state in (
+        'describing', 'questions', 'naming', 'making', 'planning', 'plan-ready', 'agreed', 'paused', 'failed'
+      )),
+      description text not null,
+      created_at text not null,
+      updated_at text not null
+    );
+    create index conversations_by_person on conversations (person_id);
+    create table messages (
+      conversation_id text not null references conversations (id),
+      seq integer not null, sender text not null check (sender in ('person', 'we')),
+      body text not null, at text not null, primary key (conversation_id, seq)
+    );
+    create table plans (
+      conversation_id text not null references conversations (id),
+      version integer not null, body text not null, at text not null,
+      primary key (conversation_id, version)
+    );
+    insert into persons values ('${ALICE.id}', 'Alice Instructor', '2026-09-28T00:00:00.000Z');
+    insert into conversations values ('c-1', '${ALICE.id}', 'p-1', 'First build', 'agreed', 'the words',
+      '2026-09-28T00:00:00.000Z', '2026-09-28T00:00:00.000Z');
+    insert into messages values ('c-1', 1, 'person', '{"words":"the words"}', '2026-09-28T00:00:00.000Z');
+    insert into plans values ('c-1', 1, '{"whoGetsIn":"Anyone with a CWL"}', '2026-09-28T00:00:00.000Z');
+  `
+
+  it('opens an F2 file (version 0) at version 2, its conversation, messages and plan intact, and able to build', () => {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    execOn(file, F2)
+    expect(pragmaOf(file, 'user_version')).toBe(0)
+
+    const store = openStore(file)
+    cleanups.push(() => store.close())
+    expect(pragmaOf(file, 'user_version')).toBe(2)
+    expect(store.getConversation('c-1', ALICE.id)).toMatchObject({
+      state: 'agreed',
+      projectId: 'p-1',
+      description: 'the words',
+    })
+    expect(store.listMessages('c-1')).toEqual([
+      { from: 'person', body: { words: 'the words' }, at: '2026-09-28T00:00:00.000Z' },
+    ])
+    expect(store.latestPlan('c-1')).toEqual({
+      version: 1,
+      plan: { whoGetsIn: 'Anyone with a CWL' },
+    })
+    expect(store.setState('c-1', 'building').state).toBe('building')
+    expect(store.setState('c-1', 'built').state).toBe('built')
+  })
+
+  it('opens a new file at version 2, and a state it does not know is still refused', () => {
+    const { store, file } = fresh()
+    expect(pragmaOf(file, 'user_version')).toBe(2)
+    store.rememberPerson(ALICE)
+    const made = store.createConversation(ALICE.id, WORDS)
+    expect(store.setState(made.id, 'building').state).toBe('building')
+    expect(() => store.setState(made.id, 'deploying' as never)).toThrow()
+  })
+
+  it('opens a version-2 file again without rebuilding it', () => {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    const first = openStore(file)
+    first.rememberPerson(ALICE)
+    const made = first.createConversation(ALICE.id, WORDS)
+    first.setState(made.id, 'built')
+    first.close()
+    const second = openStore(file)
+    cleanups.push(() => second.close())
+    expect(second.getConversation(made.id, ALICE.id)?.state).toBe('built')
+    expect(pragmaOf(file, 'user_version')).toBe(2)
   })
 })

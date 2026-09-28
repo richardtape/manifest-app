@@ -35,3 +35,23 @@ export function scratchDir(): { dir: string; remove: () => void } {
   const dir = mkdtempSync(join(tmpdir(), 'manifest-app-store-'))
   return { dir, remove: () => rmSync(dir, { recursive: true, force: true }) }
 }
+
+/** A pragma's value in the file, read behind the store's back (the migration's tests). */
+export function pragmaOf(file: string, name: 'user_version'): number {
+  const db = new DatabaseSync(file, { readOnly: true })
+  try {
+    return (db.prepare(`pragma ${name}`).get() as Record<string, number>)[name] ?? -1
+  } finally {
+    db.close()
+  }
+}
+
+/** Runs SQL against a file with no store in the way: to write what F2 left behind. */
+export function execOn(file: string, sql: string): void {
+  const db = new DatabaseSync(file)
+  try {
+    db.exec(sql)
+  } finally {
+    db.close()
+  }
+}

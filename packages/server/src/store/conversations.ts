@@ -1,8 +1,10 @@
 import type { Person } from '../identity.js'
 import type { Conversation, ConversationState } from '../api/progress.js'
+import type { Run } from './runs.js'
 
 /** The page's contract owns these (Decision 4); the store keeps them. */
 export type { Conversation, ConversationState } from '../api/progress.js'
+export type { Run, RunStatus } from './runs.js'
 
 export type Sender = 'person' | 'we'
 
@@ -44,5 +46,11 @@ export interface Store {
   latestPlan(conversationId: string): { version: number; plan: unknown } | undefined
   /** False, and nothing written, when the reference is already recorded. */
   recordProblem(problem: Problem): boolean
+  /** F3 Decision 10: a round's run, saved after every move. A second save replaces the first. */
+  saveRun(run: Run): void
+  getRun(id: string): Run | undefined
+  /** What happened in a run, never what was said. Anything shaped like a credential is refused. */
+  recordTrace(runId: string, entry: unknown): void
+  listTrace(runId: string): { at: string; entry: unknown }[]
   close(): void
 }
