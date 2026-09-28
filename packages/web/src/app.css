@@ -174,16 +174,25 @@
 
 /* Your apps: the empty state (moment 2), and one card per app (moment 16). */
 .your-apps__empty {
-  display: flex;
-  flex-direction: column;
+  max-width: 640px;
   gap: var(--space-4);
-  max-width: 60ch;
 }
-.your-apps__empty p {
+.app-main .your-apps__empty p,
+.app-main .your-apps__empty .body-lead {
   margin: 0;
 }
-.your-apps__empty .caption {
-  color: var(--ink-subtle);
+.your-apps__lead-time {
+  display: flex;
+  gap: 11px;
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-secondary);
+}
+.your-apps__lead-time svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 .app-card {
   display: flex;

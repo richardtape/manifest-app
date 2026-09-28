@@ -76,15 +76,33 @@ export function YourApps({
         <TroubleNotice trouble={loaded.trouble} onRetry={retry} />
       ) : null}
       {loaded.state === 'ready' && loaded.cards.length === 0 ? (
-        <div className="your-apps__empty">
+        <Card className="your-apps__empty">
           <p className="body-lead">{w.empty}</p>
           <div>
             <Button kind="primary" {...linkTo('/new')}>
               {w.describe}
             </Button>
           </div>
-          <p className="caption">{w.leadTime}</p>
-        </div>
+          {/* The lead time, anchored to the invitation in a note of its own (Rich, sitting 5:
+              as a caption it was "really small and kinda just... floating there"). */}
+          <div className="your-apps__lead-time">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--ink-muted)"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 7.5V12l3 2" />
+            </svg>
+            <p className="body-small">{w.leadTime}</p>
+          </div>
+        </Card>
       ) : null}
       {loaded.state === 'ready'
         ? loaded.cards.map((card) => <AppCardView key={card.id} card={card} />)

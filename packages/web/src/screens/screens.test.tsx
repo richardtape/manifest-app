@@ -250,9 +250,14 @@ describe('Your apps, empty (moment 2)', () => {
       />,
     )
     expect(await screen.findByText(words.yourApps.empty)).toBeTruthy()
-    expect(screen.getByText(words.yourApps.leadTime)).toBeTruthy()
     const describe = screen.getByRole('link', { name: words.yourApps.describe })
     expect(describe.getAttribute('href')).toBe('/new')
+    // The lead time is anchored to the invitation, in a note of its own, not a caption left
+    // floating below it (Rich, sitting 5: "really small and kinda just... floating there").
+    const leadTime = screen.getByText(words.yourApps.leadTime)
+    expect(leadTime.closest('.mf-card')).toBe(describe.closest('.mf-card'))
+    expect(leadTime.closest('.your-apps__lead-time')).not.toBeNull()
+    expect(leadTime.className).not.toContain('caption')
     expect(machineryIn(wordsOnScreen())).toEqual([])
 
     await act(async () => {
