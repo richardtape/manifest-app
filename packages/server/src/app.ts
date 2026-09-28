@@ -1,8 +1,11 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import proxy from '@fastify/http-proxy'
 import Fastify, { type FastifyInstance } from 'fastify'
+import { registerConversations } from './api/conversations.js'
+import { registerProblems } from './api/problems.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
+import type { Store } from './store/db.js'
 
 /** Whatever serves the app: Vite's middlewares while we develop (main.ts). */
 export type WebHandler = (request: IncomingMessage, response: ServerResponse) => void
@@ -33,7 +36,11 @@ function decodable(url: string | undefined): boolean {
  * handler is the front door: Fastify's paths to Fastify, everything else to the app. It is
  * why Vite's SPA fallback can never answer an `/api` path with `index.html`.
  */
-export function buildServer(config: Config, web: WebHandler): FastifyInstance {
+export function buildServer(
+  config: Config,
+  web: WebHandler,
+  { store }: { store: Store },
+): FastifyInstance {
   const app = Fastify({
     serverFactory: (handler) =>
       createServer((request, response) => {
@@ -57,6 +64,10 @@ export function buildServer(config: Config, web: WebHandler): FastifyInstance {
       return reply.code(401).send({ error: { code: 'UNAUTHENTICATED' } })
     return person
   })
+
+  // Our own API (F2): every route guarded by the person and, for a change, by Origin.
+  registerConversations(app, { config, store })
+  registerProblems(app, { config, store })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to

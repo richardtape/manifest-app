@@ -1,3 +1,5 @@
 .superpowers/
 node_modules/
 dist/
+# Our server's database (F2 Decision 2): data, never committed.
+packages/server/.data/

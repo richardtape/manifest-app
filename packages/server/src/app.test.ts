@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify'
 import { afterEach, describe, expect, it } from 'vitest'
 import { buildServer, type WebHandler } from './app.js'
 import { readConfig, type Config } from './config.js'
+import { openStore } from './store/db.js'
 
 /**
  * OUR SERVER, DRIVEN OVER REAL HTTP. Not Fastify's `inject`: it enters Fastify's router
@@ -30,9 +31,13 @@ async function serve(config: Config): Promise<{ base: string; webSaw: string[] }
     response.writeHead(200, { 'content-type': 'text/html' })
     response.end('<div id="root"></div>')
   }
-  const app: FastifyInstance = buildServer(config, web)
+  const store = openStore(':memory:')
+  const app: FastifyInstance = buildServer(config, web, { store })
   await app.listen({ host: '127.0.0.1', port: 0 })
-  closers.push(() => app.close())
+  closers.push(async () => {
+    await app.close()
+    store.close()
+  })
   return {
     base: `http://127.0.0.1:${(app.server.address() as { port: number }).port}`,
     webSaw,
@@ -42,11 +47,13 @@ async function serve(config: Config): Promise<{ base: string; webSaw: string[] }
 const mock = (platformOrigin: string): Config => ({
   mode: 'mock',
   port: 7105,
+  origin: 'http://127.0.0.1:7105',
   platformOrigin,
 })
 const edge = (platformOrigin: string): Config => ({
   mode: 'edge',
   port: 7105,
+  origin: 'https://app.manifest.internal',
   platformOrigin,
 })
 const SESSION = { cookie: 'theme=dark; manifest_session=mock-session' }
@@ -54,17 +61,19 @@ const json = async (response: Response) =>
   [response.status, await response.json()] as const
 
 describe('readConfig', () => {
-  it('is edge by default, asking the control plane on the host', () => {
+  it('is edge by default, served at the app origin, asking the control plane on the host', () => {
     expect(readConfig({})).toEqual({
       mode: 'edge',
       port: 7105,
+      origin: 'https://app.manifest.internal',
       platformOrigin: 'http://127.0.0.1:7100',
     })
   })
-  it('is mock when asked, asking manifest-mock', () => {
+  it('is mock when asked, served on 7105 itself, asking manifest-mock', () => {
     expect(readConfig({ MANIFEST_APP_MODE: 'mock' })).toEqual({
       mode: 'mock',
       port: 7105,
+      origin: 'http://127.0.0.1:7105',
       platformOrigin: 'http://127.0.0.1:7102',
     })
   })

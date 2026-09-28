@@ -9,6 +9,11 @@ export interface Config {
   mode: 'mock' | 'edge'
   port: 7105
   /**
+   * Where the browser reaches us, and so the one `Origin` our API accepts a change from
+   * (F2 Decision 3): 7105 itself in mock mode, the app's own origin through the edge.
+   */
+  origin: string
+  /**
    * Where `whoIs` asks `getMe`. Edge mode's answer is not yet measured: the control plane
    * keeps a session per origin, so whether 7100 directly serves a session minted on
    * `app.manifest.internal` is Task 8 Step 4's first measurement.
@@ -17,10 +22,14 @@ export interface Config {
 }
 
 const PLATFORM = { mock: 'http://127.0.0.1:7102', edge: 'http://127.0.0.1:7100' } as const
+const ORIGIN = {
+  mock: 'http://127.0.0.1:7105',
+  edge: 'https://app.manifest.internal',
+} as const
 
 export function readConfig(env: NodeJS.ProcessEnv): Config {
   const mode = env['MANIFEST_APP_MODE'] ?? 'edge'
   if (mode !== 'mock' && mode !== 'edge')
     throw new Error(`MANIFEST_APP_MODE is 'mock' or 'edge', never '${mode}'`)
-  return { mode, port: 7105, platformOrigin: PLATFORM[mode] }
+  return { mode, port: 7105, origin: ORIGIN[mode], platformOrigin: PLATFORM[mode] }
 }
