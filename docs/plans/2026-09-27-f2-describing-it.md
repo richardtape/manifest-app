@@ -46,7 +46,7 @@ import it (Task 2).
 | 2 | 2, 3 | Storage and our API: conversations, the person, `Origin`, the progress stream | **done 2026-09-27.** Storage, the guard, conversations and support references; the progress stream, reopened by the page when the browser gives up. 213 tests |
 | 3 | 4, 5 | The model client; the three intake agents, tested against a scripted model | **done 2026-09-27.** A client that takes only structured answers; the three agents, with checks after parsing ruled on from M3; `/intake`, `/names` and `/blueprint`, with the intake carried in the state frame. 300 tests |
 | 4 | 6, 7 | The intake adapter; the *Describe* and *Name it* screens and their components | **done 2026-09-27.** The adapters on the contract as it landed; the intake key handed over; *Describe it* and *Name it*, walked in headless Chrome against the mock, where two defects were found and fixed. 395 tests |
-| 5 | 8, 9 | Making the project and handing over its tokens; the plan, corrected and agreed, committed as `docs/plan.md` | |
+| 5 | 8, 9 | Making the project and handing over its tokens; the plan, corrected and agreed, committed as `docs/plan.md` | **done 2026-09-27.** *Make it* in the person's session, the token checked and held in memory; *Making it*'s three lines; the plan on an agent session, corrected, agreed and committed; Review Focus 4 and 5 pinned. Walked in headless Chrome against the mock, moments 3–5 whole. 503 tests. Six words proposed for Rich |
 | 6 | 10 | **The acceptance**: against the mock with a scripted model; against the real platform where sittings 7 and 10 have landed. **Alone, and last** | |
 
 **Every sitting ends as F1's do:**
@@ -1480,3 +1480,136 @@ and see its address. *Make it* stops at *"Making it arrives next."*
   the conversation's token; the handover.
 - **The plan**, on an agent session.
 - The mock answers its own fixtures whatever is sent (M2), so the tests assert what was sent.
+
+### 2026-09-27 — Sitting 5 (Tasks 8 and 9): *Make it*, and the plan
+
+**Commits:**
+- `96cc28e`: *Make it*: the project in the person's session, the conversation's token handed to our server and
+  checked;
+- `4c7a997`: the plan, written on the person's agent session, corrected, agreed, and committed as `docs/plan.md`.
+
+**The contract moved during this sitting.** The platform committed its sitting 9 (delete) at 22:32, manifest
+`bfae957`: 66 operations, with `deleteProject`, `PROJECT_LAUNCHED_NOT_DELETABLE` and `SOURCE_PROVIDER_MISMATCH`.
+It is F6's. Nothing F2 calls changed, and every gate after it ran against it and passed. Rich has not yet relayed its
+close-out.
+
+**Task 8: *Make it* (moment 4's end).**
+- **In the person's session** (`platform/api.ts`):
+  - `createProject`, with the chosen name, address and audience, and *why* when given;
+  - the blueprint the agent chose, or the list's first when it never answered, from its skeleton;
+  - `mintToken` for the conversation: the eight capabilities, seven days, *"Building — <title>"*;
+  - the three calls in that order, then the handover.
+- **The handover** (`POST /api/conversations/:id/project`, `api/project.ts`):
+  - our server keeps the token in memory only, and only once `getProject` with it answers that project. Otherwise
+    it is `400 TOKEN_NOT_FOR_PROJECT`, and the token is never kept.
+  - The conversation is tied to that project for good: a later handover for another is `409 PROJECT_MISMATCH`.
+  - It moves to `making`, and its intake key is dropped.
+  - What was made (id, name, address, blueprint) is stored and carried in the state frame, so a reconnect
+    rebuilds *Making it*.
+- **Review Focus 4, pinned:**
+  - one `Idempotency-Key` per press, kept while the request is the same, and one request per press;
+  - a create that landed and never answered is answered on its retry, and never repeated;
+  - each mint takes its own key (a repeat is `TOKEN_ALREADY_MINTED`, and the secret is never answered again), and
+    is tried twice;
+  - then *"Reading responses is made, but we couldn't start work on it. Nothing is lost."* with **[Start
+    building]**;
+  - a reload between the create and the handover carries on from the project by itself, and never makes another,
+    whose address would be the person's own.
+- **The slug refusals of a race** (`SLUG_TAKEN`, `SLUG_RESERVED`, `SLUG_INVALID`) are the platform's own words
+  under the address, which opens.
+- ***Making it***: three lines, each ticking on its real event from the project's stream, which is closed once its
+  replay is done.
+- **Found by failing tests, in my own code before commit:**
+  - the made view returned before the functions its buttons call, so a second failed *Start building* would have
+    thrown;
+  - a blueprint list that failed was reported as `createProject`.
+
+**Task 9: the plan (moment 5).**
+- **The plan agent** (`agents/plan.ts`):
+  - structured output: five rows, three assumptions at most, two questions at most;
+  - checks of form: a row has words, and a question is a question;
+  - **a sign-in promised to one class is rewritten** to *"Anyone with a CWL can sign in. We can't limit it to your
+    class yet."* (FE-20);
+  - the rows marked after a correction are **the rows whose words changed**, computed by us, never the model's
+    claim;
+  - `planMarkdown` is deterministic, and every line of a model's or a person's is flattened to one and escaped.
+- **The plan step** (`api/plan.ts`), all with the conversation's token:
+  - `getAgentBudget`, then a session named after the conversation, then the knowledge pack and the tree;
+  - the plan, on Config's plan model (`default-chat`, or `MANIFEST_APP_PLAN_MODEL`), only if the session offers it,
+    and only on our own gateway;
+  - **the session is ended whatever happens.**
+  - A spent allowance, or `AGENT_BUDGET_EXHAUSTED` at the start, carries whose it is and when it resets.
+  - A correction is stored before it runs, so *Carry on* re-runs it, never lost.
+  - Agreed: `docs/plan.md`, dry run then commit, with their answers, and the conversation is `agreed`.
+- **Review Focus 5, pinned:**
+  - a connection made while a step works hears it (the hub remembers the steps at work);
+  - after a restart nothing works, so the page offers **[Carry on]**;
+  - our server then has no token (`409 TOKEN_MISSING`), so the page mints another, hands it over and carries on,
+    without a word. A test restarts `buildServer` on the same database file.
+- **One piece of work per conversation**, shared by the intake and the plan (`api/work.ts`).
+- **The page**: *Making it*, then the two steps, then *"Here's what we'd build"*, *Not quite* in one sentence,
+  *Yes, build that*, and *"Agreed. Building it arrives next."*
+  - Every refusal is in Rich's words or the walk-through's, with its reference.
+  - A refusal from moments 3 and 4 still on the stream is never read as the plan's. **Found by a failing test**: the
+    plan's spent allowance had started an intake session.
+
+**Walked in headless Chrome against the mock** (`pnpm dev:mock`, 1440 and 375 wide; `scratchpad/s5/walk5.mjs`):
+- describe → questions → a name → `mock-app` taken → *Make it* → the three lines on the mock's replay → the plan →
+  *Not quite*, one sentence → *What you see* alone marked → an answer → *Yes, build that* → *"Agreed…"*;
+- no console error, no failed request, no horizontal overflow;
+- the database holds no `mft_` and no `sk-`.
+- **One defect found only there:** the plan screen had no styles. *"What you seeChanged"* ran together, and the
+  decision card sat under the plan. `app.css` gained the prototype's layout, checked by the walk at both widths.
+- **Against the mock, the project is always *"Mock course app"***, whatever name was chosen (FE-27), so that is the
+  heading. The mock's agent session names another project and another name. The plan step reads neither.
+
+**Words worded here, where the walk-through gives none. Proposed, for Rich:**
+- the step *"Saving the plan with your app"*;
+- *"Changed"*, on a row a correction changed;
+- *"One thing only you know"*, when the plan asks one;
+- *"In a sentence, what should change"*, the correction's box;
+- *"We couldn't save the plan with your app just now. Nothing is lost."*, a commit refused;
+- *"Not answered yet."*, in `docs/plan.md`.
+
+**Negative controls.** Each was red, then restored and green:
+- Task 8's ten:
+  - on the server: the token trusted without asking; the token kept in a message; the person ignored;
+  - on the page: a new key per call; no busy guard; no second mint; one key for every mint; the slug race said as
+    a failure; the reload not resumed; the stream never closed.
+- Task 9's twenty-two:
+  - the agent's five: the FE-20 rewrite, the marks, the question check, the escaping, and *"Two things"* always;
+  - the server's nine: the session ended only on success; no budget check; a stale budget said as the model's;
+    any model; any gateway; a refused token kept; the correction forgotten; any answer agreed; a step never
+    forgotten;
+  - the page's eight: a stale refusal read as the plan's; no *Carry on*; no renewal; renewal every time; the
+    allowance unsaid; every row marked; *Making it* never moving on; the intake hearing the plan's refusals.
+
+**Could not fail:**
+- the handover's file-wide FE-2 check: nothing in this sitting's code holds a session to send. It stands as a guard
+  for later changes.
+- The plan's layout is checked by the walk, not by a unit test.
+
+**Gates, from the root:**
+- `pnpm test` twice: 503/503 each time (`ui` 17, `web` 220, `server` 266);
+- `pnpm lint` 0;
+- `pnpm typecheck` 0, against manifest `bfae957`;
+- `pnpm format:check` clean;
+- `check-slice` 7 passed.
+
+**The machine at the close:**
+- the mock on 7102 and our server on 7105 in mock mode;
+- the control plane stopped;
+- manifest touched only by the platform session.
+- Two headless Chromes left on port 9334 by walks (one of sitting 4's, one of this sitting's first try) were
+  stopped. The walk scripts now stop Chrome when they exit.
+
+**For sitting 6 (Task 10, the acceptance):**
+- `check-describing.sh` drives our API as the browser would. Our API cannot mint, so the script mints in the mock
+  with a session (`mintToken`), then hands over (`POST .../project`).
+- **Step 7, what our server sent to `createCommit`.** The conversation records the agreed version, the answers and
+  the commit's sha, but not the markdown. `api/plan.test.ts` and `adapters.test.ts` prove what is sent, against
+  recording fakes. The script needs its own way to show it against the mock, such as a recording proxy between our
+  server and the mock. **For sitting 6 to rule on.**
+- Rich's clicked half: moments 3–5 now click whole at `http://127.0.0.1:7105/new`.
+- The real platform (step 3) is Rich's and the platform session's to start.
+- The six proposed words wait on Rich.

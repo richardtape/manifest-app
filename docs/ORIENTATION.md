@@ -4,7 +4,7 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-27)*:
+**Where things stand** *(2026-09-27, after F2's sitting 5)*:
 - The faculty experience is designed moment by moment and **approved by Rich**
   ([`walkthrough.md`](./walkthrough.md)).
 - The platform's gaps are listed, and Rich's decisions on them have been carried to the platform session
@@ -14,24 +14,32 @@ says which plan is current. This file states where things stand and the rules. I
   - It passed against the mock, where Rich clicked it, and against the platform, where Rich signed in as
     `instructor` at `https://app.manifest.internal`.
   - Its findings, sitting by sitting, are the record. Read them before touching what they touch.
-- **F2 is under way**, in [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md).
-  Sittings 1–4 are done (2026-09-27).
-  - **Sitting 1** measured what the platform landed: intake sessions (FE-1) and agent sessions, with
-    `spentUsd` (FE-23). No Decision broke, and Tasks 2–10 are amended to the contract, each marked *Amended by
-    sitting 1*.
-  - **After it, at Rich's word:** every problem shown carries a support reference (Decision 11), and a limit
-    says whose it is and when it resets. Rich has agreed every proposed sentence (2026-09-27).
-  - **Sitting 2** built our server's storage and its own API: conversations, support references, and one
-    progress stream per conversation, which the page reopens when the browser gives up.
-  - **Sitting 3** built a model client that takes only structured answers, and the three intake agents with
-    their routes, tested against a scripted model.
-  - **Sitting 4** built the adapters on the contract as it landed, and the *Describe it* and *Name it* screens.
-    Walked in headless Chrome against the mock, moments 3 and 4 work at `http://127.0.0.1:7105/new`.
-- **Next: F2's sitting 5**, Tasks 8 and 9: *Make it* (the project, its token, the handover), and the plan
-  written on an agent session and committed as `docs/plan.md`.
-- **The platform's sitting 8 (archive and restore) has landed**, relayed by Rich: `Project.state` and
-  `archivedAt`, and an archived project's tokens answer `401` and stay revoked. That is F6's; the roadmap
-  says so.
+- **F2 is built, and waits on its acceptance**, in
+  [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md). Sittings 1–5 are done
+  (2026-09-27).
+  - **Sitting 1** measured what the platform landed, and amended Tasks 2–10 to it. **After it, at Rich's word:**
+    every problem shown carries a support reference (Decision 11), and a limit says whose it is and when it
+    resets.
+  - **Sittings 2–4** built our server's storage and guarded API, the progress stream, the model client, the three
+    intake agents, the adapters, and *Describe it* and *Name it*.
+  - **Sitting 5** built *Make it* and the plan:
+    - the project and the conversation's token, made in the person's session;
+    - the token checked by our server and held in memory;
+    - *Making it*'s three lines;
+    - the plan, written on the person's agent session, corrected in a sentence, agreed, and committed as
+      `docs/plan.md`.
+    - Review Focus 4 (a double press, a retry) and 5 (a restart) are pinned by tests.
+  - **Moments 3–5 click whole against the mock** at `http://127.0.0.1:7105/new`, walked in headless Chrome at
+    1440 and 375 wide. Against the mock the project is always *"Mock course app"* (FE-27).
+  - **Six words proposed in sitting 5 wait on Rich** (the plan's *What executing this plan found*, sitting 5).
+- **Next: F2's sitting 6, Task 10, alone and last.**
+  - The acceptance script against the mock, and Rich's clicked half.
+  - Then the real platform, **which needs Rich and the platform session**.
+  - The whole-branch review is owed then.
+- **The platform:**
+  - **Its sitting 8 (archive and restore) has landed**, relayed by Rich. It is F6's, and the roadmap says so.
+  - **Its sitting 9 (delete) was committed during F2's sitting 5** (manifest `bfae957`: 66 operations,
+    `deleteProject`). It is F6's, and not yet relayed. Our typecheck and tests pass against it.
 - **How to run it** is §6, below.
 - **The workspace:**
   - `packages/ui` is the design system, **ours since Rich's *"fix it at source"***. Its stylesheets are in
@@ -41,12 +49,15 @@ says which plan is current. This file states where things stand and the rules. I
     against the platform on 7100.
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract
-      with the page is `api/progress.ts`.
-    - `model/` asks a model for structured output only; `agents/` are the intake agents, each a schema and a
-      prompt.
-  - **The gates:** `pnpm test` (395 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
+      with the page is `api/progress.ts`. One piece of work per conversation at a time runs through
+      `api/work.ts`.
+    - `model/` asks a model for structured output only; `agents/` are the agents, each a schema and a prompt:
+      the three intake agents, and the plan.
+    - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
+      the person's session: the intake key, the project and its token, agent sessions, authoring.
+  - **The gates:** `pnpm test` (503 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, and
     `scripts/check-slice.sh`.
-- **Findings not yet carried to the platform session** (Rich's to carry; none blocks its sitting 8):
+- **Findings not yet carried to the platform session** (Rich's to carry; none blocks F2):
   - FE-26: the mock accepts any session, and a token where only a session may go;
   - FE-27: the mock answers from the document's examples, now including everything sitting 7 added;
   - FE-28: the session cookie is not `__Host-`, and apps live on sibling hosts;
@@ -207,8 +218,11 @@ MODE=edge bash scripts/check-slice.sh                           # the same, thro
   each sitting's entry lists these as its *negative controls*.
 - **Walk the screens in a real browser**, as every sitting since F1's has: headless Chrome over the DevTools
   protocol, from a script in the session's scratchpad, with Node 24's global `WebSocket` and no new dependency.
-  It found two defects in F2's sitting 4 that no unit test could. `pnpm dev:mock` must be running;
-  `tsx watch` restarts our server on each edit.
+  It found two defects in F2's sitting 4 and one in sitting 5 that no unit test could. `pnpm dev:mock` must be
+  running; `tsx watch` restarts our server on each edit, so wait for it after a formatting pass.
+  - **A walk that throws leaves its headless Chrome running**, holding the DevTools port and its profile, and the
+    next walk talks to the old one and hangs. Stop Chrome in `process.on('exit')`. Sitting 5 found two left
+    behind on port 9334.
 - **A problem's reference is only as good as its report.** If a reference shown on screen is missing from
   `problems` (`packages/server/.data/app.sqlite`), the report was refused. That is how sitting 4's second defect
   was found.
