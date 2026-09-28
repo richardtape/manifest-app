@@ -1,12 +1,12 @@
 # F3 — Building It: Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
-> superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task,
+> as ONE agent (Rich, 2026-09-28: not subagent-driven). Steps use checkbox (`- [ ]`) syntax for tracking.
 > **Read [`../ORIENTATION.md`](../ORIENTATION.md) first. F2 is executed; this plan starts from it.**
 
-**Status: written 2026-09-28, for Rich's review.** Nothing is built until he approves it and chooses how it is
-executed (the earlier session recommended subagent-driven). Whoever hears his yes replaces this line, and the
-roadmap's row, with his words and the date.
+**Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
+sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
+whole-branch review by one fresh reviewer at the end (Task 12). Sitting 1 is next.
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that

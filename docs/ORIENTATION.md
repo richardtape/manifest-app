@@ -4,13 +4,12 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F3 written; the platform's 9b under way)*:
+**Where things stand** *(2026-09-28, F3 approved by Rich; the platform's 9b under way)*:
 
 - **YOUR JOB, IF YOU ARE THE NEXT SESSION: F3, *Building it*.** Its plan is
   [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md): seven sittings, twelve tasks.
-  - **First, check that Rich has approved it.** The status line at the top of the plan, and its roadmap row, say
-    *"for Rich's review"* until he has. If they still do, ask Rich to review it and to choose how it is executed. The earlier session
-    recommended **subagent-driven**, as F2 was. Build nothing before his yes.
+  - **Rich approved it on 2026-09-28**, and chose how it runs: **one agent, natively** (superpowers:executing-plans),
+    not subagent-driven. One sitting per session, and the whole-branch review by one fresh reviewer at the end.
   - **Then sitting 1, Task 1, the measurements, alone.**
     - **M2, M5 and M6 can run at once:** the mock's answers, the two agent frameworks' documentation, and the
       blueprint's sign-in code. So can M1's reading of `openapi.json`.
