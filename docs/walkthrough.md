@@ -92,6 +92,18 @@ and what changing course would cost.*
   and the person never has to keep track of which one is speaking.
 - **D6. The agreed plan is committed into the app as `docs/plan.md`** (Rich, 2026-09-27). It is the agreement,
   versioned with the code it describes, and readable by any agent that ever works on the app.
+- **D7. Only faculty build, for now; and administrators** (Rich, 2026-09-29: *"This should be available to all members
+  of faculty (using the associated CWL role). For everyone else (save for a prescribed list of admins), they should
+  see a screen telling them that it isn't available for them at the moment."*; *"the platform, because this would then
+  also work for agentic use"*; *"Faculty members should be able to add other faculty members for now. Perhaps in the
+  future they should be able to add TAs"*).
+  - **The platform decides** (**FE-39**): faculty by CWL's `eduPersonAffiliation`, administrators by a prescribed list
+    of CWL logins in its settings. It refuses anyone else a project, an intake, or a place on someone's app, whatever
+    client asks, an agent included. `getMe` answers the decision, and our screens only follow it.
+  - *Rejected:* a list of instructors that administrators keep (all faculty needs nobody to keep it);
+    deciding in our own screens, which a student calling the API directly would walk past; the IdP refusing everyone
+    else at sign-in, which leaves no page to say why.
+  - *Changing course:* who may build is one predicate on the platform (TAs later), and one field we read.
 
 ---
 
@@ -135,6 +147,18 @@ the left.
   is still working."*
 
 **They wait:** seconds. No state.
+
+**Someone who isn't faculty** (D7: a student, staff, anyone not on the administrators' list):
+- **They see**, in place of every page, whatever address they came to:
+  - the brand, their name and **[Sign out]**, and no rail items (no *Your apps*, no *Start something new*);
+  - **"Manifest isn't available to you at the moment."** · *"It's open to UBC faculty for now."*
+  - Still, in the *not yet* tone: nobody is working on anything, and nothing is wrong.
+- **Fed by:** `getMe` answering that they may not build (**FE-39**: `mayBuild: false`, its name the platform's). Until
+  the platform ships it, everyone builds, as before.
+- **If it goes wrong:** the platform refuses them part-way (their faculty status changed since they signed in, and
+  `createProject`, `startIntakeSession` or our own routes answer the refusal's code): the same screen, never an error.
+  Our server refuses a new conversation or a change to them with the same code, before the platform has to.
+- **They wait:** nothing.
 
 ## 2. *Your apps*, with nothing in it yet
 
@@ -839,6 +863,11 @@ Then one more step, and one sentence decides how long it takes.
 **They wait:** minutes, or days when it re-escalates.
 
 ## 18. Adding a TA
+
+**For now, a colleague who is faculty** (D7, Rich, 2026-09-29: *"Faculty members should be able to add other faculty
+members for now. Perhaps in the future they should be able to add TAs"*). The platform refuses to add anyone who may
+not build (**FE-39**), and we say: *"Only UBC faculty can work on apps for now, so we can't add them yet."* The rest
+of this moment stands for when TAs may be added.
 
 **Trying to:** let a TA help, and understand what that lets the TA do.
 
