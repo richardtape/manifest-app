@@ -164,6 +164,9 @@ function stage(refusals: Refusals = {}) {
     message: record('message') as Ours['message'],
     answer: record('answer') as Ours['answer'],
     stop: record('stop') as Ours['stop'],
+    startChange: never,
+    conversationsOn: never,
+    conversationFor: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -1054,7 +1057,8 @@ describe('built (Decision 16)', () => {
       expect(stepItem(words.building.steps[key]).className).toContain('mf-step--done')
     expect(screen.getByText(words.building.chip.built)).toBeTruthy()
     expect(screen.getByText(words.building.thread.built('28 Sep, 9:12am'))).toBeTruthy()
-    expect(screen.getByText(words.building.thread.changeNext)).toBeTruthy()
+    // F4 Task 9: once built, the box is open again, and a message is the next change.
+    expect(screen.getByLabelText('What should change next?')).toBeTruthy()
     expect(screen.queryByLabelText(words.building.thread.messageLabel)).toBeNull()
     noButton(words.building.stop)
   })

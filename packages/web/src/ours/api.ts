@@ -1,5 +1,5 @@
 import type { Schemas } from '@manifest/contract'
-import type { Conversation } from '@manifest-app/server/progress'
+import type { AppConversation, Conversation } from '@manifest-app/server/progress'
 
 /**
  * OUR OWN API (`/api/*`), FROM THE PAGE: this file is its one caller, as src/platform/ is
@@ -159,8 +159,21 @@ export interface Ours {
   message(id: string, words: string): Promise<void>
   /** An answer, kept as they typed it: a secret's goes to their app alone. */
   answer(id: string, questionId: string, words: string): Promise<void>
-  /** Stop: whatever the draft address has, it keeps. */
+  /** Stop: whatever the draft address has, it keeps. A change waiting or planned is set aside (F4). */
   stop(id: string): Promise<void>
+  /**
+   * F4 TASK 6: A CHANGE ON AN APP, in one request: their words (or a fix of ours) and the token the
+   * browser has just minted for it. Our server checks the token before it keeps anything.
+   */
+  startChange(
+    projectId: string,
+    body:
+      { words: string; token: string } | { fix: { incidentId: string }; token: string },
+  ): Promise<Conversation>
+  /** The person's conversations on the app, newest first, each where it left off. */
+  conversationsOn(projectId: string): Promise<AppConversation[]>
+  /** The conversation whose round deployed this instance; none of ours did, null. */
+  conversationFor(projectId: string, instanceId: string): Promise<{ id: string } | null>
   events(id: string): StreamSource
 }
 
@@ -212,6 +225,27 @@ export function createOurs(): Ours {
     },
     stop: async (id) => {
       await call('POST', at(id, '/stop'), {})
+    },
+    startChange: async (projectId, body) =>
+      (await call(
+        'POST',
+        `/api/apps/${encodeURIComponent(projectId)}/conversations`,
+        body,
+      )) as Conversation,
+    conversationsOn: async (projectId) =>
+      ((await call('GET', `/api/apps/${encodeURIComponent(projectId)}/conversations`)) ??
+        []) as AppConversation[],
+    conversationFor: async (projectId, instanceId) => {
+      try {
+        const found = (await call(
+          'GET',
+          `/api/apps/${encodeURIComponent(projectId)}/instances/${encodeURIComponent(instanceId)}/conversation`,
+        )) as { id?: unknown } | undefined
+        return typeof found?.id === 'string' ? { id: found.id } : null
+      } catch (error) {
+        if (error instanceof OurRefusal && error.status === 404) return null
+        throw error
+      }
     },
     events: conversationEvents,
   }

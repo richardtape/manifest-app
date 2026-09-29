@@ -2,6 +2,8 @@ import type {
   Allowance,
   Conversation,
   Intake,
+  LineView,
+  PieceView,
   PlanView,
   Progress,
   RoundView,
@@ -23,6 +25,9 @@ export interface ConversationView {
   round?: RoundView | null
   /** What every round said, oldest first. */
   thread?: Said[]
+  /** F4: the piece of work it is on (null in the intake), and its place in the app's line. */
+  piece?: PieceView | null
+  line?: LineView | null
   /** Each step at its latest, in the order they began. */
   steps: Step[]
   /** Our code, and the reference the person may quote (Decision 11); whose allowance, if spent. */
@@ -46,6 +51,8 @@ function apply(view: ConversationView, frame: Progress): ConversationView {
         plan: frame.plan,
         round: frame.round,
         thread: frame.thread,
+        piece: frame.piece,
+        line: frame.line,
         status: 'live',
       }
     case 'step': {

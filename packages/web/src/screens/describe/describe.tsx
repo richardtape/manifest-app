@@ -9,6 +9,7 @@ import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { BuildingScreen } from '../building/building.js'
+import { SetAsideScreen, WaitingScreen } from '../change/waiting.js'
 import { NameIt } from '../name-it/name-it.js'
 import { PlanScreen } from '../plan/plan.js'
 import { countOf, countProp, LIMITS, tooLong } from '../limits.js'
@@ -415,6 +416,7 @@ export function Describing({
         conversation={view.conversation}
         intake={intake}
         plan={view.plan ?? null}
+        piece={view.piece ?? null}
         steps={view.steps}
         refusal={view.refusal}
         expire={expire}
@@ -441,10 +443,36 @@ export function Describing({
         intake={intake}
         round={view.round ?? null}
         thread={view.thread ?? []}
+        purpose={view.piece?.kind === 'change' ? 'changing' : 'building'}
         connecting={view.status === 'connecting'}
         expire={expire}
         now={now}
         timeZone={timeZone}
+      />
+    )
+
+  // F4, moment 8: waiting its turn on the app, or a change set aside.
+  if (state === 'waiting' && view.conversation !== undefined && intake !== undefined)
+    return (
+      <WaitingScreen
+        key={view.conversation.id}
+        ours={ours}
+        conversation={view.conversation}
+        intake={intake}
+        line={view.line ?? null}
+        piece={view.piece ?? null}
+        expire={expire}
+      />
+    )
+  if (state === 'set-aside' && view.conversation !== undefined && intake !== undefined)
+    return (
+      <SetAsideScreen
+        key={view.conversation.id}
+        ours={ours}
+        conversation={view.conversation}
+        intake={intake}
+        piece={view.piece ?? null}
+        expire={expire}
       />
     )
 

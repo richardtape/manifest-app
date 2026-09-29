@@ -2,6 +2,7 @@ import type {
   Allowance,
   Conversation,
   Intake,
+  PieceView,
   PlanRow,
   PlanView,
   StepKey,
@@ -95,6 +96,12 @@ const COULDNT_SAVE: Said = {
   tone: 'attention',
   button: 'tryAgain',
 }
+/** Not now, not taken: nothing was set aside yet (F4). */
+const COULDNT_LEAVE: Said = {
+  words: words.building.couldntPress,
+  tone: 'attention',
+  button: 'tryAgain',
+}
 
 /**
  * MOMENT 5 (F2 Task 9), and the seconds before it: Making it's three lines, then the plan
@@ -104,6 +111,8 @@ const COULDNT_SAVE: Said = {
  *   or a press not yet answered. Anything else is Carry on.
  * - **Our server without a token** (a restart forgot it) is answered by minting another, once,
  *   and carrying on, without a word.
+ * - **A change's plan (F4 Task 9)**: "Here's what we'd change", the parts it changes and no
+ *   others, "Everything else stays as we agreed.", Yes, change it, and Not now, which sets it aside.
  */
 export function PlanScreen({
   platform,
@@ -111,6 +120,7 @@ export function PlanScreen({
   conversation,
   intake,
   plan,
+  piece = null,
   steps,
   refusal,
   expire,
@@ -122,6 +132,8 @@ export function PlanScreen({
   conversation: Conversation
   intake: Intake
   plan: { version: number; plan: PlanView } | null
+  /** F4: the piece of work; a change's plan shows only what changes. */
+  piece?: PieceView | null
   steps: Step[]
   refusal: { code: string; reference: string; allowance?: Allowance } | undefined
   expire: () => void
@@ -132,6 +144,7 @@ export function PlanScreen({
   const state = conversation.state
   const projectId = conversation.projectId
   const name = intake.project?.name ?? conversation.title
+  const change = piece?.kind === 'change'
   const [pressed, setPressed] = useState(false)
   const [notice, setNotice] = useState<Notice>()
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -175,7 +188,7 @@ export function PlanScreen({
   const failed = (
     error: unknown,
     operation: string,
-    during: 'write' | 'agree',
+    during: 'write' | 'agree' | 'leave',
     retry: () => void,
   ) => {
     let code: string
@@ -191,7 +204,11 @@ export function PlanScreen({
       status = refusal.kind === 'refused' ? refusal.status : null
     }
     const said =
-      during === 'agree' ? COULDNT_SAVE : planRefused(code, undefined, now(), timeZone)
+      during === 'agree'
+        ? COULDNT_SAVE
+        : during === 'leave'
+          ? COULDNT_LEAVE
+          : planRefused(code, undefined, now(), timeZone)
     show(said, { code, operation, status }, retry)
   }
 
@@ -199,13 +216,19 @@ export function PlanScreen({
   const renewThen = async (
     call: () => Promise<void>,
     operation: string,
-    during: 'write' | 'agree',
+    during: 'write' | 'agree' | 'leave',
   ) => {
     renewed.current = true
     let step = 'mintToken'
     try {
       if (projectId === null) throw new OurRefusal('PROJECT_MISSING', null)
-      await handOverToken(platform, ours, { id, title: conversation.title }, projectId)
+      await handOverToken(
+        platform,
+        ours,
+        { id, title: conversation.title },
+        projectId,
+        change ? 'changing' : 'building',
+      )
       step = operation
       await call()
     } catch (error) {
@@ -235,7 +258,7 @@ export function PlanScreen({
   const send = async (
     operation: string,
     call: () => Promise<void>,
-    during: 'write' | 'agree',
+    during: 'write' | 'agree' | 'leave',
   ) => {
     setNotice(undefined)
     setPressed(true)
@@ -283,6 +306,11 @@ export function PlanScreen({
   const agreeIt = () => {
     const agreed = agreement()
     void send('agree', () => ours.agree(id, agreed), 'agree')
+  }
+  /** Not now (F4): the change set aside. Nothing is working meanwhile, so nothing says it is. */
+  const leave = () => {
+    setNotice(undefined)
+    ours.stop(id).catch((error: unknown) => failed(error, 'stop', 'leave', leave))
   }
 
   // A REFUSAL ON THE STREAM: a token renewed once, without a word; anything else said, with the
@@ -373,20 +401,23 @@ export function PlanScreen({
   }
 
   const shown = plan.plan
+  // A change shows only what changes: every part shown is changed, so none is marked.
   const rows = (
     <Card className="plan__rows">
       <dl className="plan__list">
-        {ROWS.map((row) => (
-          <div className="plan__row" key={row}>
-            <dt className="plan__label">
-              <span>{words.plan.rows[row]}</span>{' '}
-              {shown.changed.includes(row) ? (
-                <span className="plan__changed">{words.plan.changed}</span>
-              ) : null}
-            </dt>
-            <dd className="plan__text">{shown[row]}</dd>
-          </div>
-        ))}
+        {(change ? ROWS.filter((row) => shown.changed.includes(row)) : ROWS).map(
+          (row) => (
+            <div className="plan__row" key={row}>
+              <dt className="plan__label">
+                <span>{words.plan.rows[row]}</span>{' '}
+                {!change && shown.changed.includes(row) ? (
+                  <span className="plan__changed">{words.plan.changed}</span>
+                ) : null}
+              </dt>
+              <dd className="plan__text">{shown[row]}</dd>
+            </div>
+          ),
+        )}
       </dl>
     </Card>
   )
@@ -396,10 +427,11 @@ export function PlanScreen({
     <div className="plan">
       <div className="plan__main">
         <h1 className="page-title">{name}</h1>
-        <h2 className="moment">{words.plan.title}</h2>
+        <h2 className="moment">{change ? words.change.planTitle : words.plan.title}</h2>
         <p className="body-lead">{words.plan.lead}</p>
         {noticeCard}
         {rows}
+        {change ? <p className="body-lead">{words.change.unchanged}</p> : null}
         {shown.assumed.length > 0 ? (
           <section className="plan__section">
             <h3 className="subheading">{words.plan.assumedTitle}</h3>
@@ -431,7 +463,7 @@ export function PlanScreen({
         ) : null}
       </div>
       <Card className="plan__aside" title={words.plan.yesTitle}>
-        <p className="body-lead">{words.plan.yesBody}</p>
+        <p className="body-lead">{change ? words.change.yesBody : words.plan.yesBody}</p>
         {saving ? (
           <StateChip state="working" label={words.steps.agreeing} />
         ) : (
@@ -441,11 +473,16 @@ export function PlanScreen({
               disabled={Object.values(given()).some((a) => tooLong(a, LIMITS.sentence))}
               onClick={agreeIt}
             >
-              {words.plan.yes}
+              {change ? words.change.yes : words.plan.yes}
             </Button>
             <Button kind="secondary" onClick={() => setCorrecting(true)}>
               {words.plan.notQuite}
             </Button>
+            {change ? (
+              <Button kind="tertiary" onClick={leave}>
+                {words.change.notNow}
+              </Button>
+            ) : null}
           </div>
         )}
         {correcting && !saving ? (

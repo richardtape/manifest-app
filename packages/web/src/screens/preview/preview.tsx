@@ -1,6 +1,7 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, Card, SegmentedControl, StateChip, TwoFacts } from '@manifest-app/ui'
 import { useCallback, useEffect, useId, useState } from 'react'
+import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, remember, TABS, type Tab } from '../../router.js'
@@ -89,6 +90,7 @@ async function read(
  */
 export function Preview({
   platform,
+  ours,
   project,
   tab: first,
   expire,
@@ -96,6 +98,7 @@ export function Preview({
   timeZone,
 }: {
   platform: Platform
+  ours: Ours
   project: Schemas['Project']
   tab: Tab
   expire: () => void
@@ -123,6 +126,26 @@ export function Preview({
     }
     // `now` is a clock, read once per attempt: never a reason to read again.
   }, [platform, project.id, timeZone, expire, attempt])
+
+  // [WHAT WENT WRONG] (F4 Task 9): the draft's failed attempt, when one of our rounds put it
+  // there, opens that conversation. None of ours did: no button.
+  const [wentWrong, setWentWrong] = useState<string | null>(null)
+  const failedDraft =
+    loaded.state === 'ready' && loaded.addresses.draft?.attempt?.failed === true
+      ? loaded.addresses.draft.attempt.instanceId
+      : null
+  useEffect(() => {
+    setWentWrong(null)
+    if (failedDraft === null) return
+    let live = true
+    ours.conversationFor(project.id, failedDraft).then(
+      (found) => live && setWentWrong(found?.id ?? null),
+      () => undefined,
+    )
+    return () => {
+      live = false
+    }
+  }, [ours, project.id, failedDraft])
 
   const retry = useCallback(() => {
     setLoaded({ state: 'loading' })
@@ -163,7 +186,15 @@ export function Preview({
               className="preview__panel"
             >
               {loaded.addresses[t] === undefined ? null : (
-                <Panel tab={t} address={loaded.addresses[t]} />
+                <Panel
+                  tab={t}
+                  address={loaded.addresses[t]}
+                  wentWrong={
+                    t === 'draft' && wentWrong !== null
+                      ? `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(wentWrong)}`
+                      : null
+                  }
+                />
               )}
             </section>
           ))}
@@ -182,8 +213,17 @@ export function Preview({
   )
 }
 
-/** One address: where it is, what its world is, and the two facts. */
-function Panel({ tab, address }: { tab: Tab; address: Address }) {
+/** One address: where it is, what its world is, and the two facts; a failure's conversation. */
+function Panel({
+  tab,
+  address,
+  wentWrong,
+}: {
+  tab: Tab
+  address: Address
+  /** The conversation whose round put the failed attempt there (F4 Task 9). */
+  wentWrong: string | null
+}) {
   const { env, serving, attempt } = address
   const reaches = env.instance !== null
   return (
@@ -240,6 +280,13 @@ function Panel({ tab, address }: { tab: Tab; address: Address }) {
             // The footnote promises an older version answering while a new one proves itself.
             {...(reaches && attempt.tone !== 'steady' ? {} : { foot: null })}
           />
+        )}
+        {wentWrong === null ? null : (
+          <div className="describe__actions">
+            <Button kind="secondary" {...linkTo(wentWrong)}>
+              {w.whatWentWrong}
+            </Button>
+          </div>
         )}
       </div>
     </div>

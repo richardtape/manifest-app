@@ -105,6 +105,8 @@ describe('useConversation', () => {
       plan: null,
       round: null,
       thread: [],
+      piece: null,
+      line: null,
       steps: [],
       status: 'live',
     })
@@ -184,6 +186,8 @@ describe('useConversation', () => {
       plan: null,
       round: null,
       thread: [],
+      piece: null,
+      line: null,
       steps: [
         { step: 'understanding', state: 'done' },
         { step: 'naming', state: 'now' },

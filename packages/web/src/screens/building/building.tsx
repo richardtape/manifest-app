@@ -34,6 +34,7 @@ export function BuildingScreen({
   intake,
   round,
   thread,
+  purpose = 'building',
   connecting,
   expire,
   now,
@@ -46,6 +47,8 @@ export function BuildingScreen({
   /** Null for the moment between agree and the round's first frame. */
   round: RoundView | null
   thread: Said[]
+  /** What a token minted here is named for: a change's says so (F4 Task 9). */
+  purpose?: 'building' | 'changing'
   /** The page's stream is reopening: "Reconnecting…", quietly. */
   connecting: boolean
   expire: () => void
@@ -60,7 +63,13 @@ export function BuildingScreen({
   const handOver = () =>
     projectId === null
       ? Promise.reject(new OurRefusal('PROJECT_MISSING', null))
-      : handOverToken(platform, ours, { id, title: conversation.title }, projectId)
+      : handOverToken(
+          platform,
+          ours,
+          { id, title: conversation.title },
+          projectId,
+          purpose,
+        )
 
   /** Said, with a reference where something failed; a 401 is the session ending, as everywhere. */
   const failed = (error: unknown, operation: string, retry: () => void) => {

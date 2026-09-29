@@ -127,7 +127,7 @@ function QuestionCard({
 /**
  * A QUESTION WE WENT ON WITH, ONCE NO ANSWER CAN BE TAKEN (built): the ask and the default we
  * built with, and no field, since our server takes an answer only while it builds. A change is
- * F4's moment 8, which the message box's place says is next.
+ * asked in the message box below it (F4's moment 8).
  */
 function WentWith({ ask, fallback }: { ask: string; fallback: string }) {
   return (
@@ -138,15 +138,30 @@ function WentWith({ ask, fallback }: { ask: string; fallback: string }) {
   )
 }
 
-/** Their words while it works: the lead reads them at its next step. */
-function MessageBox({ onMessage }: { onMessage: (words: string) => void }) {
+/**
+ * THEIR WORDS, IN ONE SENTENCE: while it works (the lead reads them at its next step), or, from F4,
+ * the next change once it is built or set aside, and more of what they asked while it waits.
+ */
+export function MessageBox({
+  onMessage,
+  id = 'building-message',
+  label = words.building.thread.messageLabel,
+  hint = words.building.thread.messageHint,
+  send = words.building.thread.send,
+}: {
+  onMessage: (words: string) => void
+  id?: string
+  label?: string
+  hint?: string | undefined
+  send?: string
+}) {
   const [value, setValue] = useState('')
   return (
     <div className="building__message">
       <FormField
-        id="building-message"
-        label={words.building.thread.messageLabel}
-        hint={words.building.thread.messageHint}
+        id={id}
+        label={label}
+        {...(hint === undefined ? {} : { hint })}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         {...countProp(value)}
@@ -161,7 +176,7 @@ function MessageBox({ onMessage }: { onMessage: (words: string) => void }) {
             onMessage(sent)
           }}
         >
-          {words.building.thread.send}
+          {send}
         </Button>
       </div>
     </div>
@@ -171,7 +186,7 @@ function MessageBox({ onMessage }: { onMessage: (words: string) => void }) {
 /**
  * THE CONVERSATION, ON THE LEFT (layout C): their words from moment 3, then what every round
  * said, each earlier round folded into one line; the questions still open; and the message
- * box, until the round is built, when a change arrives next (Decision 16).
+ * box: their words while it works, and once it is built, the next change (F4's moment 8).
  */
 export function Thread({
   description,
@@ -219,7 +234,13 @@ export function Thread({
             ),
           )}
       {built ? (
-        <p className="body-lead">{words.building.thread.changeNext}</p>
+        <MessageBox
+          id="building-next"
+          label={words.change.next}
+          hint={words.change.nextHint}
+          send={words.change.ask}
+          onMessage={onMessage}
+        />
       ) : talking ? (
         <MessageBox onMessage={onMessage} />
       ) : null}

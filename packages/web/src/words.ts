@@ -3,6 +3,25 @@
  * The prototype's words were a starting point; where the walk-through changed one, this is
  * the walk-through's. A screen never writes a sentence of its own.
  */
+
+/** 1 is "next"; 2 to 10 in words; beyond, a number. */
+function ordinal(place: number, capital: boolean): string {
+  const said =
+    [
+      'next',
+      'second',
+      'third',
+      'fourth',
+      'fifth',
+      'sixth',
+      'seventh',
+      'eighth',
+      'ninth',
+      'tenth',
+    ][place - 1] ?? `number ${place}`
+  return capital ? said.charAt(0).toUpperCase() + said.slice(1) : said
+}
+
 export const words = {
   signIn: {
     /** The tab's title, as the prototype names it. */
@@ -393,8 +412,6 @@ export const words = {
       /** The lead reads it at its next step. */
       messageHint: 'We read it at the next step.',
       send: 'Send',
-      /** Decision 16: a change is F4's moment 8. */
-      changeNext: 'Asking for a change arrives next.',
     },
     /** Ours: quietly, while the page's stream reopens. */
     reconnecting: 'Reconnecting…',
@@ -449,9 +466,8 @@ export const words = {
     students: 'Not live yet. This is the address your students will use.',
     notRight: 'Not right? Tell us what to change.',
     askForChange: 'Ask for a change',
-    /** Ours: until F4's Task 9 builds them. */
-    conversationsNext: "This app's conversations arrive next.",
-    changeNext: 'Asking for a change arrives next.',
+    /** Opens the conversation whose round deployed the failed attempt (F4 Task 9). */
+    whatWentWrong: 'What went wrong',
     /** The two facts (TwoFacts), for the chosen address. */
     facts: {
       serving: 'Serving right now',
@@ -474,6 +490,67 @@ export const words = {
       hour: 'an hour ago',
       hours: (n: number) => `${n} hours ago`,
       on: (when: string) => `on ${when}`,
+    },
+  },
+  /**
+   * MOMENT 8, ASKING FOR A CHANGE (F4 Task 9): the walk-through's words, and those Rich approved
+   * with the plan (its *Words proposed for Rich*); ours where neither has any, marked "ours".
+   */
+  change: {
+    title: 'What should change?',
+    lead: "Say it the way you'd say it to a colleague. We'll show you what we'd change before we change anything.",
+    /** Ours: the box's label. */
+    label: 'What should change',
+    ask: 'Ask for it',
+    /** Ours: the press, working. */
+    asking: 'Asking for it',
+    /** Ours: the token or our server said no; nothing was kept. */
+    couldntAsk: "We couldn't ask for it just now. Nothing is lost.",
+    /**
+     * The line (walk-through; "…which is waiting for you" Rich's with the plan): "Waiting for
+     * 'Word count' to finish. It starts by itself.", the title between the two, a link to it.
+     */
+    waitingBefore: "Waiting for '",
+    waitingAfter: (forYou: boolean) =>
+      `' to finish${forYou ? ', which is waiting for you' : ''}. It starts by itself.`,
+    /** Ours: the chip at the top of a waiting conversation (waiting on someone). */
+    waitingChip: 'Waiting its turn',
+    /** Ours: between one conversation ending and the next starting. */
+    startsSoon: 'It starts in a moment.',
+    /** Ours: its place. */
+    place: (place: number) => `${ordinal(place, true)} in line.`,
+    leave: 'Leave the line',
+    /** Ours: what they asked, and the box that adds to it while it waits. */
+    asked: 'What you asked for',
+    addLabel: 'Anything to add?',
+    send: 'Send',
+    /** The change's plan (walk-through; Rich's with the plan). */
+    planTitle: "Here's what we'd change",
+    unchanged: 'Everything else stays as we agreed.',
+    yes: 'Yes, change it',
+    /** Ours: what Yes does. */
+    yesBody:
+      'We add it to the plan we agreed, then change it on your draft address, and you watch. You can leave; it keeps going.',
+    notNow: 'Not now',
+    setAside: 'Set aside. Nothing was changed.',
+    /** Ours: the box on a change set aside, and on a built conversation. */
+    instead: 'What should change instead?',
+    next: 'What should change next?',
+    nextHint: "We'll show you what we'd change before we change anything.",
+    /** The app's conversations (Rich's with the plan). */
+    conversations: {
+      title: 'Conversations',
+      lead: (name: string) =>
+        `Every piece of work on ${name}, and where each one left it.`,
+      /** Ours: each row's chip, one of the five states. */
+      working: 'Working on it',
+      attention: 'Needs you',
+      built: 'Built',
+      setAside: 'Set aside',
+      stopped: 'Stopped',
+      waiting: (place: number) => `Waiting: ${ordinal(place, false)} in line`,
+      /** Ours: nothing on this app yet. */
+      none: 'Nothing has been asked here yet.',
     },
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */

@@ -151,6 +151,9 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     message: record('message') as Ours['message'],
     answer: record('answer') as Ours['answer'],
     stop: record('stop') as Ours['stop'],
+    startChange: never,
+    conversationsOn: never,
+    conversationFor: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)

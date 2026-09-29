@@ -249,6 +249,9 @@ function stage(
     message: record('message') as Ours['message'],
     answer: record('answer') as Ours['answer'],
     stop: record('stop') as Ours['stop'],
+    startChange: () => new Promise(() => undefined),
+    conversationsOn: () => new Promise(() => undefined),
+    conversationFor: () => new Promise(() => undefined),
     events: () => {
       const source = new FakeSource()
       sources.push(source)

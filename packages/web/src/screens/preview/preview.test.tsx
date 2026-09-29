@@ -229,9 +229,9 @@ describe("an app's own pages", () => {
     await waitFor(() => expect(document.title).toBe(PROJECT.name))
   })
 
-  it('its conversations: Conversations current, and the page says it arrives next', async () => {
+  it('its conversations: Conversations current, and the page is the app’s conversations (F4 Task 9)', async () => {
     await open(`/apps/${SLUG}/conversations`)
-    expect(await screen.findByText(w.conversationsNext)).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Conversations' })).toBeTruthy()
     await waitFor(() =>
       expect(rail().querySelector('[aria-current="page"]')?.textContent).toBe(
         w.rail.conversations,
@@ -240,14 +240,16 @@ describe("an app's own pages", () => {
     expect(rail().querySelector('.mf-rail__over')?.textContent).toBe(PROJECT.name)
   })
 
-  it('Ask for a change goes to the app’s change page, which says it arrives next', async () => {
+  it('Ask for a change goes to the app’s change page (F4 Task 9)', async () => {
     await open(`/apps/${SLUG}`)
     await ready()
     expect(screen.getByText(w.notRight)).toBeTruthy()
     const ask = screen.getByRole('link', { name: w.askForChange })
     expect(ask.getAttribute('href')).toBe(`/apps/${SLUG}/change`)
     await press(ask)
-    expect(await screen.findByText(w.changeNext)).toBeTruthy()
+    expect(
+      await screen.findByRole('heading', { name: 'What should change?' }),
+    ).toBeTruthy()
     expect(window.location.pathname).toBe(`/apps/${SLUG}/change`)
   })
 
@@ -373,6 +375,42 @@ describe('the two facts', () => {
       facts.getByText("Didn't start, 4 minutes ago. Nobody lost anything."),
     ).toBeTruthy()
     expect(s.called('listIncidents')).toEqual([[ID.sandbox]])
+  })
+
+  /** Our server answers which conversation's round deployed an instance, or 404. */
+  const answering = (id: string | null) => {
+    const fetched = vi.fn(async (url: string) =>
+      url === `/api/apps/${PROJECT.id}/instances/i-2/conversation`
+        ? id === null
+          ? new Response(JSON.stringify({ error: { code: 'NOT_FOUND' } }), {
+              status: 404,
+            })
+          : new Response(JSON.stringify({ id }), { status: 200 })
+        : new Response(null, { status: 204 }),
+    )
+    vi.stubGlobal('fetch', fetched)
+    return fetched
+  }
+
+  it('[What went wrong] on the failed draft attempt opens the conversation whose round deployed it (F4 Task 9)', async () => {
+    answering('c-7')
+    await open(`/apps/${SLUG}`)
+    await ready()
+    const link = await within(panel()).findByRole('link', { name: 'What went wrong' })
+    expect(link.getAttribute('href')).toBe(`/apps/${SLUG}/conversations/c-7`)
+  })
+
+  it('when none of ours deployed it, there is no [What went wrong]', async () => {
+    const fetched = answering(null)
+    await open(`/apps/${SLUG}`)
+    await ready()
+    await waitFor(() =>
+      expect(fetched.mock.calls.map((c) => c[0])).toContain(
+        `/api/apps/${PROJECT.id}/instances/i-2/conversation`,
+      ),
+    )
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(within(panel()).queryByRole('link', { name: 'What went wrong' })).toBeNull()
   })
 
   it('the same version, when the one serving was the last to go there', async () => {

@@ -18,9 +18,16 @@ export const CAPABILITIES: Schemas['MintTokenRequest']['capabilities'] = [
   'agent:session',
 ]
 
-export function mintRequest(title: string): Schemas['MintTokenRequest'] {
+/**
+ * THE TOKEN'S NAME: the conversation it is for. A change's names what they asked (F4 Task 9:
+ * "Changing — <their words>"), cut to the platform's 64.
+ */
+export function mintRequest(
+  title: string,
+  purpose: 'building' | 'changing' = 'building',
+): Schemas['MintTokenRequest'] {
   return {
-    name: `Building — ${title}`.slice(0, 64),
+    name: `${purpose === 'changing' ? 'Changing' : 'Building'} — ${title}`.slice(0, 64),
     capabilities: CAPABILITIES,
     expiresInDays: 7,
   }
@@ -36,10 +43,11 @@ export async function handOverToken(
   ours: Ours,
   conversation: { id: string; title: string },
   projectId: string,
+  purpose: 'building' | 'changing' = 'building',
 ): Promise<void> {
   const minted = await platform.mintToken(
     projectId,
-    mintRequest(conversation.title),
+    mintRequest(conversation.title, purpose),
     crypto.randomUUID(),
   )
   await ours.handProject(conversation.id, { projectId, token: minted.secret })

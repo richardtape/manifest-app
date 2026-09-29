@@ -4,6 +4,8 @@ import { signInHref, signOut } from './auth.js'
 import { createOurs, type Ours } from './ours/api.js'
 import type { Platform } from './platform/api.js'
 import { linkTo, navigate, useRoute } from './router.js'
+import { AskForChange } from './screens/change/ask.js'
+import { AppConversations } from './screens/change/conversations.js'
 import { Describing } from './screens/describe/describe.js'
 import { Preview } from './screens/preview/preview.js'
 import { useApp } from './screens/preview/use-app.js'
@@ -160,21 +162,30 @@ export function App({
         <Preview
           key={lookup.project.id}
           platform={platform}
+          ours={ours}
           project={lookup.project}
           tab={route.tab}
           expire={expire}
           {...(now === undefined ? {} : { now })}
           {...(timeZone === undefined ? {} : { timeZone })}
         />
+      ) : route.name === 'app-change' ? (
+        <AskForChange
+          key={lookup.project.id}
+          platform={platform}
+          ours={ours}
+          project={lookup.project}
+          expire={expire}
+        />
       ) : (
-        <>
-          <h1 className="page-title">{lookup.project.name}</h1>
-          <p className="body-lead">
-            {route.name === 'app-change'
-              ? words.preview.changeNext
-              : words.preview.conversationsNext}
-          </p>
-        </>
+        <AppConversations
+          key={lookup.project.id}
+          ours={ours}
+          project={lookup.project}
+          expire={expire}
+          now={now ?? (() => new Date())}
+          timeZone={timeZone}
+        />
       )
   else if (route.name === 'new' || route.name === 'conversation') {
     const from = new URLSearchParams(here.split('?')[1] ?? '').get('from') ?? undefined

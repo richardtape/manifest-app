@@ -407,7 +407,10 @@ describe('Your apps cannot be read (Review Focus 2)', () => {
     expect(screen.queryByText(words.unreachable.body)).toBeNull()
     expect(screen.getByRole('button', { name: words.refused.button })).toBeTruthy()
     expect(document.body.textContent).not.toContain('INTERNAL')
-    expect(warned.flat().join(' ')).toMatch(/INTERNAL.*500|500.*INTERNAL/)
+    // Said in the notice's effect, which may run after its words are on the page.
+    await waitFor(() =>
+      expect(warned.flat().join(' ')).toMatch(/INTERNAL.*500|500.*INTERNAL/),
+    )
     vi.restoreAllMocks()
   })
 })
