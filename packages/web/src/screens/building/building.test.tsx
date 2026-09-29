@@ -561,6 +561,13 @@ const CARDS: [
     [[words.building.carryOn, 'build', ['c-1']]],
   ],
   [
+    "sign-in refused on Manifest's side (FE-37)",
+    { kind: 'refused', code: 'SIGN_IN_REFUSED' },
+    words.building.needs.signInRefused,
+    true,
+    [[words.building.carryOn, 'build', ['c-1']]],
+  ],
+  [
     'a refusal we do not name',
     { kind: 'refused', code: 'INTERNAL' },
     words.refused.body,
@@ -605,6 +612,11 @@ describe('what a round needs of them: one card each', () => {
     expect(screen.getByText(words.building.chip.waitingOn.platform)).toBeTruthy()
     s.state(round({ status: 'needs-you', needs: { kind: 'unreachable', what: 'model' } }))
     expect(screen.getByText(words.building.chip.waitingOn.model)).toBeTruthy()
+    // FE-37: a sign-in the IdP refuses is Manifest's to put right, never theirs.
+    s.state(
+      round({ status: 'needs-you', needs: { kind: 'refused', code: 'SIGN_IN_REFUSED' } }),
+    )
+    expect(screen.getByText(words.building.chip.waitingOn.platform)).toBeTruthy()
     s.state(round({ status: 'needs-you', needs: { kind: 'moves' } }))
     expect(screen.getByText(words.building.chip.needsYou)).toBeTruthy()
   })

@@ -341,6 +341,9 @@ export const words = {
         `We can't add ${what} yet: it needs a piece we can't install. Everything else is built.`,
       /** Ours, after Rich's for the plan: the model is not ours to switch on. */
       waitingOnAdmin: 'Building is waiting on a Manifest administrator. Nothing is lost.',
+      /** Ours (FE-37): the draft answers, but signing in to it is refused on Manifest's side. */
+      signInRefused:
+        "It started and answered, but signing in to it is refused on Manifest's side. That's Manifest's to put right, not yours. Nothing is lost.",
       /** Ours: after Stop. */
       stopped:
         'Stopped. Nothing is lost: your draft address keeps whatever was last put there.',

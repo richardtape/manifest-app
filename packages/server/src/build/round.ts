@@ -22,6 +22,7 @@ import type { Members } from '../platform/members.js'
 import type { ConversationTokens, Projects } from '../platform/project.js'
 import { PLATFORM_TIMEOUT_MS, PlatformRefusal } from '../platform/refusal.js'
 import type { Releases, Sandbox } from '../platform/releases.js'
+import type { SignIn } from '../platform/sign-in.js'
 import type { Secrets } from '../platform/secrets.js'
 import type { Change, Sent, Source } from '../platform/source.js'
 import type { ProjectStream, Watch } from '../platform/stream.js'
@@ -85,6 +86,8 @@ export interface RoundDeps {
   projects: Projects
   trace: Trace
   now: () => Date
+  /** Whether the draft's sign-in starts (FE-37): the IdP took the app's request. */
+  signIn: SignIn
   /** The build's and the instance's waits (`WAITS`); a test shortens them. */
   waits?: { pollMs: number; buildMs: number; draftMs: number }
 }
@@ -1055,6 +1058,22 @@ export function createRounds(deps: RoundDeps): Rounds {
     // Their words while it built: acted on now, in the same session.
     if (heardIn(store, live.conversation.id, live.run.round).length > d.heard)
       return backToPages(live, live.run.last, false)
+    // FE-37: "It started and answered" only if signing in to it starts too. A refusal is the
+    // platform's to put right (the IdP refused the app's request), never the lead's.
+    const signIn = await deps.signIn.starts(sandbox.url)
+    record(
+      live,
+      'signIn',
+      'sandbox',
+      signIn === 'ok'
+        ? null
+        : signIn === 'refused'
+          ? 'SIGN_IN_REFUSED'
+          : 'SIGN_IN_UNKNOWN',
+    )
+    if (live.stopped) return STOPPED
+    if (signIn === 'refused')
+      return needs({ kind: 'refused', code: 'SIGN_IN_REFUSED' }, 'SIGN_IN_REFUSED')
     return { kind: 'done' }
   }
 

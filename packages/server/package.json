@@ -7,7 +7,7 @@
     "./progress": "./src/api/progress.ts"
   },
   "scripts": {
-    "dev": "tsx watch --clear-screen=false --exclude '../web/**' src/main.ts",
+    "dev": "NODE_OPTIONS=--use-system-ca tsx watch --clear-screen=false --exclude '../web/**' src/main.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

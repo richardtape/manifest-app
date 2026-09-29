@@ -142,6 +142,7 @@ function setUp(script: unknown[] = []) {
         ...base,
         sessions,
         projects,
+        signIn: { starts: async () => 'ok' },
         source: {
           tree: async () => ({
             commitSha: BASE,

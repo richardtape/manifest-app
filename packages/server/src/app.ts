@@ -18,6 +18,7 @@ import {
   type Answered,
   type Model,
 } from './model/client.js'
+import { platformSignIn, type SignIn } from './platform/sign-in.js'
 import { walkthroughModel } from './model/walkthrough.js'
 import { platformAgentSessions, type AgentSessions } from './platform/agent-sessions.js'
 import { platformAuthoring, type Authoring } from './platform/authoring.js'
@@ -161,6 +162,7 @@ export function buildServer(
         trace: storeTrace(store),
         now: () => new Date(),
         modelFor: roundModelFor(config),
+        signIn: roundSignInFor(config),
       }))
   )({ store, hub, work, tokens })
   // A RESTART (Review Focus 3): a round that was working, or waiting on a question, lost its
@@ -243,6 +245,14 @@ export function roundModelFor(config: Config): RoundDeps['modelFor'] {
       onAnswer,
     })
   }
+}
+
+/**
+ * EACH MODE'S SIGN-IN CHECK (FE-37). Through the edge, the draft's own `/login` followed to the
+ * IdP. Against the mock, which has no IdP and whose drafts answer nothing, it starts.
+ */
+export function roundSignInFor(config: Config): SignIn {
+  return config.mode === 'mock' ? { starts: async () => 'ok' } : platformSignIn()
 }
 
 /**

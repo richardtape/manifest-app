@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { words } from '../../words.js'
 import { monthResetsAt, whenWords } from '../describe/model.js'
 import { SupportReference, useReported } from '../reference.js'
-import { ADMIN, money } from './model.js'
+import { ADMIN, money, SIGN_IN_REFUSED } from './model.js'
 
 /** What a card's buttons do: Carry on, Try again, Try a different way; Stop here. */
 export interface Presses {
@@ -142,6 +142,12 @@ function needCard(
         <NeedsCard tone="waiting" said={said.cannot(needs.what)} reference={reference} />
       )
     case 'refused':
+      if (needs.code === SIGN_IN_REFUSED)
+        return (
+          <NeedsCard tone="waiting" said={said.signInRefused} reference={reference}>
+            {carryOn(presses)}
+          </NeedsCard>
+        )
       return ADMIN.has(needs.code) ? (
         <NeedsCard tone="waiting" said={said.waitingOnAdmin} reference={reference}>
           {carryOn(presses)}

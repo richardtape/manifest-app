@@ -13,6 +13,8 @@ export const money = (usd: number): string =>
 
 /** The refusals that wait on an administrator, as the plan screen reads them. */
 export const ADMIN = new Set(['MODEL_NOT_AVAILABLE', 'MODEL_GATEWAY_REFUSED'])
+/** FE-37: the IdP refused the draft's sign-in: Manifest's to put right. */
+export const SIGN_IN_REFUSED = 'SIGN_IN_REFUSED'
 
 /** The five states only: where the round is, and who has it. */
 export function chipOf(round: RoundView | null): {
@@ -42,6 +44,8 @@ export function chipOf(round: RoundView | null): {
         return { state: 'waiting', label: chip.waitingOn[needs.what] }
       if (needs?.kind === 'refused' && ADMIN.has(needs.code))
         return { state: 'waiting', label: chip.waitingOn.admin }
+      if (needs?.kind === 'refused' && needs.code === SIGN_IN_REFUSED)
+        return { state: 'waiting', label: chip.waitingOn.platform }
       return { state: 'attention', label: chip.needsYou }
   }
 }

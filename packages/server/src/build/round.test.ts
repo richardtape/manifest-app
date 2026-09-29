@@ -192,6 +192,8 @@ interface Options {
   waits?: { pollMs: number; buildMs: number; draftMs: number }
   /** What each session lists: a confidential project's lists only the on-campus model. */
   models?: string[]
+  /** Whether the draft's sign-in starts, each time it is checked (FE-37). */
+  signIn?: (n: number) => 'ok' | 'refused' | 'unknown'
 }
 
 function harness(options: Options, file?: string, store0?: Store) {
@@ -400,6 +402,7 @@ function harness(options: Options, file?: string, store0?: Store) {
       return { ready: Promise.resolve(), close: () => void (watch.closed = true) }
     },
   }
+  let signInChecks = 0
   let events = 0
   /** A platform event on the round's open stream. */
   const emit = (type: string, detail: Record<string, unknown>) => {
@@ -421,6 +424,13 @@ function harness(options: Options, file?: string, store0?: Store) {
     members,
     stream,
     projects,
+    signIn: {
+      starts: async (url) => {
+        signInChecks++
+        did.push(`signIn ${url}`)
+        return options.signIn?.(signInChecks) ?? 'ok'
+      },
+    },
     trace: storeTrace(store),
     now: () => new Date(),
     ...(options.waits === undefined ? {} : { waits: options.waits }),
@@ -1397,6 +1407,44 @@ describe('the stream (Decision 15; Review Focus 5)', () => {
     await untilStatus(h, id, 'needs-you')
     expect(viewOf(h, id)?.needs).toEqual({ kind: 'unreachable', what: 'platform' })
     expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+  })
+})
+
+describe("the draft's sign-in starts (FE-37, found by Rich's click)", () => {
+  it('Checking it answers also sees sign-in start: refused is needs you, waiting on Manifest, with a reference, never built; Carry on checks again', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      autoBuild: true,
+      signIn: (n) => (n === 1 ? 'refused' : 'ok'),
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'refused', code: 'SIGN_IN_REFUSED' })
+    expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(h.did).toContain(`signIn ${SANDBOX.url}`)
+    expect(stateOf(h, id)).not.toBe('built')
+    expect(h.ended).toEqual([])
+
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN)
+    await untilStatus(h, id, 'done')
+    expect(stateOf(h, id)).toBe('built')
+    expect(h.did.filter((d) => d.startsWith('signIn'))).toHaveLength(2)
+    expect(h.did.filter((d) => d.startsWith('startBuild'))).toHaveLength(1)
+  })
+
+  it('a sign-in it cannot judge (no redirect to the IdP, or our own fetch failing) never holds the round', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      autoBuild: true,
+      signIn: () => 'unknown',
+    })
+    await untilStatus(h, id, 'done')
+    expect(stateOf(h, id)).toBe('built')
+    // Said in the trace, so a check that can never reach the draft is seen, not silent.
+    const traced = h.store
+      .listTrace(h.store.latestRun(id)!.id)
+      .map((t) => t.entry as { operation?: string; code?: string | null })
+      .filter((e) => e.operation === 'signIn')
+    expect(traced).toEqual([expect.objectContaining({ code: 'SIGN_IN_UNKNOWN' })])
   })
 })
 
