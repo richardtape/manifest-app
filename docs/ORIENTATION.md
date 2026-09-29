@@ -36,7 +36,8 @@ says which plan is current. This file states where things stand and the rules. I
     and says *"Your app now keeps confidential data. We carried on."*; his card only when the model is gone.
 - **Open for Rich** (sitting 7's entry has each): *Trying out* offers *[Open it in a new tab]* while its words say
   nobody can sign in there yet; a timeout's own words (*"…is taking longer than usual"*) and streaming the model's
-  answers; whether the two acceptance projects on 7100 are kept usable after the platform moves to real GitHub; a
+  answers; (the two acceptance projects on 7100 are gone: Rich had them truncated by the platform's launch-path sitting 2,
+  2026-09-29); a
   negative control's re-run log that the tool's classifier would not let us read. **F4's deferred minors** (the
   review's eleven, and F3's) are in the plan's sitting 7 entry and the ledger.
 - **Done so far:**
