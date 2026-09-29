@@ -4,82 +4,70 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-29, late morning: F4's sittings 1 to 6 done; F3 executed)*:
+**Where things stand** *(2026-09-29, afternoon: F4 executed)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F4's sitting 7, Task 11, the acceptance, alone and last.** The plan is
-  [`plans/2026-09-28-f4-seeing-and-changing-it.md`](./plans/2026-09-28-f4-seeing-and-changing-it.md), approved by Rich:
-  one agent, natively (superpowers:executing-plans).
-  - **Its order:** the whole-branch review (one fresh reviewer, read-only) **dispatched at the sitting's start**, so its
-    fixes land before the real platform; Step 0 (M6: re-read the contract, re-run typecheck); Step 1,
-    `scripts/check-seeing.sh` against the mock **from a fresh dev database**; Step 2, **the real platform** (ask Rich
-    first, and tell the platform session: §8); Step 3, **Rich's click**. **F4 is executed only when Step 3 is done.**
-  - **Read first:** the plan's *Decided by Rich* (with *Words proposed for Rich*: sitting 6's row is new, and Rich has
-    not yet seen it), Global Constraints, Review Focus, **sittings 1 to 6's dated entries**, then Task 11 and its
-    **(S6)** note. Corrections are marked **(S1)** to **(S6)**: trust those over the unmarked text around them.
-  - The ledger is `.superpowers/sdd/2026-09-28-f4-seeing-and-changing-it/progress.md` (git-ignored): every run and
-    ruling with its cost, and the controls. **The whole-branch review weighs its `Ruling:` lines** (about a hundred
-    across six sittings) and the deferred minors from F3.
-- **What sitting 6 built** (`c18b968`; its dated entry has each, and nineteen rulings): **moment 9, trying-out**, all in
-  the person's own session.
-  - **[Put this version on trying-out]** at the building screen's end (*"Ready on your draft address."*, **[Try it]**)
-    and beside the Preview's draft facts; *"already there"* is ours (M3); no button when the draft serves nothing.
-  - **The question** fixes the version at the press; **[Put it there]** deploys exactly that release, 120 s deadline.
-  - **The four stations** tick on the new instance (the id not listed at the press), read every second; the end is
-    `deploy`'s answer: Rich's words, or *It never answered* with trying-out's two facts and **[What went wrong]** (a
-    fix conversation; also on the Preview's *Trying out* tab).
-  - **A secret with no value there**: `listAppSecrets`' `declared && !set`, each named by our question
-    (**`GET /api/apps/:projectId/secrets`**, never a value); the value to `setAppSecret` alone. **Step-up** (never
-    expected) returns to the same question. The Preview reads again while an attempt is under way.
-  - **The walk found five layout defects** no unit test could (fixed; the dated entry has them).
-- **What sittings 1 to 5 built** (their dated entries have each): the measurements (a staging deploy from the session in
-  5–9 s, no step-up, listed while it runs); `SegmentedControl`, `Timeline`, Rich's four F3 decisions, names people read;
-  moment 7 (the Preview, FE-38 written); the line and the change's plan (*Yes* commits `docs/plan.md` before round
-  *n+1*); the lead on an app that exists (`unread`), Rich's *"stop and ask first"* for `models_withdrawn`, and moment
-  8's screens.
-- **What Rich decided for F4, 2026-09-28** (the plan has each): laptop staging only; *Trying out* says UBC's words
-  everywhere, his sentence; **a change is agreed before it is built** (built); his four F3 items (built); names people
-  read (built); the laptop sentence (approved and built). **Still his to see:** sitting 6's own words (*Words proposed
-  for Rich*), at his click.
-- **FE-35 and FE-36 are DECIDED** (Spec action 10) and **built** by the platform's sitting 11a: under the default
-  `capable` setting a confidential session lists `default-chat-onprem`, `default-chat-onprem-reasoning`, then
-  `default-chat-large`; **`models_withdrawn`** ends a session holding a model its project no longer allows (built:
-  sitting 5); a delegated token on a confidential project's staging or production `listIncidents` is **`403
-  INCIDENT_LOG_CONFIDENTIAL`**, never read another way. **The contract: 1.4.0, 66 operations, 128 codes** (manifest
-  `16c3357`: declared error lists only since `90b8e81`). **Our mock has `MANIFEST_MOCK_CONFIDENTIAL=1`**; our 7102 mock has not reloaded it.
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F5 — Going live, the next plan, written with Rich** (moments 10–15:
+  the clocks, the checklist in our words, the dry run, waiting on sign-off, step-up, the address handed over).
+  [`plans/roadmap.md`](./plans/roadmap.md) says so. Nothing is built for it.
+  - **How:** superpowers:brainstorming, then writing-plans, as F4 was written (one session, with Rich, then his
+    approval). Ask Rich first whether F5 waits for **the platform's next plan, the launch path** (FE-6, FE-25), which
+    `manifest-63` began writing on 2026-09-29, so F5 can argue from what it will build.
+  - **Read first:** the walk-through's moments 10–15; `api-findings.md`'s table rows dated 2026-09-29 (the platform's
+    close, its recommendations, Rich's two decisions, real GitHub); F4's plan, sitting 7's dated entry, and its *Open
+    for Rich*.
+- **What F4 built** (moments 7–9; the plan's dated entries have each): the app's own pages and the Preview's three
+  tabs, *Try it as*, the two facts; a change as its own conversation, **the line** (one at a time, the next starting
+  by itself), the change's plan agreed and committed into `docs/plan.md` before its round, the lead on an app that
+  exists (`unread`); trying-out from the person's own session (the version fixed at the question, four stations, a
+  staging secret from the browser to the platform alone).
+- **What sitting 7 did** (`manifest-app-9d`): the whole-branch review (no Critical; its two Importants fixed: **[Stop
+  here] on every card that holds the app**, and **one fix conversation per incident**); `scripts/check-seeing.sh`
+  (8/8, four negative controls); the real platform at Rich's word, walked end to end (one defect: a copied title);
+  **Rich's click**, on an app of his own, found two more, each fixed test-first:
+  - **a round's model call was cut at 60 s** and said *"We can't reach the model…"*: a round now waits five minutes
+    (`ROUND_MODEL_TIMEOUT_MS`, `model/client.ts`);
+  - **`models_withdrawn` after the lead's own commit made his app confidential**, though the capable model stayed
+    allowed: **Rich decided** the round carries on by itself when a new session still lists the model it was using,
+    and says *"Your app now keeps confidential data. We carried on."*; his card only when the model is gone.
+- **Open for Rich** (sitting 7's entry has each): *Trying out* offers *[Open it in a new tab]* while its words say
+  nobody can sign in there yet; a timeout's own words (*"…is taking longer than usual"*) and streaming the model's
+  answers; whether the two acceptance projects on 7100 are kept usable after the platform moves to real GitHub; a
+  negative control's re-run log that the tool's classifier would not let us read. **F4's deferred minors** (the
+  review's eleven, and F3's) are in the plan's sitting 7 entry and the ledger.
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md)).
   - **F1 is executed** (2026-09-27): sign-in, the shell, *Your apps*, and a profile.
   - **F2 is executed** (2026-09-28): moments 3–5, describe it to the plan committed as `docs/plan.md`.
-  - **F3 is executed** (2026-09-28): moment 6. Rich clicked moments 3–6 on the real platform. The whole-branch review's
-    minors are deferred (its sitting 7 entry, and the ledger).
-  - **F4 is written and approved** (2026-09-28); **sittings 1 to 6 are done** (1 in `manifest-app-bb`; 2 and 3 in
-    `manifest-app-07`; 4 and 5 in `manifest-app-f8`; 6 in `manifest-app-56`). Its whole-branch review is sitting 7's.
+  - **F3 is executed** (2026-09-28): moment 6. Rich clicked moments 3–6 on the real platform.
+  - **F4 is executed** (2026-09-29): moments 7–9, seven sittings (`manifest-app-bb`, `-07`, `-f8`, `-56`, `-9d`). Rich
+    clicked moments 7–9 on the real platform.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
-  - **Its sitting 12, the acceptance, is under way** (`manifest-8b`, its LAST sitting): the resets Rich approved (7100 was
-    down during our sitting 6), then its full suite at its close, **which truncates 7100**. **Its review's fix pass committed a
-    contract change during our sitting 6, `16c3357`** (declared error lists only: `409 PROJECT_ARCHIVED` declared on
-    the 23 operations an archived project refuses, `deploy`, `setAppSecret` and `mintToken` among them;
-    `AI_CATALOGUE_DISABLED` on the two session ends; 1.4.0, 66, 128; the mock unchanged): our typecheck and 1222 tests
-    pass against it, twice (`api-findings.md` has the row). **It messages us before any truncation or restart of 7100, at any
-    contract or mock commit, and at its close.** Its Docker tier boots control planes on **7188 and 7189**: never use
-    those. Find its live name with `ListAgents`.
-  - **The laptop's on-premise names are `qwen3.8:27b`**: `default-chat-large`'s fallback answers as
-    `ollama_chat/qwen3.8:27b`, and a cold first call takes about 12 s.
-  - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`), read from `session.models`, never
-    assumed. A fallback answer says so in `x-litellm-attempted-fallbacks: 1`.
-  - **Our findings FE-26 to FE-32 are carried; FE-35 and FE-36 are decided and built; FE-33, FE-34 and FE-38 are
-    written and not carried; FE-37 is fixed.** Rich carries what he decides.
+  - **Its sitting 12 closed at `e824956` (2026-09-29): the front-end enablement plan is EXECUTED.** The contract is
+    **1.4.0, 66 operations, 128 codes**, unchanged since `16c3357`. **Its next session, `manifest-63`**, is writing the
+    next platform plan: the launch path (FE-6, FE-25), with FE-33, FE-34, FE-38, member removal and the key trim. It
+    messages us before any commit to `packages/contract` or `packages/mock`.
+  - **7100 is moving to real GitHub.** Rich set `MANIFEST_SOURCE_DRIVER=github` in manifest's `.env`; that plan's Task
+    1 restarts the control plane onto driver 2. Then every driver-1 project answers `409 SOURCE_PROVIDER_MISMATCH`
+    (F4's `my-weekly-thoughts` and `notes-and-answers` among them), and **anything created through 7100 makes a real
+    private repository on github.com that nothing deletes**. A real-platform walk from then on is Rich's word, every
+    time. **Never restart the control plane yourself.**
+  - **Findings:** FE-26 to FE-32 carried; FE-35 and FE-36 decided and built, **FE-36 changing** (Rich, 2026-09-29: a
+    key trimmed in place, not the session ended); **FE-11 decided** (removing a member revokes their tokens and ends
+    their sessions); **FE-33, FE-34 and FE-38: the platform recommends our option (a) for each**, pending Rich; FE-37
+    fixed. Rich carries what he decides.
+  - **The laptop's on-premise names are `qwen3.8:27b`**; the capable model is `default-chat-large`
+    (`openai/gpt-6-luna`), read from `session.models`, never assumed. A fallback says so in
+    `x-litellm-attempted-fallbacks: 1`.
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
-- **The machine** *(2026-09-29, late morning)*:
+- **The machine** *(2026-09-29, afternoon)*:
   - **Our server on 7105 is in mock mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102** (node
-    28239). **Its dev database** is sitting 5's, now holding sitting 5's and 6's walks (sitting 6's left built fix
-    conversations on the mock's project); **sitting 7's `check-seeing.sh` starts from a fresh one** (move
-    `packages/server/.data/app.sqlite` aside with our server stopped; `app-before-f4s5.sqlite` is the one before).
-  - Sitting 6's throwaway mock on 7195 is stopped.
+    93237, restarted from current source at sitting 7). **Its dev database** is sitting 7's fresh one, with its runs
+    (`check-seeing.sh` sets its third change aside each run, so the mock's app is left free); `app-before-f4s7.sqlite`
+    is the one before.
+  - **The control plane on 7100 is the platform session's.** Query it (`lsof -nP -iTCP:7100 -sTCP:LISTEN`), ask Rich,
+    and tell the platform session before using it.
   - **Our dev script trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA lives.
-  - **The control plane on 7100** is the platform session's. Query it before using it
-    (`lsof -nP -iTCP:7100 -sTCP:LISTEN`), ask Rich, and tell the platform session.
   - To switch to the edge: stop our server's whole process tree (§7's trap), then `pnpm dev`. To switch back: the same,
     then `pnpm dev:mock`.
 - **How to run it** is §6, below.
@@ -90,7 +78,7 @@ says which plan is current. This file states where things stand and the rules. I
     SegmentedControl's arrow keys, tab order, `controls` and `label`.
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
     `screens/building/` is moment 6, `screens/preview/` moment 7 (its facts pure, in `facts.ts`), `screens/change/`
-    moment 8, **`screens/trying-out/` moment 9** (`put.tsx`; its stations and the question's version pure, in
+    moment 8, `screens/trying-out/` moment 9 (`put.tsx`; its stations and the question's version pure, in
     `stations.ts`), and `ours/pretend-people.ts` the pretend people (FE-3). The router's `remember` keeps an address
     without a navigation. **Only `src/auth.ts` names an `/auth/` path** (sign in, sign out, step-up).
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2).
@@ -98,20 +86,22 @@ says which plan is current. This file states where things stand and the rules. I
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
       the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`, its
       claims kept in the hub (`events.ts`), which the line reads. The folds: `intake-state.ts`, `round-state.ts`,
-      `piece-state.ts` and `line-state.ts`. `api/build.ts` is the building routes, **`api/apps.ts`** an app's
-      conversations and **the secrets we asked for** (names and questions), and `api/plan.ts` a plan.
-    - `model/` asks a model for structured output only, and says which model answered. `agents/` are the agents,
-      each a schema and a prompt: the three intake agents, the plan, the change planner, the lead, the CWL specialist
-      and the explaining agent.
+      `piece-state.ts` and `line-state.ts`. `api/build.ts` is the building routes, `api/apps.ts` an app's
+      conversations, the secrets we asked for, and **the fix under way for an incident**, and `api/plan.ts` a plan.
+    - `model/` asks a model for structured output only, and says which model answered. **A round's calls wait five
+      minutes** (`ROUND_MODEL_TIMEOUT_MS`), the intake's and the plan's 60 s. `agents/` are the agents, each a schema
+      and a prompt: the three intake agents, the plan, the change planner, the lead, the CWL specialist and the
+      explaining agent.
     - **`runtime/` is our own agent framework**: it knows no platform. `build/` holds the lead's guards and moves,
-      `round.ts`, the round of work, and `line.ts`, the line.
+      `round.ts`, the round of work (it renews a session the platform withdrew, once a leg), and `line.ts`, the line.
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1222 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (1229 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
-      (F3's, 12): each in mock mode, `pnpm mock` and `pnpm dev:mock` running. Sitting 7 adds `check-seeing.sh`.
+      (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**: each in mock mode, `pnpm mock` and `pnpm dev:mock` running.
+      Run `check-seeing.sh` first, while the mock's app is free.
 
 ---
 
@@ -260,6 +250,7 @@ bash scripts/check-slice.sh                                     # the headless a
 MODE=edge bash scripts/check-slice.sh                           # the same, through the edge
 bash scripts/check-describing.sh                                # F2's acceptance: our API as the browser drives it (pnpm mock and pnpm dev:mock first)
 bash scripts/check-building.sh                                  # F3's acceptance: a round to built, and Stop, read from the trace (the same)
+bash scripts/check-seeing.sh                                    # F4's acceptance: the line, the change's plan, Stop freeing the app (the same; run it first)
 ```
 
 **Installing:**
@@ -408,6 +399,31 @@ bash scripts/check-building.sh                                  # F3's acceptanc
   (`manifest_session=mock-session`) and an `Origin` for a change; any other session value is `401`.
 - **Zod strips a key its schema does not name.** A negative control that makes a model's extra field matter (a `slug`
   it was told not to write) must change the schema **and** the code that reads it, or it stays green (F4 sitting 2).
+- **A model call's deadline is a guess until the real platform answers it.** The lead writes whole files: at Rich's
+  click one call wrote 9,564 tokens in 68.9 s, and our 60-s deadline cut it off and said *"We can't reach the model"*,
+  though the gateway answered and billed it. A round's calls now wait five minutes (`ROUND_MODEL_TIMEOUT_MS`); a
+  timeout still says *unreachable* (F4 sitting 7). The platform session can read LiteLLM's spend log: ask it.
+- **Never edit the server someone is clicking on without telling them first**, and make the change one edit: `tsx
+  watch` restarts on each save, and Rich's press landed between two edits of one fix (a constant used before its
+  import): `INTERNAL`, a reference, and a restart under him (F4 sitting 7).
+- **The lead's own commit can raise an app's classification mid-round** (`internal` to `confidential`, with
+  `ai.models: [default-chat-onprem]`), and the platform then ends **every** live session on the project
+  (`models_withdrawn`), even when the capable model stays allowed. The round renews once a leg (`5a1aa1f`); the
+  platform's next plan trims the key instead.
+- **A quoted example in a prompt is copied.** The change planner titled an unrelated change *"Word count"*, its
+  prompt's own example (F4 sitting 7). Say what a field is for, and give no example the model can copy whole.
+- **`innerText` returns CSS's `text-transform`**: the facts' overline reads *"SERVING RIGHT NOW"*. A walk that matches
+  words case-sensitively misses it; `textContent` does not transform.
+- **`Environment.instance` is the Instance itself, not its id**: compare `env.instance.releaseId`.
+- **A negative control's run stays in the dev database.** A script check that reads the whole trace table goes red
+  after a control, for good: scope each check to the conversations its own run made (`check-seeing.sh`'s check 5). A
+  control that sends a round's deploy to staging leaves the round at needs-you holding the mock's app: clear it
+  through our API (*Stop*, then *Not now* on what waited) before the next run.
+- **The tool's safety classifier can refuse a read it takes for a deploy** (it refused a control's log as
+  *"Production Deploy"*). Do not route around it by another tool: say so to Rich, and let him decide.
+- **Real GitHub on 7100** (from the platform's next plan's Task 1): a driver-1 project answers `409
+  SOURCE_PROVIDER_MISMATCH`, and a project made through 7100 is a real private repository on github.com that nothing
+  deletes. A walk that makes projects there needs Rich's word, every time.
 
 ## 8. Working with the platform session, and other agents
 
@@ -416,7 +432,8 @@ enablement plan there, one sitting per session. We share the machine, the contro
 
 - **Finding it.** Call `ListAgents`. Load `SendMessage` with `ToolSearch` if it is deferred. The platform session is
   the live session named `manifest-…` (it was `manifest-de`, `manifest-b1`, `manifest-82`, then `manifest-7c`, which F3's sitting 7 found stopped by Rich
-  and back at its close, then `manifest-c3` for its sitting 11a), or the one whose messages come
+  and back at its close, then `manifest-c3` for its sitting 11a, `manifest-8b` for its sitting 12 and close, and `manifest-63` for the next
+  plan, the launch path), or the one whose messages come
   from manifest. Send to the name exactly as `ListAgents` prints it. Our own session's name is printed at the top of
   that list: tell the platform session to reply to it.
 - **What it tells us, and what we answer:**

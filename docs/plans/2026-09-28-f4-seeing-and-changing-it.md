@@ -4,7 +4,8 @@
 > as ONE agent (Rich, 2026-09-28: *"native as F3"*), one sitting per session. Steps use checkbox (`- [ ]`) syntax for
 > tracking. **Read [`../ORIENTATION.md`](../ORIENTATION.md) first. F3 is executed; this plan starts from it.**
 
-**Status: approved by Rich, 2026-09-28:** *"approved, native as F3, and send FE-35 now"*. Written with him in one
+**Status: EXECUTED 2026-09-29** (sitting 7, `manifest-app-9d`: the acceptance passed against the mock and on the real
+platform, and Rich clicked moments 7–9; the dated entries below). **Approved by Rich, 2026-09-28:** *"approved, native as F3, and send FE-35 now"*. Written with him in one
 session (`manifest-app-bb`). It is executed by one agent, natively (superpowers:executing-plans), one sitting per
 session, with the whole-branch review by one fresh reviewer at the end (Task 11). **Sitting 1 (the measurements) is
 done** (2026-09-28, in the same session at Rich's word), and Tasks 2–11 are corrected to what it measured: each
@@ -56,7 +57,7 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
 | 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | **done 2026-09-29**, in session `manifest-app-f8`, no platform: `d662d29`, `7f7616c`; 1110 tests (the dated entry below) |
 | 5 | 8, 9 | The lead on an app that exists; moment 8's screens | **done 2026-09-29**, in session `manifest-app-f8` after sitting 4, at Rich's word, no platform: `8d94539`, `eb44728`, `18b1fe4`; 1162 tests; Rich's *"Stop and ask first"* for `models_withdrawn` (the dated entry below) |
 | 6 | 10 | Trying-out: the button, the question, the deploy from the session, the four stations, the two failures | **done 2026-09-29**, in session `manifest-app-56`, no platform: `c18b968`; 1222 tests; walked, five defects found and fixed (the dated entry below) |
-| 7 | 11 | **The acceptance:** `scripts/check-seeing.sh` against the mock; headless Chrome on the real platform; Rich's click. **Alone, and last** | not started |
+| 7 | 11 | **The acceptance:** `scripts/check-seeing.sh` against the mock; headless Chrome on the real platform; Rich's click. **Alone, and last** | **done 2026-09-29**, in session `manifest-app-9d`: the whole-branch review (its two Importants fixed); `check-seeing.sh` 8/8; the real platform at Rich's word (walked end to end; one defect found and fixed); **Rich's click** (two defects found and fixed, a third decided by him). `3f0c410`, `2e15d36`, `a38cf85`, `0dca1e9`, `5a1aa1f`; 1229 tests. **F4 IS EXECUTED** (the dated entry below) |
 
 **Every sitting ends as F3's did:**
 1. the four gates, `pnpm test` twice; and, when it touched our server, `check-slice.sh`, `check-describing.sh` and
@@ -138,7 +139,8 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
 | A secret with no value there | walk-through's *"It needs <its plain name> before it can start there."* · **[Set it]**; when we never asked for it by name: *"It needs a setting we asked you for on your draft, before it can start there."* |
 | A fix conversation's title | *"It didn't start on the trying-out address"* |
 | A session the platform ended as `models_withdrawn` (FE-36) ✓ | **Rich, 2026-09-29: stop and ask first.** *"Your app now keeps confidential data, so the model we were using can't work on it. Carry on continues with the on-campus model."* · **[Carry on]** · **[Stop here]** (the option he chose, in its words) |
-| Moment 9, ours (sitting 6) | the question's second sentence only when something is on trying-out; a version whose date cannot be read, *"this version"*; while it runs, the prototype's chip *"Working, under 90 seconds"*, the Timeline README's *"Each step is the app actually reaching that point."*, and ours: *"You can leave: it keeps going, and the Preview shows where it got to."* (M3); arrival under the Preview's *"Waiting on UBC's identity team"*, with the address; on failure the chip *"Needs you"*, and trying-out's two facts titled *"Your trying-out address"* (the prototype's), because on the Preview they sit under the draft's own; **a secret**: the lead's `ask` is a question, never a plain name, so the walk-through's *"It needs <its plain name>…"* cannot be filled truthfully: the plan's *"It needs a setting we asked you for on your draft, before it can start there."* (*"…settings…"* for several), each field labelled by the question we asked, and *"It needs a setting we never asked you for, before it can start there."* over a field labelled by the name the app reads it by; **step-up** (never expected): moment 14's *"Sign in once more"* and its reassurance, without its sentence about students, and **[Sign in again]**; a press that did not go through: *"We couldn't do that just now. Nothing is lost."*, with a reference |
+| Moment 9, ours (sitting 6); **put to Rich at sitting 7's click, no change asked** | the question's second sentence only when something is on trying-out; a version whose date cannot be read, *"this version"*; while it runs, the prototype's chip *"Working, under 90 seconds"*, the Timeline README's *"Each step is the app actually reaching that point."*, and ours: *"You can leave: it keeps going, and the Preview shows where it got to."* (M3); arrival under the Preview's *"Waiting on UBC's identity team"*, with the address; on failure the chip *"Needs you"*, and trying-out's two facts titled *"Your trying-out address"* (the prototype's), because on the Preview they sit under the draft's own; **a secret**: the lead's `ask` is a question, never a plain name, so the walk-through's *"It needs <its plain name>…"* cannot be filled truthfully: the plan's *"It needs a setting we asked you for on your draft, before it can start there."* (*"…settings…"* for several), each field labelled by the question we asked, and *"It needs a setting we never asked you for, before it can start there."* over a field labelled by the name the app reads it by; **step-up** (never expected): moment 14's *"Sign in once more"* and its reassurance, without its sentence about students, and **[Sign in again]**; a press that did not go through: *"We couldn't do that just now. Nothing is lost."*, with a reference |
+| Moment 6, **Rich's (sitting 7, at his click)** ✓ | after `models_withdrawn`, when a new session still lists the model we were using: *"Your app now keeps confidential data. We carried on."*, said once in the conversation; his card (above) only when that model is gone |
 | Moment 8, ours (sitting 5) | the waiting chip *"Waiting its turn"*; its place *"Next in line."* / *"Third in line."*; no holder *"It starts in a moment."*; the box while it waits *"Anything to add?"*, *"We add it to what you asked for."*; set aside *"What should change instead?"*; built *"What should change next?"*, *"We'll show you what we'd change before we change anything."*, **[Ask for it]**; Yes's body *"We add it to the plan we agreed, then change it on your draft address, and you watch. You can leave; it keeps going."*; the conversations' chips *Working on it · Needs you · Built · Set aside · Stopped · "Waiting: second in line"*; **[What went wrong]** |
 
 ## Decisions this plan makes, and why
@@ -924,10 +926,10 @@ platform's sitting 12 committed a contract change during sitting 6, `16c3357` (d
 PROJECT_ARCHIVED` on `deploy`, `setAppSecret`, `mintToken` and others; 1.4.0, 66, 128): sitting 6's close ran against it.
 Step 0 re-reads `openapi.json` for anything after it.
 
-- [ ] **Step 0: M6, if sitting 1 could not run it** (S1: it could not; FE-35 is Spec action 10, the platform's sitting
+- [x] **Step 0: M6, if sitting 1 could not run it** (S1: it could not; FE-35 is Spec action 10, the platform's sitting
   11a). Re-read the contract for 11a's codes (the incident refusal, the session's end reason) and correct Tasks 8 and
   10 to them before the walk.
-- [ ] **Step 1: Against the mock.** *(S4: from a fresh dev database: in mock mode every conversation is on the mock's
+- [x] **Step 1: Against the mock.** *(S4: from a fresh dev database: in mock mode every conversation is on the mock's
   one project, and older rows hold it.)* `scripts/check-seeing.sh`, beside `check-building.sh`, drives our API as the browser
   does, with mock mode's model, and asserts **what our server sent**, from the trace and the store:
   1. two changes asked at once on one app: one plans, one waits at place 1;
@@ -943,7 +945,7 @@ Step 0 re-reads `openapi.json` for anything after it.
   staging from our server; the scan pointed at a copy holding a leaked row. *(S1: M2: the mock's staging already
   serves the draft's release, so a staging deploy against it shows only "already there": moment 9 is proved by the web
   tests and on the real platform, and this script asserts our server sends none.)*
-- [ ] **Step 2: On the real platform** (the control plane per manifest's RUNBOOK, **asking Rich first and telling the
+- [x] **Step 2: On the real platform** (the control plane per manifest's RUNBOOK, **asking Rich first and telling the
   platform session**; our server in edge mode). Headless Chrome through `https://app.manifest.internal`, signed in as
   `instructor`, at 1440 and 375:
   - the walk-through app, built by moments 3–6;
@@ -956,9 +958,9 @@ Step 0 re-reads `openapi.json` for anything after it.
   - **put the version on trying-out**: the stations, the time, Rich's words at the end; `listInstances` on staging
     serving that release;
   - **record the change planner's and the lead's words verbatim**, as F3 recorded the lead's.
-- [ ] **Step 3: Rich's click:** `https://app.manifest.internal`, signed in as `instructor`: his app's Preview, a change,
+- [x] **Step 3: Rich's click:** `https://app.manifest.internal`, signed in as `instructor`: his app's Preview, a change,
   and trying-out.
-- [ ] **Close:** the whole-branch review (a fresh reviewer, read-only), dispatched at the sitting's start so its fixes
+- [x] **Close:** the whole-branch review (a fresh reviewer, read-only), dispatched at the sitting's start so its fixes
   land before the real platform and Rich's click, its findings fixed test-first; the gates twice; the dated entry; this
   table; ORIENTATION; the roadmap. **F4 is executed only when Step 3 is done.**
 
@@ -1451,3 +1453,108 @@ walk: 29 checks, no overflow, the only failed requests the expected ones.
 **Gates:** `pnpm test` **1222/1222, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock mode.** The
 whole-branch review stays where the plan puts it: sitting 7, over all of F4, dispatched at its start.
+
+### 2026-09-29 — Sitting 7 (Task 11): the acceptance — F4 IS EXECUTED
+
+*In session `manifest-app-9d`, at Rich's word (*"proceed with the next sitting: F4's sitting 7, Task 11, the acceptance
+(alone and last)"*), one agent natively. The platform's sitting 12 (`manifest-8b`) was running its last test tiers at
+our start. We introduced ourselves, waited for its close (`e824956`: the front-end enablement plan executed; 7100
+steady, driver 1, its database empty), told it, and used 7100 only after Rich's yes. The ledger has every run and
+ruling.*
+
+**The whole-branch review** (one fresh reviewer on the most capable model, read-only, over `38c6775..2945099`,
+dispatched at the sitting's start so its fixes landed before the real platform): no Critical, two Important, eleven
+Minor, *"With fixes"*. Both Importants were fixed test-first (`2e15d36`):
+- **I1:** a round holding its app at needs-you or interrupted offered no Stop, so every change behind it waited on a
+  *Carry on* that spends. **[Stop here]** is now on every holding card (interrupted, unreachable, the month spent, a
+  refusal in each of its three words).
+- **I2:** *[What went wrong]* pressed again started a second fix for the same incident. It now asks our server for the
+  fix already under way (`GET /api/apps/:projectId/incidents/:incidentId/conversation`) and opens it, minting nothing.
+- The review's declined item, *readPlanMarkdown* through the real platform's file read, was settled at Step 2 (two
+  parts marked, not five).
+
+**Step 0 (M6):** the contract is unchanged since `16c3357` (1.4.0, 66 operations, 128 codes); both 11a codes are
+handled; typecheck clean. M6's live half (a confidential project's `session.models`) was not measured as planned:
+the walk's app stayed `internal`. Rich's own app became confidential mid-round at his click (below), which showed
+more than M6 asked.
+
+**Step 1** (`3f0c410`): `scripts/check-seeing.sh`, 8/8 against the mock from a fresh dev database, re-runnable (it
+sets its third change aside, and refuses to start while an older conversation holds or waits on the mock's app).
+- It asserts from the store: two changes in one second, one plans and one waits at place 1; *Yes* commits
+  `docs/plan.md` (a dry run, then the commit on one base, alone) before the round's `startAgentSession`; the second
+  starts by itself; *Stop* during the second's round frees the app and sets nothing aside, and a third starts by
+  itself; every deploy is answered a sandbox instance and every output read is one; a student app's post is refused
+  on every change route; no `mft_` or `sk-` anywhere.
+- **Negative controls**, each red: the line's hold removed (1, 4); the round started before the plan's commit (2:
+  the session at .745, the commit at .749); a deploy to staging from our server (5; the trace's *"sandbox"* is a
+  constant, the answered instance is not); the scan pointed at a copy holding a leaked row (7).
+- Check 5 was then scoped to the run's own conversations (a control's run had made every later run red). The staging
+  control's re-run against the scoped check finished, but reading its log was blocked by the tool's safety
+  classifier; its first run's offending deploy was that run's own, which the scoped check reads by construction.
+
+**Step 2, on the real platform** (12:15–12:21 PDT, our server in edge mode; a walk in headless Chrome at 1440 and 375,
+59 shots, no overflow, no console error):
+- **Moments 3–6:** *"My weekly thoughts"* built in about 140 s on `default-chat-large`, no fallback (6 model calls:
+  read, ask the CWL specialist, commit, read, done). Its account: *"Students see only their own response; instructors
+  can skim all responses, newest first."*
+- **The Preview:** each tab and both facts as designed; *Trying out* with Rich's words, no logins, no date.
+- **The draft as `student`, by *Try it as*'s words:** *Sign in* went straight through as the instructor; *Sign out*,
+  then the practice IdP's form, then `student`/`student`: the student's own box, the instructor's endpoint `403` to
+  them; Manifest stayed signed in.
+- **Two changes**, two seconds apart: the second *"Waiting for 'Also show a word count on each response' to finish.
+  It starts by itself. Next in line."* The first's *"Here's what we'd change"* marked **two** parts, with two questions
+  only they know (*"How often will you display the word count?"*, *"Will the word count include spaces between
+  words?"*). *Yes*, and its round built in about 60 s; its account *"Each response shows its word count, and the count
+  is saved with the post."* `docs/plan.md`, read back by the person's session, carries *"## Changes since we first
+  agreed"* and *"- 29 September 2026: Also show a word count on each response"*. The second then planned by itself,
+  and was set aside.
+- **Trying out:** *"Put the version from today, 12:20pm on the trying-out address?"*; *Waiting its turn* +0.3 s,
+  *Making room* +1.1 s, *Starting up* +4.2 s, the end at +9.3 s with Rich's words. Staging lists one instance,
+  healthy, on the change's release, the one the question named. Our server deployed only to the sandbox.
+- **One defect found:** the change planner titled the second change (*"Show when each response was posted"*)
+  *"Word count"*, its prompt's own example. Fixed test-first (`a38cf85`); re-walked, it titled it *"Display posting
+  time"*.
+
+**Step 3, Rich's click** (from 12:28 PDT; he made his own app, *notes-and-answers*):
+- ***"We can't reach the model we build with just now"*** (`B6AB-C08A`) was ours. The platform session read LiteLLM's
+  spend log at Rich's asking: the lead's call answered in 68.9 s (9,564 tokens written, billed), and our 60-s deadline
+  cut it off. **Fixed test-first** (`0dca1e9`): a round's model calls get five minutes; the deadline is a plain timer
+  over the whole answer. His next *Carry on* wrote 9,290 tokens in 63 s.
+- **An `INTERNAL` (`FBB7-3454`) was our own doing:** that fix was made in two edits on the server he was clicking
+  on, and his press landed between them. A trap below.
+- **`models_withdrawn`:** the lead's own commit raised his app to `confidential`, and the platform ended every live
+  session, though `default-chat-large` stays allowed under the default setting. So the card's *"the model we were
+  using can't work on it… on-campus model"* was untrue. **Rich decided: carry on by itself** when the new session
+  still lists the model we were using, and say *"Your app now keeps confidential data. We carried on."*; his card only
+  when that model is gone. Built test-first (`5a1aa1f`). His *Carry on* then built the app in 35 s.
+- The platform's next plan trims such a key in place instead (Rich, the same afternoon), after which this rarely runs.
+
+**Rulings** (the ledger has each with its cost):
+1. The review over F4's code alone (docs read by path); `check-seeing.sh` outside its range.
+2. The mock restarted from source (it predated `38c2ade`), from a fresh dev database.
+3. *"Yes commits docs/plan.md with its Changes"* is checked by path and order; the text by `plan.test.ts`, and read
+   back at Step 2.
+4. Check 5 scoped to the run's own conversations.
+5. I2 fixed by a read before the mint, not by an idempotent POST (which would leave a minted token unused).
+6. A set-aside fix is not under way: a new press starts a new one.
+7. Five minutes for a round's model call; a timeout keeps the unreachable card's words until Rich words its own.
+8. The lead's `done` keeps its example account: both real rounds wrote their own.
+9. The renewal after `models_withdrawn` probes with a real session start, ended unused when the model changed.
+10. The walk's own staging check was wrong (`Environment.instance` is an Instance); the release was matched from our
+    store.
+
+**Deferred minors** (the review's): a session's deploy cut at 120 s said as not done (it may land); `neverAnswered`'s
+fallback to the first incident; several secrets typed again after one fails; no way back to the offer after an end;
+the line's words assume the holder is the person's (F6); a hand-edited `docs/plan.md` loses its settled questions;
+`noted` advancing silently; `agreed` with no run holds for ever; `unread`'s reason echoes a path; the needs switch has
+no exhaustive default; an interrupted fix reports a problem it did not have; the words guard now also guards accounts
+and titles.
+
+**Open for Rich:** *Trying out* offers *[Open it in a new tab]* once something is there, while its words say nobody
+can sign in yet; a timeout's own words (*"…is taking longer than usual"*), and streaming the model's answers; whether
+the two acceptance projects are kept usable after the platform restarts 7100 onto real GitHub; the staging control's
+re-run log, unread.
+
+**Gates:** `pnpm test` **1229/1229, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
+8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, **`check-seeing.sh` 8/8**, mock mode, on the final code.
+**Our server is back in mock mode**; the mock on 7102 runs from current source.

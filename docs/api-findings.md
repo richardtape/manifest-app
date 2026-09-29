@@ -34,6 +34,10 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **The platform's sitting 11a, built, 2026-09-28; closed 2026-09-29 at `90b8e81`** (relayed by `manifest-c3` to F4's sittings 2 and 4; the close-out is documents only on top of `8c7eb5e`) | **FE-35**, **FE-36** | Spec action 10, as built | **`ad4e94c`** (no contract change): under the default `capable` setting, a confidential project's session lists `default-chat-onprem`, `default-chat-onprem-reasoning`, then `default-chat-large` when registered; under `on-premise`, the two on-premise names. **`4f261e9`** (contract 1.4.0, one enum value): **`models_withdrawn`** in `AgentSession.endReason` and `agent_session.ended`; after every valid `manifest.yaml` recorded, and at every boot, an active session holding a model its project no longer allows is ended and its key refused for every model, so the next piece of work starts a new session (F4 Task 8). A session at its cap stays `active` (`spentUsd` against `capUsd`); `expired` is its time. **`38c2ade`** (contract and mock; 1.4.0, 66 operations, **128 codes**): **`403 INCIDENT_LOG_CONFIDENTIAL`**, a delegated token on a confidential project's staging or production `listIncidents` while the setting is `capable`; a session, and any token on the sandbox, still read them. Its remedy: *"Read the sandbox's Incidents instead … or ask the person you work for to read this environment's Incidents in their own session and tell you what failed."* **Our mock gains `MANIFEST_MOCK_CONFIDENTIAL=1`**: a Bearer's staging or production `listIncidents` refused so, and every agent session holding the three names; without it nothing changes. Our typecheck and 916 tests pass against `4f261e9` and again, twice, against `38c2ade`. Our server reads only the sandbox's incidents today; F4's fix round (Tasks 8–10) meets this refusal, and **never hands the person's own reading to our server or a model** (F4 sitting 1's ruling): the person may still tell us in their own words. **Then `8c7eb5e`** (its review's fix pass, relayed to F4's sitting 4, `manifest-app-f8`, 2026-09-29; **contract text only**, 1.4.0, 66 operations, 128 codes): the Incident's `prompt` is shown to the person and never handed to a model on a confidential project's staging or production while the capable model is allowed, and `INCIDENT_LOG_CONFIDENTIAL`'s remedy says never to paste its log tail or prompt to the agent (our ruling, now the contract's words); the refusal holds after a commit *lowers* the manifest (the most restrictive of the classification and every release run there); a **production** deploy to a more restrictive release ends the sessions it no longer allows (`models_withdrawn`) before it answers. Our typecheck and 1110 tests pass against it, and again, twice, at the close-out `90b8e81` (1.4.0, 66, 128; no contract or mock change). The platform's next is its sitting 12, the acceptance (`make demo-frontend`, on the `app` origin), which uses 7100 and the edge and messages us first. **How we use `models_withdrawn`** (F4 sitting 5, `8d94539`): a key refused mid-round is looked up in `listAgentSessions`; ended `models_withdrawn`, the round **stops and asks first** (Rich, 2026-09-29), never the $2 checkpoint, and *Carry on* starts a new session |
 | **The platform's sitting 12, its whole-branch review's fix pass, 2026-09-29** (`16c3357`, announced to F4's sitting 6, `manifest-app-56`, by `manifest-8b` before it landed) | — | Declared error lists | **Contract 1.4.0, error lists only** (66 operations, 128 codes; the mock unchanged): every operation an archived project refuses **declares** `409 PROJECT_ARCHIVED` (23 operations, `deploy`, `setAppSecret` and `mintToken` among them; they already answered it); `endAgentSession` and `endIntakeSession` declare `AI_CATALOGUE_DISABLED`, and `revokeToken` now answers the one it declares. Our typecheck and 1222 tests pass against it, twice. For us: trying-out (F4 Task 10) reads refusals by code, so an archived project's `deploy` is said as *"We couldn't do that just now…"* with a reference; a switched-off app is F6's to say better |
 | **Written 2026-09-28, F4's sitting 3** (the Preview, from sitting 1's M3) | **FE-38** | The last attempt cannot be read from `listInstances`: its order is *"seen most recently"*, and an instance has no time of its own. It corrects FE-13's premise | **Not carried**: Rich's word decides that. Meanwhile we read the versions' dates (right for every F4 flow, wrong for a rollback, F6). Option (a): `createdAt` on an instance |
+| **The platform's sitting 12 closed, 2026-09-29, at `e824956`**: **the front-end enablement plan is EXECUTED** (relayed by `manifest-8b` to F4's sitting 7, `manifest-app-9d`) | — | — | **The contract is unchanged since `16c3357`** (1.4.0, 66 operations, 128 codes; nothing in `packages/contract` or `packages/mock` since; `c5f1493` and `11f2526` are the control plane and the guides). 7100 left steady on `11f2526`, driver 1, its database empty, and used by F4's sitting 7 for its real-platform step and Rich's click (two projects: `my-weekly-thoughts`, `notes-and-answers`). Our typecheck, and 1229 tests twice, pass against it |
+| **Recommended by the platform, 2026-09-29** (`manifest-8b`, at Rich's asking; **not decided: Rich's word carries them**) | **FE-33**, **FE-34**, **FE-38** | Each as an early task of the platform's **next plan, the launch path (FE-6, FE-25)**, which `manifest-63` is writing | **FE-33**: our (a), revoking, archiving, deleting or expiring a token closes its open streams with a close code of its own (e.g. `4401`); also the platform's own review's M6. For us: keep closing a round's stream at its end; treat `4401` as *"ask for a new token"* once it exists. **FE-34**: our (a) in principle, the fallback only for an unreachable or failing provider, if LiteLLM 1.98's router can restrict it by error type (measured first); else (b), the guide says so. For us: unchanged (a root-object schema, and `x-litellm-attempted-fallbacks` and `model` read on every answer); the on-premise fallback is `qwen3.8:27b` (32k) since 11a. **FE-38**: our (a), `createdAt` on `Instance` and `InstanceSummary`; the last attempt becomes the newest by it. For us: keep Task 5's interim rule; F6's *Start it again* after it ships. Timing it recommends: FE-38 before our F6; FE-33 and member removal before faculty use it for real; FE-34 measured in the next plan's Task 1 |
+| **Decided by Rich, 2026-09-29** (relayed by `manifest-8b`; the platform's next plan builds each, with a spec action) | **FE-11**, **FE-36** | Removing a member; a session whose project went confidential | **FE-11: removing a member revokes that member's tokens on the project and ends their agent sessions** (not built yet; with FE-33 their streams close too). **FE-36 changes: a session holding a model its project no longer allows has its key TRIMMED in place** (the withdrawn models removed) and stays active, ended only when nothing it may use is left (measured first: does LiteLLM's `/key/update` narrow a live key at once). Until it ships, `models_withdrawn` as today. Meanwhile (F4 sitting 7, at Rich's click, **Rich's decision**): our round starts a new session itself after `models_withdrawn`, carries on when it still lists the model we were using, and asks first only when that model is gone (`5a1aa1f`) |
+| **The platform's next sitting** (`manifest-63`, opened 2026-09-29, 13:00) | — | Real GitHub | Rich set `MANIFEST_SOURCE_DRIVER=github` in manifest's `.env`. The next plan's Task 1 restarts 7100 onto driver 2 against **real GitHub**: every driver-1 project then answers `409 SOURCE_PROVIDER_MISMATCH` on source operations (a restart back onto driver 1 restores them), and **anything created through 7100 makes a real private repository on github.com that nothing deletes**. Told by F4's sitting 7 that 7100 is free for it; whether the two acceptance projects are kept usable is Rich's word |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -313,6 +317,9 @@ raised follows.
   - (c) `?member=me` for an administrator's own list.
 
 ### FE-11 — Removing a colleague does not stop their agent
+
+***Decided by Rich, 2026-09-29** (relayed by the platform session): removing a member revokes that member's tokens on
+the project and ends their agent sessions. The platform's next plan builds it, with a spec action.*
 
 - **What is missing:**
   - A token outlives its minter's membership ✓ (ORIENTATION §3, *"A token therefore outlives its minter's
@@ -833,7 +840,8 @@ Measured. **Carried to the platform session 2026-09-28**, at Rich's word (to `ma
 ### FE-33 — A revoked token keeps its open event stream, and goes on receiving the project's events
 
 *Found 2026-09-28 in F3's sitting 1 (M3), against manifest `346cd9e` (contract 1.4.0). Measured. Not carried: Rich's
-word decides that.*
+word decides that. **The platform recommends (a), 2026-09-29** (a close code of its own, e.g. `4401`, on revoke, archive,
+delete and expiry; its own review's M6), in its next plan: see the table.*
 
 - **Screen and moment:** moment 6. Our server watches the project's stream with the conversation's token for as long
   as a round runs. Any agent holding a delegated token can do the same (`docs/api/events.md` ✓).
@@ -864,7 +872,8 @@ word decides that.*
 ### FE-34 — The capable model's fallback also answers a request OpenAI refused as malformed
 
 *Found 2026-09-28 in F3's sitting 1 (M1), against manifest `346cd9e` (9b's fallback). Measured. Not carried: Rich's
-word decides that.*
+word decides that. **The platform recommends (a) in principle, 2026-09-29**, if LiteLLM 1.98's router can restrict a
+fallback by error type (measured first), else (b): see the table.*
 
 - **Screen and moment:** moment 6. The lead asks `default-chat-large` for one move at a time, as structured output.
 - **What happened** (`scratchpad m1-why.mjs`, one agent session):
@@ -932,7 +941,11 @@ setting, and the app's own AI stays on-premise. The platform's sitting 11a build
 
 *Found 2026-09-28 in F3's sitting 7, against manifest `e90de38`. Measured. **Decided by Rich with the platform
 session, 2026-09-28, in Spec action 10 (manifest `d9a1fa1`)**: a session holding more than its project now allows is
-ended, its key revoked; the platform's sitting 11a builds it, and may give the end a reason of its own.*
+ended, its key revoked; the platform's sitting 11a builds it, and may give the end a reason of its own. **Built**
+(`models_withdrawn`). **Changed by Rich, 2026-09-29**: the platform's next plan trims such a key in place instead (see
+the table). F4's sitting 7 met it at Rich's click: the lead's own commit raised his app to `confidential`, every live
+session ended though `default-chat-large` stayed allowed, and our round now carries on by itself in that case
+(`5a1aa1f`).*
 
 - **Screen and moment:** moment 6, the round's first session.
 - **What happened** (the same conversation): the session started at 02:31 UTC while the project was `internal`, and
@@ -977,7 +990,8 @@ code. Not carried: Rich's word decides that.*
 ### FE-38 — The last attempt cannot be told: instances are listed "seen most recently", and carry no time of their own
 
 *Found 2026-09-28 by F4's sitting 3, from what F4's sitting 1 measured (M3) against manifest `d82b3a2`, and the
-contract at `38c2ade`. Not carried: Rich's word decides that. It corrects FE-13's premise.*
+contract at `38c2ade`. Not carried: Rich's word decides that. It corrects FE-13's premise. **The platform recommends
+(a), 2026-09-29**: `createdAt` on `Instance` and `InstanceSummary`, before our F6: see the table.*
 
 - **Screen and moment:** the Preview's two facts (moment 7), on every address: *serving right now* and **the last
   attempt**; and moment 9, where a failed attempt on the trying-out address offers *[What went wrong]*.
