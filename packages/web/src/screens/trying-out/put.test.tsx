@@ -115,6 +115,8 @@ type World = {
   staging: Schemas['InstanceSummary'][]
   incidents: Schemas['Incident'][]
   secrets: Schemas['AppSecretStatus'][]
+  /** The fix conversation we are already making for the incident, if any (F4 review I2). */
+  fix: string | null
 }
 
 const refused = (status: number, code: string, message = 'x') =>
@@ -137,6 +139,7 @@ function stage(start: Partial<World> = {}) {
     staging: [THERE],
     incidents: [],
     secrets: [],
+    fix: null,
     ...start,
   }
   const calls: [string, ...unknown[]][] = []
@@ -226,6 +229,10 @@ function stage(start: Partial<World> = {}) {
     askedSecrets: (...args) => {
       ours.push(['askedSecrets', ...args])
       return Promise.resolve([ASKED])
+    },
+    fixFor: (...args) => {
+      ours.push(['fixFor', ...args])
+      return Promise.resolve(world.fix === null ? null : { id: world.fix })
     },
     events: () => new FakeSource(),
   }
@@ -549,6 +556,20 @@ describe('It never answered: the two facts, and [What went wrong]', () => {
         { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
       ],
     ])
+  })
+
+  it('[What went wrong] once a fix for that incident is under way opens it: no token minted, and no second fix (F4 review I2)', async () => {
+    const s = stage({ fix: 'c-fix-1' })
+    await neverAnswered(s)
+    await press(await screen.findByRole('button', { name: t.whatWentWrong }))
+    await waitFor(() =>
+      expect(window.location.pathname).toBe(`/apps/${SLUG}/conversations/c-fix-1`),
+    )
+    expect(s.oursCalls.filter((c) => c[0] === 'fixFor')).toEqual([
+      ['fixFor', PROJECT.id, INCIDENT.id],
+    ])
+    expect(s.called('mintToken')).toEqual([])
+    expect(s.oursCalls.filter((c) => c[0] === 'startChange')).toEqual([])
   })
 
   it("on the Preview's Trying out tab, a failed last attempt offers [What went wrong] too", async () => {

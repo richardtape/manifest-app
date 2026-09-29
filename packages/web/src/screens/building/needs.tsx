@@ -6,7 +6,11 @@ import { monthResetsAt, whenWords } from '../describe/model.js'
 import { SupportReference, useReported } from '../reference.js'
 import { ADMIN, money, SIGN_IN_REFUSED } from './model.js'
 
-/** What a card's buttons do: Carry on, Try again, Try a different way; Stop here. */
+/**
+ * What a card's buttons do: Carry on, Try again, Try a different way; Stop here. Every card of
+ * a round that still holds its app offers Stop here (F4 Decision 5), or the changes waiting
+ * behind it could only move on by Carry on, which spends (the whole-branch review's I1).
+ */
 export interface Presses {
   build: (way?: 'different') => void
   stop: () => void
@@ -59,6 +63,7 @@ function Interrupted({ presses }: { presses: Presses }) {
       reference={reference}
     >
       {carryOn(presses)}
+      {stopHere(presses)}
     </NeedsCard>
   )
 }
@@ -117,7 +122,9 @@ function needCard(
           tone="attention"
           said={said.month(whenWords(resets, timeZone))}
           reference={reference}
-        />
+        >
+          {stopHere(presses)}
+        </NeedsCard>
       )
     }
     case 'conflict':
@@ -144,6 +151,7 @@ function needCard(
           reference={reference}
         >
           {carryOn(presses)}
+          {stopHere(presses)}
         </NeedsCard>
       )
     case 'cannot':
@@ -155,15 +163,18 @@ function needCard(
         return (
           <NeedsCard tone="waiting" said={said.signInRefused} reference={reference}>
             {carryOn(presses)}
+            {stopHere(presses)}
           </NeedsCard>
         )
       return ADMIN.has(needs.code) ? (
         <NeedsCard tone="waiting" said={said.waitingOnAdmin} reference={reference}>
           {carryOn(presses)}
+          {stopHere(presses)}
         </NeedsCard>
       ) : (
         <NeedsCard tone="attention" said={words.refused.body} reference={reference}>
           {carryOn(presses)}
+          {stopHere(presses)}
         </NeedsCard>
       )
   }

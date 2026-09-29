@@ -184,6 +184,20 @@ export function registerApps(
     },
   )
 
+  // [WHAT WENT WRONG] AGAIN (the whole-branch review's I2): the fix we are already making for this
+  // incident, so the page opens it rather than starting a second. One set aside is not under way.
+  app.get<{ Params: { projectId: string; incidentId: string } }>(
+    '/api/apps/:projectId/incidents/:incidentId/conversation',
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      const { projectId, incidentId } = request.params
+      const id = store.fixFor(projectId, incidentId, who.person.id)
+      if (id === undefined) return refuse(reply, 404, 'NOT_FOUND')
+      return { id }
+    },
+  )
+
   app.get<{ Params: { projectId: string; instanceId: string } }>(
     '/api/apps/:projectId/instances/:instanceId/conversation',
     async (request, reply) => {

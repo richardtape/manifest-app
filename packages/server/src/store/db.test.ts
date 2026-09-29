@@ -671,4 +671,38 @@ describe('conversations on an app (F4 Task 6)', () => {
     expect(store.conversationForInstance(OTHER, 'instance-a', ALICE.id)).toBeUndefined()
     expect(store.conversationForInstance(PROJECT, 'nothing', ALICE.id)).toBeUndefined()
   })
+
+  it("finds the fix conversation for an incident: the latest, never one set aside, never another person's (F4 review I2)", () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    store.rememberPerson(BOB)
+    const fix = (personId: string, incidentId: string) => {
+      const made = store.createChange(personId, PROJECT, 'It didn’t start', 'ours')
+      store.addMessage(made.id, 'we', {
+        kind: 'asked',
+        change: 1,
+        words: 'ours',
+        fix: { incidentId },
+      })
+      return made
+    }
+    const older = fix(ALICE.id, 'incident-a')
+    const newer = fix(ALICE.id, 'incident-a')
+    const asideFix = fix(ALICE.id, 'incident-b')
+    store.setState(asideFix.id, 'set-aside')
+    fix(BOB.id, 'incident-c')
+    const theirs = store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    store.addMessage(theirs.id, 'person', {
+      kind: 'asked',
+      change: 1,
+      words: WORDS,
+      fix: null,
+    })
+    expect(store.fixFor(PROJECT, 'incident-a', ALICE.id)).toBe(newer.id)
+    expect(older.id).not.toBe(newer.id)
+    expect(store.fixFor(PROJECT, 'incident-b', ALICE.id)).toBeUndefined()
+    expect(store.fixFor(PROJECT, 'incident-c', ALICE.id)).toBeUndefined()
+    expect(store.fixFor(OTHER, 'incident-a', ALICE.id)).toBeUndefined()
+    expect(store.fixFor(PROJECT, 'nothing', ALICE.id)).toBeUndefined()
+  })
 })

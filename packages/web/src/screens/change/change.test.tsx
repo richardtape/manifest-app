@@ -166,6 +166,7 @@ function stage(
     },
     conversationFor: never,
     askedSecrets: never,
+    fixFor: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)

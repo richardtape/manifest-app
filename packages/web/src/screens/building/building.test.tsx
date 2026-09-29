@@ -171,6 +171,7 @@ function stage(refusals: Refusals = {}) {
     conversationsOn: never,
     conversationFor: never,
     askedSecrets: never,
+    fixFor: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -538,14 +539,14 @@ const CARDS: [
     { kind: 'month', resetsAt: '2026-10-01T00:00:00.000Z' },
     words.building.needs.month('5pm on 30 September'),
     true,
-    [],
+    [[words.building.stopHere, 'stop', ['c-1']]],
   ],
   [
     'the month spent, its reset unknown',
     { kind: 'month', resetsAt: null },
     words.building.needs.month('5pm on 30 September'),
     true,
-    [],
+    [[words.building.stopHere, 'stop', ['c-1']]],
   ],
   [
     'someone else changed it',
@@ -572,35 +573,50 @@ const CARDS: [
     { kind: 'unreachable', what: 'platform' },
     words.building.needs.unreachable.platform,
     true,
-    [[words.building.carryOn, 'build', ['c-1']]],
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
   ],
   [
     'the model unreachable',
     { kind: 'unreachable', what: 'model' },
     words.building.needs.unreachable.model,
     true,
-    [[words.building.carryOn, 'build', ['c-1']]],
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
   ],
   [
     'waiting on an administrator',
     { kind: 'refused', code: 'MODEL_NOT_AVAILABLE' },
     words.building.needs.waitingOnAdmin,
     true,
-    [[words.building.carryOn, 'build', ['c-1']]],
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
   ],
   [
     "sign-in refused on Manifest's side (FE-37)",
     { kind: 'refused', code: 'SIGN_IN_REFUSED' },
     words.building.needs.signInRefused,
     true,
-    [[words.building.carryOn, 'build', ['c-1']]],
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
   ],
   [
     'a refusal we do not name',
     { kind: 'refused', code: 'INTERNAL' },
     words.refused.body,
     true,
-    [[words.building.carryOn, 'build', ['c-1']]],
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
   ],
 ]
 
@@ -702,6 +718,17 @@ describe('what a round needs of them: one card each', () => {
     )
     await press(within(card).getByRole('button', { name: words.building.carryOn }))
     expect(s.called('build')).toEqual([['c-1']])
+  })
+
+  it('interrupted, it can be stopped here: a round that holds the app is never kept by a card with no Stop (F4 review I1)', async () => {
+    const s = stage()
+    await open(s)
+    s.state(round({ status: 'interrupted' }, { pages: { state: 'halted' } }))
+    const card = screen
+      .getByText(words.building.needs.interrupted)
+      .closest('.mf-card') as HTMLElement
+    await press(within(card).getByRole('button', { name: words.building.stopHere }))
+    expect(s.called('stop')).toEqual([['c-1']])
   })
 })
 

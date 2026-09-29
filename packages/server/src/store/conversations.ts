@@ -65,6 +65,11 @@ export interface Store {
     instanceId: string,
     personId: string,
   ): string | undefined
+  /**
+   * The person's fix conversation for this incident, the latest, unless it was set aside: so
+   * [What went wrong] pressed again opens it (the whole-branch review's I2).
+   */
+  fixFor(projectId: string, incidentId: string, personId: string): string | undefined
   /** `body` is our structured JSON. */
   addMessage(conversationId: string, from: Sender, body: unknown): void
   listMessages(conversationId: string): { from: Sender; body: unknown; at: string }[]

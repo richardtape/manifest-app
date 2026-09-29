@@ -182,6 +182,20 @@ export function openStore(file: string): Store {
       return row?.id
     },
 
+    fixFor(projectId, incidentId, personId) {
+      const row = db
+        .prepare(
+          `select conversations.id from messages join conversations on conversations.id = messages.conversation_id
+           where conversations.project_id = ? and conversations.person_id = ?
+             and conversations.state != 'set-aside'
+             and json_extract(messages.body, '$.kind') = 'asked'
+             and json_extract(messages.body, '$.fix.incidentId') = ?
+           order by conversations.created_at desc, conversations.rowid desc limit 1`,
+        )
+        .get(projectId, personId, incidentId) as { id: string } | undefined
+      return row?.id
+    },
+
     addMessage(conversationId, from, body) {
       db.prepare(
         `insert into messages (conversation_id, seq, sender, body, at)

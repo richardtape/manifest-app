@@ -6,6 +6,7 @@ import type { Config } from '../config.js'
 import { createConversationTokens } from '../platform/project.js'
 import { openStore, type Conversation, type Run, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
+import { FIX_WORDS } from './apps.js'
 import { createHub, publishState, type Hub } from './events.js'
 import { pieceOf } from './piece-state.js'
 import { LIMITS, type AppConversation, type Progress } from './progress.js'
@@ -448,6 +449,37 @@ describe('GET /api/apps/:projectId/instances/:instanceId/conversation', () => {
       expect(missing.json()).toEqual({ error: { code: 'NOT_FOUND' } })
     }
     expect((await s.get(url('instance-a'), AS_BOB)).statusCode).toBe(404)
+  })
+})
+
+describe('GET /api/apps/:projectId/incidents/:incidentId/conversation (F4 review I2)', () => {
+  it("answers the fix we are making for that incident, so [What went wrong] opens it again; set aside, another person's, or none, is 404", async () => {
+    const s = setUp()
+    const fix = (personId: string, incidentId: string) => {
+      const made = s.store.createChange(personId, PROJECT, FIX_WORDS, FIX_WORDS)
+      s.store.addMessage(made.id, 'we', {
+        kind: 'asked',
+        change: 1,
+        words: FIX_WORDS,
+        fix: { incidentId },
+      })
+      return made
+    }
+    const mine = fix(ALICE.id, 'incident-a')
+    s.store.setState(fix(ALICE.id, 'incident-b').id, 'set-aside')
+    fix(BOB.id, 'incident-c')
+    const url = (incident: string) =>
+      `/api/apps/${PROJECT}/incidents/${incident}/conversation`
+    const found = await s.get(url('incident-a'))
+    expect(found.statusCode).toBe(200)
+    expect(found.json()).toEqual({ id: mine.id })
+    for (const incident of ['incident-b', 'incident-c', 'incident-z']) {
+      const missing = await s.get(url(incident))
+      expect(missing.statusCode).toBe(404)
+      expect(missing.json()).toEqual({ error: { code: 'NOT_FOUND' } })
+    }
+    expect((await s.get(url('incident-a'), AS_BOB)).statusCode).toBe(404)
+    expect((await s.get(url('incident-a'), '')).statusCode).toBe(401)
   })
 })
 

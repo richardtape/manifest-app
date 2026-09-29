@@ -179,6 +179,11 @@ export interface Ours {
    * trying-out can name one it lacks (Decision 15). A read: nothing is sent, and never a value.
    */
   askedSecrets(projectId: string): Promise<{ name: string; ask: string }[]>
+  /**
+   * The fix we are already making for this incident, unless it was set aside; none, null. So
+   * [What went wrong] pressed again opens it, and never starts a second (the review's I2).
+   */
+  fixFor(projectId: string, incidentId: string): Promise<{ id: string } | null>
   events(id: string): StreamSource
 }
 
@@ -258,6 +263,18 @@ export function createOurs(): Ours {
           secrets: { name: string; ask: string }[]
         }
       ).secrets,
+    fixFor: async (projectId, incidentId) => {
+      try {
+        const found = (await call(
+          'GET',
+          `/api/apps/${encodeURIComponent(projectId)}/incidents/${encodeURIComponent(incidentId)}/conversation`,
+        )) as { id?: unknown } | undefined
+        return typeof found?.id === 'string' ? { id: found.id } : null
+      } catch (error) {
+        if (error instanceof OurRefusal && error.status === 404) return null
+        throw error
+      }
+    },
     events: conversationEvents,
   }
 }

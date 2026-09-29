@@ -589,7 +589,9 @@ function Secrets({
 /**
  * [WHAT WENT WRONG] ON TRYING-OUT (walk-through moment 9): a fix conversation of ours, carrying the
  * incident, with a token minted for it in their session, then opened. The line starts it, or it
- * waits its turn.
+ * waits its turn. A fix already under way for the same incident is opened instead: its round
+ * deploys to the draft, so trying-out's failed attempt, and this button, stay until they put the
+ * fixed version there (the whole-branch review's I2).
  */
 export function WhatWentWrong({
   platform,
@@ -609,8 +611,18 @@ export function WhatWentWrong({
   const press = async () => {
     setPressing(true)
     setReference(undefined)
-    let step = 'mintToken'
+    let step = 'fixFor'
+    const open = (id: string) =>
+      navigate(
+        `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(id)}`,
+      )
     try {
+      const under = await ours.fixFor(project.id, incidentId)
+      if (under !== null) {
+        open(under.id)
+        return
+      }
+      step = 'mintToken'
       const minted = await platform.mintToken(
         project.id,
         mintRequest(t.fixTitle, 'changing'),
@@ -621,9 +633,7 @@ export function WhatWentWrong({
         fix: { incidentId },
         token: minted.secret,
       })
-      navigate(
-        `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(made.id)}`,
-      )
+      open(made.id)
     } catch (error) {
       setPressing(false)
       const said = pressFailed(error, step)
