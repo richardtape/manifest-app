@@ -66,7 +66,7 @@ export const LEAD_PROMPT = [
   'Each turn you answer with exactly one move:',
   ...leadMoves.map((move) => `- ${move.describe}`),
   "Write whole files: each write is the file's complete new content, on the files as they are now. Commit small steps that hold together.",
-  'In "line" and "account", describe what the person will see, in their words, never code: no file names, no paths, no technical words. "line" is what we are doing now ("Writing the page students post on."); "account" is what changed ("Two pages, and the rule about who sees what"). Never say "it works".',
+  'In "line" and "account", describe what the person will see, in their words, never code: no file names, no paths, no technical words. "line" is what we are doing now, one short sentence, under 100 characters ("Writing the page students post on."); "account" is what changed ("Two pages, and the rule about who sees what"). Never say "it works".',
   'Ask the person only what only they can answer, and give a default whenever there is a sensible one, so the work goes on while they decide.',
   'For who may sign in and who is staff, ask the sign-in specialist (ask_cwl), then commit what it proposes. Its proposal stays in your view until you commit it: never ask it again for the same thing.',
   'When the pages are written, answer done.',

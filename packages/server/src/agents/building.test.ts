@@ -159,6 +159,8 @@ describe("the lead's prompt", () => {
     expect(LEAD_PROMPT).toMatch(/what (the person|they) will see/i)
     expect(LEAD_PROMPT).toMatch(/only (the person|they) can answer/i)
     expect(LEAD_PROMPT).toMatch(/default/i)
+    // Task 12's walk: strict mode cuts a line at the schema's ceiling, mid-word ("…the full-in-").
+    expect(LEAD_PROMPT).toMatch(/one short sentence, under 100 characters/)
     for (const move of leadMoves) expect(LEAD_PROMPT).toContain(move.describe)
   })
 })
@@ -181,14 +183,18 @@ describe('the moves the lead may answer (Decision 2)', () => {
       expect(moves.safeParse({ move }).success).toBe(true)
   })
 
-  it('refuses a sixth kind, a read of 21 paths, and a line over 120 characters', () => {
+  it('refuses a sixth kind, a read of 21 paths, and a line over 200 characters; takes one of 200', () => {
     expect(moves.safeParse({ move: { kind: 'deploy' } }).success).toBe(false)
     const paths = Array.from({ length: 21 }, (_, i) => `f${i}.js`)
     expect(moves.safeParse({ move: { kind: 'read', paths } }).success).toBe(false)
     expect(
-      moves.safeParse({ move: { kind: 'done', line: 'x'.repeat(121), cannot: null } })
+      moves.safeParse({ move: { kind: 'done', line: 'x'.repeat(201), cannot: null } })
         .success,
     ).toBe(false)
+    expect(
+      moves.safeParse({ move: { kind: 'done', line: 'x'.repeat(200), cannot: null } })
+        .success,
+    ).toBe(true)
     // Strict mode asks for every field (M1): a done that leaves out `cannot` is not a move.
     expect(moves.safeParse({ move: { kind: 'done', line: 'Built.' } }).success).toBe(
       false,

@@ -62,7 +62,8 @@ export const CHANGE = z.discriminatedUnion('op', [
   z.object({ op: z.literal('delete'), path: z.string().min(1).max(1024) }),
 ])
 
-const LINE = z.string().min(1).max(120)
+/** A ceiling that should never bind: strict mode cuts a line at it, mid-word (Task 12's walk). */
+const LINE = z.string().min(1).max(200)
 const ACCOUNT = z.string().min(1).max(200)
 /** A secret's name as the platform takes it (M1). Checked by the guard, never as a schema pattern. */
 const SECRET_NAME = /^[A-Z][A-Z0-9_]{0,127}$/
