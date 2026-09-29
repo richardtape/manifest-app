@@ -30,7 +30,7 @@ export const CHANGE_PROMPT = [
   'Describe the finished thing, not how to build it. Who gets in: anyone with a CWL can sign in. We cannot limit it to one class, course or section yet, so never promise that.',
   'In "assumed", keep what we assumed before, and add at most what the change makes us assume; three at most.',
   'In "onlyYouKnow", ask at most two questions only the instructor can answer about this change, each one short sentence ending in a question mark. The questions we asked before are settled: never ask one of them again, and never write an answer into a question.',
-  'Give the change a short title, a few words they would use for it: "Word count".',
+  'Give this change a short title of its own: a few words they would use for what they asked for now, never the title of a change made before.',
   'You are also given the guide to how apps like this are built. It is for you to know what we build on: never name a file, a tool or any code.',
   'When they correct the change, change only what their correction asks for, and keep every other part word for word.',
   'Never use technical words: say what people see and do.',

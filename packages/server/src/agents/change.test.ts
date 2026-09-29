@@ -187,4 +187,13 @@ describe('the change prompt (walk-through D5, C3)', () => {
     expect(CHANGE_PROMPT).toContain('CWL')
     expect(machineryIn(CHANGE_PROMPT)).toEqual([])
   })
+
+  it('asks for a title of this change alone, and gives it none to copy (F4 Step 2: "Show when each response was posted" came back titled "Word count", the prompt\'s own example)', () => {
+    const titled = CHANGE_PROMPT.split('\n').filter((line) => /title/i.test(line))
+    expect(titled).toHaveLength(1)
+    expect(titled[0]).toMatch(/of its own/i)
+    expect(titled[0]).toMatch(/what they asked for now/i)
+    expect(titled[0]).toMatch(/never the title of a change made before/i)
+    expect(titled[0]).not.toMatch(/"[^"]+"/)
+  })
 })
