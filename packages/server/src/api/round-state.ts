@@ -46,6 +46,7 @@ export const NO_DETAIL: RunDetail = {
   failures: [],
   tried: [],
   cannot: null,
+  account: null,
 }
 
 /**
@@ -79,21 +80,33 @@ export function heardIn(
   return heard
 }
 
+/**
+ * Where each step is. A Stop they chose is still (Rich): the step it was on goes back to not
+ * started. `halted` is for what went wrong.
+ */
 function stateOf(run: Run, key: BuildStep): RoundView['steps'][number]['state'] {
   if (run.status === 'done') return 'done'
   const at = STEPS.indexOf(run.step as BuildStep)
   const here = STEPS.indexOf(key)
   if (here < at) return 'done'
   if (here > at) return 'next'
+  if (run.status === 'stopped') return 'next'
   return run.status === 'working' || run.status === 'paused' ? 'now' : 'halted'
 }
 
+/**
+ * A step's failed tries. A conflict is no try on the pages (Rich, moment 8: "the person sees
+ * nothing unless it happens three times"); three are `needs: conflict`.
+ */
 function triesOf(run: Run, key: BuildStep): number {
   if (key === 'build') return run.tries['build'] ?? 0
   if (key === 'draft') return run.tries['draft'] ?? 0
-  if (key === 'pages') return run.tries['conflict'] ?? 0
   return 0
 }
+
+/** What changed in a round: its one account; a round from before F4, the accounts it joined. */
+const accountOf = (detail: RunDetail | null): string | null =>
+  detail?.account ?? detail?.steps.pages?.changed ?? null
 
 /** The latest round's view, or null before the first. */
 export function roundOf(store: Store, conversationId: string): RoundView | null {
@@ -111,7 +124,7 @@ export function roundOf(store: Store, conversationId: string): RoundView | null 
       state: stateOf(run, key),
       tries: triesOf(run, key),
       note: detail.steps[key]?.note ?? null,
-      changed: detail.steps[key]?.changed ?? null,
+      changed: key === 'pages' ? accountOf(detail) : (detail.steps[key]?.changed ?? null),
       exact: detail.steps[key]?.exact ?? null,
     })),
     needs: detail.needs,
@@ -170,7 +183,7 @@ export function threadOf(store: Store, conversationId: string): Said[] {
         thread.push({
           kind: 'built',
           round: said.round,
-          changed: runs.get(said.round)?.detail?.steps.pages?.changed ?? null,
+          changed: accountOf(runs.get(said.round)?.detail ?? null),
           cannot: said.cannot,
           at,
         })

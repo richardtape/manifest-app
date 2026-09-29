@@ -208,6 +208,7 @@ describe("a round's run and its trace (F3 Decision 10)", () => {
     failures: [],
     tried: [],
     cannot: null,
+    account: 'Students post on a weekly page.',
   }
 
   it('saves a run, reads it back, and a second save replaces the first', () => {

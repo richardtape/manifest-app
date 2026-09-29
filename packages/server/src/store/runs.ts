@@ -70,6 +70,12 @@ export interface RunDetail {
   tried: { what: 'build' | 'draft'; text: string }[]
   /** FE-32, in the lead's words. */
   cannot: string | null
+  /**
+   * The round's one sentence, from the lead's `done` (Rich, 2026-09-28): What changed. Each
+   * commit's own account is in `steps.pages.exact`, above its files. A round from before F4 has
+   * none, and its joined accounts are `steps.pages.changed`.
+   */
+  account: string | null
 }
 
 /** One question a round asked (F3 Decision 10). A secret's answer is never here. */

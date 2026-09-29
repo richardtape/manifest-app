@@ -248,7 +248,14 @@ const AT_BUILD = [
       account: 'One page listing the weeks',
     },
   },
-  { move: { kind: 'done', line: 'The pages are written.', cannot: null } },
+  {
+    move: {
+      kind: 'done',
+      line: 'The pages are written.',
+      cannot: null,
+      account: 'One page listing the weeks, where students post.',
+    },
+  },
 ]
 
 async function atBuild(s: Setup): Promise<Conversation> {

@@ -347,8 +347,13 @@ describe('the steps, each ticking on its own signal', () => {
         {
           pages: {
             state: 'done',
-            changed: 'One page listing the weeks. The rule about who sees what',
-            exact: ['public/weeks.html', 'server.js'],
+            changed: 'Students post on a weekly page.',
+            exact: [
+              'One page listing the weeks.',
+              'public/weeks.html',
+              'The rule about who sees what.',
+              'server.js',
+            ],
           },
           holds: { state: 'done', exact: [] },
           build: { state: 'now', tries: 1, note: 'A piece it depends on was missing' },
@@ -358,8 +363,9 @@ describe('the steps, each ticking on its own signal', () => {
     const build = stepItem('Building it (second try)')
     expect(build.className).toContain('mf-step--now')
     expect(within(build).getByText('A piece it depends on was missing')).toBeTruthy()
+    // After the pages, the line is ours (Rich), never the lead's.
     expect(build.querySelector('[aria-live="polite"]')?.textContent).toBe(
-      'Building it again.',
+      words.building.stepLine.build,
     )
     // The line is under the step at work, and nowhere else.
     expect(document.querySelectorAll('.mf-step [aria-live]')).toHaveLength(1)
@@ -371,9 +377,9 @@ describe('the steps, each ticking on its own signal', () => {
     })
     const what = changed.closest('details')!
     expect(what.open).toBe(false)
-    expect(within(what).getByText(/One page listing the weeks/)).toBeTruthy()
+    expect(within(what).getByText('Students post on a weekly page.')).toBeTruthy()
     const exact = within(what).getByText(words.building.exactChanges, { exact: false })
-    expect(exact.textContent).toBe(`${words.building.exactChanges} · 2 lines`)
+    expect(exact.textContent).toBe(`${words.building.exactChanges} · 4 lines`)
     expect(exact.closest('details')!.querySelector('.mf-inverse')).not.toBeNull()
     // Nothing missing from the pages: the check that holds has nothing to disclose.
     expect(stepItem(words.building.steps.holds).querySelector('details')).toBeNull()
@@ -649,7 +655,7 @@ describe('what a round needs of them: one card each', () => {
   it('stopped: nothing is lost, and Carry on sends {}', async () => {
     const s = stage()
     await open(s)
-    s.state(round({ status: 'stopped' }, { pages: { state: 'halted' } }))
+    s.state(round({ status: 'stopped' }, { pages: { state: 'next' } }))
     expect(screen.getByText(words.building.needs.stopped)).toBeTruthy()
     expect(screen.getByText(words.building.chip.stopped)).toBeTruthy()
     // Nothing keeps going: the permission to leave would not be true.
@@ -683,7 +689,7 @@ describe('a token our server no longer holds (F2 handOverToken), without a word'
       build: (n) => (n === 1 ? new OurRefusal('TOKEN_MISSING', 409) : undefined),
     })
     await open(s)
-    s.state(round({ status: 'stopped' }, { pages: { state: 'halted' } }))
+    s.state(round({ status: 'stopped' }, { pages: { state: 'next' } }))
     await press(button(words.building.carryOn))
     await waitFor(() => expect(s.called('build')).toHaveLength(2))
     expect(s.calls.map((c) => c[0])).toEqual([
@@ -912,7 +918,7 @@ describe('Stop', () => {
       build: (n) => (n === 1 ? new OurRefusal('CONVERSATION_BUSY', 409) : undefined),
     })
     await open(s)
-    s.state(round({ status: 'stopped' }, { pages: { state: 'halted' } }))
+    s.state(round({ status: 'stopped' }, { pages: { state: 'next' } }))
     await press(button(words.building.carryOn))
     expect(await screen.findByText(words.building.busy)).toBeTruthy()
     expect(reports).toEqual([])
@@ -1143,7 +1149,8 @@ describe('no machinery shown, and never "It works" (C3)', () => {
       ],
     )
     // Drawn: the line, the two facts, the question, the cost, and the platform's words shut away.
-    expect(screen.getByText('Putting it on your draft address again.')).toBeTruthy()
+    expect(screen.getByText(words.building.stepLine.draft)).toBeTruthy()
+    expect(screen.queryByText('Putting it on your draft address again.')).toBeNull()
     expect(screen.getByText(words.building.facts.attemptFailed)).toBeTruthy()
     expect(screen.getByLabelText('Should a TA see everything you see?')).toBeTruthy()
     expect(screen.getByText('$0.40 so far · $9.60 left this month')).toBeTruthy()
@@ -1152,5 +1159,151 @@ describe('no machinery shown, and never "It works" (C3)', () => {
     )
     expect(machineryIn(wordsShown())).toEqual([])
     expect(document.body.textContent).not.toMatch(/it works/i)
+  })
+})
+
+/**
+ * RICH'S F3 DECISIONS (2026-09-28), ON THE BUILDING SCREEN (F4 Task 3): the line under each step
+ * after the pages is ours; a Stop he chose is still, not red; What changed is one account a
+ * round, the commits' own behind the disclosure with their files.
+ */
+describe("Rich's F3 decisions", () => {
+  const LEADS = 'Students can save private answers, and you can review and post them.'
+  const AFTER = ['holds', 'build', 'draft', 'answers'] as const
+
+  it.each([...AFTER])('under %s, the line is ours, never the lead’s', async (key) => {
+    const s = stage()
+    await open(s)
+    const steps = Object.fromEntries(
+      KEYS.map((k) => [
+        k,
+        {
+          state:
+            KEYS.indexOf(k) < KEYS.indexOf(key)
+              ? ('done' as const)
+              : k === key
+                ? ('now' as const)
+                : ('next' as const),
+        },
+      ]),
+    )
+    s.state(round({ line: LEADS }, steps))
+    const live = document.querySelectorAll('.mf-step [aria-live="polite"]')
+    expect(live).toHaveLength(1)
+    expect(live[0]!.closest('li')).toBe(stepItem(words.building.steps[key]))
+    expect(live[0]!.textContent).toBe(words.building.stepLine[key])
+    expect(document.body.textContent).not.toContain(LEADS)
+  })
+
+  it('under Writing the pages, the line is the lead’s own', async () => {
+    const s = stage()
+    await open(s)
+    s.state(round({ line: 'Writing the page students post on.' }))
+    expect(
+      stepItem(words.building.steps.pages).querySelector('[aria-live="polite"]')
+        ?.textContent,
+    ).toBe('Writing the page students post on.')
+  })
+
+  it('a Stop they chose is still: no step in red, the chip not yet and still, the card not red, and Carry on', async () => {
+    const s = stage()
+    await open(s)
+    s.state(
+      round(
+        { status: 'stopped', line: LEADS },
+        { pages: { state: 'done' }, holds: { state: 'done' }, build: { state: 'next' } },
+      ),
+    )
+    expect(document.querySelector('.mf-step--halted')).toBeNull()
+    expect(document.querySelector('.mf-step--now')).toBeNull()
+    const chip = screen.getByText(words.building.chip.stopped)
+    expect(words.building.chip.stopped).toBe('Stopped. Nothing is lost.')
+    expect(chip.className).toContain('mf-is-notyet')
+    expect(chip.querySelector('.mf-pulse')).toBeNull()
+    expect(document.querySelector('.mf-card--attention')).toBeNull()
+    expect(document.querySelector('[class*="mf-is-attention"]')).toBeNull()
+    expect(button(words.building.carryOn)).toBeTruthy()
+    // Stopped, nothing is moving: no line under any step.
+    expect(document.querySelectorAll('.mf-step [aria-live]')).toHaveLength(0)
+  })
+
+  it("What changed is the round's one sentence, the same folded in the thread; each commit's account is behind the disclosure with its files", async () => {
+    const s = stage()
+    await open(s)
+    const ACCOUNT = 'Students post on a weekly page, and only you see every response.'
+    s.state(
+      round(
+        { status: 'done' },
+        {
+          ...ALL_DONE,
+          pages: {
+            state: 'done',
+            changed: ACCOUNT,
+            exact: [
+              'One page listing the weeks.',
+              'public/weeks.html',
+              'The rule about who sees what.',
+              'config/staff.json',
+            ],
+          },
+        },
+      ),
+      { state: 'built' },
+      [
+        {
+          kind: 'built',
+          round: 1,
+          changed: ACCOUNT,
+          cannot: null,
+          at: '2026-09-28T16:12:00.000Z',
+        },
+      ],
+    )
+    const pages = stepItem(words.building.steps.pages)
+    const what = within(pages)
+      .getByText(words.building.whatChanged, { selector: 'summary' })
+      .closest('details')!
+    expect(what.querySelector('.building__changed')?.textContent).toBe(ACCOUNT)
+    const exact = within(what)
+      .getByText(words.building.exactChanges, { exact: false })
+      .closest('details')!
+    expect(exact.querySelector('.mf-log')?.textContent).toContain(
+      'The rule about who sees what.',
+    )
+    const talk = screen.getByRole('region', { name: words.building.thread.label })
+    const folded = within(talk)
+      .getByText(words.building.whatChanged, { selector: 'summary' })
+      .closest('details')!
+    expect(folded.querySelector('p')?.textContent).toBe(ACCOUNT)
+  })
+
+  it('while it writes, the commits so far are the exact changes, never the exact words', async () => {
+    const s = stage()
+    await open(s)
+    s.state(
+      round(
+        { line: 'Writing the page students post on.' },
+        {
+          pages: {
+            state: 'now',
+            exact: ['One page listing the weeks.', 'public/weeks.html'],
+          },
+        },
+      ),
+    )
+    const pages = stepItem(words.building.steps.pages)
+    expect(
+      within(pages).getByText(words.building.exactChanges, { exact: false }).textContent,
+    ).toBe(`${words.building.exactChanges} · 2 lines`)
+    expect(
+      within(pages).queryByText(words.building.exactWords, { exact: false }),
+    ).toBeNull()
+  })
+
+  it('a conflict is no try: Writing the pages is never "(second try)"', async () => {
+    const s = stage()
+    await open(s)
+    s.state(round({}, { pages: { state: 'now', tries: 0 } }))
+    expect(stepItem(words.building.steps.pages).textContent).not.toMatch(/try\)/)
   })
 })

@@ -250,6 +250,17 @@ export const words = {
       draft: 'Putting it on your draft address',
       answers: 'Checking it answers',
     },
+    /**
+     * Rich (2026-09-28): the line under each step after the pages is ours, one per step. Under
+     * the pages it is the lead's own.
+     */
+    stepLine: {
+      /** Ours, approved with F4's plan. */
+      holds: 'Checking that everything it needs is there.',
+      build: 'Building it. This usually takes under a minute.',
+      draft: 'Putting it on your draft address. Under a minute and a half.',
+      answers: 'Opening it, and starting a sign-in, to check it answers.',
+    },
     /** "Building it (second try)": the failures so far. Three tries, then it asks. */
     tries: (failures: number) =>
       failures >= 2 ? ' (third try)' : failures === 1 ? ' (second try)' : '',
@@ -259,8 +270,8 @@ export const words = {
       working: 'Working, a few minutes',
       paused: 'Paused, waiting for you',
       needsYou: 'Needs you',
-      /** Ours: stopped by them, and still. */
-      stopped: 'Stopped',
+      /** Rich (2026-09-28): stopped by them, and still, in the not-yet tone. */
+      stopped: 'Stopped. Nothing is lost.',
       /** Ours: the round is done. */
       built: 'Built',
       /** Ours: every wait names its owner. */
@@ -344,9 +355,8 @@ export const words = {
       /** Ours (FE-37): the draft answers, but signing in to it is refused on Manifest's side. */
       signInRefused:
         "It started and answered, but signing in to it is refused on Manifest's side. That's Manifest's to put right, not yours. Nothing is lost.",
-      /** Ours: after Stop. */
-      stopped:
-        'Stopped. Nothing is lost: your draft address keeps whatever was last put there.',
+      /** Ours: after Stop, under the chip, which already says it stopped and nothing is lost. */
+      stopped: 'Your draft address keeps whatever was last put there.',
       /** Ours: our server restarted while it worked (Review Focus 3). */
       interrupted:
         'We were interrupted part-way through. Nothing is lost: carry on, and we pick up where we were.',

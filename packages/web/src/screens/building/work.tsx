@@ -17,18 +17,18 @@ const KEYS: BuildStep[] = ['pages', 'holds', 'build', 'draft', 'answers']
 type StepView = RoundView['steps'][number]
 
 /**
- * A STEP'S DISCLOSURE: *What changed* in the lead's own accounts, with the files behind it; or
- * the platform's own words while a try fails. Machine text sits behind a disclosure shut by
- * default, on the inverse surface (InverseSurface/README.md).
+ * A STEP'S DISCLOSURE: *What changed*, the round's one account (Rich), with each commit's own
+ * account and its files behind it; or the platform's own words while a try fails. Machine text
+ * sits behind a disclosure shut by default, on the inverse surface (InverseSurface/README.md).
  */
 function detailOf(step: StepView): ReactNode {
   const lines = step.exact === null ? [] : linesOf(step.exact)
+  // The pages' exact lines are always its commits, even before done says what changed.
+  const changes = step.key === 'pages' || step.changed !== null
   const exact =
     lines.length === 0 ? null : (
       <Disclosure
-        summary={
-          step.changed === null ? words.building.exactWords : words.building.exactChanges
-        }
+        summary={changes ? words.building.exactChanges : words.building.exactWords}
         count={lines.length}
         machine
       >
@@ -48,15 +48,24 @@ function detailOf(step: StepView): ReactNode {
 function stepsOf(round: RoundView | null): Step[] {
   if (round === null)
     return KEYS.map((key) => ({ text: words.building.steps[key], state: 'next' }))
-  // A message of theirs waiting is said under the step at work; else the lead's own line.
-  const line = round.messageWaiting ? words.building.gotIt : (round.line ?? undefined)
-  return round.steps.map((step) => ({
-    text: words.building.steps[step.key] + words.building.tries(step.tries),
-    state: step.state,
-    ...(step.note === null ? {} : { note: step.note }),
-    ...(line === undefined ? {} : { line }),
-    detail: detailOf(step),
-  }))
+  // A message of theirs waiting is said under the step at work; else, under the pages, the
+  // lead's own line, and under every step after them, ours (Rich).
+  const lineOf = (key: BuildStep): string | undefined =>
+    round.messageWaiting
+      ? words.building.gotIt
+      : key === 'pages'
+        ? (round.line ?? undefined)
+        : words.building.stepLine[key]
+  return round.steps.map((step) => {
+    const line = lineOf(step.key)
+    return {
+      text: words.building.steps[step.key] + words.building.tries(step.tries),
+      state: step.state,
+      ...(step.note === null ? {} : { note: step.note }),
+      ...(line === undefined ? {} : { line }),
+      detail: detailOf(step),
+    }
+  })
 }
 
 /**

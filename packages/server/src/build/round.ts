@@ -625,12 +625,16 @@ export function createRounds(deps: RoundDeps): Rounds {
       cannot(what) {
         d.cannot = what
       },
+      account(sentence) {
+        d.account = sentence
+      },
     }
   }
 
   /**
    * THE LEAD'S MOVES, AS THIS ROUND HOLDS THEM: `done` is sent back until a commit has landed
-   * (Decision 5), and each landed commit's account is what changed.
+   * (Decision 5), and each landed commit's account goes with its files into the exact changes.
+   * What changed is `done`'s one account (Rich).
    */
   /** The proposal's paths a commit wrote, or found already so, leave it; none left is settled. */
   function settle(live: Live, changes: Change[]) {
@@ -662,23 +666,16 @@ export function createRounds(deps: RoundDeps): Rounds {
             const result = await tool.run(input, context)
             const changes = live.landed as Change[] | null
             if (changes !== null) {
-              const pages = d.steps.pages ?? { note: null, changed: null, exact: null }
-              // One full stop between accounts, whatever the lead ends each with, and a repeated
-              // account said once (Task 12's walk: "…their answers.. The instructor…").
-              const account = (input as { account: string }).account
-                .trim()
-                .replace(/\.+$/, '')
-              const said = pages.changed === null ? '' : `. ${pages.changed}. `
+              // Each commit's own account, then its files, in order (Rich: behind the
+              // disclosure, next to the files).
+              const account = (input as { account: string }).account.trim()
               d.steps.pages = {
                 note: null,
-                changed:
-                  pages.changed === null
-                    ? account
-                    : said.includes(`. ${account}. `)
-                      ? pages.changed
-                      : `${pages.changed}. ${account}`,
+                changed: null,
                 exact: [
-                  ...new Set([...(pages.exact ?? []), ...changes.map((c) => c.path)]),
+                  ...(d.steps.pages?.exact ?? []),
+                  account,
+                  ...changes.map((c) => c.path),
                 ],
               }
             }
@@ -969,10 +966,7 @@ export function createRounds(deps: RoundDeps): Rounds {
     const sandbox = live.sandbox!
     const buildId = d.buildId!
     if (d.releaseId === null) {
-      const summary = (d.steps.pages?.changed ?? d.line ?? 'The pages we wrote').slice(
-        0,
-        500,
-      )
+      const summary = (d.account ?? d.line ?? 'The pages we wrote').slice(0, 500)
       const release = await call(live, 'createRelease', buildId, () =>
         releases.create(live.token, live.projectId, buildId, summary),
       )

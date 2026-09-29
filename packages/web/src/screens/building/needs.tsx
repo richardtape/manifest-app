@@ -12,7 +12,8 @@ export interface Presses {
   stop: () => void
 }
 
-type Tone = 'attention' | 'waiting'
+/** `plain` is still: a Stop they chose (Rich), which is neither a problem nor a wait. */
+type Tone = 'attention' | 'waiting' | 'plain'
 
 /** One card: what is true, its reference where it is a problem, and its buttons. */
 function NeedsCard({
@@ -179,7 +180,7 @@ export function RoundNeeds({
   if (round === null) return null
   if (round.status === 'stopped')
     return (
-      <NeedsCard tone="attention" said={words.building.needs.stopped} reference={null}>
+      <NeedsCard tone="plain" said={words.building.needs.stopped} reference={null}>
         {carryOn(presses)}
       </NeedsCard>
     )

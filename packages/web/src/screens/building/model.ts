@@ -32,7 +32,8 @@ export function chipOf(round: RoundView | null): {
     case 'paused':
       return { state: 'attention', label: chip.paused }
     case 'stopped':
-      return { state: 'attention', label: chip.stopped, pulse: false }
+      // Rich: a Stop they chose is still, not red.
+      return { state: 'notyet', label: chip.stopped, pulse: false }
     case 'interrupted':
       return { state: 'attention', label: chip.needsYou }
     case 'done':

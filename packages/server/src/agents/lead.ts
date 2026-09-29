@@ -45,7 +45,7 @@ export type LeadMove =
       }
     }
   | { kind: 'ask_person'; ask: string; default: string | null; secret: string | null }
-  | { kind: 'done'; line: string; cannot: string | null }
+  | { kind: 'done'; line: string; cannot: string | null; account: string }
 
 /**
  * DECISION 3's CAP: everything the lead is sent, instructions included, whatever model is

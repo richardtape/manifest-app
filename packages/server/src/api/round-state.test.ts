@@ -4,7 +4,7 @@ import { openStore, type Run } from '../store/db.js'
 import { scratchDir } from '../store/testing.js'
 import { stateFrame } from './events.js'
 import { ALICE } from './testing.js'
-import { NO_DETAIL, type RoundSaid } from './round-state.js'
+import { NO_DETAIL, roundOf, type RoundSaid } from './round-state.js'
 
 /**
  * WHAT THE ROUNDS SAID, ON THE PAGE (F3 Task 11). Sitting 5 kept each round's words as the
@@ -172,5 +172,98 @@ describe('the state frame carries what the rounds said', () => {
     expect(after.kind === 'state' && after.thread).toMatchObject([
       { kind: 'built', round: 1, changed: null, cannot: null },
     ])
+  })
+})
+
+/**
+ * RICH'S F3 DECISIONS, FOLDED (F4 Task 3, 2026-09-28): What changed is one account a round, from
+ * the lead's done; each commit's own account sits with its files; a Stop he chose is still; a
+ * conflict is no try on the pages.
+ */
+describe("Rich's F3 decisions, as the round is folded", () => {
+  const ACCOUNT = 'Word counts appear as students write, and beside each response.'
+  const EXACT = [
+    'One page listing the weeks',
+    'public/weeks.html',
+    'The rule about who sees what',
+    'config/staff.json',
+  ]
+  const stepOf = (s: ReturnType<typeof store>, id: string, key: string) =>
+    roundOf(s, id)?.steps.find((step) => step.key === key)
+
+  it("What changed is done's one account, and the exact changes are each commit's account with its files", () => {
+    const s = store()
+    const id = s.createConversation(ALICE.id, 'Words.').id
+    s.saveRun(
+      run(id, 1, {
+        detail: {
+          ...NO_DETAIL,
+          account: ACCOUNT,
+          steps: { pages: { note: null, changed: null, exact: EXACT } },
+        },
+      }),
+    )
+    s.addMessage(id, 'we', {
+      kind: 'built',
+      round: 1,
+      line: 'The pages are written.',
+      cannot: null,
+    } satisfies RoundSaid)
+    expect(stepOf(s, id, 'pages')).toMatchObject({ changed: ACCOUNT, exact: EXACT })
+    const frame = stateFrame(s, s.getConversation(id, ALICE.id)!)
+    expect(frame.kind === 'state' && frame.thread).toMatchObject([
+      { kind: 'built', round: 1, changed: ACCOUNT },
+    ])
+  })
+
+  it('a round from before F4, with no account, still folds the accounts it kept', () => {
+    const s = store()
+    const id = s.createConversation(ALICE.id, 'Words.').id
+    // As F3 saved it: a detail with no `account` key at all.
+    const before = Object.fromEntries(
+      Object.entries(NO_DETAIL).filter(([key]) => key !== 'account'),
+    ) as unknown as typeof NO_DETAIL
+    s.saveRun(
+      run(id, 1, {
+        detail: {
+          ...before,
+          steps: {
+            pages: { note: null, changed: 'One page. The rule', exact: ['a.html'] },
+          },
+        },
+      }),
+    )
+    expect(stepOf(s, id, 'pages')?.changed).toBe('One page. The rule')
+  })
+
+  it("a stopped round's step goes back to not started, still; interrupted and needs-you stay halted", () => {
+    const s = store()
+    const id = s.createConversation(ALICE.id, 'Words.').id
+    s.saveRun(run(id, 1, { status: 'stopped', step: 'build' }))
+    expect(roundOf(s, id)?.steps.map((step) => step.state)).toEqual([
+      'done',
+      'done',
+      'next',
+      'next',
+      'next',
+    ])
+    for (const status of ['interrupted', 'needs-you'] as const) {
+      s.saveRun(run(id, 1, { status, step: 'build' }))
+      expect(stepOf(s, id, 'build')?.state).toBe('halted')
+    }
+  })
+
+  it('a conflict is no try on the pages: two leave its tries at 0, and a build still counts its own', () => {
+    const s = store()
+    const id = s.createConversation(ALICE.id, 'Words.').id
+    s.saveRun(
+      run(id, 1, {
+        status: 'working',
+        step: 'pages',
+        tries: { conflict: 2, build: 1, draft: 0 },
+      }),
+    )
+    expect(stepOf(s, id, 'pages')?.tries).toBe(0)
+    expect(stepOf(s, id, 'build')?.tries).toBe(1)
   })
 })

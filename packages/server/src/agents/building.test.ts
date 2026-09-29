@@ -44,6 +44,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
   const written: Change[][] = []
   const questions: { ask: string; fallback: string | null; secret: string | null }[] = []
   const cannot: string[] = []
+  const accounts: string[] = []
   const proposals: { changes: Change[]; summary: string }[] = []
   const briefs: CwlBrief[] = []
   const commits: { baseCommit: string; message: string; changes: Change[] }[] = []
@@ -98,6 +99,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
       }
     },
     cannot: (what) => void cannot.push(what),
+    account: (sentence) => void accounts.push(sentence),
     propose: (proposal) => void proposals.push(proposal),
     unchanged: () => undefined,
     askCwl: async (brief) => {
@@ -126,6 +128,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
     written,
     questions,
     cannot,
+    accounts,
     briefs,
     commits,
     base: () => base,
@@ -138,6 +141,8 @@ const guardOf = (kind: string, input: unknown, context: RoundContext) =>
 const runOf = (kind: string, input: unknown, context: RoundContext) =>
   tool(kind).run(input as never, context as never)
 
+/** The round's one sentence: What changed (Rich, 2026-09-28). */
+const ACCOUNT = 'Word counts appear as students write, and beside each response.'
 const commitMove = (over: object = {}) => ({
   message: 'Two pages',
   changes: [
@@ -177,8 +182,13 @@ describe('the moves the lead may answer (Decision 2)', () => {
       },
       { kind: 'ask_person', ask: 'Late posts?', default: 'They count.', secret: null },
       { kind: 'ask_person', ask: 'Your SIS key?', default: null, secret: 'SIS_KEY' },
-      { kind: 'done', line: 'The pages are written.', cannot: null },
-      { kind: 'done', line: 'The rest is built.', cannot: 'the formatted text box' },
+      { kind: 'done', line: 'The pages are written.', cannot: null, account: ACCOUNT },
+      {
+        kind: 'done',
+        line: 'The rest is built.',
+        cannot: 'the formatted text box',
+        account: ACCOUNT,
+      },
     ])
       expect(moves.safeParse({ move }).success).toBe(true)
   })
@@ -188,17 +198,31 @@ describe('the moves the lead may answer (Decision 2)', () => {
     const paths = Array.from({ length: 21 }, (_, i) => `f${i}.js`)
     expect(moves.safeParse({ move: { kind: 'read', paths } }).success).toBe(false)
     expect(
-      moves.safeParse({ move: { kind: 'done', line: 'x'.repeat(201), cannot: null } })
-        .success,
+      moves.safeParse({
+        move: { kind: 'done', line: 'x'.repeat(201), cannot: null, account: ACCOUNT },
+      }).success,
     ).toBe(false)
     expect(
-      moves.safeParse({ move: { kind: 'done', line: 'x'.repeat(200), cannot: null } })
-        .success,
+      moves.safeParse({
+        move: { kind: 'done', line: 'x'.repeat(200), cannot: null, account: ACCOUNT },
+      }).success,
     ).toBe(true)
     // Strict mode asks for every field (M1): a done that leaves out `cannot` is not a move.
-    expect(moves.safeParse({ move: { kind: 'done', line: 'Built.' } }).success).toBe(
-      false,
-    )
+    expect(
+      moves.safeParse({ move: { kind: 'done', line: 'Built.', account: ACCOUNT } })
+        .success,
+    ).toBe(false)
+  })
+
+  it("refuses a done without the round's one account (Rich: one account a round)", () => {
+    expect(
+      moves.safeParse({ move: { kind: 'done', line: 'Built.', cannot: null } }).success,
+    ).toBe(false)
+    expect(
+      moves.safeParse({
+        move: { kind: 'done', line: 'Built.', cannot: null, account: '' },
+      }).success,
+    ).toBe(false)
   })
 
   it("is the lead's own answer, and its root is an object (M1)", () => {
@@ -477,12 +501,46 @@ describe('done', () => {
   it('ends the run with its line, guarded for plain words', async () => {
     const r = roundContext()
     expect(
-      await runOf('done', { line: 'The pages are written.', cannot: null }, r.context),
+      await runOf(
+        'done',
+        { line: 'The pages are written.', cannot: null, account: ACCOUNT },
+        r.context,
+      ),
     ).toMatchObject({
       stop: { kind: 'done', line: 'The pages are written.' },
     })
     expect(r.cannot).toEqual([])
-    expect(guardOf('done', { line: 'It works', cannot: null }, r.context)).not.toBeNull()
+    expect(
+      guardOf('done', { line: 'It works', cannot: null, account: ACCOUNT }, r.context),
+    ).not.toBeNull()
+  })
+
+  it('hands the round its one account, What changed (Rich), guarded like the line', async () => {
+    const r = roundContext()
+    await runOf(
+      'done',
+      { line: 'The pages are written.', cannot: null, account: ACCOUNT },
+      r.context,
+    )
+    expect(r.accounts).toEqual([ACCOUNT])
+    expect(
+      guardOf(
+        'done',
+        {
+          line: 'The pages are written.',
+          cannot: null,
+          account: 'We changed server.js and the routes.',
+        },
+        r.context,
+      ),
+    ).toMatch(/never a file or a path/)
+    expect(
+      guardOf(
+        'done',
+        { line: 'The pages are written.', cannot: null, account: 'It works now.' },
+        r.context,
+      ),
+    ).toMatch(/it works/)
   })
 
   it('FE-32: what cannot be added is handed to the round in its plain words, guarded like the line', async () => {
@@ -490,7 +548,11 @@ describe('done', () => {
     expect(
       await runOf(
         'done',
-        { line: 'The rest is built.', cannot: 'the formatted text box' },
+        {
+          line: 'The rest is built.',
+          cannot: 'the formatted text box',
+          account: ACCOUNT,
+        },
         r.context,
       ),
     ).toMatchObject({ stop: { kind: 'done', line: 'The rest is built.' } })
@@ -498,7 +560,11 @@ describe('done', () => {
     expect(
       guardOf(
         'done',
-        { line: 'The rest is built.', cannot: 'the npm package marked' },
+        {
+          line: 'The rest is built.',
+          cannot: 'the npm package marked',
+          account: ACCOUNT,
+        },
         r.context,
       ),
     ).not.toBeNull()
@@ -807,6 +873,8 @@ describe('mock mode: the walk-through answers the three (F2 Decision 7)', () => 
     expect(stop).toMatchObject({ kind: 'done' })
     expect(saved.map((s) => s.last?.kind)).toEqual(['read', 'commit', 'done'])
     expect(r.commits).toHaveLength(1)
+    // Its done carries the round's one account, as the real lead's must.
+    expect(r.accounts).toHaveLength(1)
   })
 
   it('its CWL specialist writes the brief’s own staff, and its explaining agent is plain', async () => {

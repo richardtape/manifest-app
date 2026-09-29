@@ -40,6 +40,8 @@ export interface RoundContext {
   ): { id: string; answeredWith: string | null }
   /** FE-32: what the plan asked for that needs a piece we cannot install, in the lead's words. */
   cannot(what: string): void
+  /** The round's one sentence, from `done` (Rich): What changed. */
+  account(sentence: string): void
   askCwl(brief: CwlBrief): Promise<{ changes: Change[]; summary: string }>
   /**
    * The specialist's proposal, kept for the lead's view until it is committed (Task 12's walk: a
@@ -286,12 +288,19 @@ const askPerson = defineTool({
 const done = defineTool({
   kind: 'done',
   describe:
-    'done { line, cannot }: the pages are written. cannot is what they asked for that needs a piece we cannot install, in their words ("the formatted text box"), or null.',
-  input: z.object({ line: LINE, cannot: z.string().min(1).max(120).nullable() }),
-  guard: ({ line, cannot }, context: RoundContext) =>
-    context.guards.words(line) ?? (cannot === null ? null : context.guards.words(cannot)),
-  async run({ line, cannot }, context: RoundContext): Promise<MoveResult> {
+    'done { line, cannot, account }: the pages are written. account is what changed this round, as one sentence the person reads ("Word counts appear as students write, and beside each response."). cannot is what they asked for that needs a piece we cannot install, in their words ("the formatted text box"), or null.',
+  input: z.object({
+    line: LINE,
+    cannot: z.string().min(1).max(120).nullable(),
+    account: ACCOUNT,
+  }),
+  guard: ({ line, cannot, account }, context: RoundContext) =>
+    context.guards.words(line) ??
+    context.guards.words(account) ??
+    (cannot === null ? null : context.guards.words(cannot)),
+  async run({ line, cannot, account }, context: RoundContext): Promise<MoveResult> {
     if (cannot !== null) context.cannot(cannot)
+    context.account(account.trim())
     return { report: 'Done.', stop: { kind: 'done', line } }
   },
 })

@@ -100,8 +100,14 @@ const commit = (changes: Change[] = [write('public/weeks.html', PAGE)], over = {
     ...over,
   },
 })
-const done = (line = 'The pages are written.', cannot: string | null = null) => ({
-  move: { kind: 'done', line, cannot },
+/** The round's one sentence (Rich): What changed. */
+const ACCOUNT = 'One page listing the weeks, where students post.'
+const done = (
+  line = 'The pages are written.',
+  cannot: string | null = null,
+  account = ACCOUNT,
+) => ({
+  move: { kind: 'done', line, cannot, account },
 })
 const ask = (
   question: string,
@@ -550,7 +556,8 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
       () => viewOf(h, id),
     )
     expect(stepOf(h, id, 'build')?.state).toBe('done')
-    expect(h.releasesMade).toEqual([{ buildId: 'build-1', summary: expect.any(String) }])
+    // The version's summary is the round's one account.
+    expect(h.releasesMade).toEqual([{ buildId: 'build-1', summary: ACCOUNT }])
 
     // The deploy answered before the instance was healthy: draft waits for ITS instance.
     deploy.resolve({ id: 'instance-1', releaseId: 'release-1', state: 'starting' })
@@ -736,28 +743,44 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(prompts[0]).not.toMatch(/What you have asked this round/)
   })
 
-  it("What changed joins the commits' own accounts with one full stop each, and says a repeated one once (the real platform's accounts end with one)", async () => {
+  it("What changed is done's one account (Rich); the exact changes are each commit's account, then its files, in order", async () => {
+    const thinking = held<unknown>()
     const { h, id } = await startedRound({
       script: {
         lead: [
           commit([write('public/weeks.html', PAGE)], {
             account: 'One page listing the weeks.',
           }),
-          commit([write('config/staff.json', '{"puids":["ins000001"],"emails":[]}')], {
-            account: 'The rule about who sees what.',
-          }),
-          commit([write('public/post.html', PAGE)], {
-            account: 'One page listing the weeks.',
-          }),
-          done(),
+          commit(
+            [
+              write('config/staff.json', '{"puids":["ins000001"],"emails":[]}'),
+              write('server.js', FILES['server.js']! + '// staff\n'),
+            ],
+            { account: 'The rule about who sees what.' },
+          ),
+          () => thinking.promise,
         ],
       },
       autoBuild: true,
     })
-    await untilStatus(h, id, 'done')
-    expect(stepOf(h, id, 'pages')?.changed).toBe(
-      'One page listing the weeks. The rule about who sees what',
+    // While it writes, nothing is said to have changed yet: the exact changes grow commit by commit.
+    await until(
+      () => (stepOf(h, id, 'pages')?.exact?.length ?? 0) === 5,
+      () => viewOf(h, id),
     )
+    expect(stepOf(h, id, 'pages')?.changed).toBeNull()
+    thinking.resolve(
+      done('The pages are written.', null, 'Students post on a weekly page.'),
+    )
+    await untilStatus(h, id, 'done')
+    expect(stepOf(h, id, 'pages')?.changed).toBe('Students post on a weekly page.')
+    expect(stepOf(h, id, 'pages')?.exact).toEqual([
+      'One page listing the weeks.',
+      'public/weeks.html',
+      'The rule about who sees what.',
+      'config/staff.json',
+      'server.js',
+    ])
   })
 
   it('Writing the pages stays now on a done with nothing committed: the lead is told, and ticks after a commit lands', async () => {
@@ -926,6 +949,8 @@ describe('someone else changed the app (SOURCE_CONFLICT)', () => {
     })
     await untilStatus(h, id, 'needs-you')
     expect(viewOf(h, id)?.needs).toEqual({ kind: 'conflict' })
+    // Rich: a conflict is no try on the pages; the person sees nothing unless it is three.
+    expect(stepOf(h, id, 'pages')?.tries).toBe(0)
     expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
     expect(h.trees()).toBe(3)
     expect(h.attempts.map((c) => c.baseCommit)).toEqual([
