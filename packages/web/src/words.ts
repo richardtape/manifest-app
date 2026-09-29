@@ -555,6 +555,92 @@ export const words = {
       none: 'Nothing has been asked here yet.',
     },
   },
+  /**
+   * MOMENT 9, PUTTING A VERSION ON THE TRYING-OUT ADDRESS (F4 Task 10): the walk-through's words,
+   * Rich's, the prototype's where they are true, and ours where none has any, marked "ours".
+   */
+  tryingOut: {
+    /** The building screen's end, once built (walk-through). */
+    ready: 'Ready on your draft address.',
+    tryIt: 'Try it',
+    put: 'Put this version on trying-out',
+    /** Ours (Words proposed): the platform would make a new instance of the same version (M3). */
+    alreadyThere: 'This version is already on the trying-out address.',
+    /**
+     * The walk-through's question, the version fixed when it is asked. Its second sentence only
+     * when something is there to keep answering (ours).
+     */
+    question: (version: string, somethingThere: boolean) =>
+      `Put ${version} on the trying-out address?${
+        somethingThere
+          ? ' The one there now keeps answering until this one proves it can.'
+          : ''
+      }`,
+    /** "the version from today, 3:12pm" (the walk-through's question). */
+    today: 'today',
+    /** Ours: a version whose date cannot be read is never given one. */
+    thisVersion: 'this version',
+    putItThere: 'Put it there',
+    notNow: 'Not now',
+    /** The prototype's pill, and the bound given once, in words (Timeline/README.md). */
+    working: 'Working, under 90 seconds',
+    real: 'Each step is the app actually reaching that point.',
+    /** Ours: F4 M3 measured a deploy carrying on when its page closed. */
+    leave: 'You can leave: it keeps going, and the Preview shows where it got to.',
+    /** Ours: the stations, as a list, named for a screen reader. */
+    stationsLabel: 'Putting it on the trying-out address',
+    /** The prototype's stations, each with its note. */
+    stations: {
+      turn: {
+        label: 'Waiting its turn',
+        note: 'In the queue behind anything else going out',
+      },
+      room: {
+        label: 'Making room',
+        note: 'Somewhere to run, and a place to keep things',
+      },
+      starting: {
+        label: 'Starting up',
+        note: 'Your app is running its first few seconds',
+      },
+      answering: {
+        label: 'Answering',
+        note: 'It replied to us, so it will reply to people',
+      },
+      never: {
+        label: 'It never answered',
+        note: 'It started, then stopped replying to us',
+      },
+    },
+    /** Rich (2026-09-28): the end, everywhere, the laptop included. Never a date, never "We asked…". */
+    arrived:
+      "It's on the trying-out address. Nobody can sign in there until UBC's identity team has registered it. That takes some time, as several teams at UBC help make sure the app and its data are kept safe and secure.",
+    /** The prototype's: whose two facts these are, under the draft's own on the Preview. */
+    address: 'Your trying-out address',
+    /** Ours: the chip on either failure. */
+    needsYou: 'Needs you',
+    whatWentWrong: 'What went wrong',
+    /** The fix conversation's title (Words proposed for Rich; our server's FIX_WORDS). */
+    fixTitle: "It didn't start on the trying-out address",
+    secret: {
+      /** The plan's words, for a secret we asked for on the draft; ours for several. */
+      asked: (several: boolean) =>
+        several
+          ? 'It needs settings we asked you for on your draft, before it can start there.'
+          : 'It needs a setting we asked you for on your draft, before it can start there.',
+      /** Ours: a name no question of ours asked for. */
+      never: 'It needs a setting we never asked you for, before it can start there.',
+      set: 'Set it',
+    },
+    /** Moment 14's step-up card, without its rule about students (not true here). Never expected (M3). */
+    stepUp: {
+      title: 'Sign in once more',
+      body: "We're not doubting you. We're making it useless for anyone who finds your laptop open.",
+      again: 'Sign in again',
+    },
+    /** Ours: a press that did not go through. */
+    couldnt: "We couldn't do that just now. Nothing is lost.",
+  },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
   /** How much we read at once, near and past a limit (F2's deferred Minor, Rich: say it). */
   limits: {

@@ -87,6 +87,11 @@ export interface Store {
   answerQuestion(id: string, answer: string | null): void
   getQuestion(id: string): AskedQuestion | undefined
   listQuestions(runId: string): AskedQuestion[]
+  /**
+   * F4 Task 10: each secret the person's conversations on the app asked for by name, with the
+   * latest question we asked for it, sorted by name. Never an answer: a secret's is never here.
+   */
+  secretsAskedOn(projectId: string, personId: string): { name: string; ask: string }[]
   /** What happened in a run, never what was said. Anything shaped like a credential is refused. */
   recordTrace(runId: string, entry: unknown): void
   listTrace(runId: string): { at: string; entry: unknown }[]

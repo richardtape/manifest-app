@@ -885,3 +885,63 @@
   font-size: 14px;
   white-space: nowrap;
 }
+
+/*
+ * MOMENT 9, TRYING-OUT (F4 Task 10): under the draft's two facts on the Preview, and under the building
+ * screen's end, one column: the button, the question, the stations on a card of their own, and what they
+ * end with. A chip keeps its own width (sitting 5's defect: a chip as wide as its card).
+ */
+.trying-out {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  min-width: 0;
+}
+.trying-out .body-lead {
+  margin: 0;
+}
+.trying-out .mf-chip {
+  align-self: flex-start;
+}
+.trying-out__stations {
+  padding: var(--space-4) var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+/* At a phone's width, four stations share under 300px: each label must fit its own. */
+@media (max-width: 480px) {
+  .trying-out__stations {
+    padding: var(--space-4) 0;
+  }
+  .trying-out__stations .mf-station__label {
+    font-size: 12.5px;
+  }
+  .trying-out__stations .mf-station__note {
+    font-size: 11.5px;
+  }
+  /* In the building screen's work card, the stations take its padding too. */
+  .building__work .trying-out__stations {
+    margin-inline: calc(-1 * var(--space-3));
+  }
+}
+.trying-out__word {
+  white-space: nowrap;
+}
+.trying-out__title {
+  margin: var(--space-2) 0 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+.building__end {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.building__end .body-lead {
+  margin: 0;
+}
+.building__end .trying-out {
+  margin-top: 0;
+}

@@ -174,6 +174,11 @@ export interface Ours {
   conversationsOn(projectId: string): Promise<AppConversation[]>
   /** The conversation whose round deployed this instance; none of ours did, null. */
   conversationFor(projectId: string, instanceId: string): Promise<{ id: string } | null>
+  /**
+   * F4 TASK 10: the secrets we asked for by name on the app, each with the question we asked, so
+   * trying-out can name one it lacks (Decision 15). A read: nothing is sent, and never a value.
+   */
+  askedSecrets(projectId: string): Promise<{ name: string; ask: string }[]>
   events(id: string): StreamSource
 }
 
@@ -247,6 +252,12 @@ export function createOurs(): Ours {
         throw error
       }
     },
+    askedSecrets: async (projectId) =>
+      (
+        (await call('GET', `/api/apps/${encodeURIComponent(projectId)}/secrets`)) as {
+          secrets: { name: string; ask: string }[]
+        }
+      ).secrets,
     events: conversationEvents,
   }
 }

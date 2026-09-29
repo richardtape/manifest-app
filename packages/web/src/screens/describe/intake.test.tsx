@@ -205,6 +205,9 @@ function stage(
         secret: `mft_test_${mints}`,
       } as Schemas['MintedToken'])
     },
+    deploy: () => new Promise(() => undefined),
+    listAppSecrets: () => new Promise(() => undefined),
+    setAppSecret: () => new Promise(() => undefined),
     watchProject: (projectId, onEvent) => {
       calls.push(['watchProject', projectId])
       let ready!: () => void
@@ -252,6 +255,7 @@ function stage(
     startChange: () => new Promise(() => undefined),
     conversationsOn: () => new Promise(() => undefined),
     conversationFor: () => new Promise(() => undefined),
+    askedSecrets: () => new Promise(() => undefined),
     events: () => {
       const source = new FakeSource()
       sources.push(source)

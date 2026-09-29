@@ -451,6 +451,70 @@ describe('GET /api/apps/:projectId/instances/:instanceId/conversation', () => {
   })
 })
 
+describe('GET /api/apps/:projectId/secrets: what we asked for by name, never an answer (F4 Task 10)', () => {
+  /** A question a round of `conversation` asked; a secret's answer never reaches the store. */
+  function asked(
+    s: Setup,
+    conversation: Conversation,
+    ask: string,
+    secret: string | null,
+    answer: string | null,
+  ) {
+    const run = s.store.latestRun(conversation.id) ?? runOf(conversation.id, 'done')
+    s.store.saveRun(run)
+    const id = `q-${conversation.id}-${ask.length}-${secret ?? 'words'}`
+    s.store.addQuestion({
+      id,
+      runId: run.id,
+      conversationId: conversation.id,
+      ask,
+      fallback: null,
+      secret,
+    })
+    s.store.answerQuestion(id, answer)
+  }
+
+  it("names each secret the person's conversations on the app asked for, with the question we asked, and nothing else", async () => {
+    const s = setUp()
+    const mine = first(s, 'built', 'done')
+    asked(s, mine, 'What is the key for your class list?', 'SIS_KEY', null)
+    asked(s, mine, 'Can a student change a response?', null, 'Only before the deadline')
+    const bobs = s.store.createChange(BOB.id, PROJECT, "Bob's", 'words')
+    asked(s, bobs, "What is Bob's key?", 'BOB_KEY', null)
+    const elsewhere = s.store.createChange(ALICE.id, ANOTHER, 'Another app', 'words')
+    asked(s, elsewhere, 'What is the other key?', 'OTHER_KEY', null)
+
+    const answered = await s.get(`/api/apps/${PROJECT}/secrets`)
+    expect(answered.statusCode).toBe(200)
+    expect(answered.json()).toEqual({
+      secrets: [{ name: 'SIS_KEY', ask: 'What is the key for your class list?' }],
+    })
+    expect(answered.body).not.toContain('Only before the deadline')
+    expect((await s.get(`/api/apps/${PROJECT}/secrets`, AS_BOB)).json()).toEqual({
+      secrets: [{ name: 'BOB_KEY', ask: "What is Bob's key?" }],
+    })
+  })
+
+  it('a name asked again is named by the latest question, once', async () => {
+    const s = setUp()
+    const mine = first(s, 'built', 'done')
+    asked(s, mine, 'What is your key?', 'SIS_KEY', null)
+    await new Promise((resolve) => setTimeout(resolve, 3))
+    const later = s.store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    asked(s, later, 'What is the key for your class list, please?', 'SIS_KEY', null)
+    expect((await s.get(`/api/apps/${PROJECT}/secrets`)).json()).toEqual({
+      secrets: [{ name: 'SIS_KEY', ask: 'What is the key for your class list, please?' }],
+    })
+  })
+
+  it('none asked: an empty list; without a session, 401', async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    expect((await s.get(`/api/apps/${PROJECT}/secrets`)).json()).toEqual({ secrets: [] })
+    expect((await s.get(`/api/apps/${PROJECT}/secrets`, '')).statusCode).toBe(401)
+  })
+})
+
 describe('the state frame carries the piece and the line (Review Focus 5)', () => {
   it("a waiting change's frame says what was asked and its place; the first conversation's, its first piece", async () => {
     const s = setUp()

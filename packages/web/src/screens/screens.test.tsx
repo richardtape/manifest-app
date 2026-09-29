@@ -53,6 +53,9 @@ function platform(
     listBlueprints: (answers.listBlueprints ?? never) as Platform['listBlueprints'],
     createProject: (answers.createProject ?? never) as Platform['createProject'],
     mintToken: (answers.mintToken ?? never) as Platform['mintToken'],
+    deploy: never,
+    listAppSecrets: never,
+    setAppSecret: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
 }

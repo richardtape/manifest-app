@@ -219,6 +219,22 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
     expect([seen, JSON.parse(String(init.body))]).toEqual([url, body])
   })
 
+  it('askedSecrets reads the names we asked for, and each question, and sends nothing (F4 Task 10)', async () => {
+    const fetch = answer(200, {
+      secrets: [{ name: 'SIS_KEY', ask: 'What is the key for your class list?' }],
+    })
+    vi.stubGlobal('fetch', fetch)
+    expect(await createOurs().askedSecrets('p/1')).toEqual([
+      { name: 'SIS_KEY', ask: 'What is the key for your class list?' },
+    ])
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect([url, init.method, init.body]).toEqual([
+      '/api/apps/p%2F1/secrets',
+      'GET',
+      undefined,
+    ])
+  })
+
   it('a refusal is OurRefusal by its code and status; nothing answering is UNREACHABLE', async () => {
     vi.stubGlobal('fetch', answer(409, { error: { code: 'CONVERSATION_BUSY' } }))
     const busy = await createOurs()

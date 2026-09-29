@@ -80,10 +80,35 @@ export interface Platform {
     projectId: string,
     onEvent: (event: EventFrame) => void,
   ): { ready: Promise<void>; close(): void }
+  /**
+   * TRYING-OUT (F4 Task 10, Decision 11), in the person's session, so the record says who chose
+   * this version: the release, to the environment named. It answers once the new instance serves
+   * or has failed (a failed one is a `200` whose state is `failed`), up to about 90 s: its deadline
+   * is `DEPLOY_TIMEOUT_MS`. One `Idempotency-Key` per press. Staging asks no step-up (F4 M3).
+   */
+  deploy(
+    environmentId: string,
+    releaseId: string,
+    idempotencyKey: string,
+  ): Promise<Schemas['Instance']>
+  /** Each secret's name, `declared` and `set`, as fields: never a value (F4 S1: M1). */
+  listAppSecrets(environmentId: string): Promise<Schemas['AppSecretList']>
+  /**
+   * A secret's value, from the browser to the platform and nowhere else (Decision 15). Nothing is
+   * answered back that the page needs.
+   */
+  setAppSecret(
+    environmentId: string,
+    name: string,
+    value: string,
+    idempotencyKey: string,
+  ): Promise<void>
 }
 
 /** A read that has not answered by now is unreachable: never a page left blank (review #3). */
 export const READ_TIMEOUT_MS = 15_000
+/** A deploy answers once it has proved itself, up to about 90 s (F3 Decision 17's reason). */
+export const DEPLOY_TIMEOUT_MS = 120_000
 
 export function createPlatform(options: {
   origin: string
@@ -91,15 +116,18 @@ export function createPlatform(options: {
   timeoutMs?: number
 }): Platform {
   const timeoutMs = options.timeoutMs ?? READ_TIMEOUT_MS
-  const client = createManifestClient({
-    origin: options.origin,
-    ...(options.session === undefined ? {} : { session: options.session }),
-    // Every call has a deadline. A platform that takes the connection and never answers
-    // (the edge has no response timeout of its own) becomes a TimeoutError, which
-    // refusalOf reads as unreachable.
-    fetch: (request) =>
-      globalThis.fetch(request, { signal: AbortSignal.timeout(timeoutMs) }),
-  })
+  // Every call has a deadline. A platform that takes the connection and never answers
+  // (the edge has no response timeout of its own) becomes a TimeoutError, which
+  // refusalOf reads as unreachable. A deploy's is its own.
+  const clientWith = (deadline: number) =>
+    createManifestClient({
+      origin: options.origin,
+      ...(options.session === undefined ? {} : { session: options.session }),
+      fetch: (request) =>
+        globalThis.fetch(request, { signal: AbortSignal.timeout(deadline) }),
+    })
+  const client = clientWith(timeoutMs)
+  const deploys = clientWith(DEPLOY_TIMEOUT_MS)
   return {
     async getMe() {
       return unwrap(await client.GET('/v1/me'), 'getMe')
@@ -192,6 +220,38 @@ export function createPlatform(options: {
           body,
         }),
         'mintToken',
+      )
+    },
+    async deploy(environmentId, releaseId, idempotencyKey) {
+      return unwrap(
+        await deploys.POST('/v1/environments/{environmentId}/deploy', {
+          params: {
+            path: { environmentId },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+          body: { releaseId },
+        }),
+        'deploy',
+      )
+    },
+    async listAppSecrets(environmentId) {
+      return unwrap(
+        await client.GET('/v1/environments/{environmentId}/secrets', {
+          params: { path: { environmentId } },
+        }),
+        'listAppSecrets',
+      )
+    },
+    async setAppSecret(environmentId, name, value, idempotencyKey) {
+      unwrap(
+        await client.PUT('/v1/environments/{environmentId}/secrets/{name}', {
+          params: {
+            path: { environmentId, name },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+          body: { value },
+        }),
+        'setAppSecret',
       )
     },
     watchProject(projectId, onEvent) {

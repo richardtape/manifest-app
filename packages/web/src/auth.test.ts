@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { signInHref, signOut } from './auth.js'
+import { signInHref, signOut, stepUpHref } from './auth.js'
 
 /**
  * SIGN-OUT ASSERTS THE SHAPE OF ITS ANSWER, NOT THAT AN ANSWER ARRIVED (the console's
@@ -21,6 +21,13 @@ describe('signInHref', () => {
   it('sends the path and query back, encoded', () =>
     expect(signInHref('/apps?tab=people')).toBe(
       '/auth/login?returnTo=%2Fapps%3Ftab%3Dpeople',
+    ))
+})
+
+describe('stepUpHref (F4 Task 10; moment 14’s)', () => {
+  it('signs in again, however recently, and comes back to the page, encoded', () =>
+    expect(stepUpHref('/apps/reading-responses?tab=draft')).toBe(
+      '/auth/step-up?returnTo=%2Fapps%2Freading-responses%3Ftab%3Ddraft',
     ))
 })
 

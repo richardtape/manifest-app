@@ -173,6 +173,17 @@ export function registerApps(
     },
   )
 
+  // TRYING-OUT'S SECRETS (F4 Task 10, Decision 15): which names we asked for, and the question we
+  // asked for each, so the page can name one staging lacks. Never a value: none is ever here.
+  app.get<{ Params: { projectId: string } }>(
+    '/api/apps/:projectId/secrets',
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      return { secrets: store.secretsAskedOn(request.params.projectId, who.person.id) }
+    },
+  )
+
   app.get<{ Params: { projectId: string; instanceId: string } }>(
     '/api/apps/:projectId/instances/:instanceId/conversation',
     async (request, reply) => {

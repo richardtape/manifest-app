@@ -1,6 +1,6 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, Card, SegmentedControl, StateChip, TwoFacts } from '@manifest-app/ui'
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
@@ -16,9 +16,12 @@ import {
   type Attempt,
   type Said,
 } from './facts.js'
+import { PutOnTryingOut, WhatWentWrong } from '../trying-out/put.js'
 import { TryItAs } from './try-it-as.js'
 
 const w = words.preview
+/** While an attempt is under way, the addresses are read again this often (a page reopened mid-deploy). */
+export const UNDER_WAY_MS = 2000
 /** The three worlds (walk-through moment 7), each an address of the app's. */
 const KIND: Record<Tab, Schemas['Environment']['kind']> = {
   draft: 'sandbox',
@@ -151,6 +154,19 @@ export function Preview({
     setLoaded({ state: 'loading' })
     setAttempt((n) => n + 1)
   }, [])
+  /** Read again, quietly: what is on the page stays until the new reading answers. */
+  const refresh = useCallback(() => setAttempt((n) => n + 1), [])
+
+  // AN ATTEMPT UNDER WAY is read again until it ends (F4 Task 10: a page closed mid-deploy and
+  // reopened reads "under way", then the result).
+  const underWay =
+    loaded.state === 'ready' &&
+    Object.values(loaded.addresses).some((a) => a?.attempt?.tone === 'working')
+  useEffect(() => {
+    if (!underWay) return
+    const timer = setInterval(refresh, UNDER_WAY_MS)
+    return () => clearInterval(timer)
+  }, [underWay, refresh])
 
   const choose = (value: string) => {
     const chosen = TABS.find((t) => t === value) ?? 'draft'
@@ -194,6 +210,32 @@ export function Preview({
                       ? `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(wentWrong)}`
                       : null
                   }
+                  put={
+                    t === 'draft' ? (
+                      <PutOnTryingOut
+                        platform={platform}
+                        ours={ours}
+                        project={project}
+                        expire={expire}
+                        now={now}
+                        timeZone={timeZone}
+                        known={{
+                          sandbox: loaded.addresses.draft?.env,
+                          staging: loaded.addresses['trying-out']?.env,
+                        }}
+                        onPut={refresh}
+                      />
+                    ) : null
+                  }
+                  fix={(incidentId) => (
+                    <WhatWentWrong
+                      platform={platform}
+                      ours={ours}
+                      project={project}
+                      incidentId={incidentId}
+                      expire={expire}
+                    />
+                  )}
                 />
               )}
             </section>
@@ -213,16 +255,25 @@ export function Preview({
   )
 }
 
-/** One address: where it is, what its world is, and the two facts; a failure's conversation. */
+/**
+ * One address: where it is, what its world is, and the two facts; a failure's conversation; on
+ * the draft, putting its version on trying-out (F4 Task 10).
+ */
 function Panel({
   tab,
   address,
   wentWrong,
+  put,
+  fix,
 }: {
   tab: Tab
   address: Address
   /** The conversation whose round put the failed attempt there (F4 Task 9). */
   wentWrong: string | null
+  /** [Put this version on trying-out], beside the draft's facts. */
+  put: ReactNode
+  /** [What went wrong] for trying-out's failed attempt: a fix conversation of ours (F4 Task 10). */
+  fix: (incidentId: string) => ReactNode
 }) {
   const { env, serving, attempt } = address
   const reaches = env.instance !== null
@@ -288,6 +339,10 @@ function Panel({
             </Button>
           </div>
         )}
+        {tab === 'trying-out' && attempt?.failed === true && attempt.incidentId !== null
+          ? fix(attempt.incidentId)
+          : null}
+        {tab === 'draft' && reaches ? put : null}
       </div>
     </div>
   )

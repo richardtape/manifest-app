@@ -139,6 +139,9 @@ function stage(refusals: Refusals = {}) {
         secret: `mft_test_${mints}`,
       } as Schemas['MintedToken'])
     },
+    deploy: never,
+    listAppSecrets: never,
+    setAppSecret: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const record =
@@ -167,6 +170,7 @@ function stage(refusals: Refusals = {}) {
     startChange: never,
     conversationsOn: never,
     conversationFor: never,
+    askedSecrets: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -1061,6 +1065,51 @@ describe('built (Decision 16)', () => {
     expect(screen.getByLabelText('What should change next?')).toBeTruthy()
     expect(screen.queryByLabelText(words.building.thread.messageLabel)).toBeNull()
     noButton(words.building.stop)
+  })
+
+  it('the work ends: "Ready on your draft address.", [Try it] opening the Preview’s draft, and [Put this version on trying-out] (F4 Task 10)', async () => {
+    const s = stage()
+    const serving = {
+      id: 'i-1',
+      environmentId: 'e-sandbox',
+      releaseId: 'r-1',
+      kind: 'web' as const,
+      state: 'healthy' as const,
+      lastSeenAt: null,
+    }
+    s.platform.listEnvironments = () =>
+      Promise.resolve([
+        { id: 'e-sandbox', kind: 'sandbox', instance: serving },
+        { id: 'e-staging', kind: 'staging', instance: null },
+      ] as Schemas['EnvironmentList'])
+    await open(s)
+    s.state(
+      round(
+        {
+          status: 'done',
+          draft: { address: DRAFT, serving: true, lastAttempt: 'healthy' },
+        },
+        ALL_DONE,
+      ),
+      { state: 'built' },
+    )
+    const work = screen.getByRole('region', { name: words.building.workLabel })
+    expect(within(work).getByText(words.building.startedAndAnswered)).toBeTruthy()
+    expect(within(work).getByText(words.tryingOut.ready)).toBeTruthy()
+    const tryIt = within(work).getByRole('link', { name: words.tryingOut.tryIt })
+    expect(tryIt.getAttribute('href')).toBe(`/apps/${PROJECT.slug}?tab=draft`)
+    expect(
+      await within(work).findByRole('button', { name: words.tryingOut.put }),
+    ).toBeTruthy()
+    expect(machineryIn(wordsShown())).toEqual([])
+  })
+
+  it('while it works, the work does not end: no [Try it], no trying-out', async () => {
+    const s = stage()
+    await open(s)
+    s.state(round())
+    expect(screen.queryByText(words.tryingOut.ready)).toBeNull()
+    expect(screen.queryByRole('link', { name: words.tryingOut.tryIt })).toBeNull()
   })
 
   it('a question we went on with is said as what we went with, never an answer our server would refuse once built', async () => {

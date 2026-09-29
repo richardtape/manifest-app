@@ -8,6 +8,14 @@ export function signInHref(returnTo: string): string {
   return `/auth/login?returnTo=${encodeURIComponent(returnTo)}`
 }
 
+/**
+ * SIGNING IN AGAIN (moment 14's step-up; F4 Task 10's guard, never expected on trying-out: F4 M3).
+ * The platform never replays the refused request: they come back and press again.
+ */
+export function stepUpHref(returnTo: string): string {
+  return `/auth/step-up?returnTo=${encodeURIComponent(returnTo)}`
+}
+
 export function signIn(returnTo: string = location.pathname + location.search): void {
   window.location.href = signInHref(returnTo)
 }

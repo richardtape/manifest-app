@@ -130,6 +130,9 @@ function stage(
         secret: `mft_test_${mints}`,
       } as Schemas['MintedToken'])
     },
+    deploy: never,
+    listAppSecrets: never,
+    setAppSecret: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const record =
@@ -162,6 +165,7 @@ function stage(
       return Promise.resolve(options.rows ?? [])
     },
     conversationFor: never,
+    askedSecrets: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)

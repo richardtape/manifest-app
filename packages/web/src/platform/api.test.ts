@@ -1,8 +1,8 @@
 import { ManifestApiError, type ErrorEnvelope } from '@manifest/contract'
 import { createMockServer, fixtures } from '@manifest/mock'
 import { createServer } from 'node:http'
-import { describe, expect, it } from 'vitest'
-import { createPlatform } from './api.js'
+import { describe, expect, it, vi } from 'vitest'
+import { createPlatform, DEPLOY_TIMEOUT_MS, READ_TIMEOUT_MS } from './api.js'
 import { refusalOf } from './refusal.js'
 
 /**
@@ -246,6 +246,154 @@ describe('Make it (F2 Task 8), against manifest-mock', () => {
       ])
     } finally {
       await new Promise((resolve) => server.close(resolve))
+    }
+  })
+})
+
+/** A platform that records each request's method, path, key and body, and answers `status`. */
+async function recording(status: number, answer: unknown) {
+  const seen: {
+    method: string | undefined
+    url: string | undefined
+    key: string | undefined
+    body: unknown
+  }[] = []
+  const server = createServer((request, response) => {
+    let text = ''
+    request.on('data', (chunk) => (text += chunk))
+    request.on('end', () => {
+      seen.push({
+        method: request.method,
+        url: request.url,
+        key: request.headers['idempotency-key'] as string | undefined,
+        body: text === '' ? undefined : JSON.parse(text),
+      })
+      response.writeHead(status, { 'content-type': 'application/json' })
+      response.end(JSON.stringify(answer))
+    })
+  })
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+  return {
+    origin,
+    seen,
+    close: () => new Promise((resolve) => server.close(resolve)),
+  }
+}
+
+describe('trying-out (F4 Task 10), in the person’s session', () => {
+  it('deploy names the environment it is given, with the release and the Idempotency-Key, and answers the instance', async () => {
+    const answered = { ...fixtures.INSTANCE, state: 'healthy' }
+    const fake = await recording(200, answered)
+    try {
+      expect(
+        await platform(fake.origin).deploy(fixtures.STAGING_ID, 'r-1', 'put-0001'),
+      ).toEqual(answered)
+      expect(fake.seen).toEqual([
+        {
+          method: 'POST',
+          url: `/v1/environments/${fixtures.STAGING_ID}/deploy`,
+          key: 'put-0001',
+          body: { releaseId: 'r-1' },
+        },
+      ])
+    } finally {
+      await fake.close()
+    }
+  })
+
+  it('a deploy answered 200 failed is returned as failed, never thrown (§14)', async () => {
+    const fake = await recording(200, { ...fixtures.INSTANCE, state: 'failed' })
+    try {
+      expect(
+        (await platform(fake.origin).deploy(fixtures.STAGING_ID, 'r-1', 'put-0002'))
+          .state,
+      ).toBe('failed')
+    } finally {
+      await fake.close()
+    }
+  })
+
+  it('its deadline is 120 s, where every other call keeps 15 s (F3 Decision 17’s reason: up to ~90 s)', async () => {
+    const deadlines = vi.spyOn(AbortSignal, 'timeout')
+    try {
+      await withMock(async (origin) => {
+        const p = platform(origin)
+        await p.listInstances(fixtures.STAGING_ID)
+        await p.deploy(fixtures.STAGING_ID, fixtures.RELEASE.id, 'put-0003')
+        await p.listAppSecrets(fixtures.STAGING_ID)
+      })
+      expect(DEPLOY_TIMEOUT_MS).toBe(120_000)
+      expect(deadlines.mock.calls.map(([ms]) => ms)).toEqual([
+        READ_TIMEOUT_MS,
+        DEPLOY_TIMEOUT_MS,
+        READ_TIMEOUT_MS,
+      ])
+    } finally {
+      deadlines.mockRestore()
+    }
+  })
+
+  it('listAppSecrets answers each name, declared and set, as fields (S1: M1)', async () => {
+    await withMock(async (origin) => {
+      const list = await platform(origin).listAppSecrets(fixtures.STAGING_ID)
+      expect(list.environmentKind).toBe('staging')
+      for (const secret of list.secrets) {
+        expect(typeof secret.declared).toBe('boolean')
+        expect(typeof secret.set).toBe('boolean')
+        expect(Object.keys(secret)).not.toContain('value')
+      }
+    })
+  })
+
+  it('setAppSecret puts the value under its name, with the Idempotency-Key, and answers nothing back', async () => {
+    const fake = await recording(200, {
+      name: 'SIS_KEY',
+      declared: true,
+      set: true,
+      updatedAt: '2026-09-29T17:00:00.000Z',
+    })
+    try {
+      expect(
+        await platform(fake.origin).setAppSecret(
+          fixtures.STAGING_ID,
+          'SIS_KEY',
+          'a-long-value',
+          'set-0001',
+        ),
+      ).toBeUndefined()
+      expect(fake.seen).toEqual([
+        {
+          method: 'PUT',
+          url: `/v1/environments/${fixtures.STAGING_ID}/secrets/SIS_KEY`,
+          key: 'set-0001',
+          body: { value: 'a-long-value' },
+        },
+      ])
+    } finally {
+      await fake.close()
+    }
+  })
+
+  it('a staging secret with no value is refused by its code, the names never read from its message', async () => {
+    const fake = await recording(409, {
+      error: {
+        code: 'RELEASE_SECRET_NOT_SET',
+        message:
+          'Set each name the message lists: SIS_KEY (PUT /v1/environments/x/secrets/{name})',
+      },
+    })
+    try {
+      const error = await thrown(() =>
+        platform(fake.origin).deploy(fixtures.STAGING_ID, 'r-1', 'put-0004'),
+      )
+      expect(refusalOf(error)).toEqual({
+        kind: 'refused',
+        code: 'RELEASE_SECRET_NOT_SET',
+        status: 409,
+      })
+    } finally {
+      await fake.close()
     }
   })
 })

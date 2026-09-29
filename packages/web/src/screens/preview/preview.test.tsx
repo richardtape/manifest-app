@@ -151,6 +151,9 @@ function stage(
     listBlueprints: never,
     createProject: never,
     mintToken: never,
+    deploy: never,
+    listAppSecrets: never,
+    setAppSecret: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const called = (name: string) =>

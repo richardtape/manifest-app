@@ -77,6 +77,7 @@ export function Work({
   round,
   connecting,
   notice,
+  end,
   presses,
   now,
   timeZone,
@@ -84,6 +85,8 @@ export function Work({
   round: RoundView | null
   connecting: boolean
   notice: ReactNode
+  /** Once built, what comes next: try it, or put this version on trying-out (F4 Task 10). */
+  end: ReactNode
   presses: Presses
   now: () => Date
   timeZone: string | undefined
@@ -121,7 +124,10 @@ export function Work({
       </div>
       <LiveSteps steps={stepsOf(round)} />
       {round?.status === 'done' ? (
-        <p className="body-lead">{words.building.startedAndAnswered}</p>
+        <>
+          <p className="body-lead">{words.building.startedAndAnswered}</p>
+          {end}
+        </>
       ) : working ? (
         <p className="building__leave">{words.building.leave}</p>
       ) : null}

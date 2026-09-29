@@ -116,6 +116,9 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
         secret: `mft_test_${mints}`,
       } as Schemas['MintedToken'])
     },
+    deploy: never,
+    listAppSecrets: never,
+    setAppSecret: never,
     watchProject: (projectId) => {
       calls.push(['watchProject', projectId])
       let ready!: () => void
@@ -154,6 +157,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     startChange: never,
     conversationsOn: never,
     conversationFor: never,
+    askedSecrets: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)

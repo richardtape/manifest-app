@@ -111,7 +111,13 @@ describe('the last attempt', () => {
     const serving = instance('i-1', OLD.id, 'healthy', true)
     expect(
       attemptFact(env('sandbox', serving), [serving], [], RELEASES, NOW, TZ),
-    ).toEqual({ words: f.same, tone: 'steady', failed: false, instanceId: 'i-1' })
+    ).toEqual({
+      words: f.same,
+      tone: 'steady',
+      failed: false,
+      instanceId: 'i-1',
+      incidentId: null,
+    })
     expect(f.same).toBe("The same version. It's the one answering.")
   })
 
@@ -124,6 +130,8 @@ describe('the last attempt', () => {
       tone: 'attention',
       failed: true,
       instanceId: 'i-2',
+      // Why it did not start, for [What went wrong] (F4 Task 10).
+      incidentId: 'incident-i-2',
     }
     // "Seen most recently first" (M3): the serving one is seen all the time, so it leads.
     for (const list of [
@@ -169,6 +177,7 @@ describe('the last attempt', () => {
             tone: 'working',
             failed: false,
             instanceId: 'i-2',
+            incidentId: null,
           },
         )
     }
@@ -194,7 +203,11 @@ describe('the last attempt', () => {
     const failed = instance('i-2', NEW.id, 'failed')
     expect(
       attemptFact(env('sandbox', null), [failed], [], RELEASES, NOW, TZ),
-    ).toMatchObject({ words: "Didn't start. Nobody lost anything.", failed: true })
+    ).toMatchObject({
+      words: "Didn't start. Nobody lost anything.",
+      failed: true,
+      incidentId: null,
+    })
   })
 
   it('names the versions it must read: the one serving, and each that failed', () => {

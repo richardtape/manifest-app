@@ -1,5 +1,6 @@
 import type { Conversation, Intake, RoundView, Said } from '@manifest-app/server/progress'
 import { Button, Card } from '@manifest-app/ui'
+import { linkTo } from '../../router.js'
 import { useEffect, useRef, useState } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
@@ -7,6 +8,7 @@ import { refusalOf } from '../../platform/refusal.js'
 import { words } from '../../words.js'
 import { handOverToken } from '../making/token.js'
 import { SupportReference } from '../reference.js'
+import { PutOnTryingOut } from '../trying-out/put.js'
 import type { Presses } from './needs.js'
 import { Thread } from './thread.js'
 import { Work } from './work.js'
@@ -188,6 +190,31 @@ export function BuildingScreen({
       </div>
     )
 
+  // THE WORK'S END, ONCE BUILT (walk-through moment 9): try it, or put this version on trying-out.
+  const slug = intake.project?.slug
+  const end =
+    round?.status !== 'done' || projectId === null || slug === undefined ? null : (
+      <div className="building__end">
+        <p className="body-lead">{words.tryingOut.ready}</p>
+        <div className="describe__actions">
+          <Button
+            kind="primary"
+            {...linkTo(`/apps/${encodeURIComponent(slug)}?tab=draft`)}
+          >
+            {words.tryingOut.tryIt}
+          </Button>
+        </div>
+        <PutOnTryingOut
+          platform={platform}
+          ours={ours}
+          project={{ id: projectId, slug }}
+          expire={expire}
+          now={now}
+          timeZone={timeZone}
+        />
+      </div>
+    )
+
   const state = conversation.state
   return (
     <div className="building">
@@ -197,6 +224,7 @@ export function BuildingScreen({
           round={round}
           connecting={connecting}
           notice={noticeCard}
+          end={end}
           presses={presses}
           now={now}
           timeZone={timeZone}

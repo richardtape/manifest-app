@@ -8,7 +8,12 @@ import { studentsFact, versionWords } from '../your-apps/model.js'
  * Words come from words.ts.
  */
 export type Said = { words: string; tone: FactTone }
-export type Attempt = Said & { failed: boolean; instanceId: string }
+export type Attempt = Said & {
+  failed: boolean
+  instanceId: string
+  /** Why a failed attempt did not start, when its incident is read (F4 Task 10's [What went wrong]). */
+  incidentId: string | null
+}
 
 const f = words.preview.facts
 
@@ -88,7 +93,13 @@ export function attemptFact(
 ): Attempt | null {
   const rising = instances.find((i) => UNDER_WAY.has(i.state))
   if (rising !== undefined)
-    return { words: f.underWay, tone: 'working', failed: false, instanceId: rising.id }
+    return {
+      words: f.underWay,
+      tone: 'working',
+      failed: false,
+      instanceId: rising.id,
+      incidentId: null,
+    }
   const failures = instances.filter(
     (i) => i.state === 'failed' && after(i, env.instance, releases),
   )
@@ -108,10 +119,17 @@ export function attemptFact(
       tone: 'attention',
       failed: true,
       instanceId: latest.id,
+      incidentId: incident?.id ?? null,
     }
   }
   if (env.instance === null) return null
-  return { words: f.same, tone: 'steady', failed: false, instanceId: env.instance.id }
+  return {
+    words: f.same,
+    tone: 'steady',
+    failed: false,
+    instanceId: env.instance.id,
+    incidentId: null,
+  }
 }
 
 /** The versions the facts must date: the one serving, and each that failed. */

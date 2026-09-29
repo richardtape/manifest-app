@@ -259,6 +259,23 @@ export function runStatements(db: DatabaseSync, now: () => string) {
       return rows.map(questionOf)
     },
 
+    secretsAskedOn(projectId: string, personId: string): { name: string; ask: string }[] {
+      const rows = db
+        .prepare(
+          `select questions.secret as name, questions.ask as ask from questions
+           join conversations on conversations.id = questions.conversation_id
+           where conversations.project_id = ? and conversations.person_id = ?
+             and questions.secret is not null
+           order by questions.asked_at, questions.rowid`,
+        )
+        .all(projectId, personId) as { name: string; ask: string }[]
+      // The latest question for each name names it.
+      const latest = new Map(rows.map((row) => [row.name, row.ask]))
+      return [...latest]
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([name, ask]) => ({ name, ask }))
+    },
+
     getRun(id: string): Run | undefined {
       const row = db.prepare('select * from runs where id = ?').get(id) as
         RunRow | undefined
