@@ -4,67 +4,75 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, F3 executed: sittings 1–4 in one session, 5, 6 and 7 in one each)*:
+**Where things stand** *(2026-09-28, evening: F4 written and approved; F3 executed)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F4, *Seeing and changing it*, is not written yet.** Write it with Rich:
-  superpowers:brainstorming first, then superpowers:writing-plans, as F3 was. [`plans/roadmap.md`](./plans/roadmap.md)
-  says what it delivers (moments 7–9) and what it waits on.
-  - **Read first:**
-    - F3's plan, [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md): its *Decided by Rich*,
-      its Decisions, and its seven dated entries. **Sitting 7's entry is the record of the real platform.**
-    - [`walkthrough.md`](./walkthrough.md), moments 7–9;
-    - [`api-findings.md`](./api-findings.md): FE-3 and FE-24, and the three new ones, FE-35, FE-36 and FE-37.
-  - **What F4 stands on, measured tonight:**
-    - **A draft's CWL sign-in works** since manifest `c4e10cc` (FE-37, made from this repository at Rich's word, once).
-      Our round checks that sign-in starts before it says *"It started and answered"*.
-    - **A confidential app's later sessions get only the on-campus 4B model** (FE-35), which could not write the app.
-      Rich decided: carry on, and say so. He notes that a developer would run `qwen3.6:35b-a3b` or `qwen3.8:27b`
-      locally. That is manifest's LiteLLM config, not ours.
-  - **For Rich's eye, unresolved from F3** (sitting 7's entry has each):
-    - the line under *Building it* is the lead's done line;
-    - *Stop* halts the step red;
-    - *What changed* is long after many commits;
-    - *"(second try)"* stays on the pages after someone else's commit;
-    - the offered names read like slugs.
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F4's sitting 1, Task 1, the measurements, alone and first.** The plan is
+  [`plans/2026-09-28-f4-seeing-and-changing-it.md`](./plans/2026-09-28-f4-seeing-and-changing-it.md), approved by Rich
+  (*"approved, native as F3"*): one agent, natively (superpowers:executing-plans), one sitting per session, seven
+  sittings, eleven tasks. **Nothing is built yet.**
+  - **Read first:** the plan's *Decided by Rich* (and its *Words proposed for Rich*, approved with the plan), its
+    Decisions, Global Constraints and Review Focus, then Task 1 in full; F3's sitting 7 entry (the record of the real
+    platform); [`walkthrough.md`](./walkthrough.md), moments 7–9, **changed today** with Rich's decisions.
+  - **Before 7100 (M3, M4, M5): ask Rich, and tell the platform session** (§8). M3 deploys to the laptop's staging,
+    which Rich allowed (*laptop staging only*). Switch our server to edge mode by §7's trap, and back to mock mode at the
+    close unless Rich says otherwise.
+  - **M6 waits on FE-35's landing.** If it has not landed, record that; M6 moves to the start of sitting 7.
+  - **Close sitting 1 by correcting Tasks 2–11** to what it measured, before sitting 2, as F3's sitting 1 did.
+- **What Rich decided for F4, 2026-09-28** (the plan has each):
+  - **staging: the laptop's only.** Nothing reaches UBC;
+  - ***Trying out* says UBC's words everywhere, the laptop included**: never the pretend logins there, never a date,
+    never *"We asked…"* (nothing records a staging registration: FE-6, FE-24). His sentence replaces *"That takes
+    weeks"*;
+  - **a change is agreed before it is built**: *"Here's what we'd change"*, then *Yes* updates `docs/plan.md` with a
+    *Changes* list, then the round (D6 holds);
+  - **his F3 items:** our own line under each step after the pages; a *Stop* he chose is still, not red; one account per
+    round for *What changed*; names people read (folded in: Task 4);
+  - **FE-35 carried to the platform**, option (a). We carry on on whatever a session lists meanwhile, and say so once.
+- **What F4 stands on, measured or read 2026-09-28:**
+  - **A draft's CWL sign-in works** since manifest `c4e10cc` (FE-37). Our round checks that it starts.
+  - **The laptop's pretend people** are `student`/`student` and `instructor`/`instructor` (manifest's
+    `infra/idp/config/authsources.php`). A third, `operator`, is an administrator's, never shown.
+  - **The real intake model offers slugs as names** (`reading-responses`, `Course-questions`: our dev database's `names`
+    messages). The mock offers proper names, so no test saw it. Task 4 fixes it at our end.
+  - **The design system's reference has `SegmentedControl` and `Timeline`**, and our `components.css` already carries
+    `.mf-seg` and `.mf-station`. The reference's tabs have no arrow keys: Task 2 adds them, as ours.
+  - **The laptop's Ollama holds `qwen3.6:35b-a3b` (22.6 GB) and `qwen3.8:27b` (17.7 GB)**, the models Rich named for
+    FE-35. Which the platform lists is its design.
+  - **The contract is 1.4.0, 66 operations, 127 codes** at manifest `d82b3a2`: `c90f571` moved published text only, and
+    `d82b3a2` is spec §8's row (Rich's Spec action 9). Our typecheck passes against it (2026-09-28, evening).
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md)).
   - **F1 is executed** (2026-09-27): sign-in, the shell, *Your apps*, and a profile.
   - **F2 is executed** (2026-09-28): moments 3–5, describe it to the plan committed as `docs/plan.md`.
   - **F3 is executed** (2026-09-28): moment 6. Rich clicked moments 3–6 on the real platform: *"the process went very
-    smoothly"*, *"This is awesome"*.
-    - The lead agent, on our own runtime, writes the app as guarded commits, builds it, puts it on the draft address and
-      checks it answers and that sign-in starts.
-    - It can take messages, questions, *Stop*, *Carry on* and the $2 checkpoint. The page is layout C.
-    - **Sitting 7 walked eleven rounds on the real platform**: a straight round built in 3 minutes, a deliberate break
-      explained and fixed by the lead, a message, *Stop* keeping the draft, *Carry on*, and the 40-move stop. It found
-      six defects only the real platform showed and fixed each test-first. The whole-branch review's three Importants
-      are fixed; its minors are deferred (sitting 7's entry and the ledger).
+    smoothly"*, *"This is awesome"*. Its sitting 7 walked eleven rounds on the real platform and fixed six defects only
+    it showed; the whole-branch review's minors are deferred (its entry, and the ledger).
+  - **F4 is written and approved** (2026-09-28, `manifest-app-bb`), from a design Rich approved in four sections.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
-  - **Rich stopped it for F3's sitting 7, and it came back at the close** (`manifest-7c`), resuming its sitting 11 (the
-    guides, Task 14).
-    - It has read `c4e10cc`, and carries what it owes: both test tiers, a control-plane restart, and a draft of the spec's
-      §8 row for Rich.
-    - Its unit tier TRUNCATES 7100, which deletes Rich's own app, `student-q-and-a`, unless he says otherwise. It was told
-      that is Rich's call.
-  - **`c4e10cc` is the one change this repository ever made in manifest**, at Rich's word, and noted in manifest's
-    ORIENTATION. The rule stands: never change manifest.
-  - The contract is still **1.4.0, 66 operations, 127 codes**; our typecheck and 873 tests pass against it.
+  - **`manifest-7c`, its sitting 11 (the guides), was closing on the evening of 2026-09-28**: running `pnpm test` twice
+    (which truncates 7100's database) and `pnpm test:docker` (which restarts the edge), then restarting the control plane
+    on its HEAD from Rich's `.env`. **It promised to message `manifest-app-bb` when the control plane is back up, at its
+    close-out, and when FE-35 lands.** A later session finds the live name with `ListAgents`, and the facts in manifest's
+    `git log` and its ORIENTATION §7e.
+  - **Its next is sitting 12, the acceptance**, which asks Rich where FE-35 goes (sitting 12, or its next plan). FE-35 is
+    in its ORIENTATION §8 *Open*, relayed at Rich's word, to confirm with him in his own words.
+  - **Nothing of ours on 7100 must survive** (told to it this evening). Rich let his `student-q-and-a` go with the
+    truncation.
   - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`), read from `session.models`, never
-    assumed.
-    - A `confidential` project's sessions list only `default-chat-onprem` (FE-35), which we now take, and say so once.
-    - When OpenAI cannot answer, the same name answers from the fallback, with `x-litellm-attempted-fallbacks: 1`.
-  - **Our findings FE-26 to FE-32 are carried; FE-33 to FE-37 are written and not carried** (FE-37 is fixed). Rich
-    carries what he decides.
+    assumed. A `confidential` project's sessions list exactly `default-chat-onprem` and `default-chat-onprem-reasoning`
+    until FE-35 lands (`manifest-7c`, 2026-09-28). When OpenAI cannot answer, the same name answers from the fallback,
+    with `x-litellm-attempted-fallbacks: 1`.
+  - **Our findings FE-26 to FE-32 and FE-35 are carried; FE-33, FE-34 and FE-36 are written and not carried; FE-37 is
+    fixed.** Rich carries what he decides.
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
-- **The machine** *(2026-09-28, sitting 7's close)*:
-  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`), with one watcher, **at Rich's word: the mode that suits the
-    next agent** while the platform session tests 7100. Our mock on 7102 serves the platform's current fixtures. Our dev
-    database is at version 3.
-  - **Our dev script now trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA
-    lives: in edge mode our server reaches a draft address through the edge, for the sign-in check.
-  - **The control plane on 7100** was restarted by this session at ~03:42 UTC, at Rich's OK, from his `.env` per the
-    RUNBOOK, running `c4e10cc`. The platform session will restart it again.
+- **The machine** *(2026-09-28, evening)*:
+  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`, `MANIFEST_APP_MODE=mock`, node 33856 under one watcher,
+    33850), against **our mock on 7102** (node 28239), at Rich's word. Our dev database is at version 3.
+  - **Our dev script trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA lives:
+    in edge mode our server reaches a draft address through the edge, for the sign-in check.
+  - **The control plane on 7100** is the platform session's to restart tonight (above). Query it before using it
+    (`lsof -nP -iTCP:7100 -sTCP:LISTEN`), and ask Rich.
   - To switch to the edge: stop our server's whole process tree (§7's trap), then `pnpm dev`. To switch back: the same,
     then `pnpm dev:mock`.
 - **How to run it** is §6, below.
@@ -161,7 +169,8 @@ that runs.
 | [`plans/roadmap.md`](./plans/roadmap.md) | The plans, in order, and what each waits on |
 | [`2026-09-27-reading-note.md`](./2026-09-27-reading-note.md) | What the first session read, and what surprised it |
 | [`research/`](./research) | A digest of the contract (every operation, event, code), and an inventory of the prototype and components |
-| [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md) | **The current plan**: F3, its sittings, Rich's decisions and ours |
+| [`plans/2026-09-28-f4-seeing-and-changing-it.md`](./plans/2026-09-28-f4-seeing-and-changing-it.md) | **The current plan**: F4, its sittings, Rich's decisions and ours |
+| [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md) | F3, executed: its sitting 7 is the record of the real platform |
 
 *`research/`'s contract digest predates the platform's sittings 7–9a (57 operations, not 66). For F3, read the
 contract and the guides themselves.*
@@ -178,6 +187,12 @@ contract and the guides themselves.*
     no dependency may be added, FE-32);
   - `blueprints/node-ts-mongo/skeleton/` and `starters/proof-app/`: what an app starts from;
   - `docs/superpowers/ORIENTATION.md` §7e: the platform session's own next job, and its notes about us.
+- **For F4:**
+  - `docs/api/frontend.md` (*Seeing a running app*, *Two credentials*), `launching.md` and `journey.md`: environments,
+    `deploy`, releases, incidents, and what a token may and may not do;
+  - spec §9's *Staging: a registration with UBC's staging IdP*, and §21: the laptop's staging is the Manifest IdP's;
+  - `design/system/components/SegmentedControl/` and `Timeline/`: the READMEs' rules, which the reference's markup
+    does not all carry.
 
 ## 5. How to work here
 

@@ -439,6 +439,11 @@ token), and the operations named in the table.
 staging world, that its registration is reviewed with a wait, and that staging CWLs belong to real people
 (FE-24). On the laptop, staging keeps the fake sign-in, as a stated difference from UBC.*
 
+*Changed 2026-09-28, with F4's plan (Rich): **Trying out says UBC's words everywhere, the laptop included**, never
+the pretend logins, never a date and never "We asked…", since nothing records a staging registration (FE-6, FE-24).
+His words replace "That usually takes <n> weeks". The Preview's rail items are Preview and Conversations until
+their plans build the rest.*
+
 **Trying to:** see the thing they asked for, as a student would and as they will.
 
 **The three addresses mean three different worlds** (Rich, 2026-09-27):
@@ -460,10 +465,15 @@ staging world, that its registration is reviewed with a wait, and that staging C
   - One sentence says what the draft is: *"Your draft is a practice copy. Everyone in it is pretend, and so is
     anything they post."*
 - **On *Trying out***: the same address and button. **Until UBC IAM has registered it for staging** (a review,
-  with a wait: FE-24, answered by Rich), the card is **waiting on someone**:
-  - *"Trying out uses UBC's real staging sign-in, so UBC's identity team registers it first. That usually takes
-    <n> weeks. We asked on 18 September."*
+  with a wait: FE-24, answered by Rich), the card is **waiting on someone**, *UBC's identity team*, still, with no
+  number, because nothing records when it began (FE-6):
+  - *"Trying out uses UBC's real staging sign-in, so UBC's identity team registers it first. That takes some
+    time, as several teams at UBC help make sure the app and its data are kept safe and secure."* (Rich,
+    2026-09-28, in place of *"That usually takes <n> weeks. We asked on 18 September."*: nothing asks, so nothing
+    can say when.)
   - Meanwhile: *"Your draft is ready to try now."*
+  - **The laptop says the same** (Rich, 2026-09-28), though its staging signs in with the pretend IdP: no logins
+    are shown on this tab.
   - **Once registered**: *"Sign in with your staging CWL. It's a separate account from your everyday CWL, for
     trying things before they're real. [How to get one]"*
     - There are no pretend people here: everyone who signs in to staging is a real person with a staging CWL
@@ -509,6 +519,14 @@ staging world, that its registration is reviewed with a wait, and that staging C
   - The reason: an app has one draft address (§23: one sandbox per project), and two conversations writing to it
     at once would each find `main` moved under them (`409 SOURCE_CONFLICT`: the platform never merges). Each
     would then redo its work, and pay twice.
+  - *Works* means from reaching the front until its change is built, stopped or set aside, waiting on the person
+    included, so a half-made change never sits under the next one's version (F4's plan, Decision 5).
+- **The change is agreed first** (Rich, 2026-09-28): *"Here's what we'd change"*, moment 5's pattern, showing only
+  what changes and *"Everything else stays as we agreed."* **[Yes, change it]** updates `docs/plan.md` (the
+  agreement as it now stands, and a dated *Changes* list in their own words), then the work starts. **[Not now]**
+  sets it aside: *"Set aside. Nothing was changed."* D6 holds: the plan stays the agreement.
+  - A fix of something that went wrong (*[What went wrong]*, moment 9) changes no agreement, and is not asked
+    about.
 - **Then moment 6**, in layout C: the work on the right, the conversation on the left.
 
 **Fed by:** ours, meaning the conversation and the queue. **`mintToken`** runs in the browser, once per new
@@ -543,8 +561,11 @@ try it.
   - The prototype's Deploy screen, with its words kept where they are true.
   - A version is only ever *"the version from <when>"*, never a digest.
 - **While UBC's identity team has not yet registered it for staging** (FE-24), the stations end honestly:
-  *"It's on the trying-out address. Nobody can sign in there until UBC's identity team has registered it. We
-  asked on 18 September."*
+  *"It's on the trying-out address. Nobody can sign in there until UBC's identity team has registered it. That
+  takes some time, as several teams at UBC help make sure the app and its data are kept safe and secure."* (Rich,
+  2026-09-28: no *"We asked…"*, since nothing asks; the laptop says the same.)
+- **The version is fixed when they are asked**: the one the draft was serving at the question is the one put
+  there, even if more work finishes in between.
 
 **Fed by:**
 - **The release the draft address is serving**, from `listInstances` on the sandbox (`serving`), then its
