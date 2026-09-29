@@ -20,8 +20,14 @@ export {
 export { InverseSurface, type InverseSurfaceProps } from './InverseSurface.js'
 export { LiveSteps, type LiveStepsProps, type Step } from './LiveSteps.js'
 export { LogPane, type LogPaneProps } from './LogPane.js'
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentOption,
+} from './SegmentedControl.js'
 export { SideNav, type NavItem, type SideNavProps } from './SideNav.js'
 export { StateChip, type State, type StateChipProps } from './StateChip.js'
+export { Timeline, type Station, type TimelineProps } from './Timeline.js'
 export { TwoFacts, type Fact, type FactTone, type TwoFactsProps } from './TwoFacts.js'
 export { MARK, TICK } from './icons.js'
 export { PERSON } from './icons.js'

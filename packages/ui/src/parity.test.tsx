@@ -367,6 +367,121 @@ const CASES: Record<string, Record<string, unknown>[]> = {
       style: { minHeight: '100vh' },
     },
   ],
+  SegmentedControl: [
+    // preview.html: which address, which viewport, a filter carrying its counts
+    {
+      value: 'staging',
+      options: [
+        { label: 'Your draft', value: 'sandbox' },
+        { label: 'Trying out', value: 'staging' },
+        { label: 'Students', value: 'production' },
+      ],
+      onChange: () => {},
+    },
+    {
+      role: 'radiogroup',
+      value: 'desktop',
+      options: [
+        { value: 'desktop', label: 'Desktop' },
+        { value: 'phone', label: 'Phone' },
+      ],
+      onChange: () => {},
+    },
+    {
+      value: 'all',
+      options: [
+        { label: 'All 4', value: 'all' },
+        { label: 'Needs you 1', value: 'needs' },
+        { label: 'Working 1', value: 'working' },
+        { label: 'Over 2', value: 'ended' },
+      ],
+    },
+    // options as strings, each selected in turn, in both roles
+    ...['Desktop', 'Phone', 'Tablet'].flatMap((value) => [
+      { options: ['Desktop', 'Phone', 'Tablet'], value },
+      { role: 'radiogroup', options: ['Desktop', 'Phone', 'Tablet'], value },
+    ]),
+    // an explicit tablist, a className, nothing selected, and no options at all
+    { role: 'tablist', options: ['One', 'Two'], value: 'Two', className: 'extra' },
+    { options: ['One', 'Two'], value: 'none of them' },
+    { options: [], value: 'x' },
+    {},
+  ],
+  Timeline: [
+    // preview.html: a run under way, and a run that ended badly
+    {
+      stations: [
+        {
+          label: 'Waiting its turn',
+          note: 'In the queue behind anything else going out',
+          state: 'done',
+        },
+        {
+          label: 'Making room',
+          note: 'Somewhere to run, and a place to keep things',
+          state: 'done',
+        },
+        {
+          label: 'Starting up',
+          note: 'Your app is running its first few seconds',
+          state: 'now',
+        },
+        {
+          label: 'Answering',
+          note: 'It replied to us, so it will reply to people',
+          state: 'next',
+        },
+      ],
+    },
+    {
+      stations: [
+        { label: 'Making room', state: 'done' },
+        { label: 'Starting up', state: 'done' },
+        {
+          label: 'It never answered',
+          note: 'It started, then stopped replying to us',
+          state: 'halted',
+        },
+      ],
+    },
+    // each state at the start, the middle and the end, with and without a note
+    ...(['done', 'now', 'next', 'halted', undefined, 'no-such-state'] as const).flatMap(
+      (state) => [
+        { stations: [{ label: 'Alone', state }] },
+        {
+          stations: [
+            { label: 'First', note: 'a note', state },
+            { label: 'Second', state: 'next' },
+          ],
+        },
+        {
+          stations: [
+            { label: 'First', state: 'done' },
+            { label: 'Middle', note: 'a note', state },
+            { label: 'Last', state: 'next' },
+          ],
+        },
+        {
+          stations: [
+            { label: 'First', state: 'done' },
+            { label: 'Last', state },
+          ],
+        },
+      ],
+    ),
+    { stations: [], className: 'extra' },
+    {},
+  ],
+}
+
+/**
+ * OURS, and the only bytes excused (F4 Task 2's ruling): a SegmentedControl keeps only its
+ * selected segment in the tab order, so arrow keys move within it (SegmentedControl/README.md:
+ * "arrow-key navigable"). The reference renders no `tabindex`; SegmentedControl.test.tsx holds
+ * ours. Every other byte is still the reference's.
+ */
+const OURS: Record<string, (markup: string) => string> = {
+  SegmentedControl: (markup) => markup.replace(/ tabindex="(?:0|-1)"/g, ''),
 }
 
 describe('the design system is the prototype’s, byte for byte (Decision 2)', () => {
@@ -376,8 +491,9 @@ describe('the design system is the prototype’s, byte for byte (Decision 2)', (
       const ref = REF[name]
       expect(ours, `${name} is exported`).toBeTypeOf('function')
       expect(ref, `${name} is in the reference`).toBeTypeOf('function')
+      const excuse = OURS[name] ?? ((markup: string) => markup)
       for (const props of cases)
-        expect(html(ours!, props), JSON.stringify(props)).toBe(html(ref!, props))
+        expect(excuse(html(ours!, props)), JSON.stringify(props)).toBe(html(ref!, props))
     })
   }
 })
