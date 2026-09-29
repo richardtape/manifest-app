@@ -628,6 +628,46 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(viewOf(h, id)?.line).toBe('The pages are written.')
   })
 
+  it("the specialist's proposal stays in the lead's view across a read, and leaves once committed (the real platform's ping-pong)", async () => {
+    const STAFF = write(
+      'config/staff.json',
+      JSON.stringify({ puids: ['ins000001'], emails: [] }),
+    )
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          {
+            move: {
+              kind: 'ask_cwl',
+              brief: {
+                whoGetsIn: 'Anyone with a CWL.',
+                youSee: 'Every response.',
+                studentsSee: 'Their own.',
+                namedEmails: [],
+              },
+            },
+          },
+          read('server.js'),
+          commit([STAFF], {
+            line: 'Setting who is staff.',
+            account: 'Only you see every response',
+          }),
+          done(),
+        ],
+        cwl: [{ changes: [STAFF], summary: 'Only you see every response.' }],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    const prompts = leadPrompts(h)
+    expect(prompts).toHaveLength(4)
+    // After the read, the proposal is still there to commit.
+    expect(prompts[2]).toMatch(/proposal, not yet committed/i)
+    expect(prompts[2]).toContain('{"puids":["ins000001"],"emails":[]}')
+    // Committed: it leaves.
+    expect(prompts[3]).not.toMatch(/not yet committed/i)
+  })
+
   it('Writing the pages stays now on a done with nothing committed: the lead is told, and ticks after a commit lands', async () => {
     const { h, id } = await startedRound({
       script: { lead: [done(), commit(), done()] },

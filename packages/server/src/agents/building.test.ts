@@ -44,6 +44,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
   const written: Change[][] = []
   const questions: { ask: string; fallback: string | null; secret: string | null }[] = []
   const cannot: string[] = []
+  const proposals: { changes: Change[]; summary: string }[] = []
   const briefs: CwlBrief[] = []
   const commits: { baseCommit: string; message: string; changes: Change[] }[] = []
   const source: Source = {
@@ -97,6 +98,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
       }
     },
     cannot: (what) => void cannot.push(what),
+    propose: (proposal) => void proposals.push(proposal),
     askCwl: async (brief) => {
       briefs.push(brief)
       return {
@@ -117,6 +119,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
   }
   return {
     context,
+    proposals,
     did,
     kept,
     written,
@@ -346,6 +349,21 @@ describe('ask_cwl: the specialist proposes, the lead commits (agents.md rule 2)'
     expect(result.report).toContain('config/staff.json')
     expect(result.report).toMatch(/not committed/i)
     expect(r.commits).toEqual([])
+    // The proposal is kept for the lead's view, where it stays across its other moves (the real
+    // platform: a lead that read a file after asking lost the proposal, and asked again, 15 times).
+    expect(r.proposals).toEqual([
+      {
+        changes: [
+          {
+            op: 'write',
+            path: 'config/staff.json',
+            content: '{"puids":["ins000001"],"emails":[]}',
+          },
+        ],
+        summary: 'Only you can see every response.',
+      },
+    ])
+    expect(result.report).not.toContain('"puids"')
   })
 
   it('is guarded: an email the person never wrote is sent back before the specialist is asked', () => {
@@ -491,6 +509,56 @@ describe("the lead's view (Decision 3)", () => {
     last: { kind: 'commit', report: 'Committed 23ed148: added routes/posts.js.' },
     messages: ['Can a late post still count?'],
     failures: [],
+    proposal: null,
+  })
+
+  it("the specialist's proposal has its own section, whole, beside a read; the files give way first; none, no section", () => {
+    const proposal = {
+      summary: 'Only you and your TA see every response.',
+      changes: [
+        {
+          op: 'write' as const,
+          path: 'config/staff.json',
+          content: '{"puids":["ins000001"],"emails":["sam.lee@ubc.ca"]}',
+        },
+        {
+          op: 'write' as const,
+          path: 'server.js',
+          content: `// server.js\n${'s'.repeat(9_000)}\n`,
+        },
+      ],
+    }
+    const files = ['routes/c.js', 'routes/b.js'].map((path, i) => ({
+      path,
+      content: `// ${path}\n${String(i).repeat(15_000)}\n`,
+    }))
+    const input: LeadView = {
+      ...view(files),
+      last: { kind: 'read', report: 'Read routes/c.js, routes/b.js.' },
+      proposal,
+    }
+    const messages = [
+      { role: 'system', content: lead.instructions },
+      ...lead.brief(input),
+    ]
+    expect(messages.reduce((n, m) => n + m.content.length, 0)).toBeLessThanOrEqual(
+      VIEW_CAP,
+    )
+    const user = lead
+      .brief(input)
+      .map((m) => m.content)
+      .join('\n')
+    expect(user).toMatch(/proposal, not yet committed/i)
+    expect(user).toContain(proposal.summary)
+    for (const change of proposal.changes) expect(user).toContain(change.content)
+    expect(user).toMatch(
+      /routes\/b\.js: too large to show beside the rest: read it alone/,
+    )
+    const none = lead
+      .brief(view(files))
+      .map((m) => m.content)
+      .join('\n')
+    expect(none).not.toMatch(/not yet committed/i)
   })
 
   it('keeps everything the lead is sent to VIEW_CAP; the plan and the pack whole; the file left out is one line', () => {
@@ -685,6 +753,7 @@ describe('mock mode: the walk-through answers the three (F2 Decision 7)', () => 
         last: state.last,
         messages: [],
         failures: [],
+        proposal: null,
       }),
       state: {
         runId: 'run-walk',

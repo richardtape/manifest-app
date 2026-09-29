@@ -152,6 +152,8 @@ interface Live {
   paths: string[]
   packageJson: unknown
   files: { path: string; content: string }[]
+  /** The sign-in specialist's proposal, until each of its paths is committed (the lead's view). */
+  proposal: { changes: Change[]; summary: string } | null
   plan: string
   pack: string | null
   sandbox: Sandbox | null
@@ -567,6 +569,11 @@ export function createRounds(deps: RoundDeps): Rounds {
       paths: () => live.paths,
       packageJson: () => live.packageJson,
       wrote(changes) {
+        if (live.proposal !== null) {
+          const written = new Set(changes.map((change) => change.path))
+          const left = live.proposal.changes.filter((change) => !written.has(change.path))
+          live.proposal = left.length === 0 ? null : { ...live.proposal, changes: left }
+        }
         for (const change of changes) {
           live.files = live.files.filter((file) => file.path !== change.path)
           if (change.op === 'delete') {
@@ -597,6 +604,9 @@ export function createRounds(deps: RoundDeps): Rounds {
         return { id, answeredWith: secret === null ? fallback : null }
       },
       askCwl: (brief) => askAgent(cwl, live.session!.model, brief),
+      propose(proposal) {
+        live.proposal = proposal
+      },
       theirWords: () => theirWords(live),
       cannot(what) {
         d.cannot = what
@@ -665,6 +675,7 @@ export function createRounds(deps: RoundDeps): Rounds {
       last: state.last,
       messages: words.slice(d.heard).map((word) => word.text),
       failures: d.failures,
+      proposal: live.proposal,
     }
   }
 
@@ -1147,6 +1158,7 @@ export function createRounds(deps: RoundDeps): Rounds {
       paths: [],
       packageJson: null,
       files: [],
+      proposal: null,
       plan: '',
       pack: null,
       sandbox: null,

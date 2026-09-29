@@ -41,6 +41,11 @@ export interface RoundContext {
   /** FE-32: what the plan asked for that needs a piece we cannot install, in the lead's words. */
   cannot(what: string): void
   askCwl(brief: CwlBrief): Promise<{ changes: Change[]; summary: string }>
+  /**
+   * The specialist's proposal, kept for the lead's view until it is committed (Task 12's walk: a
+   * lead that read a file after asking lost the proposal, and asked again, 15 times).
+   */
+  propose(proposal: { changes: Change[]; summary: string }): void
   /** Their description, their messages, their answers: whose emails staff may be (Decision 13). */
   theirWords(): string[]
 }
@@ -235,14 +240,9 @@ const askCwl = defineTool({
         }
       throw error
     }
+    context.propose(proposed)
     return {
-      report: [
-        'The sign-in specialist proposes these changes. They are NOT committed: commit them yourself if they are right.',
-        proposed.summary,
-        ...proposed.changes.map((c) =>
-          c.op === 'write' ? `--- ${c.path}\n${c.content}` : `--- delete ${c.path}`,
-        ),
-      ].join('\n'),
+      report: `The sign-in specialist proposes changes to ${proposed.changes.map((c) => c.path).join(', ')}. They are NOT committed: the proposal is in its own section below, and stays there until you commit it, if it is right.`,
     }
   },
 })
