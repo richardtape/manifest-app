@@ -37,16 +37,21 @@ says which plan is current. This file states where things stand and the rules. I
 - **What Rich decided for F4, 2026-09-28** (the plan has each): laptop staging only; *Trying out* says UBC's words
   everywhere, his sentence; a change is agreed before it is built; his four F3 items (built); names people read
   (built); the laptop sentence (approved).
-- **FE-35 and FE-36 are DECIDED** (Spec action 10, manifest `d9a1fa1`) and **part-landed** by the platform's sitting 11a:
+- **FE-35 and FE-36 are DECIDED** (Spec action 10, manifest `d9a1fa1`) and **built** by the platform's sitting 11a (its
+  close-out to come):
   - `ad4e94c`: under the default `capable` setting, a confidential session lists `default-chat-onprem`,
     `default-chat-onprem-reasoning`, then `default-chat-large` when registered;
   - **`4f261e9` moved the contract, additively** (still 1.4.0, 66 operations, 127 codes): **`models_withdrawn`** in
     `AgentSession.endReason`. A session holding a model its project no longer allows is ended at the next valid
     `manifest.yaml` recorded, or at boot, and its key refused for every model: **the next piece of work starts a new
     session** (Task 8). Our typecheck and 916 tests pass against it;
-  - **ruled, not committed**: `403 INCIDENT_LOG_CONFIDENTIAL`, a delegated token on a confidential project's staging or
-    production `listIncidents` while the setting is `capable`. The platform session messages us at that commit: then
-    re-read `openapi.json`, run the gates, and record it (§5, §8).
+  - **`38c2ade` committed the incident refusal** (contract and mock; still 1.4.0, 66 operations, **128 codes**):
+    `403 INCIDENT_LOG_CONFIDENTIAL`, a delegated token on a confidential project's staging or production
+    `listIncidents` while the setting is `capable`. Our server reads only the sandbox's today; F4's fix round meets
+    it, and never hands the person's own reading to our server or a model. Typecheck and 916 tests pass against it;
+  - **our mock gains `MANIFEST_MOCK_CONFIDENTIAL=1`** (a Bearer's staging or production incidents refused, every agent
+    session holding the three names). Without it nothing changes. **Our mock on 7102 has not reloaded it**: restart it
+    (`pnpm mock`, with the variable) when a test of the confidential path needs it.
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md)).
   - **F1 is executed** (2026-09-27): sign-in, the shell, *Your apps*, and a profile.

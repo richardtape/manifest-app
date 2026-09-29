@@ -1056,7 +1056,14 @@ mock on 7102 and our server in mock mode on 7105 throughout. The ledger has ever
   `models_withdrawn` in `AgentSession.endReason` and `agent_session.ended`. After every valid `manifest.yaml` recorded,
   and at every boot, an active session holding a model its project no longer allows is ended, and its key refused
   for every model: **the next piece of work must start a new session** (Task 8). `ad4e94c` built the setting. **Our
-  typecheck and 916 tests pass against it.** The incident refusal is still to come.
+  typecheck and 916 tests pass against it.**
+- **After our close-out, `38c2ade` committed the incident refusal** (contract and mock; 1.4.0, 66 operations, **128
+  codes**): `403 INCIDENT_LOG_CONFIDENTIAL`, family `OutputError`. Its remedy suggests asking the person to read it in
+  their own session and say what failed: that stays the person's choice, in their own words, never our server reading
+  it for them (sitting 1's ruling 7, Tasks 8–10). **Our mock gains `MANIFEST_MOCK_CONFIDENTIAL=1`** (a Bearer's staging
+  or production incidents refused; every agent session holding the three names); without it nothing changes, and our
+  running mock on 7102 has not reloaded it. Typecheck and 916 tests, twice, pass against it. **M6 can now be measured
+  against the mock**, and on 7100 at sitting 7.
 
 **Task 2** (`e394339`): `SegmentedControl` and `Timeline`, ported from the bundle, held byte for byte by the parity
 test (the previews' cases, strings and options in both roles, every station state at each end). Ours, tested apart:
