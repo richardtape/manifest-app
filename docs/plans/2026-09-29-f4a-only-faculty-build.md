@@ -5,8 +5,8 @@
 > **Read [`../ORIENTATION.md`](../ORIENTATION.md) first.**
 
 **Status: written 2026-09-29, for Rich's review.** It waits on the platform: **FE-39**, carried by Rich the same day,
-and in the platform's launch-path plan as its *proposed* Task 8a (sitting 5a, Spec action 7; manifest `3f20f83`),
-waiting on Rich's own confirmation there. **Nothing here is built before the platform's contract answers
+and in the platform's launch-path plan as its Task 8a (sitting 5a, Spec action 7; manifest `3f20f83`), confirmed by
+Rich there (`e46df38`: builders are exactly the `faculty` affiliation, or an administrator's PUID). **Nothing here is built before the platform's contract answers
 `Me.mayBuild`.** The names this plan uses are the ones the platform proposed; Task 1 reads what actually landed and
 corrects Tasks 2–4 to it.
 

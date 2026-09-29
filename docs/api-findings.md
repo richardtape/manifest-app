@@ -1068,11 +1068,11 @@ word the same day** to the platform session (`manifest-63`), for its launch-path
   1), our server refusing new conversations and changes with the same code, and moment 18's faculty-only words. A
   small plan of our own, *"Only faculty build"*, written now and built when it lands.
 - **Later:** TAs (Rich: *"Perhaps in the future"*), as a change to the one predicate.
-- **In the platform's launch-path plan** (`manifest-63`, `3f20f83`, 2026-09-29): *proposed* Task 8a in its sitting 5a,
-  with Spec action 7, waiting on Rich's own confirmation there. Its shape: `users.affiliations`, refreshed at every
-  sign-in (an assertion without the attribute is `[]`, not faculty); `mayBuild(user)` = administrator, or an
-  affiliation in `MANIFEST_BUILDER_AFFILIATIONS` (default `faculty`: UBC may not mark sessional lecturers so, a question
-  for UBC IAM); **`Me.mayBuild: boolean`**; `createProject` and `startIntakeSession` **`403 BUILDING_NOT_OPEN`**;
+- **In the platform's launch-path plan** (`manifest-63`, `3f20f83`, 2026-09-29): Task 8a in its sitting 5a, with Spec
+  action 7; **confirmed by Rich there the same day** (`e46df38`). Its shape: `users.affiliations`, refreshed at every
+  sign-in (an assertion without the attribute is `[]`, not faculty); `mayBuild(user)` = administrator, or **exactly the
+  affiliation `faculty`** (Rich: no setting for other values; a sessional lecturer UBC marks `staff` builds only if the
+  administrators' list names them); **`Me.mayBuild: boolean`**; `createProject` and `startIntakeSession` **`403 BUILDING_NOT_OPEN`**;
   `addMember` with a target who may not build **`409 MEMBER_MAY_NOT_BUILD`**, naming them; the mock's
   **`MANIFEST_MOCK_MAY_BUILD=0`**; a second faculty test user, `colleague`. It messages us at the contract commit.
 - **Rich decided the platform's two differences, 2026-09-29, each its recommendation:** administrators **by PUID**
