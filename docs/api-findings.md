@@ -1069,7 +1069,11 @@ word the same day** to the platform session (`manifest-63`), for its launch-path
   small plan of our own, *"Only faculty build"*, written now and built when it lands.
 - **Later:** TAs (Rich: *"Perhaps in the future"*), as a change to the one predicate.
 - **In the platform's launch-path plan** (`manifest-63`, `3f20f83`, 2026-09-29): Task 8a in its sitting 5a, with Spec
-  action 7; **confirmed by Rich there the same day** (`e46df38`). Its shape: `users.affiliations`, refreshed at every
+  action 7; **confirmed by Rich there the same day** (`e46df38`), and **Spec action 7 applied at his *"apply 7"***
+  (`dcbd023`: §9 asks CWL for `eduPersonAffiliation`, and only `faculty` or an administrator may start a project or an
+  intake session, or be added to one; §6 `User.affiliations`; §13 *Who may build* heads *Roles*, its collaborator now
+  *"an invited co-instructor (a TA once who may build includes TAs)"*; §20 administrators may be named by a setting of
+  PUIDs). No contract change yet: `mayBuild` lands at sitting 5a. Its shape: `users.affiliations`, refreshed at every
   sign-in (an assertion without the attribute is `[]`, not faculty); `mayBuild(user)` = administrator, or **exactly the
   affiliation `faculty`** (Rich: no setting for other values; a sessional lecturer UBC marks `staff` builds only if the
   administrators' list names them); **`Me.mayBuild: boolean`**; `createProject` and `startIntakeSession` **`403 BUILDING_NOT_OPEN`**;
