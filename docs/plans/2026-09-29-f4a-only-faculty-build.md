@@ -4,7 +4,9 @@
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 > **Read [`../ORIENTATION.md`](../ORIENTATION.md) first.**
 
-**Status: written 2026-09-29, for Rich's review.** It waits on the platform: **FE-39**, carried by Rich the same day,
+**Status: approved by Rich, 2026-09-29** (*"yes plan is good"*). Its execution method is his to confirm when it is
+built: native (superpowers:executing-plans, one agent, then one fresh whole-branch reviewer) is recommended, as for F3
+and F4. It waits on the platform: **FE-39**, carried by Rich the same day,
 and in the platform's launch-path plan as its Task 8a (sitting 5a, Spec action 7; manifest `3f20f83`), confirmed by
 Rich there (`e46df38`: builders are exactly the `faculty` affiliation, or an administrator's PUID). **Nothing here is built before the platform's contract answers
 `Me.mayBuild`.** The names this plan uses are the ones the platform proposed; Task 1 reads what actually landed and
@@ -38,7 +40,7 @@ but starts nothing new. Faculty and administrators go on as today.
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1–4 | What landed, read; our server's refusal of a new start; the *not available* screen, and the shell for someone who keeps apps; walked against the mock and on the real platform at Rich's word; Rich's click | **waits on FE-39** (the platform's sitting 5a) |
+| 1 | 1–4 | What landed, read; our server's refusal of a new start; the *not available* screen, and the shell for someone who keeps apps; walked against the mock and on the real platform at Rich's word; Rich's click | **waits on FE-39** (the platform's sitting 5a; it messages us at the contract commit that adds `mayBuild`) |
 
 The sitting ends as F4's did: the four gates, `pnpm test` twice; the four acceptance scripts in mock mode; a dated entry
 in *What executing this plan found*; this table; ORIENTATION's *Where things stand*, replaced; the roadmap.
