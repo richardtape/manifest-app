@@ -338,7 +338,9 @@ bash scripts/check-building.sh                                  # F3's acceptanc
   green; remove them all to see the test go red.
 - **A negative control can hang instead of failing.** A mutation that makes React render in a loop inside `act`
   (an effect's dependencies removed) never yields to Vitest's timeout. A harness that restores the file only when
-  Vitest returns then leaves it broken: stop the Vitest processes, and check the file (sitting 6).
+  Vitest returns then leaves it broken: stop the Vitest processes, and check the file (sitting 6). **Its worker can
+  outlive the session**: F4 sitting 6 found one (`node (vitest 3)`, parent launchd) at 100% of a core for 11 hours,
+  loading the machine the platform's test tiers time against. Run `pgrep -fl vitest` at a sitting's start and close.
 - **`git status --short` lists a new directory as one line**, so piping it into `prettier --write` misses the files
   inside. Name the directory.
 - **Vitest reads `$0` in an `it.each` title as a variable**, so a title holding money prints garbled.
