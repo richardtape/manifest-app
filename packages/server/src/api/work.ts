@@ -53,12 +53,21 @@ export interface Work {
 const refuse = (reply: FastifyReply, status: number, code: string) =>
   reply.code(status).send({ error: { code } })
 
-export function createWork(hub: Hub, store: Store): Work {
+/**
+ * `ended` is told each time a piece of work ends, after its claim is released: the app's line
+ * starts its next conversation if nothing holds the app now (F4 M7-1: a stopped round frees it
+ * when what it had in flight has returned, never at the press).
+ */
+export function createWork(
+  hub: Hub,
+  store: Store,
+  ended: (conversation: Conversation) => void = () => undefined,
+): Work {
   /**
    * EACH RUN'S OWN CLAIM, released by that run alone (F3 Task 9): agree's run starts round 1
-   * from inside itself (Decision 11), and its end must never free the round's claim.
+   * from inside itself (Decision 11), and its end must never free the round's claim. The hub
+   * keeps them, so the line and the state frame see work in flight (F4).
    */
-  const working = new Map<string, symbol>()
   const step = (id: string, key: StepKey | null, state: 'now' | 'done' | 'halted') => {
     if (key !== null) hub.publish(id, { kind: 'step', step: key, state })
   }
@@ -76,15 +85,13 @@ export function createWork(hub: Hub, store: Store): Work {
     mine(request, reply, who, states) {
       const conversation = store.getConversation(request.params.id, who.person.id)
       if (conversation === undefined) return void refuse(reply, 404, 'NOT_FOUND')
-      if (working.has(conversation.id))
-        return void refuse(reply, 409, 'CONVERSATION_BUSY')
+      if (hub.busy(conversation.id)) return void refuse(reply, 409, 'CONVERSATION_BUSY')
       if (!states.includes(conversation.state))
         return void refuse(reply, 409, 'CONVERSATION_STATE')
       return conversation
     },
     run(conversation, first, work) {
-      const claim = Symbol(conversation.id)
-      working.set(conversation.id, claim)
+      const claim = hub.claim(conversation.id)
       let current = first
       step(conversation.id, current, 'now')
       const next = (key: StepKey) => {
@@ -115,7 +122,7 @@ export function createWork(hub: Hub, store: Store): Work {
           },
         )
         .finally(() => {
-          if (working.get(conversation.id) === claim) working.delete(conversation.id)
+          if (hub.unclaim(conversation.id, claim)) ended(now(conversation))
         })
     },
   }

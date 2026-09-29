@@ -22,8 +22,9 @@ import type { Secrets } from '../platform/secrets.js'
 import type { Change, Source } from '../platform/source.js'
 import type { ProjectStream } from '../platform/stream.js'
 import { storeTrace } from '../runtime/trace.js'
-import { openStore, type Store } from '../store/db.js'
+import { openStore, type Conversation, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
+import { createLine, type Line } from './line.js'
 import { createRounds, type Rounds } from './round.js'
 
 /**
@@ -200,6 +201,8 @@ interface Options {
   models?: string[]
   /** Whether the draft's sign-in starts, each time it is checked (FE-37). */
   signIn?: (n: number) => 'ok' | 'refused' | 'unknown'
+  /** Told when a piece of work ends (F4: the app's line starts its next). */
+  ended?: (conversation: Conversation) => void
 }
 
 function harness(options: Options, file?: string, store0?: Store) {
@@ -212,7 +215,7 @@ function harness(options: Options, file?: string, store0?: Store) {
   const store = store0 ?? openStore(where)
   if (store0 === undefined) cleanups.push(() => store.close())
   const hub: Hub = createHub()
-  const work = createWork(hub, store)
+  const work = createWork(hub, store, (conversation) => options.ended?.(conversation))
   const tokens = createConversationTokens()
   const did: string[] = []
   const frames: Progress[] = []
@@ -1603,5 +1606,42 @@ describe('the store is enough (a reconnect, or a restart)', () => {
     const h = harness({ script: STRAIGHT })
     const conversation = agreed(h)
     expect(viewOf(h, conversation.id)).toBeNull()
+  })
+})
+
+describe('the round frees its app (F4 Task 6, Decision 5)', () => {
+  it('built: once its work has ended, the line starts the next change, with no request', async () => {
+    const begun: string[] = []
+    const h = harness({
+      script: STRAIGHT,
+      autoBuild: true,
+      ended: (conversation) => line.released(conversation.projectId),
+    })
+    const conversation = agreed(h)
+    h.tokens.put(conversation.id, TOKEN)
+    const line: Line = createLine({
+      store: h.store,
+      hub: h.hub,
+      now: () => new Date(),
+      begin: (next) => {
+        begun.push(next.id)
+        h.store.setState(next.id, 'planning')
+      },
+    })
+    const next = h.store.createChange(
+      ALICE.id,
+      PROJECT.id,
+      'Word count',
+      'Also a word count.',
+    )
+    expect(line.join(next)).toBe('waiting')
+    h.rounds.start(conversation, TOKEN)
+    await untilStatus(h, conversation.id, 'done')
+    await until(
+      () => begun.length > 0,
+      () => begun,
+    )
+    expect(stateOf(h, conversation.id)).toBe('built')
+    expect(begun).toEqual([next.id])
   })
 })

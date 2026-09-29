@@ -82,6 +82,8 @@ const state = (
   plan,
   round: null,
   thread: [],
+  piece: null,
+  line: null,
 })
 
 beforeEach(() => {

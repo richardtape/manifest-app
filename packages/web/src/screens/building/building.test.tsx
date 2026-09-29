@@ -188,6 +188,8 @@ function stage(refusals: Refusals = {}) {
       plan: null,
       round: view,
       thread,
+      piece: null,
+      line: null,
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))
@@ -1350,6 +1352,8 @@ describe("the rail's project section, on a conversation", () => {
       plan: null,
       round: null,
       thread: [],
+      piece: null,
+      line: null,
     })
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(nav().querySelector('.mf-rail__over')).toBeNull()

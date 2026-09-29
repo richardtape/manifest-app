@@ -174,6 +174,8 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
       plan,
       round: null,
       thread: [],
+      piece: null,
+      line: null,
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))

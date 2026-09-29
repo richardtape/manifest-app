@@ -8,11 +8,13 @@ import type { DatabaseSync } from 'node:sqlite'
  *   `check`, so the table is rebuilt.
  * - 3: F3 Task 8. `runs` gains `detail`, the round's own facts; `questions` is a new table,
  *   which `schema.sql` makes.
+ * - 4: F4 Decision 14. `conversations` gains `waiting` and `set-aside`, and `waiting_since`, its
+ *   place in the app's line. Rebuilt again, as for 2: one rebuild brings 0, 2 or 3 up to it.
  *
  * `schema.sql` runs first, and makes a new file's tables as they are now. Only an existing
  * table keeps the definition it was made with, which is what this corrects.
  */
-export const VERSION = 3
+export const VERSION = 4
 
 /**
  * The one definition of `conversations`, read out of `schema.sql` itself, so the rebuild can
@@ -25,6 +27,7 @@ function conversationsColumns(schema: string): string {
   return found[1]
 }
 
+/** The columns every version has: a later one's (`waiting_since`) starts null. */
 const COLUMNS =
   'id, person_id, project_id, title, state, description, created_at, updated_at'
 
@@ -32,7 +35,7 @@ export function migrate(db: DatabaseSync, schema: string): void {
   const { user_version: version } = db.prepare('pragma user_version').get() as {
     user_version: number
   }
-  if (version < 2) rebuildConversations(db, schema)
+  if (version < 4) rebuildConversations(db, schema)
   if (version < 3) {
     // A new file's runs already have it (schema.sql); sitting 2's do not.
     const columns = db.prepare('pragma table_info(runs)').all() as { name: string }[]
@@ -59,10 +62,12 @@ function rebuildConversations(db: DatabaseSync, schema: string): void {
       db.exec(
         'create index if not exists conversations_by_person on conversations (person_id)',
       )
+      db.exec(
+        'create index if not exists conversations_by_project on conversations (project_id, state)',
+      )
       const broken = db.prepare('pragma foreign_key_check').all()
       if (broken.length > 0)
         throw new Error('the rebuilt conversations broke a reference')
-      db.exec('pragma user_version = 2')
       db.exec('commit')
     } catch (error) {
       db.exec('rollback')

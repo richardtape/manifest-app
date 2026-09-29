@@ -4,6 +4,8 @@ import type { Config } from '../config.js'
 import type { Conversation, Store } from '../store/db.js'
 import { guard } from './guard.js'
 import { intakeOf, planOf } from './intake-state.js'
+import { lineOf } from './line-state.js'
+import { pieceOf } from './piece-state.js'
 import { problem } from './problems.js'
 import type { Allowance, Progress } from './progress.js'
 import { roundOf, threadOf } from './round-state.js'
@@ -23,12 +25,33 @@ export interface Hub {
    * none, and the page offers Carry on.
    */
   working(conversationId: string): Progress[]
+  /**
+   * WORK IN FLIGHT, by conversation (work.ts claims it): one piece at a time, and a stopped
+   * round still finishing what it had in flight holds its app until it ends (F4 M7-1). Each
+   * claim is released by its own holder alone.
+   */
+  claim(conversationId: string): symbol
+  /** True when this claim was the conversation's, and is now released. */
+  unclaim(conversationId: string, claim: symbol): boolean
+  busy(conversationId: string): boolean
 }
 
 export function createHub(): Hub {
   const listeners = new Map<string, Set<(frame: Progress) => void>>()
   const working = new Map<string, Map<string, Progress>>()
+  const claims = new Map<string, symbol>()
   return {
+    claim(conversationId) {
+      const claim = Symbol(conversationId)
+      claims.set(conversationId, claim)
+      return claim
+    },
+    unclaim(conversationId, claim) {
+      if (claims.get(conversationId) !== claim) return false
+      claims.delete(conversationId)
+      return true
+    },
+    busy: (conversationId) => claims.has(conversationId),
     publish(conversationId, frame) {
       if (frame.kind === 'step') {
         const now = working.get(conversationId) ?? new Map<string, Progress>()
@@ -51,8 +74,16 @@ export function createHub(): Hub {
   }
 }
 
-/** The whole state: the conversation, its intake so far, its latest plan, its latest round, and what the rounds said. */
-export function stateFrame(store: Store, conversation: Conversation): Progress {
+/**
+ * The whole state: the conversation, its intake so far, its latest plan, its latest round, what
+ * the rounds said, its piece of work and its place in the app's line (F4).
+ */
+export function stateFrame(
+  store: Store,
+  conversation: Conversation,
+  busy: (conversationId: string) => boolean,
+): Progress {
+  const piece = pieceOf(store, conversation.id)
   return {
     kind: 'state',
     conversation,
@@ -60,12 +91,34 @@ export function stateFrame(store: Store, conversation: Conversation): Progress {
     plan: planOf(store, conversation.id),
     round: roundOf(store, conversation.id),
     thread: threadOf(store, conversation.id),
+    piece:
+      conversation.projectId === null
+        ? null
+        : { kind: piece.kind, change: piece.change, asked: piece.asked },
+    line: lineOf(store, conversation, busy),
   }
 }
 
-/** Every change of state is published whole. */
+/**
+ * EVERY CHANGE OF STATE IS PUBLISHED WHOLE, and with it each waiting conversation of the same
+ * app: their frames say who holds it, and whether it waits for them (F4 Decision 5).
+ */
 export function publishState(hub: Hub, store: Store, conversation: Conversation): void {
-  hub.publish(conversation.id, stateFrame(store, conversation))
+  hub.publish(conversation.id, stateFrame(store, conversation, hub.busy))
+  publishLine(hub, store, conversation.projectId, conversation.id)
+}
+
+/** Each waiting conversation of an app, told its place and its holder afresh. */
+export function publishLine(
+  hub: Hub,
+  store: Store,
+  projectId: string | null,
+  except?: string,
+): void {
+  if (projectId === null) return
+  for (const waiting of store.waitingOn(projectId))
+    if (waiting.id !== except)
+      hub.publish(waiting.id, stateFrame(store, waiting, hub.busy))
 }
 
 /**
@@ -153,7 +206,7 @@ export function registerEvents(
       })
       // THE STATE FIRST, then each change: nothing can be published between the two lines,
       // which run without a pause between them.
-      response.write(data(stateFrame(store, conversation)))
+      response.write(data(stateFrame(store, conversation, hub.busy)))
       for (const frame of hub.working(conversation.id)) response.write(data(frame))
       const unsubscribe = hub.subscribe(conversation.id, (frame) => {
         response.write(data(frame))

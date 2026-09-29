@@ -115,7 +115,7 @@ describe('the state frame carries what the rounds said', () => {
     s.saveRun(run(id, 2, { status: 'working', step: 'pages' }))
     for (const [from, body] of said) s.addMessage(id, from, body)
 
-    const frame = stateFrame(s, s.getConversation(id, ALICE.id)!)
+    const frame = stateFrame(s, s.getConversation(id, ALICE.id)!, () => false)
     expect(frame.kind).toBe('state')
     const thread = frame.kind === 'state' ? frame.thread : undefined
     const at = expect.stringMatching(/^\d{4}-\d\d-\d\dT/) as unknown as string
@@ -159,7 +159,7 @@ describe('the state frame carries what the rounds said', () => {
   it('a round whose run kept no detail folds with nothing changed; before any round, nothing', () => {
     const s = store()
     const conversation = s.createConversation(ALICE.id, 'Words.')
-    const before = stateFrame(s, conversation)
+    const before = stateFrame(s, conversation, () => false)
     expect(before.kind === 'state' && before.thread).toEqual([])
     s.saveRun(run(conversation.id, 1, { detail: null }))
     s.addMessage(conversation.id, 'we', {
@@ -168,7 +168,7 @@ describe('the state frame carries what the rounds said', () => {
       line: null,
       cannot: null,
     } satisfies RoundSaid)
-    const after = stateFrame(s, conversation)
+    const after = stateFrame(s, conversation, () => false)
     expect(after.kind === 'state' && after.thread).toMatchObject([
       { kind: 'built', round: 1, changed: null, cannot: null },
     ])
@@ -210,7 +210,7 @@ describe("Rich's F3 decisions, as the round is folded", () => {
       cannot: null,
     } satisfies RoundSaid)
     expect(stepOf(s, id, 'pages')).toMatchObject({ changed: ACCOUNT, exact: EXACT })
-    const frame = stateFrame(s, s.getConversation(id, ALICE.id)!)
+    const frame = stateFrame(s, s.getConversation(id, ALICE.id)!, () => false)
     expect(frame.kind === 'state' && frame.thread).toMatchObject([
       { kind: 'built', round: 1, changed: ACCOUNT },
     ])

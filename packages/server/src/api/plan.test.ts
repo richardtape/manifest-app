@@ -166,6 +166,7 @@ async function setUp(
         token,
       }),
     carryOn: () => undefined,
+    withoutToken: () => undefined,
     message: () => undefined,
     answer: () => 'unknown',
     stop: () => undefined,

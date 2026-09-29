@@ -13,6 +13,7 @@ import { storeTrace } from '../runtime/trace.js'
 import { openStore, type Conversation, type Store } from '../store/db.js'
 import { scratchDir } from '../store/testing.js'
 import { createHub, type Hub } from './events.js'
+import { pieceOf } from './piece-state.js'
 import type { Progress } from './progress.js'
 import { roundOf } from './round-state.js'
 import { ALICE, AS_ALICE, AS_BOB, fakeControlPlane } from './testing.js'
@@ -616,5 +617,165 @@ describe('a restart (Review Focus 3)', () => {
     )
     cleanups.push(() => again.close())
     expect(roundOf(s.store, conversation.id)?.status).toBe('interrupted')
+  })
+})
+
+/** A change on the same app, in `state`: its project and what was asked, as Task 6 stores them. */
+function changeOn(
+  s: Setup,
+  state: Conversation['state'],
+  words = 'Also show a word count.',
+) {
+  s.store.rememberPerson(ALICE)
+  const made = s.store.createChange(ALICE.id, PROJECT.id, words.replace(/\.$/, ''), words)
+  s.store.addMessage(made.id, 'we', { kind: 'project', project: PROJECT })
+  s.store.addMessage(made.id, 'person', { kind: 'asked', change: 1, words, fix: null })
+  s.tokens.put(made.id, TOKEN)
+  return s.store.setState(made.id, state)
+}
+
+/** A first conversation whose round is done: built. */
+function built(s: Setup): Conversation {
+  const conversation = planReady(s)
+  s.store.saveRun({
+    id: `run-${conversation.id}`,
+    conversationId: conversation.id,
+    round: 1,
+    step: 'answers',
+    moves: 0,
+    tries: {},
+    status: 'done',
+    sessionIds: [],
+    model: null,
+    last: null,
+    sameRefusal: null,
+    detail: null,
+  })
+  return s.store.setState(conversation.id, 'built')
+}
+
+const stateOf = (s: Setup, id: string) => s.store.getConversation(id, ALICE.id)?.state
+const placeOf = (s: Setup, id: string) =>
+  s.store.waitingOn(PROJECT.id).findIndex((c) => c.id === id) + 1
+
+describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
+  it("a built conversation's message is its next change: on a free app it starts at once", async () => {
+    const s = setUp()
+    const conversation = built(s)
+    const answer = await post(s, conversation.id, 'messages', {
+      words: 'Also a word count.',
+    })
+    expect(answer.status).toBe(202)
+    expect(stateOf(s, conversation.id)).toBe('planning')
+    expect(pieceOf(s.store, conversation.id)).toEqual({
+      kind: 'change',
+      change: 1,
+      asked: ['Also a word count.'],
+      incidentId: null,
+    })
+  })
+
+  it("a built conversation's message while another holds the app waits: its words its next change", async () => {
+    const s = setUp()
+    const holder = changeOn(s, 'plan-ready')
+    const conversation = built(s)
+    expect(
+      (await post(s, conversation.id, 'messages', { words: 'Bigger title.' })).status,
+    ).toBe(202)
+    expect(stateOf(s, conversation.id)).toBe('waiting')
+    expect(placeOf(s, conversation.id)).toBe(1)
+    expect(stateOf(s, holder.id)).toBe('plan-ready')
+    expect(pieceOf(s.store, conversation.id).asked).toEqual(['Bigger title.'])
+  })
+
+  it("a waiting conversation's messages join what was asked, and it keeps its place", async () => {
+    const s = setUp()
+    changeOn(s, 'plan-ready')
+    const waiting = changeOn(s, 'waiting', 'Bigger title.')
+    s.store.setState(waiting.id, 'waiting')
+    expect((await post(s, waiting.id, 'messages', { words: 'And bold.' })).status).toBe(
+      202,
+    )
+    expect(pieceOf(s.store, waiting.id)).toMatchObject({
+      change: 1,
+      asked: ['Bigger title.', 'And bold.'],
+    })
+    expect(stateOf(s, waiting.id)).toBe('waiting')
+    expect(placeOf(s, waiting.id)).toBe(1)
+  })
+
+  it('Leave the line: /stop on a waiting change sets it aside, and the line closes up', async () => {
+    const s = setUp()
+    const holder = changeOn(s, 'plan-ready')
+    const a = changeOn(s, 'waiting', 'A.')
+    const b = changeOn(s, 'waiting', 'B.')
+    s.store.setState(a.id, 'waiting', { waitingSince: '2026-09-28T10:00:00.000Z' })
+    s.store.setState(b.id, 'waiting', { waitingSince: '2026-09-28T10:00:01.000Z' })
+    expect((await post(s, a.id, 'stop')).status).toBe(202)
+    expect(stateOf(s, a.id)).toBe('set-aside')
+    expect(placeOf(s, b.id)).toBe(1)
+    expect(stateOf(s, holder.id)).toBe('plan-ready')
+  })
+
+  it.each(['planning', 'plan-ready'] as const)(
+    'Not now: /stop on a change %s sets it aside and frees the app; the next starts by itself',
+    async (state) => {
+      const s = setUp()
+      const holder = changeOn(s, state)
+      const next = changeOn(s, 'waiting', 'Next.')
+      s.store.setState(next.id, 'waiting')
+      expect((await post(s, holder.id, 'stop')).status).toBe(202)
+      expect(stateOf(s, holder.id)).toBe('set-aside')
+      expect(stateOf(s, next.id)).toBe('planning')
+    },
+  )
+
+  it("the holder's round stopped: when what it had in flight returns, the next starts by itself, with no request", async () => {
+    const s = setUp(AT_BUILD)
+    const holder = await atBuild(s)
+    const next = changeOn(s, 'waiting', 'Next.')
+    s.store.setState(next.id, 'waiting')
+    expect((await post(s, holder.id, 'stop')).status).toBe(202)
+    await until(() => stateOf(s, next.id) === 'planning')
+    expect(roundOf(s.store, holder.id)?.status).toBe('stopped')
+  })
+
+  it('Carry on after a Stop while another holds: it waits; freed, the same round carries on, on a new session, never a new round', async () => {
+    const s = setUp(AT_BUILD)
+    const conversation = await atBuild(s)
+    await post(s, conversation.id, 'stop')
+    await until(() => !s.hub.busy(conversation.id))
+    const holder = changeOn(s, 'plan-ready')
+    expect((await post(s, conversation.id, 'build')).status).toBe(202)
+    expect(stateOf(s, conversation.id)).toBe('waiting')
+    expect(s.sessionsStarted()).toBe(1)
+    // The holder set aside: the stopped round carries on by itself.
+    expect((await post(s, holder.id, 'stop')).status).toBe(202)
+    await until(() => roundOf(s.store, conversation.id)?.status === 'working')
+    expect(stateOf(s, conversation.id)).toBe('building')
+    expect(s.store.listRuns(conversation.id).map((r) => r.round)).toEqual([1])
+    await until(() => s.sessionsStarted() === 2)
+  })
+
+  it('Leave the line on a stopped round waiting to carry on leaves it stopped, never set aside', async () => {
+    const s = setUp(AT_BUILD)
+    const conversation = await atBuild(s)
+    await post(s, conversation.id, 'stop')
+    await until(() => !s.hub.busy(conversation.id))
+    changeOn(s, 'plan-ready')
+    await post(s, conversation.id, 'build')
+    expect(stateOf(s, conversation.id)).toBe('waiting')
+    expect((await post(s, conversation.id, 'stop')).status).toBe(202)
+    expect(stateOf(s, conversation.id)).toBe('building')
+    expect(roundOf(s.store, conversation.id)?.status).toBe('stopped')
+  })
+
+  it("the first plan's /stop is still refused: only a change is set aside", async () => {
+    const s = setUp()
+    const conversation = planReady(s)
+    expect(await post(s, conversation.id, 'stop')).toEqual({
+      status: 409,
+      body: { error: { code: 'CONVERSATION_STATE' } },
+    })
   })
 })

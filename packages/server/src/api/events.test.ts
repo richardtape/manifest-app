@@ -175,6 +175,8 @@ describe('GET /api/conversations/:id/events', () => {
       plan: null,
       round: null,
       thread: [],
+      piece: null,
+      line: null,
     })
   })
 
@@ -204,6 +206,8 @@ describe('GET /api/conversations/:id/events', () => {
           plan: null,
           round: null,
           thread: [],
+          piece: null,
+          line: null,
         },
       ])
     }
@@ -336,6 +340,8 @@ describe('Review Focus 5, the stream’s half: our server restarts', () => {
       plan: null,
       round: null,
       thread: [],
+      piece: null,
+      line: null,
     })
   })
 })

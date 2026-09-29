@@ -30,6 +30,10 @@ export type ConversationState =
   | 'built'
   | 'paused'
   | 'failed'
+  /** F4 Decision 5: waiting its turn on the app, which another conversation holds. */
+  | 'waiting'
+  /** A change they chose not to make (Not now, Leave the line): nothing was changed. */
+  | 'set-aside'
 
 export interface Conversation {
   id: string
@@ -43,6 +47,38 @@ export interface Conversation {
   description: string
   createdAt: string
   updatedAt: string
+}
+
+/** The five states (`20-states.md`), as the design system's `StateChip` names them. */
+export type Chip = 'working' | 'waiting' | 'attention' | 'steady' | 'notyet'
+
+/** F4 Decision 6: the piece of work a conversation is on, folded from what was asked. */
+export interface PieceView {
+  /** The first build; a change they asked for; a fix of ours, when trying-out did not start. */
+  kind: 'first' | 'change' | 'fix'
+  /** 0 for the first; each change asked in the conversation counts on from 1. */
+  change: number
+  /** Their words for it, in order; ours for a fix. */
+  asked: string[]
+}
+
+/** F4 Decision 5: where a waiting conversation is in its app's line. */
+export interface LineView {
+  /** 1 is next. */
+  place: number
+  /** The conversation holding the app: null only between one ending and the next starting. */
+  holder: { id: string; title: string; waitingForYou: boolean } | null
+}
+
+/** One row of an app's conversations (F4 Task 6): where each piece of work left it. */
+export interface AppConversation {
+  id: string
+  title: string
+  state: ConversationState
+  chip: Chip
+  updatedAt: string
+  /** Its place, when it waits. */
+  line: LineView | null
 }
 
 /** One follow-up question (moment 3): `choices` when the answers are few, else null. */
@@ -232,6 +268,10 @@ export type Progress =
       round: RoundView | null
       /** What every round said, oldest first (F3 Task 11): empty until one speaks. */
       thread: Said[]
+      /** The piece of work it is on (F4): null in the intake, before its project. */
+      piece: PieceView | null
+      /** Its place in the app's line (F4): null unless it waits. */
+      line: LineView | null
     }
   /** A step, by its key, ticking on real completion. */
   | { kind: 'step'; step: StepKey; state: 'now' | 'done' | 'halted' }

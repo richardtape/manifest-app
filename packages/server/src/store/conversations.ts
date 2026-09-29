@@ -33,11 +33,38 @@ export interface Store {
   createConversation(personId: string, description: string): Conversation
   /** Another person's conversation is `undefined`, exactly as one that does not exist. */
   getConversation(id: string, personId: string): Conversation | undefined
+  /**
+   * F4 Decision 5: a conversation moved to `waiting` takes `waitingSince` as its place in the
+   * app's line, or keeps the one it has, or now; moved anywhere else, it leaves the line.
+   */
   setState(
     id: string,
     state: ConversationState,
-    patch?: Partial<Pick<Conversation, 'projectId' | 'title'>>,
+    patch?: Partial<Pick<Conversation, 'projectId' | 'title'>> & {
+      waitingSince?: string
+    },
   ): Conversation
+  /** F4 Task 6: a change asked on an app, waiting until the line lets it start. */
+  createChange(
+    personId: string,
+    projectId: string,
+    title: string,
+    description: string,
+  ): Conversation
+  /** The person's conversations on one app, newest first. */
+  listConversationsOn(projectId: string, personId: string): Conversation[]
+  /** Every person's conversations on one app: the line is the app's, not a person's. */
+  conversationsOn(projectId: string): Conversation[]
+  /** The app's line: its waiting conversations, oldest wait first. */
+  waitingOn(projectId: string): Conversation[]
+  /** The apps with a conversation waiting (a restart starts each one's next). */
+  waitingProjects(): string[]
+  /** The person's conversation whose round deployed this instance, by its run's detail. */
+  conversationForInstance(
+    projectId: string,
+    instanceId: string,
+    personId: string,
+  ): string | undefined
   /** `body` is our structured JSON. */
   addMessage(conversationId: string, from: Sender, body: unknown): void
   listMessages(conversationId: string): { from: Sender; body: unknown; at: string }[]

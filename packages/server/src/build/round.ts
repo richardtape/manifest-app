@@ -62,6 +62,12 @@ export interface Rounds {
   stop(conversation: Conversation): void
   /** A restart: a working or paused run is interrupted (Review Focus 3). */
   interruptedOnBoot(): void
+  /**
+   * F4 Decision 5: it reached the front of the app's line with no token held (a restart forgot
+   * it). Its stopped round, or a fix's first, is saved interrupted, so the page hands one over
+   * and carries on, as after any restart. Nothing is started without one.
+   */
+  withoutToken(conversation: Conversation): void
 }
 
 export interface RoundDeps {
@@ -1230,23 +1236,28 @@ export function createRounds(deps: RoundDeps): Rounds {
     if (!waiting) begin(live)
   }
 
+  /** The conversation's next round, from its first step. */
+  function newRun(conversation: Conversation, status: Run['status']): Run {
+    const previous = store.latestRun(conversation.id)
+    return {
+      id: randomUUID(),
+      conversationId: conversation.id,
+      round: (previous?.round ?? 0) + 1,
+      step: 'pages',
+      moves: 0,
+      tries: { build: 0, draft: 0, conflict: 0 },
+      status,
+      sessionIds: [],
+      model: null,
+      last: null,
+      sameRefusal: null,
+      detail: structuredClone(NO_DETAIL),
+    }
+  }
+
   return {
     start(conversation, token) {
-      const previous = store.latestRun(conversation.id)
-      const run: Run = {
-        id: randomUUID(),
-        conversationId: conversation.id,
-        round: (previous?.round ?? 0) + 1,
-        step: 'pages',
-        moves: 0,
-        tries: { build: 0, draft: 0, conflict: 0 },
-        status: 'working',
-        sessionIds: [],
-        model: null,
-        last: null,
-        sameRefusal: null,
-        detail: structuredClone(NO_DETAIL),
-      }
+      const run = newRun(conversation, 'working')
       store.saveRun(run)
       const live = liveOf(run, conversation, token)
       lives.set(conversation.id, live)
@@ -1405,6 +1416,14 @@ export function createRounds(deps: RoundDeps): Rounds {
         store.saveRun({ ...run, status: 'interrupted' })
         store.setState(run.conversationId, 'building')
       }
+    },
+
+    withoutToken(conversation) {
+      const saved = store.latestRun(conversation.id)
+      const run =
+        saved?.status === 'stopped' ? saved : newRun(conversation, 'interrupted')
+      store.saveRun({ ...run, status: 'interrupted' })
+      publishState(hub, store, store.setState(conversation.id, 'building'))
     },
   }
 }

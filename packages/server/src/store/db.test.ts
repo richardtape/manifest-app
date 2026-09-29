@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { openStore, type Store } from './db.js'
+import { VERSION } from './migrate.js'
 import { dumpAll, execOn, pragmaOf, scratchDir } from './testing.js'
 
 /**
@@ -409,7 +410,7 @@ describe('the migration (F3 Decision 12: building and built)', () => {
     insert into plans values ('c-1', 1, '{"whoGetsIn":"Anyone with a CWL"}', '2026-09-28T00:00:00.000Z');
   `
 
-  it('opens an F2 file (version 0) at version 3, its conversation, messages and plan intact, and able to build', () => {
+  it('opens an F2 file (version 0) at the latest version, its conversation, messages and plan intact, and able to build', () => {
     const { dir, remove } = scratchDir()
     cleanups.push(remove)
     const file = join(dir, 'app.sqlite')
@@ -418,7 +419,7 @@ describe('the migration (F3 Decision 12: building and built)', () => {
 
     const store = openStore(file)
     cleanups.push(() => store.close())
-    expect(pragmaOf(file, 'user_version')).toBe(3)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     expect(store.getConversation('c-1', ALICE.id)).toMatchObject({
       state: 'agreed',
       projectId: 'p-1',
@@ -435,16 +436,16 @@ describe('the migration (F3 Decision 12: building and built)', () => {
     expect(store.setState('c-1', 'built').state).toBe('built')
   })
 
-  it('opens a new file at version 3, and a state it does not know is still refused', () => {
+  it('opens a new file at the latest version, and a state it does not know is still refused', () => {
     const { store, file } = fresh()
-    expect(pragmaOf(file, 'user_version')).toBe(3)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     store.rememberPerson(ALICE)
     const made = store.createConversation(ALICE.id, WORDS)
     expect(store.setState(made.id, 'building').state).toBe('building')
     expect(() => store.setState(made.id, 'deploying' as never)).toThrow()
   })
 
-  it('opens a version-3 file again without rebuilding it', () => {
+  it('opens a file at the latest version again without rebuilding it', () => {
     const { dir, remove } = scratchDir()
     cleanups.push(remove)
     const file = join(dir, 'app.sqlite')
@@ -456,10 +457,10 @@ describe('the migration (F3 Decision 12: building and built)', () => {
     const second = openStore(file)
     cleanups.push(() => second.close())
     expect(second.getConversation(made.id, ALICE.id)?.state).toBe('built')
-    expect(pragmaOf(file, 'user_version')).toBe(3)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
   })
 
-  it("opens sitting 2's file (version 2, runs without their detail) at version 3: the runs intact, their detail null, and questions there", () => {
+  it("opens sitting 2's file (version 2, runs without their detail) at the latest version: the runs intact, their detail null, and questions there", () => {
     const { dir, remove } = scratchDir()
     cleanups.push(remove)
     const file = join(dir, 'app.sqlite')
@@ -478,10 +479,196 @@ describe('the migration (F3 Decision 12: building and built)', () => {
     )
     const store = openStore(file)
     cleanups.push(() => store.close())
-    expect(pragmaOf(file, 'user_version')).toBe(3)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     expect(store.getRun('run-1')).toMatchObject({ id: 'run-1', moves: 2, detail: null })
-    // Version 2 was already rebuilt for building and built: never rebuilt again.
     expect(store.getConversation('c-1', ALICE.id)?.state).toBe('agreed')
     expect(Object.keys(dumpAll(file))).toContain('questions')
+  })
+})
+
+describe('the migration (F4 Decision 14: the line)', () => {
+  /** What F3 left behind: version 3, its conversations unable to wait or be set aside. */
+  const F3 = `
+    create table persons (id text primary key, display_name text not null, seen_at text not null);
+    create table conversations (
+      id text primary key,
+      person_id text not null references persons (id),
+      project_id text,
+      title text not null,
+      state text not null check (state in (
+        'describing', 'questions', 'naming', 'making', 'planning', 'plan-ready', 'agreed', 'building', 'built',
+        'paused', 'failed'
+      )),
+      description text not null,
+      created_at text not null,
+      updated_at text not null
+    );
+    create index conversations_by_person on conversations (person_id);
+    create table messages (
+      conversation_id text not null references conversations (id),
+      seq integer not null, sender text not null check (sender in ('person', 'we')),
+      body text not null, at text not null, primary key (conversation_id, seq)
+    );
+    create table plans (
+      conversation_id text not null references conversations (id),
+      version integer not null, body text not null, at text not null,
+      primary key (conversation_id, version)
+    );
+    create table runs (
+      id text primary key, conversation_id text not null references conversations (id),
+      round integer not null, step text not null, moves integer not null, tries text not null,
+      status text not null, session_ids text not null, model text, last text, same_refusal text,
+      created_at text not null, updated_at text not null, detail text
+    );
+    create table questions (
+      id text primary key, run_id text not null,
+      conversation_id text not null references conversations (id),
+      ask text not null, fallback text, secret text, answer text, answered_at text, asked_at text not null
+    );
+    insert into persons values ('${ALICE.id}', 'Alice Instructor', '2026-09-28T00:00:00.000Z');
+    insert into conversations values ('c-1', '${ALICE.id}', 'p-1', 'First build', 'built', 'the words',
+      '2026-09-28T00:00:00.000Z', '2026-09-28T01:00:00.000Z');
+    insert into messages values ('c-1', 1, 'person', '{"words":"the words"}', '2026-09-28T00:00:00.000Z');
+    insert into plans values ('c-1', 1, '{"whoGetsIn":"Anyone with a CWL"}', '2026-09-28T00:00:00.000Z');
+    insert into runs values ('run-1', 'c-1', 1, 'answers', 0, '{}', 'done', '[]', null, null, null,
+      '2026-09-28T00:00:00.000Z', '2026-09-28T01:00:00.000Z', '{"instanceId":"i-1"}');
+    insert into questions values ('q-1', 'run-1', 'c-1', 'Who is my class?', null, null, 'CPSC 110',
+      '2026-09-28T00:30:00.000Z', '2026-09-28T00:20:00.000Z');
+    pragma user_version = 3;
+  `
+
+  it('is version 4', () => {
+    expect(VERSION).toBe(4)
+  })
+
+  it("opens F3's file (version 3) at version 4: every row intact, and a conversation can wait and be set aside", () => {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    execOn(file, F3)
+    const before = dumpAll(file)
+
+    const store = openStore(file)
+    cleanups.push(() => store.close())
+    expect(pragmaOf(file, 'user_version')).toBe(4)
+    expect(store.getConversation('c-1', ALICE.id)).toEqual({
+      id: 'c-1',
+      personId: ALICE.id,
+      projectId: 'p-1',
+      title: 'First build',
+      state: 'built',
+      description: 'the words',
+      createdAt: '2026-09-28T00:00:00.000Z',
+      updatedAt: '2026-09-28T01:00:00.000Z',
+    })
+    const after = dumpAll(file)
+    for (const table of ['persons', 'messages', 'plans', 'runs', 'questions'])
+      expect(after[table]).toBe(before[table])
+    expect(JSON.parse(after['conversations']!)).toEqual([
+      { ...JSON.parse(before['conversations']!)[0], waiting_since: null },
+    ])
+    expect(store.setState('c-1', 'waiting').state).toBe('waiting')
+    expect(store.setState('c-1', 'set-aside').state).toBe('set-aside')
+    expect(() => store.setState('c-1', 'queued' as never)).toThrow()
+  })
+})
+
+describe('conversations on an app (F4 Task 6)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const OTHER = '99999999-9999-4999-8999-999999999999'
+
+  it('a change is made on its project, waiting, with its title and their words', () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const made = store.createChange(ALICE.id, PROJECT, 'Also show a word count', WORDS)
+    expect(made).toMatchObject({
+      personId: ALICE.id,
+      projectId: PROJECT,
+      title: 'Also show a word count',
+      state: 'waiting',
+      description: WORDS,
+    })
+    expect(store.getConversation(made.id, ALICE.id)).toEqual(made)
+  })
+
+  it("lists the person's conversations on one app, newest first, and never another's or another app's", async () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    store.rememberPerson(BOB)
+    const first = store.createConversation(ALICE.id, WORDS)
+    store.setState(first.id, 'built', { projectId: PROJECT })
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const second = store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    store.createChange(BOB.id, PROJECT, "Bob's", WORDS)
+    store.createChange(ALICE.id, OTHER, 'Elsewhere', WORDS)
+    expect(store.listConversationsOn(PROJECT, ALICE.id).map((c) => c.id)).toEqual([
+      second.id,
+      first.id,
+    ])
+    expect(
+      store
+        .conversationsOn(PROJECT)
+        .map((c) => c.title)
+        .sort(),
+    ).toEqual(["Bob's", 'First build', 'Word count'])
+  })
+
+  it('the line keeps each wait by its time, oldest first, whoever waits; leaving it clears the time', () => {
+    const { store, file } = fresh()
+    store.rememberPerson(ALICE)
+    store.rememberPerson(BOB)
+    const a = store.createChange(ALICE.id, PROJECT, 'A', WORDS)
+    const b = store.createChange(BOB.id, PROJECT, 'B', WORDS)
+    const c = store.createChange(ALICE.id, PROJECT, 'C', WORDS)
+    store.setState(b.id, 'waiting', { waitingSince: '2026-09-28T10:00:00.000Z' })
+    store.setState(c.id, 'waiting', { waitingSince: '2026-09-28T10:00:00.001Z' })
+    store.setState(a.id, 'waiting', { waitingSince: '2026-09-28T10:00:00.002Z' })
+    expect(store.waitingOn(PROJECT).map((w) => w.title)).toEqual(['B', 'C', 'A'])
+    // Waiting again without a time keeps its place.
+    store.setState(b.id, 'waiting')
+    expect(store.waitingOn(PROJECT).map((w) => w.title)).toEqual(['B', 'C', 'A'])
+    // Leaving the line clears its time: a later wait is at the back.
+    store.setState(b.id, 'planning')
+    expect(store.waitingOn(PROJECT).map((w) => w.title)).toEqual(['C', 'A'])
+    store.setState(b.id, 'waiting', { waitingSince: '2026-09-28T10:00:01.000Z' })
+    expect(store.waitingOn(PROJECT).map((w) => w.title)).toEqual(['C', 'A', 'B'])
+    expect(store.waitingOn(OTHER)).toEqual([])
+    expect(store.waitingProjects()).toEqual([PROJECT])
+    const dumped = JSON.parse(dumpAll(file)['conversations']!) as {
+      title: string
+      waiting_since: string | null
+    }[]
+    expect(dumped.find((row) => row.title === 'B')?.waiting_since).toBe(
+      '2026-09-28T10:00:01.000Z',
+    )
+  })
+
+  it("finds the conversation whose round deployed an instance, from its run's detail; never another person's", () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    store.rememberPerson(BOB)
+    const mine = store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    const bobs = store.createChange(BOB.id, PROJECT, "Bob's", WORDS)
+    const run = (id: string, conversationId: string, instanceId: string) =>
+      store.saveRun({
+        id,
+        conversationId,
+        round: 1,
+        step: 'answers',
+        moves: 0,
+        tries: {},
+        status: 'done',
+        sessionIds: [],
+        model: null,
+        last: null,
+        sameRefusal: null,
+        detail: { instanceId } as never,
+      })
+    run('run-a', mine.id, 'instance-a')
+    run('run-b', bobs.id, 'instance-b')
+    expect(store.conversationForInstance(PROJECT, 'instance-a', ALICE.id)).toBe(mine.id)
+    expect(store.conversationForInstance(PROJECT, 'instance-b', ALICE.id)).toBeUndefined()
+    expect(store.conversationForInstance(OTHER, 'instance-a', ALICE.id)).toBeUndefined()
+    expect(store.conversationForInstance(PROJECT, 'nothing', ALICE.id)).toBeUndefined()
   })
 })

@@ -1,14 +1,16 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import proxy from '@fastify/http-proxy'
 import Fastify, { type FastifyInstance } from 'fastify'
+import { registerApps } from './api/apps.js'
 import { registerBuild } from './api/build.js'
 import { registerConversations } from './api/conversations.js'
-import { createHub, registerEvents, type Hub } from './api/events.js'
+import { createHub, publishState, registerEvents, type Hub } from './api/events.js'
 import { registerIntake } from './api/intake.js'
 import { registerPlan } from './api/plan.js'
 import { registerProblems } from './api/problems.js'
 import { registerProject } from './api/project.js'
 import { createWork, Refused } from './api/work.js'
+import { beginPiece, createLine, type Line } from './build/line.js'
 import { createRounds, type RoundDeps, type Rounds } from './build/round.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
@@ -143,8 +145,12 @@ export function buildServer(
   registerConversations(app, { config, store })
   registerProblems(app, { config, store })
   registerEvents(app, { config, store, hub, heartbeatMs })
-  // One piece of work per conversation at a time, whichever route began it.
-  const work = createWork(hub, store)
+  // One piece of work per conversation at a time, whichever route began it. When one ends, the
+  // app's line starts its next conversation if nothing holds the app now (F4 Decision 5).
+  // (`line` is made below, from the rounds; work only ever ends after it exists.)
+  const work = createWork(hub, store, (conversation) =>
+    line.released(conversation.projectId),
+  )
   const rounds = (
     roundsOf ??
     ((base) =>
@@ -165,9 +171,27 @@ export function buildServer(
         signIn: roundSignInFor(config),
       }))
   )({ store, hub, work, tokens })
+  // THE LINE (F4 Decision 5): at the front, a stopped round carries on, a fix is built, and a
+  // change is planned. Until Task 7's planner, a change moves to `planning` alone.
+  const line: Line = createLine({
+    store,
+    hub,
+    now: () => new Date(),
+    begin: beginPiece({
+      store,
+      tokens,
+      rounds,
+      planning: {
+        begin: (conversation) =>
+          publishState(hub, store, store.setState(conversation.id, 'planning')),
+      },
+    }),
+  })
   // A RESTART (Review Focus 3): a round that was working, or waiting on a question, lost its
-  // key and its token with the last process. Marked before this server can listen.
+  // key and its token with the last process. Marked before this server can listen. Then every
+  // app with a conversation waiting, and none holding it, starts its next (Review Focus 5).
   rounds.interruptedOnBoot()
+  line.onBoot()
   registerIntake(app, { config, store, work, intakeModel, intakeKeys })
   registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
   registerPlan(app, {
@@ -181,7 +205,8 @@ export function buildServer(
     planModel,
     rounds,
   })
-  registerBuild(app, { config, store, work, tokens, rounds })
+  registerBuild(app, { config, store, hub, work, tokens, rounds, line })
+  registerApps(app, { config, store, hub, projects, tokens, line })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to

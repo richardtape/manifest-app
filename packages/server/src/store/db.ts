@@ -45,6 +45,7 @@ interface ConversationRow {
   description: string
   created_at: string
   updated_at: string
+  waiting_since: string | null
 }
 
 function conversationOf(row: ConversationRow): Conversation {
@@ -104,18 +105,81 @@ export function openStore(file: string): Store {
     },
 
     setState(id, state, patch = {}) {
-      const before = conversation(id)
+      const before = readConversation.get(id) as ConversationRow | undefined
       if (before === undefined) throw new Error(`no conversation ${id}`)
+      const at = now()
       db.prepare(
-        'update conversations set state = ?, project_id = ?, title = ?, updated_at = ? where id = ?',
+        `update conversations set state = ?, project_id = ?, title = ?, updated_at = ?, waiting_since = ?
+         where id = ?`,
       ).run(
         state,
-        patch.projectId !== undefined ? patch.projectId : before.projectId,
+        patch.projectId !== undefined ? patch.projectId : before.project_id,
         patch.title ?? before.title,
-        now(),
+        at,
+        state === 'waiting' ? (patch.waitingSince ?? before.waiting_since ?? at) : null,
         id,
       )
       return conversation(id)!
+    },
+
+    createChange(personId, projectId, title, description) {
+      const id = randomUUID()
+      const at = now()
+      db.prepare(
+        `insert into conversations
+           (id, person_id, project_id, title, state, description, created_at, updated_at, waiting_since)
+         values (?, ?, ?, ?, 'waiting', ?, ?, ?, ?)`,
+      ).run(id, personId, projectId, title, description, at, at, at)
+      return conversation(id)!
+    },
+
+    listConversationsOn(projectId, personId) {
+      const rows = db
+        .prepare(
+          `select * from conversations where project_id = ? and person_id = ?
+           order by created_at desc, rowid desc`,
+        )
+        .all(projectId, personId) as unknown as ConversationRow[]
+      return rows.map(conversationOf)
+    },
+
+    conversationsOn(projectId) {
+      const rows = db
+        .prepare('select * from conversations where project_id = ? order by created_at')
+        .all(projectId) as unknown as ConversationRow[]
+      return rows.map(conversationOf)
+    },
+
+    waitingOn(projectId) {
+      const rows = db
+        .prepare(
+          `select * from conversations where project_id = ? and state = 'waiting'
+           order by waiting_since, rowid`,
+        )
+        .all(projectId) as unknown as ConversationRow[]
+      return rows.map(conversationOf)
+    },
+
+    waitingProjects() {
+      const rows = db
+        .prepare(
+          `select distinct project_id from conversations
+           where state = 'waiting' and project_id is not null order by project_id`,
+        )
+        .all() as { project_id: string }[]
+      return rows.map((row) => row.project_id)
+    },
+
+    conversationForInstance(projectId, instanceId, personId) {
+      const row = db
+        .prepare(
+          `select conversations.id from runs join conversations on conversations.id = runs.conversation_id
+           where conversations.project_id = ? and conversations.person_id = ?
+             and json_extract(runs.detail, '$.instanceId') = ?
+           order by runs.updated_at desc limit 1`,
+        )
+        .get(projectId, personId, instanceId) as { id: string } | undefined
+      return row?.id
     },
 
     addMessage(conversationId, from, body) {

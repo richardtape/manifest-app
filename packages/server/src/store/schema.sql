@@ -16,13 +16,15 @@ create table if not exists conversations (
   title text not null,
   state text not null check (state in (
     'describing', 'questions', 'naming', 'making', 'planning', 'plan-ready', 'agreed', 'building', 'built',
-    'paused', 'failed'
+    'paused', 'failed', 'waiting', 'set-aside'
   )),
   description text not null,           -- the person's own words, verbatim
   created_at text not null,
-  updated_at text not null
+  updated_at text not null,
+  waiting_since text                   -- F4 Decision 5: its place in the app's line; null unless waiting
 );
 create index if not exists conversations_by_person on conversations (person_id);
+create index if not exists conversations_by_project on conversations (project_id, state);
 
 create table if not exists messages (
   conversation_id text not null references conversations (id),
