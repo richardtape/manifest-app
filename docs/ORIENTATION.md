@@ -4,75 +4,73 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-28, evening: F4 written and approved; F3 executed)*:
+**Where things stand** *(2026-09-28, late evening: F4's sitting 1 done; F3 executed)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F4's sitting 1, Task 1, the measurements, alone and first.** The plan is
-  [`plans/2026-09-28-f4-seeing-and-changing-it.md`](./plans/2026-09-28-f4-seeing-and-changing-it.md), approved by Rich
-  (*"approved, native as F3"*): one agent, natively (superpowers:executing-plans), one sitting per session, seven
-  sittings, eleven tasks. **Nothing is built yet.**
-  - **Read first:** the plan's *Decided by Rich* (and its *Words proposed for Rich*, approved with the plan), its
-    Decisions, Global Constraints and Review Focus, then Task 1 in full; F3's sitting 7 entry (the record of the real
-    platform); [`walkthrough.md`](./walkthrough.md), moments 7–9, **changed today** with Rich's decisions.
-  - **Before 7100 (M3, M4, M5): ask Rich, and tell the platform session** (§8). M3 deploys to the laptop's staging,
-    which Rich allowed (*laptop staging only*). Switch our server to edge mode by §7's trap, and back to mock mode at the
-    close unless Rich says otherwise.
-  - **M6 waits on FE-35's landing.** If it has not landed, record that; M6 moves to the start of sitting 7.
-  - **Close sitting 1 by correcting Tasks 2–11** to what it measured, before sitting 2, as F3's sitting 1 did.
-- **What Rich decided for F4, 2026-09-28** (the plan has each):
-  - **staging: the laptop's only.** Nothing reaches UBC;
-  - ***Trying out* says UBC's words everywhere, the laptop included**: never the pretend logins there, never a date,
-    never *"We asked…"* (nothing records a staging registration: FE-6, FE-24). His sentence replaces *"That takes
-    weeks"*;
-  - **a change is agreed before it is built**: *"Here's what we'd change"*, then *Yes* updates `docs/plan.md` with a
-    *Changes* list, then the round (D6 holds);
-  - **his F3 items:** our own line under each step after the pages; a *Stop* he chose is still, not red; one account per
-    round for *What changed*; names people read (folded in: Task 4);
-  - **FE-35 carried to the platform**, option (a). We carry on on whatever a session lists meanwhile, and say so once.
-- **What F4 stands on, measured or read 2026-09-28:**
-  - **A draft's CWL sign-in works** since manifest `c4e10cc` (FE-37). Our round checks that it starts.
-  - **The laptop's pretend people** are `student`/`student` and `instructor`/`instructor` (manifest's
-    `infra/idp/config/authsources.php`). A third, `operator`, is an administrator's, never shown.
-  - **The real intake model offers slugs as names** (`reading-responses`, `Course-questions`: our dev database's `names`
-    messages). The mock offers proper names, so no test saw it. Task 4 fixes it at our end.
-  - **The design system's reference has `SegmentedControl` and `Timeline`**, and our `components.css` already carries
-    `.mf-seg` and `.mf-station`. The reference's tabs have no arrow keys: Task 2 adds them, as ours.
-  - **The laptop's Ollama holds `qwen3.6:35b-a3b` (22.6 GB) and `qwen3.8:27b` (17.7 GB)**, the models Rich named for
-    FE-35. Which the platform lists is its design.
-  - **The contract is 1.4.0, 66 operations, 127 codes** at manifest `d82b3a2`: `c90f571` moved published text only, and
-    `d82b3a2` is spec §8's row (Rich's Spec action 9). Our typecheck passes against it (2026-09-28, evening).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F4's sitting 2, Tasks 2, 3 and 4**: `SegmentedControl` and `Timeline`
+  ported with parity; Rich's four F3 decisions on the building screen; names people read. The plan is
+  [`plans/2026-09-28-f4-seeing-and-changing-it.md`](./plans/2026-09-28-f4-seeing-and-changing-it.md), approved by Rich:
+  one agent, natively (superpowers:executing-plans), one sitting per session. **Sitting 2 needs no platform**: our mock,
+  and our own fakes.
+  - **Read first:** the plan's *Decided by Rich* (with *Words proposed for Rich*), its Decisions, Global Constraints and
+    Review Focus, **sitting 1's dated entry**, then Tasks 2–4 in full. **Every correction sitting 1 made is marked
+    (S1)** in the Decisions and Tasks: trust those over the unmarked text around them.
+  - **Ask Rich at the start** about the one sentence sitting 1 reworded: the laptop sentence on *Try it as* (*Words
+    proposed for Rich*). It is Task 5's, not sitting 2's, but he is best asked early.
+  - The ledger is `.superpowers/sdd/2026-09-28-f4-seeing-and-changing-it/progress.md` (git-ignored): every run and
+    ruling with its cost.
+- **What sitting 1 measured** (its dated entry has each):
+  - **a staging deploy from the person's session** answered `200 healthy` in 5–9 s, **with no step-up**; the new
+    instance is listed while the deploy runs (ordered *seen most recently*, so it is found by id, never position); the
+    page's own event socket works; **a deploy carries on when its page closes**; the same release again makes a new
+    instance;
+  - **a missing staging secret** is `409 RELEASE_SECRET_NOT_SET`, named only in its message; `listAppSecrets(staging)`
+    names it as fields, and a session sets it with no step-up;
+  - **the draft**: opening it signs no one in; its *Sign in* goes straight through as the Manifest person; its *Sign
+    out* ends the IdP's session, and then `student`/`student` works; the person stays signed in to Manifest;
+  - **a change on the capable model**: the change planner parsed 5 of 5 and kept unchanged parts word for word, but
+    asked answered questions again (Task 7 fixes it); the lead read the files first 5 of 5 and kept 97–100% of them;
+  - **our mock's staging already serves the draft's release**, and under `MANIFEST_MOCK_FAIL` it answers a failed
+    deploy with the serving instance's id: moment 9 is proved by our tests and on the real platform.
+- **What Rich decided for F4, 2026-09-28** (the plan has each): laptop staging only; *Trying out* says UBC's words
+  everywhere, his sentence; a change is agreed before it is built; his four F3 items; names people read.
+- **FE-35 and FE-36 are DECIDED** (Rich with the platform session, 2026-09-28: **Spec action 10**, manifest `d9a1fa1`,
+  under his name). The capable model may build a confidential app, by a platform setting whose default allows it; the
+  app's own AI stays on-premise; **while allowed, a token on a confidential project is refused staging's and
+  production's incidents**. **The platform's sitting 11a builds it, before its acceptance.** Until it lands, a
+  confidential project's sessions list only the on-premise models, and we carry on and say so. The plan is corrected
+  to it (S1); F4's M6 measures it when it lands.
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md)).
   - **F1 is executed** (2026-09-27): sign-in, the shell, *Your apps*, and a profile.
   - **F2 is executed** (2026-09-28): moments 3–5, describe it to the plan committed as `docs/plan.md`.
   - **F3 is executed** (2026-09-28): moment 6. Rich clicked moments 3–6 on the real platform: *"the process went very
-    smoothly"*, *"This is awesome"*. Its sitting 7 walked eleven rounds on the real platform and fixed six defects only
-    it showed; the whole-branch review's minors are deferred (its entry, and the ledger).
-  - **F4 is written and approved** (2026-09-28, `manifest-app-bb`), from a design Rich approved in four sections.
+    smoothly"*, *"This is awesome"*. The whole-branch review's minors are deferred (its sitting 7 entry, and the
+    ledger).
+  - **F4 is written and approved** (2026-09-28), and **its sitting 1 (the measurements) is done**, both in session
+    `manifest-app-bb`.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
-  - **`manifest-7c`, its sitting 11 (the guides), was closing on the evening of 2026-09-28**: running `pnpm test` twice
-    (which truncates 7100's database) and `pnpm test:docker` (which restarts the edge), then restarting the control plane
-    on its HEAD from Rich's `.env`. **It promised to message `manifest-app-bb` when the control plane is back up, at its
-    close-out, and when FE-35 lands.** A later session finds the live name with `ListAgents`, and the facts in manifest's
-    `git log` and its ORIENTATION §7e.
-  - **Its next is sitting 12, the acceptance**, which asks Rich where FE-35 goes (sitting 12, or its next plan). FE-35 is
-    in its ORIENTATION §8 *Open*, relayed at Rich's word, to confirm with him in his own words.
-  - **Nothing of ours on 7100 must survive** (told to it this evening). Rich let his `student-q-and-a` go with the
-    truncation.
+  - **Its sitting 11 (the guides) is closed out** (`f4f28d6`, documents only). Across it the contract moved **text
+    only**: still **1.4.0, 66 operations, 127 codes**. Our typecheck and 873 tests pass against it.
+  - **Its sitting 11a is under way** (`manifest-c3`, opened 2026-09-28 ~22:45: Task 14a, the building agent's models,
+    Spec action 10), then 12 (the acceptance). **It messages us before any tier and at every contract or mock commit**;
+    we told it we are off 7100, and asked for the incident refusal's code, any new `endReason`, and a confidential
+    session's model names as they land. Find its live name with `ListAgents`.
+  - **Left on 7100 by F4's sitting 1** (told to it; all to go with its next truncation): the projects
+    `student-submissions` and `my-reading-response`, and one token, *"F4 sitting 1: measurements"*, expiring within a
+    day.
   - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`), read from `session.models`, never
-    assumed. A `confidential` project's sessions list exactly `default-chat-onprem` and `default-chat-onprem-reasoning`
-    until FE-35 lands (`manifest-7c`, 2026-09-28). When OpenAI cannot answer, the same name answers from the fallback,
-    with `x-litellm-attempted-fallbacks: 1`.
-  - **Our findings FE-26 to FE-32 and FE-35 are carried; FE-33, FE-34 and FE-36 are written and not carried; FE-37 is
-    fixed.** Rich carries what he decides.
+    assumed. When OpenAI cannot answer, the same name answers from the fallback, with
+    `x-litellm-attempted-fallbacks: 1`.
+  - **Our findings FE-26 to FE-32 are carried; FE-35 and FE-36 are decided (Spec action 10); FE-33 and FE-34 are
+    written and not carried; FE-37 is fixed.** Rich carries what he decides.
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
-- **The machine** *(2026-09-28, evening)*:
-  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`, `MANIFEST_APP_MODE=mock`, node 33856 under one watcher,
-    33850), against **our mock on 7102** (node 28239), at Rich's word. Our dev database is at version 3.
-  - **Our dev script trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA lives:
-    in edge mode our server reaches a draft address through the edge, for the sign-in check.
-  - **The control plane on 7100** is the platform session's to restart tonight (above). Query it before using it
-    (`lsof -nP -iTCP:7100 -sTCP:LISTEN`), and ask Rich.
+- **The machine** *(2026-09-28, 22:40)*:
+  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`, one watcher), against **our mock on 7102** (node 28239).
+    Our dev database is at version 3.
+  - **Our dev script trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA lives.
+  - **The control plane on 7100** runs on manifest `d82b3a2` from Rich's `.env` (PID 93161 at 22:16), the platform
+    session's. Query it before using it (`lsof -nP -iTCP:7100 -sTCP:LISTEN`), ask Rich, and tell the platform session.
   - To switch to the edge: stop our server's whole process tree (§7's trap), then `pnpm dev`. To switch back: the same,
     then `pnpm dev:mock`.
 - **How to run it** is §6, below.
@@ -347,6 +345,10 @@ bash scripts/check-building.sh                                  # F3's acceptanc
   Node, not the page (the page adds its cookie). Watch several files with a `Monitor` filter that drops `tail -F`'s
   headers.
 - **The tool shell's `ls` prints a long listing, and zsh passes an unquoted `$VAR` as one word** (`$=VAR` splits it).
+- **A React id (`useId`) holds `:`, which a CSS `#id` selector refuses.** A walk that types into a field by
+  `querySelector('#' + id)` throws on the plan's questions; look an id up with `getElementById` (F4 sitting 1).
+- **`listInstances` is ordered *seen most recently*, not newest made.** A deploy's new instance can be listed second
+  while it starts: find it by the id that was not there before, never by position (F4 sitting 1, M3).
 - **A test that pins the platform's own words moves when the platform rewords them.** Its sitting 11 renamed the slug
   in published text (`8ef685d`), and one of our tests followed.
 

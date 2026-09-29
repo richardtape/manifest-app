@@ -6,7 +6,9 @@
 
 **Status: approved by Rich, 2026-09-28:** *"approved, native as F3, and send FE-35 now"*. Written with him in one
 session (`manifest-app-bb`). It is executed by one agent, natively (superpowers:executing-plans), one sitting per
-session, with the whole-branch review by one fresh reviewer at the end (Task 11). **Nothing is built yet.** The design
+session, with the whole-branch review by one fresh reviewer at the end (Task 11). **Sitting 1 (the measurements) is
+done** (2026-09-28, in the same session at Rich's word), and Tasks 2–11 are corrected to what it measured: each
+correction is marked **(S1)**. Nothing is built yet. The design
 was approved by Rich in conversation, in four sections, and is recorded below in *Decided by Rich* and *Decisions this
 plan makes*. Sitting 1 measures before anything is built, and corrects Tasks 2–11 to what it finds. **FE-35 was sent
 to the platform session (`manifest-7c`) at Rich's word the same evening.**
@@ -48,7 +50,7 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1 | **The measurements.** The contract at the platform's sitting 11 close; our mock's environments and a staging deploy; **one staging deploy on 7100** from the test user's session (at Rich's word, after telling the platform session); the draft's sign-in as pretend people in a real browser; the change planner and the lead's first moves on a built app, on the capable model; FE-35 once the platform has carried it. **Alone, and first** | not started |
+| 1 | 1 | **The measurements.** The contract at the platform's sitting 11 close; our mock's environments and a staging deploy; **one staging deploy on 7100** from the test user's session (at Rich's word, after telling the platform session); the draft's sign-in as pretend people in a real browser; the change planner and the lead's first moves on a built app, on the capable model; FE-35 once the platform has carried it. **Alone, and first** | **done 2026-09-28**, in the planning session (`manifest-app-bb`) at Rich's word, in the platform's window on 7100 (22:16–22:38). M6 waits on the platform's sitting 11a (the dated entry below) |
 | 2 | 2, 3, 4 | `SegmentedControl` and `Timeline`, ported with parity; Rich's four F3 decisions on the building screen; names people read | not started |
 | 3 | 5 | The app's own pages: the routes, the rail's project section, the Preview's three tabs, *Try it as*, the two facts | not started |
 | 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | not started |
@@ -82,6 +84,21 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
   confidential data, listed for a confidential project's sessions. On the laptop it is manifest's LiteLLM config, and
   a model already on the machine (`qwen3.6:35b-a3b`, 22.6 GB, or `qwen3.8:27b`, 17.7 GB, both in the laptop's Ollama,
   read 2026-09-28). **It is the platform's change, not ours.** F4 keeps F3's rule meanwhile: carry on, and say so once.
+- **FE-35 and FE-36, decided by Rich with the platform session the same evening** (Spec action 10, manifest
+  `d9a1fa1`, committed under his name, quoting him: *"It's okay to use the larger models to BUILD the app, but if the
+  app needs AI, then we should switch to use the on-prem model for the AI within the created app … Can we perhaps make
+  this a setting?"*). It supersedes the relayed FE-35 above. **Built by the platform's sitting 11a, before its
+  acceptance; not landed at sitting 1's close.** What it will mean for us (the platform session's summary, to be
+  re-measured when it lands):
+  - a platform setting, **by default allowing the capable model on a confidential project's agent sessions**
+    (`default-chat-large` beside the on-premise names). On the laptop the on-premise names move to `qwen3.8:27b`;
+  - **the app's own AI stays on-premise** for a confidential app (`ai.models: [default-chat-onprem]`), as validation
+    and deploy already enforce;
+  - **FE-36:** a session holding more than its project now allows is ended, its key revoked, perhaps with a new end
+    reason (`classification_raised`);
+  - **the safeguard:** while the capable model is allowed, **a delegated token on a confidential project is refused
+    staging's and production's `listIncidents`** by a code of its own (`INCIDENT_LOG_CONFIDENTIAL`, name to be ruled).
+    A person's session still reads them; the sandbox's stay readable.
 - **His F3 decisions** (2026-09-28, each his recommended option):
   - **the line under each step after the pages is ours**, one per step, from `words.ts`;
   - **a Stop he chose is still, not red**: the step goes back to not started, and the chip reads *"Stopped. Nothing is
@@ -105,6 +122,7 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
 |---|---|
 | Step lines after the pages ✓ | *"Building it. This usually takes under a minute."* · *"Putting it on your draft address. Under a minute and a half."* · *"Opening it, and starting a sign-in, to check it answers."* |
 | The step line for *Checking it holds together* | *"Checking that everything it needs is there."* |
+| *Try it as*, on the laptop **(S1: M4)** | *"On this laptop, Sign in takes you straight in as yourself. To try it as a student, use Sign out inside the app first, then sign in as the student."* (the walk-through's *"If it opens as you…"*, corrected to what M4 measured: opening signs no one in; **signing in** does, as the Manifest person). **For Rich at sitting 2's start** |
 | The waiting conversation | **[Leave the line]**, which sets the change aside |
 | A Stop they chose ✓ | chip *"Stopped. Nothing is lost."* |
 | The line ✓ | *"Waiting for 'Word count' to finish. It starts by itself."* (walk-through), and *"…which is waiting for you."* |
@@ -181,6 +199,13 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
    - **`docs/plan.md` is read back** by `readPlanMarkdown`, the inverse of F2's `planMarkdown`, held by a round-trip test.
      A file someone edited by hand that no longer reads back is given to the planner as text, and every part it writes
      is marked changed: said, not hidden.
+   - **(S1: M5) Answered questions are settled, never asked again.** On the capable model the planner parsed 5 of 5
+     (5–10 s), titled each *"Word count"*, changed exactly the two parts the change needed and kept the other three
+     word for word; a correction narrowed it to one. **But it copied the plan's answered questions back as new ones,
+     answers and all** (*"Who is my class?\nIt closes at the deadline."*). So `readPlanMarkdown` returns the questions
+     and their answers apart from the parts; the planner is given them as settled, and its `onlyYouKnow` asks only
+     about the change. Its check refuses a question holding a line break, or repeating one already answered. The
+     agreement's answered questions are carried into the new `docs/plan.md` unchanged, and the change's own are added.
    - **The screen is F2's plan screen in change mode**: the changed parts, *"Everything else stays as we agreed."*, at
      most two questions only they can answer, **[Yes, change it]**, the correction box, and **[Not now]**.
    - ***Yes*** commits `docs/plan.md`: the agreement as it now stands, plus `## Changes since we first agreed`, each change
@@ -195,6 +220,16 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
    - **Its view gains `change`** (the agreed change: what was asked, and the parts that changed) **and `fix`** (the
      incident's `exitReason`, `failedCheck`, `logTail`, `prompt` and `diffSinceHealthy`, as F3 Decision 8 gives a draft
      failure).
+   - **(S1: Spec action 10) A confidential app's staging incident may be refused to our token**
+     (`INCIDENT_LOG_CONFIDENTIAL`, once the platform's sitting 11a lands). Then the fix's view carries **no** incident,
+     only that it did not start on the trying-out address and that we cannot read why there. **The person's own reading
+     of it is never handed to our server or a model**: that would undo the platform's safeguard. The person still sees
+     the platform's words behind *"The exact words, for whoever you ask for help"*, read by their session.
+   - **(S1: M5) Measured on the capable model:** with the change paragraph, the lead's first move read the files it
+     would change, 5 times of 5 (1.2–2.1 s), and its commit kept 97–100% of each file's lines. `unread` stays as the
+     net under that, for a smaller model or a longer round.
+   - **(S1: Spec action 10) A confidential app's own AI is on-premise**: the lead's prompt says so
+     (`ai.models: [default-chat-onprem]`), and the platform's refusal of anything else is one it can answer.
    - **Its prompt gains one paragraph**: it is changing an app that already works; it reads a file before it rewrites
      it; it changes only what the agreed change needs.
    - **A new guard, `unread`**: a write to a path that exists in the tree is refused unless the lead read it at the
@@ -224,6 +259,20 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
       when they come back.
     - *Rejected:* our server deploying with a conversation's token. The walk-through wants the record to say who chose
       this version, and F3's constraint that we never touch staging stands, with its test.
+    - **(S1: M3, measured on the real platform)**:
+      - a staging deploy from the session answered `200 healthy` in 5–9 s, and **asked no step-up** (staging is
+        `release:deploy`; production alone steps up). The step-up branch stays as a guard, never expected;
+      - `listInstances` **lists the new instance while the deploy runs** (`provisioning` at 1 s, `starting` at 3 s,
+        `healthy` at 6–9 s; `pending` never seen). **Poll every second**, not two: a deploy is 5–9 s;
+      - **its order is "seen most recently", not newest made**: the new instance was listed second while it started.
+        **The new instance is the one whose id was not listed at the press**, never a position;
+      - **the end is `deploy`'s own answer**: under `MANIFEST_MOCK_FAIL` the mock answers the *serving* instance's id
+        as `failed` while listing it healthy (M2);
+      - the page's own event socket works too (`instance.*`, and `sso.registered` for staging), and carries every
+        environment's events, so it would match by `machineDetail.instanceId`. Polling stays: no new subscription;
+      - **a deploy whose page closes carries on** (aborted at 3 s, healthy at 5 s): *they may leave* is true;
+      - **the same release deployed again makes a new instance**: the platform never says *"already there"*, so it is
+        ours, by comparing staging's serving release with the draft's before asking.
 12. **Rich's F3 decisions, as built:**
     - the step lines are the page's, from `words.ts`, for `holds`, `build`, `draft` and `answers`; the lead's `line` stays
       under *Writing the pages*;
@@ -241,7 +290,9 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
 14. **The store's version 4**: `conversations.state` gains `waiting` and `set-aside` (SQLite's twelve steps, reading the
     table's definition from `schema.sql`, as F3's version 2 did), and `conversations.waiting_since`.
 15. **A staging secret's value never reaches our server.** The page sets it with `setAppSecret` on the staging
-    environment, from the session. Its plain name is the question the lead asked when it set the draft's value (our
+    environment, from the session (**S1: M3, `200` with no step-up**). **(S1: M1, M3) Which names are missing comes from
+    `listAppSecrets(staging)`, `declared && !set`**: `RELEASE_SECRET_NOT_SET` names them only in its message, which also
+    holds machinery (`PUT /v1/environments/<id>/secrets/{name}`), so it is never read or shown (FE-29's shape). Its plain name is the question the lead asked when it set the draft's value (our
     `questions` table, by `secret`), read through `GET /api/apps/:projectId/secrets`, which answers names and questions,
     never a value.
 
@@ -326,7 +377,7 @@ scripts/check-seeing.sh  Task 11, mock mode
 Throwaway code in the scratchpad. Only this plan's findings are committed. **Run nothing in manifest**: read it.
 **Before 7100: ask Rich, and tell the platform session** (ORIENTATION §8; its tests truncate 7100 and restart the edge).
 
-- [ ] **M1: the contract and the guides, at the platform's sitting 11 close.**
+- [x] **M1: the contract and the guides, at the platform's sitting 11 close.**
   - Re-read `openapi.json`. Record the commit, the version, the operation count and the code count (1.4.0, 66, 127 at
     `c90f571`, text only). `pnpm typecheck` and `pnpm test` against it.
   - Record the exact shapes of: `listEnvironments`, `getEnvironment`, `deploy` (its codes: `STEP_UP_REQUIRED`,
@@ -336,7 +387,7 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
     FE-29's shape: say so in its entry.
   - Every adapter is written against what M1 records. Where this plan's names differ, the contract wins, and this plan is
     corrected in the same commit.
-- [ ] **M2: our mock's answers** (`pnpm mock` on 7102, from manifest's source at its current commit):
+- [x] **M2: our mock's answers** (`pnpm mock` on 7102, from manifest's source at its current commit):
   - `listEnvironments` of `mock-app`: three environments, each `instance`;
   - `listInstances` of staging; `getRelease` of each instance's `releaseId`; `listIncidents` of the sandbox and staging;
   - `deploy` to staging with `manifest_session=mock-session`: its answer and time;
@@ -346,7 +397,7 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
   - `mintToken` and `getProject` for a second conversation's token.
 
   Record the bodies. The mock keeps no state (its guide), so Task 11's mock half asserts what we sent.
-- [ ] **M3: one staging deploy on 7100** (Rich's word; the platform session told; the test user `instructor`; a project
+- [x] **M3: one staging deploy on 7100** (Rich's word; the platform session told; the test user `instructor`; a project
   built by our own round, **our server switched to edge mode by ORIENTATION §7's trap, and back to mock mode at the
   close** unless Rich says otherwise):
   - `deploy` to staging **from the browser's session** (headless Chrome through `https://app.manifest.internal`), naming
@@ -360,7 +411,7 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
     `setAppSecret` on staging from the session (step-up or not), and `deploy` again;
   - the laptop's staging address signs in as `student` (the pretend IdP, spec §21). Recorded for us; never shown to faculty
     (Rich).
-- [ ] **M4: the draft's sign-in, in headless Chrome**, a fresh profile (ORIENTATION §7):
+- [x] **M4: the draft's sign-in, in headless Chrome**, a fresh profile (ORIENTATION §7):
   - signed in to `app.manifest.internal` as `instructor`, open the draft address: **is it signed in as the instructor
     already?** Record the page;
   - **does the app have a *Sign out*?** Press it. Record where it lands, and whether the IdP's session ended (signing in
@@ -370,7 +421,7 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
     app ends the IdP's session and the console's, not ours.)
   - The laptop sentence on *Try it as* (*"If it opens as you, use Sign out inside the app, then sign in as the
     student."*) is kept only if M4 shows each part true. Otherwise Task 5 words what is.
-- [ ] **M5: a change, on the capable model** (the walk-through app, built by our round on 7100; `default-chat-large`
+- [x] **M5: a change, on the capable model** (the walk-through app, built by our round on 7100; `default-chat-large`
   if the session lists it; cents):
   - **the change planner, five times**, on *"Also show a word count on each response"*, given `docs/plan.md` from the
     tree (a first draft of Task 7's prompt and schema, in the scratchpad): record how many parse; whether the unchanged
@@ -379,16 +430,17 @@ Throwaway code in the scratchpad. Only this plan's findings are committed. **Run
   - **the lead's first two moves, five times**, on a view built by a script from the real tree, with Task 8's change
     paragraph and the agreed change: **does its first move read the files it will change?** Does a commit keep the rest
     of the file? Record each move, verbatim in spirit.
-- [ ] **M6: FE-35, once the platform has carried it.** For a `confidential` project: what `session.models` lists, and
+- [ ] **M6: FE-35, once the platform has carried it.** *(S1: not landed; it is now Spec action 10, built by the
+  platform's sitting 11a. Moves to the start of sitting 7, or earlier when 11a lands.)* For a `confidential` project: what `session.models` lists, and
   M5's lead moves on that model (parse rate, first moves, time). **If it has not landed by this sitting, record that,
   and M6 moves to the start of sitting 7.**
-- [ ] **M7: our own code, read for the seams**, each a correction to its task:
+- [x] **M7: our own code, read for the seams**, each a correction to its task:
   - `work.ts`'s claim, and how the line's start of the next conversation runs inside it;
   - `api/plan.ts`'s `write` and `agree`, and what a change's dispatch must keep (the busy check, `TOKEN_MISSING`,
     `PLAN_CHANGED`);
   - `round.ts`'s `prepare`, where the plan is read, and `end`, where the line must be told;
   - F2's `check-describing.sh` and F3's `check-building.sh`: what a changed `docs/plan.md` or `done` breaks.
-- [ ] **Close:** the dated entry. **Correct Tasks 2–11 to what M1–M7 found before sitting 2.** Write any new finding as
+- [x] **Close:** the dated entry. **Correct Tasks 2–11 to what M1–M7 found before sitting 2.** Write any new finding as
   the next `FE-n`. Commit the plan and `api-findings.md` only.
 
 ---
@@ -520,7 +572,8 @@ export function attemptFact(env: Schemas['Environment'], instances: Schemas['Ins
   `TwoFacts`: *serving right now*, *the last attempt*.
 - ***Your draft***: *"Your draft is a practice copy. Everyone in it is pretend, and so is anything they post."*; the *Try
   it as* card, one row per pretend person, each with its login and password in mono and a copy button; the laptop
-  sentence if M4 kept it. Nothing there yet: *"Nothing there yet. It appears when the first build is done."* A failed
+  sentence **as M4 corrected it (S1)** (*Words proposed for Rich*: signing in, not opening, takes them in as
+  themselves), **once Rich has read it**. Nothing there yet: *"Nothing there yet. It appears when the first build is done."* A failed
   last attempt shows its fact here; its **[What went wrong]** is Task 9's, since it needs Task 6's route.
 - ***Trying out***: Rich's words; **waiting on someone**, *UBC's identity team*, still, no number (Decision 4). No logins.
 - ***For your students***: *"Not live yet. This is the address your students will use."*
@@ -534,6 +587,8 @@ export function attemptFact(env: Schemas['Environment'], instances: Schemas['Ins
     change it (FE-27's rule); nothing deployed is *"Nothing there yet…"*;
   - **the last attempt**: the serving one is *"the same version"*; a newer failed one is *"didn't start, 4 minutes ago"*
     from its incident's time, with *[What went wrong]*; a newer one in progress is *"under way"*;
+  - **(S1: M1)** `listEnvironments` answers a bare array; `listInstances` `{ environmentId, instances, truncated }`,
+    each `serving`; the fakes answer those shapes;
   - ***Try it as*** is on the draft tab only: **the words `student` and `instructor` with their passwords never appear on
     *Trying out* or *For your students*** (Rich); each copy button copies its value;
   - ***Trying out***: Rich's sentence exactly; **no date, no *"We asked"*, no *"weeks"***; the chip names UBC's identity
@@ -633,6 +688,7 @@ line: { place: number; holder: { id: string; title: string; waitingForYou: boole
 // agents/plan.ts
 export function planMarkdown(title: string, plan: Plan, answers: Record<string, string>,
   changes?: { at: string; words: string }[]): string                    // `## Changes since we first agreed`
+// (S1: M5) the settled questions travel apart from the parts, so the planner never asks them again
 export function readPlanMarkdown(markdown: string):
   { title: string; plan: Plan; answers: Record<string, string>; changes: { at: string; words: string }[] } | null
 // agents/change.ts: on the conversation's agent session, which the person pays for
@@ -654,6 +710,10 @@ export interface Planning { begin(conversation: Conversation): void }    // to `
   - **the dispatch:** in a change's `planning`, `/plan` writes the change on a new agent session, which is ended when it is
     written; `/plan/correction` rewrites it; the frame shows `plan-ready` with the changed rows; the title becomes the
     planner's;
+  - **(S1: M5) answered questions:** `readPlanMarkdown` gives back F2's questions with their answers apart from the
+    parts; the planner's brief lists them as settled; its answer's `onlyYouKnow` holding a line break, or repeating a
+    settled question, is refused (the model asked again); the new `docs/plan.md` keeps the settled ones and adds the
+    change's;
   - **Yes:** `/plan/agree` on a change commits `docs/plan.md` with `## Changes since we first agreed` and their words,
     **before** round *n+1* starts (the fake source's call order), then the round starts in the same run (F3 Task 9's
     claim held); `PLAN_CHANGED` and `TOKEN_MISSING` as F2's;
@@ -697,6 +757,15 @@ unread(changes: Change[], tree: { paths: string[] }, known: (path: string) => bo
     whose dry run comes first, before `holds`; no message, no commit;
   - **the round ends by telling the line** (`released`) when built and when stopped, never when paused or needs-you;
   - **a fix's round** starts at `pages` with the incident in the view, and no plan is agreed;
+  - **(S1: Spec action 10) a staging incident refused to our token** (`INCIDENT_LOG_CONFIDENTIAL`, or whatever code
+    sitting 11a rules): the fix's view carries no incident, only that it did not start there and why we cannot read
+    it; nothing of the person's session's reading reaches the round; the refusal is not a problem shown with a
+    reference;
+  - **(S1: Spec action 10) the prompt says a confidential app's own AI is `default-chat-onprem`**;
+  - **(S1: FE-36, when sitting 11a lands)** a session the platform ended because the project's classification rose is
+    **not** the $2 checkpoint, whose words would be false. What the round says then, and whether it asks before a new
+    session, is Rich's: asked when 11a's end reason is in the contract (sitting 7's Step 0 at the latest). With the
+    setting's default (the capable model allowed) our sessions are never ended this way;
   - F3's whole-round tests stand, and no credential reaches a prompt or the store.
 - [ ] **Step 2: Red. Step 3: Implement**, and mock mode's lead reads before it writes on a change.
 - [ ] **Step 4: Green; controls:** `unread` not consulted; a read at an older tree counted; the *Changes* commit after the
@@ -793,13 +862,18 @@ export function newestAttempt(instances: Schemas['Instance'][], servingAtPress: 
     nothing offers no button; a failed newest sandbox instance does not change what is offered;
   - `deploy` names **the staging environment's id** and carries an `Idempotency-Key`; its deadline is 120 s (a spy on
     `AbortSignal.timeout`, F3's way);
-  - **the stations** follow `listInstances` every 2 s: `pending`, `provisioning`, `starting`, `healthy`, each ticking its
-    station; `failed` halts the current one as *It never answered*; the instance serving at the press is never taken for
-    the new one; polling stops when `deploy` answers;
+  - **the stations** follow `listInstances` **every second (S1: M3)**: `pending`, `provisioning`, `starting`, `healthy`,
+    each ticking its station; **the new instance is the one whose id was not listed at the press**, whatever its
+    position (the platform lists "seen most recently" first, M3), and a fake that lists it second still ticks; **the end
+    is `deploy`'s own answer** (a fake whose list still says healthy while `deploy` answers `failed` ends *It never
+    answered*, M2); polling stops when `deploy` answers;
+  - **already there (S1: M3)**: staging's serving release equal to the draft's → the sentence, and no button (the
+    platform would make a new instance of the same release);
   - **a page closed and reopened** mid-deploy: the Preview's *Trying out* reads *"under way"* from `listInstances`, then
     the result;
   - `STEP_UP_REQUIRED` sends them to sign in again and back to the question (F2's pattern);
-  - **the secret**: its plain name from `/api/apps/:projectId/secrets`; **its value is sent only to `setAppSecret`, and to
+  - **the secret**: the names missing from `listAppSecrets(staging)` (`declared && !set`, S1: M1, M3), never from the
+    refusal's message; each one's plain name from `/api/apps/:projectId/secrets`; **its value is sent only to `setAppSecret`, and to
     no route of ours** (a recording `Ours` sees nothing); under 6 characters, the field says so first;
   - Rich's arrival words exactly; **no date, no *"We asked"***; `machineryIn` empty; never *"It works"*;
   - **our server:** `/secrets` answers names and questions and **never an answer**; F3's test that our server deploys
@@ -814,7 +888,9 @@ export function newestAttempt(instances: Schemas['Instance'][], servingAtPress: 
 
 ## Task 11: The acceptance (sitting 7, alone)
 
-- [ ] **Step 0: M6, if sitting 1 could not run it** (FE-35 landed since).
+- [ ] **Step 0: M6, if sitting 1 could not run it** (S1: it could not; FE-35 is Spec action 10, the platform's sitting
+  11a). Re-read the contract for 11a's codes (the incident refusal, the session's end reason) and correct Tasks 8 and
+  10 to them before the walk.
 - [ ] **Step 1: Against the mock.** `scripts/check-seeing.sh`, beside `check-building.sh`, drives our API as the browser
   does, with mock mode's model, and asserts **what our server sent**, from the trace and the store:
   1. two changes asked at once on one app: one plans, one waits at place 1;
@@ -827,7 +903,9 @@ export function newestAttempt(instances: Schemas['Instance'][], servingAtPress: 
   7. no `mft_` and no `sk-` in any table, or any frame sent.
 
   **Negative controls, each red:** the line's hold removed; the round started before the plan's commit; a deploy to
-  staging from our server; the scan pointed at a copy holding a leaked row.
+  staging from our server; the scan pointed at a copy holding a leaked row. *(S1: M2: the mock's staging already
+  serves the draft's release, so a staging deploy against it shows only "already there": moment 9 is proved by the web
+  tests and on the real platform, and this script asserts our server sends none.)*
 - [ ] **Step 2: On the real platform** (the control plane per manifest's RUNBOOK, **asking Rich first and telling the
   platform session**; our server in edge mode). Headless Chrome through `https://app.manifest.internal`, signed in as
   `instructor`, at 1440 and 375:
@@ -864,3 +942,98 @@ export function newestAttempt(instances: Schemas['Instance'][], servingAtPress: 
 ## What executing this plan found
 
 *Each sitting adds a dated entry here: its measurements, its rulings, its negative controls, and its gates.*
+
+### 2026-09-28 — Sitting 1 (Task 1): the measurements
+
+*In the planning session (`manifest-app-bb`), at Rich's word (*"start sitting 1 - be aware another agent is working on
+the platform at the same time"*), one agent natively. The platform session (`manifest-7c`) was closing its sitting 11:
+we waited for its *"UP"* (22:16), used 7100 at Rich's word (*"Yes, as planned"*) until 22:38, and told it when we were
+done. The throwaway scripts and their records are in the session's scratchpad (`s1/`); the ledger has every run. The
+contract did not move: **1.4.0, 66 operations, 127 codes**, at manifest `d82b3a2`, then `f4f28d6` (documents only).*
+
+**M1: the contract.** `pnpm typecheck` passes and `pnpm test` is 873/873 against it.
+- `listEnvironments`, `listProjects` and `listReleases` answer bare arrays; `listInstances` answers `{ environmentId,
+  instances, truncated }`, each with `serving`.
+- **A staging deploy authorizes `release:deploy` and asks no step-up**; production alone steps up (read in the
+  control plane's `releases.ts`, then measured). Setting a staging secret from a session asks none either.
+- **`RELEASE_SECRET_NOT_SET` names the secrets only in its message**, which also holds machinery; `listAppSecrets`
+  answers `declared` and `set` as fields, so the page reads those (Decision 15, S1). The platform session files the
+  message's shape with FE-29.
+
+**M2: our mock** (7102, and a throwaway one under `MANIFEST_MOCK_FAIL=1` on a free port; 7102 untouched):
+- its staging **already serves the draft's release**, so against the mock the draft's version is always *"already on
+  trying-out"*; a staging deploy answers `healthy` at once;
+- **under `MANIFEST_MOCK_FAIL`, `deploy` answers the serving instance's own id as `failed`** while `listInstances`
+  still lists it healthy: the stations' end is `deploy`'s answer (Decision 11, S1);
+- `listAppSecrets` and `setAppSecret` answer their fixtures whatever is asked (FE-27's shape).
+
+**M3: a staging deploy on 7100, from the page's session** (the walk-through app, built by our round in 3.3 minutes on
+`default-chat-large`, 12 calls, $0.02):
+
+| Measured | |
+|---|---|
+| `deploy` to staging, session | `200 healthy` in **8.3 s**; again in 5.3 s; **no step-up** |
+| `listInstances(staging)`, each second | the new instance listed **while the deploy runs**: `provisioning` 1 s, `starting` 3 s, `healthy` 6–9 s; `pending` never seen. **Ordered "seen most recently"**: the new one was listed second while it started |
+| the page's own event socket | opens on the session; replay, then `ready`; `instance.provisioning` 34 ms, **`sso.registered`** (staging) 2.9 s, `instance.starting`, `instance.healthy` 8.3 s; it carries every environment's events |
+| the request aborted at 3 s | **the deploy carried on**: healthy at 5.4 s, the old instance `retiring`, then `retired` |
+| the same release again | **a new instance**: the platform never says *"already there"* |
+| a declared secret with no staging value | `409 RELEASE_SECRET_NOT_SET`; `listAppSecrets(staging)`: `declared: true, set: false`; `setAppSecret(staging)` from the session `200`; the deploy then `200 healthy` |
+
+**M4: the draft's sign-in**, headless Chrome signed in to Manifest as `instructor`:
+- **opening the draft signs no one in**: it says *"Sign in with CWL"*;
+- **its *Sign in* goes straight through as the Manifest person** (*"Signed in as Test Instructor"*): the IdP's session
+  is Manifest's;
+- **its *Sign out* ends the IdP's session**: signing in again shows the IdP's form (*"PRACTICE SIGN-IN — NOT REAL
+  CWL"*), and `student`/`student` signs in as *"Test Student"*, without the instructor's dashboard;
+- **the person stays signed in to Manifest** throughout;
+- the laptop's staging address signed `student` in straight away: the pretend IdP, as spec §21 says. Never shown to
+  faculty (Rich).
+- So the walk-through's laptop sentence is true of **signing in**, not opening: reworded in *Words proposed for Rich*.
+
+**M5: a change, on the capable model** (`default-chat-large`, no fallback, **$0.014** for 16 answers):
+- **the change planner**, on *"Also show a word count on each response"* and the app's own `docs/plan.md`: **5 of 5
+  parsed** in 5–10 s; each titled *"Word count"*; each changed exactly *What students see* and *What you see*, and
+  kept the other three word for word; a correction (*"Only on my view"*) narrowed it to one part. **But it copied the
+  plan's answered questions back as new questions, answers and all** (*"Who is my class?\nIt closes at the
+  deadline."*): Decision 7 and Task 7 now keep answered questions settled (S1);
+- **the lead's first two moves**, with the change paragraph: **5 of 5 read the files it would change first** (1.2–2.1
+  s), then committed whole files keeping **97–100%** of their lines, with accounts like *"Word counts appear as
+  students write and beside public and instructor responses."*
+
+**M6: not run.** FE-35 became **Spec action 10** the same evening (manifest `d9a1fa1`, Rich's words to the platform
+session; *Decided by Rich* has them), built by the platform's **sitting 11a**, before its acceptance. It moves to sitting
+7's Step 0. What it changes here is marked (S1) in Decisions 9 and Tasks 8, 10 and 11: a confidential app's staging
+incident may be refused to our token, and its own AI is on-premise.
+
+**M7: our code.** The line is released when a stopped round's work has **ended**, never at the *Stop* press (a deploy may
+be in flight for 90 s); `commitPlan` gains a message; a change conversation carries a `project` message so the intake's
+fold finds its project; F2's check 7 (the plan's commit, dry run first, `docs/plan.md` alone) holds for a change.
+
+**Also seen:** the real intake model offered slugs as names again, in both walks (`my-reading-response`,
+`readings-responses`, `student-writing-post`; `reading-responses`, `student-submissions`, `paper-inputs`): Task 4. And the
+line under *Building it* was the lead's done line again: Task 3.
+
+**Rulings** (the ledger has each with its cost):
+1. M3's missing names come from `listAppSecrets`, never the refusal's message.
+2. The stations poll every second; the new instance is the id not listed at the press; the end is `deploy`'s answer.
+3. *"Already there"* is ours, by comparing releases.
+4. The laptop sentence is reworded to what M4 measured, for Rich to read.
+5. The planner's settled questions travel apart from the parts.
+6. The line is released when the stopped work has ended.
+7. A staging incident refused to our token is never replaced by the person's reading of it.
+8. The walk's own bug (a React id's `:` in a CSS selector) was fixed in the throwaway walk; its first run stopped at the
+   plan, and left a project (`my-reading-response`) on 7100.
+
+**For Rich:**
+- the laptop sentence on *Try it as*, reworded (*Words proposed for Rich*);
+- FE-36's ended session, when sitting 11a lands: its words, and whether a new session is asked for (Task 8).
+
+**Left on 7100** (told to the platform session, all to go with its next truncation): the projects `student-submissions`
+and `my-reading-response`, and one delegated token (*"F4 sitting 1: measurements"*, expiring within a day), which a
+script without a session could not revoke. Its file was deleted.
+
+**Gates:** no code changed (the plan, `api-findings.md`, the roadmap and ORIENTATION). `pnpm test` **873/873, twice**;
+`pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass, against manifest `f4f28d6`. **Our server is back in mock mode**
+(7105 → our mock on 7102).
+
+**Spent:** about $0.04 of the test user's month on Rich's OpenAI key (the round's $0.02, M5's $0.014, the plan's cents).

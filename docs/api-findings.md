@@ -28,8 +28,9 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Phase 4, as specified** | **FE-4** | Noticing a live app that died | **Phase 4's reconciler (D10)**; the front-end watches meanwhile |
 | **Carried 2026-09-28**, at Rich's word | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30**, **FE-31**, **FE-32** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log; a test fixture offered by `listBlueprints`; a way for an agent to get a `package-lock.json` | **Decided by Rich (2026-09-28), each its option (a)**: FE-28, FE-31 and FE-30 before faculty use it for real; FE-29 when the envelope is next touched; FE-32 before a change after launch meets it; FE-27 before our F6, and FE-26 with FE-18. Our half of FE-28 is done. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits; FE-31 was met on the real platform (2026-09-28). None blocks the platform's sitting 8 |
 | **Landed, the platform's sitting 10** (close-out `5a952f5`, relayed by the platform session, 2026-09-28) | **FE-24**, **FE-17**, **FE-18**, **FE-26**, **FE-27** | — | FE-24's code (`bb32fa6`: a staging instance's output is `403 INSTANCE_OUTPUT_STAGING`, so `InstanceOutput.environmentKind` only ever reads `sandbox`); FE-17 (`c944a71`: a browser refused at `/auth/*` gets a short page, any other caller the envelope); FE-18 (`46399c5`: `dist/`'s types stand alone, `erasableSyntaxOnly`); the mock (`18f3214`, and `c33d4df` under `MANIFEST_MOCK_AGENT_BUDGET=unavailable` only: it refuses a session it did not issue, answers `404` for an id it does not hold, and its sandbox runs); its console calls all 66 operations. FE-26 and FE-27 confirmed by Rich there. **The contract is still 1.4.0, 66 operations, 127 codes.** Our tests follow the mock (`9278ff8`); our typecheck and 853 tests pass against it (F3 sitting 6) |
-| **Under way, the platform's sitting 11** (the guides, `manifest-7c`) | — | — | Docs and examples, and published text: `8ef685d` (the slug is called a slug in `checkSlug`'s answers and remedies, and `CSRF_ORIGIN_REFUSED`'s words; the mock's `SLUG_TAKEN` now reads *"a project already has this slug"*, which F2's *Name it* shows verbatim), `08df532` (one description; a gate refusing an internal finding id in public text), `e90de38` (*Building a front-end*). No operation, field, code or event moved. Our one test pinning the mock's slug reason follows it (`a8ffc87`) |
+| **Landed, the platform's sitting 11** (the guides, `manifest-7c`; close-out `f4f28d6`, relayed by the platform session, 2026-09-28) | — | — | Docs and examples, and published text: `8ef685d` (the slug is called a slug in `checkSlug`'s answers and remedies, and `CSRF_ORIGIN_REFUSED`'s words; the mock's `SLUG_TAKEN` now reads *"a project already has this slug"*, which F2's *Name it* shows verbatim), `08df532` (one description; a gate refusing an internal finding id in public text), `e90de38` (*Building a front-end*). No operation, field, code or event moved. Our one test pinning the mock's slug reason follows it (`a8ffc87`). **Closed out `f4f28d6`, documents only; across the sitting the contract moved TEXT ONLY** (`c90f571`: the SLUG_* codes' summaries say slug, the guides name `agent:session` and `output:read`, a person's actions are browser code; `d82b3a2`: Spec action 9, §8's `SAML_PRIVATE_KEY_PATH` row is `all`, aligned with our `c4e10cc`). Still 1.4.0, 66 operations, 127 codes; no mock behaviour change. Our typecheck and 873 tests pass against it (F4 sitting 1) |
 | **Written 2026-09-28, F3's sitting 7** (the real platform, and Rich's click) | **FE-35**, **FE-36**, **FE-37** | A confidential app's later sessions get only the on-campus 4B model, which could not write the app; a session keeps its models after its project turns confidential; no draft could sign in (the IdP demands a signed request the sandbox had no key for) | **FE-37 fixed in manifest at Rich's word, once** (`c4e10cc`, noted in its ORIENTATION; the platform session owes `pnpm test`, `pnpm test:docker` and §8's spec row). FE-36 not carried. **FE-35 CARRIED at Rich's word, 2026-09-28, option (a)** (F4's planning session, `manifest-app-bb`, to `manifest-7c`): a model that can write an app, approved for confidential data; on the laptop Rich noted `qwen3.6:35b-a3b` or `qwen3.8:27b`, both already in its Ollama. The platform session recorded it in its §8 *Open*, to confirm with Rich in his words; its sitting 12 asks him where it goes. Its design (which model, which name, the laptop's memory, a spec action) is the platform's. F4's M6 measures it once it lands |
+| **Decided by Rich, 2026-09-28** (with the platform session; **Spec action 10**, manifest `d9a1fa1`, under his name) | **FE-35**, **FE-36** | The agent that builds an app on a confidential project, and a session that outlives its project's classification | Rich: *"It's okay to use the larger models to BUILD the app, but if the app needs AI, then we should switch to use the on-prem model for the AI within the created app … Can we perhaps make this a setting?"* A platform setting, **by default allowing the capable model** on a confidential project's agent sessions; the app's own AI stays on-premise; a session holding more than its project allows is ended, its key revoked; **the safeguard: while the capable model is allowed, a delegated token on a confidential project is refused staging's and production's `listIncidents`** (a code of its own). On the laptop the on-premise names move to `qwen3.8:27b`. **To be built by the platform's sitting 11a, before its acceptance; not landed at F4 sitting 1's close.** Supersedes the relayed FE-35 (a capable on-premise model). F4's plan is corrected to it (S1) |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -695,7 +696,10 @@ Rich's word: a limit is to be said plainly, whose it is and when it resets. **Ca
 - **Screen and moment:**
   - moments 3 and 4, when describing is paused;
   - moment 5, when our server starts an agent session to write the plan, and the person's allowance is spent;
-  - every conversation in F3.
+  - every conversation in F3;
+  - **moment 9** (F4 sitting 1, measured 2026-09-28): `RELEASE_SECRET_NOT_SET` names the missing secret only in its
+    message, beside machinery (`PUT /v1/environments/<id>/secrets/{name}`). Not a gap for us: `listAppSecrets` answers
+    `declared` and `set` as fields, and we read those.
 - **What we would call:** the refusal itself, and switch on its `code`, as the envelope asks. Then word it from
   its facts: whose limit, how much, and when it lifts.
 - **What is missing.** Every fact below is in `message` only, and the envelope says of `message`: *"For a person.
@@ -892,7 +896,9 @@ word decides that.*
 Measured. **Carried at Rich's word, 2026-09-28, option (a)**, by F4's planning session to the platform session
 (`manifest-7c`), which recorded it in its ORIENTATION §8 *Open*; its sitting 12 asks Rich where it goes. Until it
 lands, a confidential project's session lists exactly `default-chat-onprem` and `default-chat-onprem-reasoning`
-(`manifest-7c`, the same evening).*
+(`manifest-7c`, the same evening).* **Then DECIDED by Rich with the platform session, the same evening: Spec action 10
+(manifest `d9a1fa1`), which supersedes this carry: the capable model may build a confidential app, by a platform
+setting, and the app's own AI stays on-premise. The platform's sitting 11a builds it.**
 
 - **Screen and moment:** moment 6, from the round's second agent session on: after *Carry on* at the $2 checkpoint,
   after *Stop* and *Carry on*, or after our server restarts.
@@ -920,7 +926,9 @@ lands, a confidential project's session lists exactly `default-chat-onprem` and 
 
 ### FE-36 — An agent session keeps its models after a commit raises the project's classification
 
-*Found 2026-09-28 in F3's sitting 7, against manifest `e90de38`. Measured. Not carried: Rich's word decides that.*
+*Found 2026-09-28 in F3's sitting 7, against manifest `e90de38`. Measured. **Decided by Rich with the platform
+session, 2026-09-28, in Spec action 10 (manifest `d9a1fa1`)**: a session holding more than its project now allows is
+ended, its key revoked; the platform's sitting 11a builds it, and may give the end a reason of its own.*
 
 - **Screen and moment:** moment 6, the round's first session.
 - **What happened** (the same conversation): the session started at 02:31 UTC while the project was `internal`, and
