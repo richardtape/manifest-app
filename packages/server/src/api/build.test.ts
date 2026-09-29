@@ -115,6 +115,7 @@ function setUp(script: unknown[] = []) {
       commits.push(baseCommit)
       return { commitSha: 'c'.repeat(40), sent: [] }
     },
+    readPlan: async () => null,
   }
   const stream: ProjectStream = {
     watch: () => ({ ready: Promise.resolve(), close: () => undefined }),
@@ -137,7 +138,7 @@ function setUp(script: unknown[] = []) {
     projects,
     sessions,
     authoring,
-    planModel: () => scripted({ plan: [PLAN] }),
+    planModel: () => scripted({ plan: [PLAN], change: [{ ...PLAN, title: 'A change' }] }),
     rounds: (base) => {
       rounds = createRounds({
         ...base,
@@ -666,7 +667,8 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
       words: 'Also a word count.',
     })
     expect(answer.status).toBe(202)
-    expect(stateOf(s, conversation.id)).toBe('planning')
+    // Its token is held, so its change is planned at once (Task 7), with no press.
+    await until(() => stateOf(s, conversation.id) === 'plan-ready')
     expect(pieceOf(s.store, conversation.id)).toEqual({
       kind: 'change',
       change: 1,
@@ -726,7 +728,7 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
       s.store.setState(next.id, 'waiting')
       expect((await post(s, holder.id, 'stop')).status).toBe(202)
       expect(stateOf(s, holder.id)).toBe('set-aside')
-      expect(stateOf(s, next.id)).toBe('planning')
+      await until(() => stateOf(s, next.id) === 'plan-ready')
     },
   )
 
@@ -736,7 +738,7 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
     const next = changeOn(s, 'waiting', 'Next.')
     s.store.setState(next.id, 'waiting')
     expect((await post(s, holder.id, 'stop')).status).toBe(202)
-    await until(() => stateOf(s, next.id) === 'planning')
+    await until(() => stateOf(s, next.id) === 'plan-ready')
     expect(roundOf(s.store, holder.id)?.status).toBe('stopped')
   })
 

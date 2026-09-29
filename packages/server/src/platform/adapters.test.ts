@@ -5,7 +5,8 @@ import { z } from 'zod/v4'
 import { understand } from '../agents/understanding.js'
 import { suggestNames } from '../agents/naming.js'
 import { chooseBlueprint } from '../agents/blueprint.js'
-import { writePlan } from '../agents/plan.js'
+import { writeChange } from '../agents/change.js'
+import { planMarkdown, writePlan } from '../agents/plan.js'
 import { buildServer } from '../app.js'
 import type { Config } from '../config.js'
 import { ModelError, type Model } from '../model/client.js'
@@ -373,6 +374,63 @@ describe('platformAuthoring: the plan’s first commit (Decision 9)', () => {
     )
     expect(answer.sent).toEqual(received(fake.seen))
     expect(answer.sent.map((s) => s.dryRun)).toEqual([true, true, false])
+  })
+
+  it("the first plan's commit says 'The plan we agreed'; a change's says what it was given (F4 M7)", async () => {
+    const fake = await fakePlatform((seen) =>
+      COMMITTED((seen.body as { dryRun?: boolean }).dryRun === true),
+    )
+    await platformAuthoring(fake.origin).commitPlan(
+      TOKEN,
+      PROJECT,
+      'a'.repeat(40),
+      '# plan\n',
+    )
+    await platformAuthoring(fake.origin).commitPlan(
+      TOKEN,
+      PROJECT,
+      'a'.repeat(40),
+      '# plan\n',
+      'The change we agreed: Word count',
+    )
+    expect(
+      commits(fake.seen).map((s) => (s.body as { message: string }).message),
+    ).toEqual([
+      'The plan we agreed',
+      'The plan we agreed',
+      'The change we agreed: Word count',
+      'The change we agreed: Word count',
+    ])
+  })
+
+  it('readPlan reads docs/plan.md at the commit it is given; a plan not there is null (F4 Task 7)', async () => {
+    const fake = await fakePlatform((seen) =>
+      seen.url?.includes('ref=' + 'a'.repeat(40))
+        ? {
+            status: 200,
+            body: {
+              ref: 'a'.repeat(40),
+              commitSha: 'a'.repeat(40),
+              path: 'docs/plan.md',
+              content: '# plan\n',
+              encoding: 'utf8',
+              size: 7,
+              mode: '100644',
+              blobSha: 'b'.repeat(40),
+            },
+          }
+        : refusal(404, 'SOURCE_PATH_NOT_FOUND'),
+    )
+    const authoring = platformAuthoring(fake.origin)
+    expect(await authoring.readPlan(TOKEN, PROJECT, 'a'.repeat(40))).toBe('# plan\n')
+    expect(await authoring.readPlan(TOKEN, PROJECT, 'b'.repeat(40))).toBeNull()
+    const asked = new URL(fake.seen[0]!.url!, 'http://x')
+    expect(asked.pathname).toBe(`/v1/projects/${PROJECT}/file`)
+    expect(Object.fromEntries(asked.searchParams)).toEqual({
+      path: 'docs/plan.md',
+      ref: 'a'.repeat(40),
+    })
+    expect(fake.seen[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`)
   })
 
   it('a second conflict is SOURCE_CONFLICT, thrown', async () => {
@@ -750,6 +808,40 @@ describe('the walk-through model (mock mode: Decision 7)', () => {
       correction: 'My TA should see everything too.',
     })
     expect(corrected.changed).toEqual(['youSee'])
+  })
+
+  it('plans a change of the agreement it is given: two parts, titled from their words; a correction narrows it to one (F4 Task 7)', async () => {
+    const plan = await writePlan(model, {
+      description: WORDS,
+      restatement: 'A page where your students post.',
+      answers: {},
+      skipped: [],
+      knowledgePack: '# guide',
+      tree: ['package.json'],
+    })
+    const agreed = { ...plan, changed: [] }
+    const input = {
+      current: agreed,
+      currentText: planMarkdown('Reading responses', agreed, {}),
+      settled: plan.onlyYouKnow.map((q) => ({ ask: q.ask, answer: null })),
+      asked: ['Also show a word count on each response.'],
+      knowledge: '# guide',
+    }
+    const change = await writeChange(model, input)
+    expect(change.title).toBe('Also show a word count on each response')
+    expect(change.changed).toEqual(['studentsSee', 'youSee'])
+    expect(change.youSee).toContain('Also show a word count on each response.')
+    expect(change.onlyYouKnow).toEqual([])
+    const narrowed = await writeChange(model, {
+      ...input,
+      previous: change,
+      correction: 'Only on my view.',
+    })
+    expect(narrowed.changed).toEqual(['youSee'])
+    // A file that no longer reads back: every part is written afresh.
+    expect((await writeChange(model, { ...input, current: null })).changed).toHaveLength(
+      5,
+    )
   })
 
   it('chooses the first blueprint it is given, with no starter', async () => {

@@ -6,6 +6,7 @@ import {
   HONEST_WHO_GETS_IN,
   PLAN_PROMPT,
   planMarkdown,
+  readPlanMarkdown,
   writePlan,
   type Plan,
 } from './plan.js'
@@ -222,5 +223,117 @@ describe('the plan prompt (walk-through D5; C3; FE-20)', () => {
     expect(machineryIn(PLAN_PROMPT)).toEqual([])
     expect(PLAN_PROMPT).toMatch(/never .*technical/i)
     expect(PLAN_PROMPT).toContain('CWL')
+  })
+})
+
+describe("docs/plan.md's Changes, and reading it back (F4 Decision 7)", () => {
+  const PLAN: Plan = { ...WALKTHROUGH, changed: [] }
+  const ANSWERS = { late: 'It closes at the deadline.' }
+  const CHANGES = [
+    { at: '28 September 2026', words: 'Also show a word count on each response.' },
+    { at: '29 September 2026', words: 'Make the title bigger, please.' },
+  ]
+  /** The file does not carry a question's id: read back, each is named by its place. */
+  const BY_PLACE: Plan = {
+    ...PLAN,
+    onlyYouKnow: PLAN.onlyYouKnow.map((q, n) => ({ id: `q${n + 1}`, ask: q.ask })),
+  }
+
+  it("with no changes, the file is F2's, byte for byte", () => {
+    expect(planMarkdown('Reading responses', PLAN, ANSWERS, [])).toBe(
+      planMarkdown('Reading responses', PLAN, ANSWERS),
+    )
+  })
+
+  it('each change is dated, in their own words, under its own heading, last', () => {
+    const text = planMarkdown('Reading responses', PLAN, ANSWERS, CHANGES)
+    expect(
+      text.endsWith(
+        [
+          '## Changes since we first agreed',
+          '',
+          '- 28 September 2026: Also show a word count on each response.',
+          '- 29 September 2026: Make the title bigger, please.',
+          '',
+        ].join('\n'),
+      ),
+    ).toBe(true)
+    expect(text.startsWith(planMarkdown('Reading responses', PLAN, ANSWERS))).toBe(true)
+  })
+
+  it.each([
+    ['without changes', []],
+    ['with changes', CHANGES],
+  ])(
+    'reads back what it wrote, %s: the title, the plan, the answers apart from the parts, and the changes',
+    (_, changes) => {
+      const read = readPlanMarkdown(
+        planMarkdown('Reading responses', PLAN, ANSWERS, changes),
+      )
+      expect(read).toEqual({
+        title: 'Reading responses',
+        plan: BY_PLACE,
+        answers: { q1: 'It closes at the deadline.' },
+        changes,
+      })
+    },
+  )
+
+  it('a question not answered yet reads back with no answer; what a person wrote reads back unescaped', () => {
+    const plan: Plan = { ...PLAN, ai: '# None at all', assumed: ['- nested'] }
+    const read = readPlanMarkdown(planMarkdown('X', plan, { ta: '> quoted' }))
+    expect(read?.plan.ai).toBe('# None at all')
+    expect(read?.plan.assumed).toEqual(['- nested'])
+    expect(read?.answers).toEqual({ q2: '> quoted' })
+  })
+
+  it('three or four questions only you know are said as many, and read back', () => {
+    const four: Plan = {
+      ...PLAN,
+      onlyYouKnow: [1, 2, 3, 4].map((n) => ({
+        id: `q${n}`,
+        ask: `Is question ${n} so?`,
+      })),
+    }
+    const text = planMarkdown('X', four, { q3: 'Yes.' })
+    expect(text).toContain('## Four things only you know')
+    expect(readPlanMarkdown(text)?.plan.onlyYouKnow).toEqual(four.onlyYouKnow)
+    expect(
+      planMarkdown('X', { ...four, onlyYouKnow: four.onlyYouKnow.slice(0, 3) }, {}),
+    ).toContain('## Three things only you know')
+  })
+
+  it('no sections of its own (no assumptions, no questions) reads back too', () => {
+    const bare: Plan = { ...PLAN, assumed: [], onlyYouKnow: [] }
+    expect(readPlanMarkdown(planMarkdown('X', bare, {}, CHANGES))).toEqual({
+      title: 'X',
+      plan: bare,
+      answers: {},
+      changes: CHANGES,
+    })
+  })
+
+  it.each([
+    [
+      'a row of two paragraphs',
+      (t: string) =>
+        t.replace(
+          'student number.\n\n## Who gets in',
+          'student number.\n\nMore.\n\n## Who gets in',
+        ),
+    ],
+    [
+      'a heading renamed',
+      (t: string) => t.replace('## What you see', '## What instructors see'),
+    ],
+    ['a part missing', (t: string) => t.replace(/## AI\n\n[^\n]*\n\n/, '')],
+    ['a line added at the end', (t: string) => `${t}Edited by hand.\n`],
+    ['another title line', (t: string) => t.replace(': the plan we agreed', '')],
+    ['a change with no date', (t: string) => t.replace('- 28 September 2026: ', '- ')],
+    ['nothing at all', () => ''],
+  ])('a file edited by hand that no longer reads back is null: %s', (_, edit) => {
+    const text = planMarkdown('Reading responses', PLAN, ANSWERS, CHANGES)
+    expect(edit(text)).not.toBe(text)
+    expect(readPlanMarkdown(edit(text))).toBeNull()
   })
 })

@@ -11,13 +11,19 @@ export type { Sent } from './source.js'
  */
 export interface Authoring {
   tree(token: string, projectId: string): Promise<{ commitSha: string; paths: string[] }>
-  /** The commit, and every `createCommit` made on the way, in order. */
+  /**
+   * The commit, and every `createCommit` made on the way, in order. The first plan's message is
+   * F2's; a change's names the change (F4 M7: "The change we agreed: Word count").
+   */
   commitPlan(
     token: string,
     projectId: string,
     baseCommit: string,
     markdown: string,
+    message?: string,
   ): Promise<{ commitSha: string; sent: Sent[] }>
+  /** F4 Task 7: docs/plan.md at `ref`, as text; null when it cannot be read there. */
+  readPlan(token: string, projectId: string, ref: string): Promise<string | null>
 }
 
 const PLAN = 'docs/plan.md'
@@ -53,6 +59,7 @@ export function platformAuthoring(origin: string): Authoring {
     projectId: string,
     baseCommit: string,
     markdown: string,
+    message: string,
     sent: Sent[],
   ) => {
     const { commitSha } = await source.commit(
@@ -60,7 +67,7 @@ export function platformAuthoring(origin: string): Authoring {
       projectId,
       {
         baseCommit,
-        message: MESSAGE,
+        message,
         changes: [{ op: 'write', path: PLAN, content: markdown }],
       },
       sent,
@@ -70,10 +77,13 @@ export function platformAuthoring(origin: string): Authoring {
 
   return {
     tree,
-    async commitPlan(token, projectId, baseCommit, markdown) {
+    async commitPlan(token, projectId, baseCommit, markdown, message = MESSAGE) {
       const sent: Sent[] = []
       try {
-        return { ...(await attempt(token, projectId, baseCommit, markdown, sent)), sent }
+        return {
+          ...(await attempt(token, projectId, baseCommit, markdown, message, sent)),
+          sent,
+        }
       } catch (error) {
         const refusal = refusalFrom(error)
         if (refusal.code !== 'SOURCE_CONFLICT') throw refusal
@@ -81,10 +91,17 @@ export function platformAuthoring(origin: string): Authoring {
       // Someone moved main: read it again, and try once more from where it is now.
       const { commitSha } = await tree(token, projectId)
       try {
-        return { ...(await attempt(token, projectId, commitSha, markdown, sent)), sent }
+        return {
+          ...(await attempt(token, projectId, commitSha, markdown, message, sent)),
+          sent,
+        }
       } catch (error) {
         throw refusalFrom(error)
       }
+    },
+    async readPlan(token, projectId, ref) {
+      const read = await source.file(token, projectId, PLAN, ref)
+      return 'content' in read ? read.content : null
     },
   }
 }

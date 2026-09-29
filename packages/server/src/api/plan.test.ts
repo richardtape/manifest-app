@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildServer } from '../app.js'
+import { planMarkdown, readPlanMarkdown } from '../agents/plan.js'
 import type { Rounds } from '../build/round.js'
 import type { Config } from '../config.js'
 import { ModelError, type Model } from '../model/client.js'
@@ -48,6 +49,12 @@ const CORRECTED = {
   ...PLAN,
   youSee: 'Every response for a week on one page. Your TA too.',
 }
+/** docs/plan.md as F2 committed it: the agreement a change starts from. */
+const AGREED_FILE = planMarkdown(
+  PROJECT.name,
+  { ...PLAN, changed: [] },
+  { late: 'It closes at the deadline.' },
+)
 
 let platform: Awaited<ReturnType<typeof fakeControlPlane>>
 beforeAll(async () => {
@@ -69,6 +76,8 @@ function fakes(
     start?: () => Promise<Awaited<ReturnType<AgentSessions['start']>>>
     pack?: () => Promise<string>
     commit?: () => Promise<Awaited<ReturnType<Authoring['commitPlan']>>>
+    /** docs/plan.md as the tree holds it (F4 Task 7): F2's, agreed, by default. */
+    planFile?: () => Promise<string | null>
   } = {},
 ) {
   const calls: Call[] = []
@@ -121,8 +130,12 @@ function fakes(
       calls.push(['tree', token, projectId])
       return Promise.resolve({ commitSha: 'a'.repeat(40), paths: ['package.json'] })
     },
-    commitPlan: (token, projectId, baseCommit, markdown) => {
-      calls.push(['commitPlan', token, projectId, baseCommit, markdown])
+    readPlan: (token, projectId, ref) => {
+      calls.push(['readPlan', token, projectId, ref])
+      return options.planFile?.() ?? Promise.resolve(AGREED_FILE)
+    },
+    commitPlan: (token, projectId, baseCommit, markdown, message) => {
+      calls.push(['commitPlan', token, projectId, baseCommit, markdown, message])
       return (
         options.commit?.() ??
         Promise.resolve({
@@ -159,12 +172,14 @@ async function setUp(
   // F3 Decision 11: agree starts round 1. The round is Task 8's, tested there; here, what it was handed.
   const roundsStarted: { conversationId: string; state: string; token: string }[] = []
   const rounds: Rounds = {
-    start: (conversation, token) =>
-      void roundsStarted.push({
+    start: (conversation, token) => {
+      platformFakes.calls.push(['roundStarted', conversation.id])
+      roundsStarted.push({
         conversationId: conversation.id,
         state: conversation.state,
         token,
-      }),
+      })
+    },
     carryOn: () => undefined,
     withoutToken: () => undefined,
     message: () => undefined,
@@ -747,5 +762,316 @@ describe('what the plan is kept as', () => {
     })
     expect(answer.status).toBe(409)
     expect(answer.body).toEqual({ error: { code: 'PLAN_MISSING' } })
+  })
+})
+
+describe('a change: "Here\'s what we\'d change", agreed, then committed (F4 Task 7)', () => {
+  const ASKED = 'Also show a word count on each response.'
+  const CHANGE = {
+    ...PLAN,
+    studentsSee: `${PLAN.studentsSee} Each response shows how many words it has.`,
+    youSee: `${PLAN.youSee} Each response shows its word count.`,
+    onlyYouKnow: [
+      { id: 'count', ask: 'Should students see their count while they write?' },
+    ],
+    title: 'Word count',
+  }
+  const NARROWED = { ...CHANGE, studentsSee: PLAN.studentsSee }
+
+  /** A change on the app, in `state`, its project and their words stored as Task 6 stores them. */
+  function changing(s: Setup, state: 'planning' | 'plan-ready' | 'waiting' = 'planning') {
+    s.store.rememberPerson(ALICE)
+    const change = s.store.createChange(
+      ALICE.id,
+      PROJECT.id,
+      'Also show a word count on each response',
+      ASKED,
+    )
+    s.store.addMessage(change.id, 'we', { kind: 'project', project: PROJECT })
+    s.store.addMessage(change.id, 'person', {
+      kind: 'asked',
+      change: 1,
+      words: ASKED,
+      fix: null,
+    })
+    s.tokens.put(change.id, TOKEN)
+    return s.store.setState(change.id, state)
+  }
+
+  async function planned(
+    model = scripted({ change: [CHANGE] }),
+    options: Parameters<typeof fakes>[0] = {},
+  ) {
+    const s = await setUp(model, options)
+    const change = changing(s)
+    const answer = await post(s, change.id, 'plan')
+    return { s, change, answer, model }
+  }
+
+  it('/plan writes the change on a session of its own, from docs/plan.md at the tree’s commit, and ends it: the changed parts marked, titled by the planner', async () => {
+    const { s, change, answer, model } = await planned()
+    expect(answer.status).toBe(202)
+    expect(s.calls.map((c) => c[0])).toEqual([
+      'budget',
+      'start',
+      'knowledgePack',
+      'tree',
+      'readPlan',
+      'end',
+    ])
+    expect(s.named('start')).toEqual([
+      [TOKEN, PROJECT.id, 'Also show a word count on each response'],
+    ])
+    expect(s.named('readPlan')).toEqual([[TOKEN, PROJECT.id, 'a'.repeat(40)]])
+    expect(s.named('end')).toEqual([[TOKEN, 'session-1']])
+    expect(s.keys).toEqual([KEY])
+    expect(answer.state).toMatchObject({
+      conversation: { id: change.id, state: 'plan-ready', title: 'Word count' },
+      plan: {
+        version: 1,
+        plan: {
+          studentsSee: CHANGE.studentsSee,
+          youSee: CHANGE.youSee,
+          onlyYouKnow: CHANGE.onlyYouKnow,
+          changed: ['studentsSee', 'youSee'],
+        },
+      },
+      piece: { kind: 'change', change: 1, asked: [ASKED] },
+    })
+    // The planner read the agreement's parts, what was asked, and the settled question with its answer.
+    const user = model.calls[0]!.messages[1]!.content
+    expect(model.calls[0]!.agent).toBe('change')
+    expect(user).toContain(PLAN.itKeeps)
+    expect(user).toContain(ASKED)
+    expect(user).toContain(`- ${PLAN.onlyYouKnow[0]!.ask} It closes at the deadline.`)
+  })
+
+  it('reaching the front of the line with its token, it is planned at once, with no press', async () => {
+    const s = await setUp(scripted({ change: [CHANGE] }))
+    s.store.rememberPerson(ALICE)
+    const frames: Progress[] = []
+    const response = await s.app.inject({
+      method: 'POST',
+      url: `/api/apps/${PROJECT.id}/conversations`,
+      headers: { cookie: AS_ALICE, origin: ORIGIN, 'content-type': 'application/json' },
+      payload: JSON.stringify({ words: ASKED, token: TOKEN }),
+    })
+    expect(response.statusCode).toBe(201)
+    const id = (response.json() as { id: string }).id
+    s.hub.subscribe(id, (frame) => frames.push(frame))
+    const deadline = Date.now() + 2000
+    while (s.store.getConversation(id, ALICE.id)?.state !== 'plan-ready') {
+      if (Date.now() > deadline) throw new Error(JSON.stringify(frames))
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    }
+    expect(s.store.getConversation(id, ALICE.id)?.title).toBe('Word count')
+    expect(s.named('end')).toHaveLength(1)
+  })
+
+  it('/plan/correction rewrites it with the change so far and their sentence; the marks stay against the agreement', async () => {
+    const model = scripted({ change: [CHANGE, NARROWED] })
+    const { s, change } = await planned(model)
+    const answer = await post(s, change.id, 'plan/correction', {
+      correction: 'Only on my view.',
+    })
+    expect(answer.state).toMatchObject({
+      conversation: { state: 'plan-ready' },
+      plan: { version: 2, plan: { changed: ['youSee'] } },
+    })
+    const user = model.calls[1]!.messages[1]!.content
+    expect(user).toContain('Only on my view.')
+    expect(user).toContain(CHANGE.youSee)
+    expect(user).toContain('titled "Word count"')
+    expect(s.named('end')).toHaveLength(2)
+  })
+
+  it('a docs/plan.md edited by hand is given as it is written, and every part is marked', async () => {
+    const { answer, model } = await planned(scripted({ change: [CHANGE] }), {
+      planFile: () => Promise.resolve('# Our app\n\nWritten by hand.\n'),
+    })
+    expect(answer.state?.plan?.plan.changed).toEqual([
+      'studentsSee',
+      'youSee',
+      'itKeeps',
+      'whoGetsIn',
+      'ai',
+    ])
+    expect(model.calls[0]!.messages[1]!.content).toContain('Written by hand.')
+  })
+
+  it('Yes commits docs/plan.md — the agreement as it now stands, the settled answers kept, the change’s added, and its Changes — before round n+1, which starts in the same run', async () => {
+    const { s, change } = await planned()
+    const answer = await post(s, change.id, 'plan/agree', {
+      version: 1,
+      answers: { count: 'Yes, as they type.' },
+    })
+    expect(answer.status).toBe(202)
+    expect(answer.state?.conversation.state).toBe('agreed')
+    // The commit, then the round: never the round first.
+    const order = s.calls
+      .map((c) => c[0])
+      .filter((n) => ['commitPlan', 'roundStarted'].includes(n))
+    expect(order).toEqual(['commitPlan', 'roundStarted'])
+    expect(s.roundsStarted).toEqual([
+      { conversationId: change.id, state: 'agreed', token: TOKEN },
+    ])
+    const [token, projectId, base, markdown, message] = s.named(
+      'commitPlan',
+    )[0] as string[]
+    expect([token, projectId, base, message]).toEqual([
+      TOKEN,
+      PROJECT.id,
+      'a'.repeat(40),
+      'The change we agreed: Word count',
+    ])
+    const read = readPlanMarkdown(markdown!)
+    expect(read).not.toBeNull()
+    expect(read!.title).toBe(PROJECT.name)
+    expect(read!.plan).toMatchObject({
+      studentsSee: CHANGE.studentsSee,
+      youSee: CHANGE.youSee,
+      itKeeps: PLAN.itKeeps,
+      onlyYouKnow: [
+        { id: 'q1', ask: PLAN.onlyYouKnow[0]!.ask },
+        { id: 'q2', ask: CHANGE.onlyYouKnow[0]!.ask },
+      ],
+    })
+    expect(read!.answers).toEqual({
+      q1: 'It closes at the deadline.',
+      q2: 'Yes, as they type.',
+    })
+    expect(read!.changes).toEqual([
+      { at: expect.stringMatching(/^\d{1,2} [A-Z][a-z]+ \d{4}$/), words: ASKED },
+    ])
+    expect(markdown).toContain('## Changes since we first agreed')
+    const agreed = s.store
+      .listMessages(change.id)
+      .map((m) => m.body as { kind: string })
+      .find((body) => body.kind === 'agreed')
+    expect(agreed).toMatchObject({ version: 1, answers: { count: 'Yes, as they type.' } })
+  })
+
+  it('a second change keeps the first change in the Changes, and every settled answer', async () => {
+    const earlier = planMarkdown(
+      PROJECT.name,
+      {
+        ...CHANGE,
+        onlyYouKnow: [PLAN.onlyYouKnow[0]!, CHANGE.onlyYouKnow[0]!],
+        changed: [],
+      },
+      { late: 'It closes at the deadline.', count: 'Yes.' },
+      [{ at: '28 September 2026', words: ASKED }],
+    )
+    const second = {
+      ...CHANGE,
+      youSee: `${CHANGE.youSee} Sorted by length.`,
+      onlyYouKnow: [],
+      title: 'Sort by length',
+    }
+    const { s, change } = await planned(scripted({ change: [second] }), {
+      planFile: () => Promise.resolve(earlier),
+    })
+    await post(s, change.id, 'plan/agree', { version: 1, answers: {} })
+    const read = readPlanMarkdown(s.named('commitPlan')[0]![3] as string)!
+    expect(read.changes.map((c) => c.words)).toEqual([ASKED, ASKED])
+    expect(read.answers).toEqual({ q1: 'It closes at the deadline.', q2: 'Yes.' })
+    expect(read.plan.onlyYouKnow).toHaveLength(2)
+  })
+
+  it('agreeing to a plan the window no longer shows is 409 PLAN_CHANGED, and without the token 409 TOKEN_MISSING: nothing committed', async () => {
+    const { s, change } = await planned()
+    expect(
+      (await post(s, change.id, 'plan/agree', { version: 2, answers: {} })).body,
+    ).toEqual({
+      error: { code: 'PLAN_CHANGED' },
+    })
+    s.tokens.drop(change.id)
+    expect(
+      (await post(s, change.id, 'plan/agree', { version: 1, answers: {} })).body,
+    ).toEqual({
+      error: { code: 'TOKEN_MISSING' },
+    })
+    expect(s.named('commitPlan')).toEqual([])
+  })
+
+  it('Not now: set aside, nothing committed, and the app freed: the next waiting change is planned by itself', async () => {
+    const { s, change } = await planned(scripted({ change: [CHANGE, NARROWED] }))
+    const next = changing(s, 'waiting')
+    const answer = await s.app.inject({
+      method: 'POST',
+      url: `/api/conversations/${change.id}/stop`,
+      headers: { cookie: AS_ALICE, origin: ORIGIN, 'content-type': 'application/json' },
+      payload: '{}',
+    })
+    expect(answer.statusCode).toBe(202)
+    expect(s.store.getConversation(change.id, ALICE.id)?.state).toBe('set-aside')
+    expect(s.named('commitPlan')).toEqual([])
+    const deadline = Date.now() + 2000
+    while (s.store.getConversation(next.id, ALICE.id)?.state !== 'plan-ready') {
+      if (Date.now() > deadline) throw new Error('the next change was never planned')
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    }
+  })
+
+  it('Not now while the planner writes: set aside at once; what it writes is dropped, and its session ended', async () => {
+    let answer!: (value: unknown) => void
+    const held: Model = {
+      complete: (_agent, schema) =>
+        new Promise(
+          (resolve) => (answer = (value) => resolve(schema.parse(value))),
+        ) as never,
+    }
+    const s = await setUp(held)
+    const change = changing(s)
+    await s.app.inject({
+      method: 'POST',
+      url: `/api/conversations/${change.id}/plan`,
+      headers: { cookie: AS_ALICE, origin: ORIGIN },
+    })
+    const deadline = Date.now() + 2000
+    while (answer === undefined) {
+      if (Date.now() > deadline) throw new Error('the planner was never asked')
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    }
+    await s.app.inject({
+      method: 'POST',
+      url: `/api/conversations/${change.id}/stop`,
+      headers: { cookie: AS_ALICE, origin: ORIGIN, 'content-type': 'application/json' },
+      payload: '{}',
+    })
+    expect(s.store.getConversation(change.id, ALICE.id)?.state).toBe('set-aside')
+    answer(CHANGE)
+    while (s.named('end').length === 0) {
+      if (Date.now() > deadline) throw new Error('the session was never ended')
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(s.store.getConversation(change.id, ALICE.id)?.state).toBe('set-aside')
+    expect(s.store.latestPlan(change.id)).toBeUndefined()
+  })
+
+  it('a restart while it was planned: planning, with no work; /plan carries it on', async () => {
+    const s = await setUp(scripted({ change: [CHANGE] }))
+    const change = changing(s)
+    expect(s.hub.busy(change.id)).toBe(false)
+    const answer = await post(s, change.id, 'plan')
+    expect(answer.state?.conversation.state).toBe('plan-ready')
+  })
+
+  it('Decision 1: after a change is planned and agreed, no table holds the token or the key', async () => {
+    const { s, change } = await planned()
+    await post(s, change.id, 'plan/agree', { version: 1, answers: {} })
+    const dumped = JSON.stringify(dumpAll(s.file))
+    expect(dumped).not.toContain(TOKEN)
+    expect(dumped).not.toContain(KEY)
+  })
+
+  it("the first plan's agreement is F2's: its message is the platform's default, and no plan is read", async () => {
+    const s = await setUp(scripted({ plan: [PLAN] }))
+    const conversation = made(s)
+    await post(s, conversation.id, 'plan')
+    await post(s, conversation.id, 'plan/agree', { version: 1, answers: {} })
+    expect(s.named('readPlan')).toEqual([])
+    expect(s.named('commitPlan')[0]?.[4]).toBeUndefined()
   })
 })

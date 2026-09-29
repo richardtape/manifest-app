@@ -57,8 +57,21 @@ const CLASS_ONLY = [
 
 const plainly = (text: string) => text.replace(/\s+/g, ' ').trim()
 
+/** FE-20: a sign-in promised to one class becomes the honest sentence. */
+export function honestWhoGetsIn(text: string): string {
+  return CLASS_ONLY.some((promise) => promise.test(text)) ? HONEST_WHO_GETS_IN : text
+}
+
+/** The rows whose words differ from `before`'s: a mark is a promise to the person. */
+export function changedRows(
+  plan: Record<Row, string>,
+  before: Record<Row, string>,
+): Row[] {
+  return ROWS.filter((key) => plainly(plan[key]) !== plainly(before[key]))
+}
+
 /** Rules about form, never meaning (agents.md rule 3): a question is a question, a row has words. */
-const checked: Check<z.infer<typeof PlanAnswer>> = (plan) => {
+export const checked: Check<z.infer<typeof PlanAnswer>> = (plan) => {
   for (const key of ROWS) if (plainly(plan[key]) === '') return `an empty row: ${key}`
   const ids = new Set(plan.onlyYouKnow.map((q) => q.id))
   if (ids.size !== plan.onlyYouKnow.length) return 'two questions share an id'
@@ -111,16 +124,10 @@ export async function writePlan(model: Model, input: PlanInput): Promise<Plan> {
     { role: 'user', content: parts.filter((part) => part !== '').join('\n\n') },
   ]
   const answer = await model.complete('plan', PlanAnswer, messages, checked)
-  const whoGetsIn = CLASS_ONLY.some((promise) => promise.test(answer.whoGetsIn))
-    ? HONEST_WHO_GETS_IN
-    : answer.whoGetsIn
-  const plan = { ...answer, whoGetsIn }
+  const plan = { ...answer, whoGetsIn: honestWhoGetsIn(answer.whoGetsIn) }
   // The rows marked are the rows whose words changed: a mark is a promise to the person.
   const previous = input.previous
-  const changed =
-    previous === undefined
-      ? []
-      : ROWS.filter((key) => plainly(plan[key]) !== plainly(previous[key]))
+  const changed = previous === undefined ? [] : changedRows(plan, previous)
   return { ...plan, changed }
 }
 
@@ -139,6 +146,35 @@ function line(text: string): string {
   return /^([#>*+-]|\d+[.)])/.test(flat) ? `\\${flat}` : flat
 }
 
+/** `line`'s escape, undone: what was written, read back. */
+const unline = (text: string) => text.replace(/^\\(?=[#>*+-]|\d+[.)])/, '')
+
+/** How many things only they know: said in words, as F2 said one and two. */
+const COUNTED = [
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+]
+const counted = (n: number) =>
+  `## ${COUNTED[n - 1] ?? String(n)} ${n === 1 ? 'thing' : 'things'} only you know`
+
+const CHANGES = '## Changes since we first agreed'
+const NOT_ANSWERED = 'Not answered yet.'
+
+/** One change since the plan was first agreed (F4 Decision 7): when, and their own words. */
+export interface PlanChange {
+  /** As it is written: "28 September 2026". */
+  at: string
+  words: string
+}
+
 /**
  * THE AGREED PLAN, AS `docs/plan.md` (walk-through D6): deterministic, so the same plan and
  * answers always make the same file. Any agent that ever works on the app reads it.
@@ -147,6 +183,7 @@ export function planMarkdown(
   title: string,
   plan: Plan,
   onlyYouKnowAnswers: Record<string, string>,
+  changes: PlanChange[] = [],
 ): string {
   const out = [
     `# ${line(title)}: the plan we agreed`,
@@ -158,20 +195,98 @@ export function planMarkdown(
   if (plan.assumed.length > 0)
     out.push('## Things we assumed', '', ...plan.assumed.map((a) => `- ${line(a)}`), '')
   if (plan.onlyYouKnow.length > 0) {
-    out.push(
-      plan.onlyYouKnow.length === 1
-        ? '## One thing only you know'
-        : '## Two things only you know',
-      '',
-    )
+    out.push(counted(plan.onlyYouKnow.length), '')
     for (const { id, ask } of plan.onlyYouKnow) {
       const answer = onlyYouKnowAnswers[id]?.trim()
       out.push(
         `- ${line(ask)}`,
-        `  ${answer === undefined || answer === '' ? 'Not answered yet.' : line(answer)}`,
+        `  ${answer === undefined || answer === '' ? NOT_ANSWERED : line(answer)}`,
       )
     }
     out.push('')
   }
+  // F4 Decision 7: the agreement as it now stands, and each change to it, in their words.
+  if (changes.length > 0)
+    out.push(CHANGES, '', ...changes.map((c) => `- ${line(`${c.at}: ${c.words}`)}`), '')
   return out.join('\n')
+}
+
+/**
+ * DOCS/PLAN.MD, READ BACK (F4 Decision 7): the inverse of `planMarkdown`. The questions only they
+ * know come back apart from the parts, with their answers: settled, never asked again (S1: M5).
+ * The file does not carry a question's id, so each is named by its place (`q1`, `q2`…). A file
+ * that `planMarkdown` would not write again, byte for byte, is one someone edited by hand: null.
+ */
+export function readPlanMarkdown(markdown: string): {
+  title: string
+  plan: Plan
+  answers: Record<string, string>
+  changes: PlanChange[]
+} | null {
+  const lines = markdown.split('\n')
+  let at = 0
+  const next = () => lines[at++]
+  const blank = () => next() === ''
+
+  const heading = /^# (.+): the plan we agreed$/.exec(next() ?? '')?.[1]
+  if (heading === undefined || !blank()) return null
+  const title = unline(heading)
+  if (next() !== 'Read it as a description of the finished thing, not as instructions.')
+    return null
+  if (!blank()) return null
+  const rows: Partial<Record<Row, string>> = {}
+  for (const key of ROWS) {
+    if (next() !== `## ${HEADINGS[key]}` || !blank()) return null
+    const text = next()
+    if (text === undefined || text === '' || !blank()) return null
+    rows[key] = unline(text)
+  }
+  /** A list's items, each `- ` and its text, until a blank line. */
+  const items = () => {
+    const found: string[] = []
+    while (lines[at]?.startsWith('- ')) found.push(unline(next()!.slice(2)))
+    return blank() ? found : null
+  }
+  let assumed: string[] = []
+  if (lines[at] === '## Things we assumed') {
+    at++
+    const list = blank() ? items() : null
+    if (list === null) return null
+    assumed = list
+  }
+  const onlyYouKnow: { id: string; ask: string }[] = []
+  const answers: Record<string, string> = {}
+  if (/^## \w+ things? only you know$/.test(lines[at] ?? '')) {
+    at++
+    if (!blank()) return null
+    while (lines[at]?.startsWith('- ')) {
+      const id = `q${onlyYouKnow.length + 1}`
+      onlyYouKnow.push({ id, ask: unline(next()!.slice(2)) })
+      const answer = next()
+      if (answer === undefined || !answer.startsWith('  ')) return null
+      if (answer !== `  ${NOT_ANSWERED}`) answers[id] = unline(answer.slice(2))
+    }
+    if (!blank()) return null
+  }
+  const changes: PlanChange[] = []
+  if (lines[at] === CHANGES) {
+    at++
+    const list = blank() ? items() : null
+    if (list === null) return null
+    for (const item of list) {
+      const split = /^(.+?): (.+)$/.exec(item)
+      if (split === null) return null
+      changes.push({ at: split[1]!, words: split[2]! })
+    }
+  }
+  const plan: Plan = {
+    ...(rows as Record<Row, string>),
+    assumed,
+    onlyYouKnow,
+    changed: [],
+  }
+  // Only what we would write again, byte for byte, is ours: anything else was edited by hand.
+  return planMarkdown(title, plan, answers, changes) === markdown
+    ? { title, plan, answers, changes }
+    : null
 }

@@ -4,7 +4,7 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import { registerApps } from './api/apps.js'
 import { registerBuild } from './api/build.js'
 import { registerConversations } from './api/conversations.js'
-import { createHub, publishState, registerEvents, type Hub } from './api/events.js'
+import { createHub, registerEvents, type Hub } from './api/events.js'
 import { registerIntake } from './api/intake.js'
 import { registerPlan } from './api/plan.js'
 import { registerProblems } from './api/problems.js'
@@ -171,30 +171,8 @@ export function buildServer(
         signIn: roundSignInFor(config),
       }))
   )({ store, hub, work, tokens })
-  // THE LINE (F4 Decision 5): at the front, a stopped round carries on, a fix is built, and a
-  // change is planned. Until Task 7's planner, a change moves to `planning` alone.
-  const line: Line = createLine({
-    store,
-    hub,
-    now: () => new Date(),
-    begin: beginPiece({
-      store,
-      tokens,
-      rounds,
-      planning: {
-        begin: (conversation) =>
-          publishState(hub, store, store.setState(conversation.id, 'planning')),
-      },
-    }),
-  })
-  // A RESTART (Review Focus 3): a round that was working, or waiting on a question, lost its
-  // key and its token with the last process. Marked before this server can listen. Then every
-  // app with a conversation waiting, and none holding it, starts its next (Review Focus 5).
-  rounds.interruptedOnBoot()
-  line.onBoot()
-  registerIntake(app, { config, store, work, intakeModel, intakeKeys })
-  registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
-  registerPlan(app, {
+  // Moment 5, and a change's plan (F4 Decision 7): the same routes, and the same work.
+  const planning = registerPlan(app, {
     config,
     store,
     work,
@@ -205,6 +183,21 @@ export function buildServer(
     planModel,
     rounds,
   })
+  // THE LINE (F4 Decision 5): at the front, a stopped round carries on, a fix is built, and a
+  // change is planned.
+  const line: Line = createLine({
+    store,
+    hub,
+    now: () => new Date(),
+    begin: beginPiece({ store, tokens, rounds, planning }),
+  })
+  // A RESTART (Review Focus 3): a round that was working, or waiting on a question, lost its
+  // key and its token with the last process. Marked before this server can listen. Then every
+  // app with a conversation waiting, and none holding it, starts its next (Review Focus 5).
+  rounds.interruptedOnBoot()
+  line.onBoot()
+  registerIntake(app, { config, store, work, intakeModel, intakeKeys })
+  registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
   registerBuild(app, { config, store, hub, work, tokens, rounds, line })
   registerApps(app, { config, store, hub, projects, tokens, line })
 

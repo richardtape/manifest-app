@@ -1,4 +1,5 @@
 import { slugOf } from '../agents/naming.js'
+import { guards } from '../build/guards.js'
 import { answered, type Message, type Model } from './client.js'
 
 /**
@@ -99,6 +100,37 @@ function plan(user: string): unknown {
 }
 
 /**
+ * F4's CHANGE PLANNER, as mock mode plays it (Task 7): the agreement it was given, with what they
+ * asked added to "What students see" and "What you see", titled by their words, and no new
+ * question; a correction narrows it to "What you see", as the capable model did (M5).
+ */
+function change(user: string): unknown {
+  const agreed = /The plan we agreed:\n([\s\S]*?)(?:\n\n|$)/.exec(user)?.[1]
+  const current = (agreed === undefined ? PLAN : JSON.parse(agreed)) as typeof PLAN
+  const asked = (/What they asked for now:\n([\s\S]*?)(?:\n\n|$)/.exec(user)?.[1] ?? '')
+    .split('\n')
+    .map((line) => line.replace(/^- /, '').trim())
+    .filter((line) => line !== '')
+  const words = asked.join(' ') || 'The change you asked for.'
+  const plain = words.replace(/[.!?]+$/, '')
+  const cut = plain.length <= 60 ? plain : plain.slice(0, plain.lastIndexOf(' ', 60))
+  const title =
+    guards().words(cut) === null && !/^\S+-\S+$/.test(cut) ? cut : 'Your change'
+  return {
+    studentsSee: user.includes('Their correction:')
+      ? current.studentsSee
+      : `${current.studentsSee} We changed this as you asked.`,
+    youSee: `${current.youSee} ${words}`,
+    itKeeps: current.itKeeps,
+    whoGetsIn: current.whoGetsIn,
+    ai: current.ai,
+    assumed: current.assumed,
+    onlyYouKnow: [],
+    title,
+  }
+}
+
+/**
  * F3's LEAD, as mock mode plays it (F3 Task 7): it reads the entry, writes one page, and is done.
  * It follows its own last move, which the view says ("Your last move (read): …"); in any step
  * but the pages, it is done at once.
@@ -188,6 +220,7 @@ export function walkthroughModel(): Model {
     naming,
     blueprint,
     plan,
+    change,
     lead,
     cwl,
     explaining,

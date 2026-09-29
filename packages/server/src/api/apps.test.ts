@@ -118,6 +118,13 @@ function setUp(file?: string) {
     hub,
     tokens,
     rounds: () => recordingRounds(store, hub, did),
+    // A change's planner, at work for as long as a test runs (Task 7 tests what it writes).
+    sessions: {
+      budget: () => new Promise(() => undefined),
+      start: () => new Promise(() => undefined),
+      end: async () => undefined,
+      list: async () => [],
+    },
   })
   cleanups.push(
     () => app.close(),
@@ -243,7 +250,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
     ).json() as AppConversation[]
     expect(rows.find((r) => r.id === waiting.id)?.line).toEqual({
       place: 1,
-      holder: { id: planning.id, title: planning.title, waitingForYou: true },
+      holder: { id: planning.id, title: planning.title, waitingForYou: false },
     })
     // Each keeps its own token.
     expect([s.tokens.get(a.json().id), s.tokens.get(b.json().id)]).toEqual([GOOD, SECOND])
@@ -373,7 +380,7 @@ describe('GET /api/apps/:projectId/conversations: every piece of work on it', ()
     ).json() as AppConversation[]
     expect(rows.map((r) => [r.id, r.state, r.chip])).toEqual([
       [waits.id, 'waiting', 'waiting'],
-      [change.id, 'planning', 'attention'],
+      [change.id, 'planning', 'working'],
       [one.id, 'built', 'steady'],
     ])
     expect(rows[0]).toEqual({
@@ -384,7 +391,7 @@ describe('GET /api/apps/:projectId/conversations: every piece of work on it', ()
       updatedAt: expect.any(String),
       line: {
         place: 1,
-        holder: { id: change.id, title: change.title, waitingForYou: true },
+        holder: { id: change.id, title: change.title, waitingForYou: false },
       },
     })
     expect(rows[2]?.line).toBeNull()
