@@ -188,6 +188,8 @@ interface Options {
   autoBuild?: boolean
   /** What this server's sessions are called: a restarted server's are its own. */
   sessionIds?: string
+  /** The round's waits, shortened: a test cannot wait 30 s for a poll. */
+  waits?: { pollMs: number; buildMs: number; draftMs: number }
 }
 
 function harness(options: Options, file?: string, store0?: Store) {
@@ -419,6 +421,7 @@ function harness(options: Options, file?: string, store0?: Store) {
     projects,
     trace: storeTrace(store),
     now: () => new Date(),
+    ...(options.waits === undefined ? {} : { waits: options.waits }),
     modelFor: (session, onAnswer) => {
       models.push(session)
       return model.bound(onAnswer)
@@ -581,6 +584,48 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(h.frames.filter((f) => f.kind === 'step')).toEqual([])
     const last = h.frames.filter((f) => f.kind === 'state').at(-1)
     expect(last?.kind === 'state' && last.round?.status).toBe('done')
+  })
+
+  it("the line under Writing the pages is each commit's, while the lead works; done's replaces it (moment 6: a line now)", async () => {
+    const next = held<unknown>()
+    const last = held<unknown>()
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          commit(),
+          () => next.promise,
+          commit([write('public/post.html', PAGE)], {
+            line: 'Writing the page they post on.',
+          }),
+          () => last.promise,
+        ],
+      },
+      autoBuild: true,
+    })
+    await until(
+      () => h.commits.length === 1,
+      () => h.did,
+    )
+    await until(
+      () => viewOf(h, id)?.line === 'Writing the page students post on.',
+      () => viewOf(h, id),
+    )
+    expect(stepOf(h, id, 'pages')?.state).toBe('now')
+
+    next.resolve(read('server.js'))
+    await until(
+      () => h.commits.length === 2,
+      () => h.did,
+    )
+    await until(
+      () => viewOf(h, id)?.line === 'Writing the page they post on.',
+      () => viewOf(h, id),
+    )
+    expect(stepOf(h, id, 'pages')?.state).toBe('now')
+
+    last.resolve(done())
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.line).toBe('The pages are written.')
   })
 
   it('Writing the pages stays now on a done with nothing committed: the lead is told, and ticks after a commit lands', async () => {
@@ -1118,6 +1163,76 @@ describe('the stream (Decision 15; Review Focus 5)', () => {
     h.watches.at(-1)!.handlers.reconnected()
     await untilStatus(h, id, 'done')
     expect(h.did).toContain('getBuild build-1')
+  })
+
+  it('a stream open but silent through a build: the build is read on a timer, and ticks from what it reads', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      waits: { pollMs: 20, buildMs: 60_000, draftMs: 60_000 },
+    })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    await until(
+      () => h.did.includes('getBuild build-1'),
+      () => h.did,
+    )
+    expect(stepOf(h, id, 'build')?.state).toBe('now')
+    h.buildStatus.set('build-1', 'succeeded')
+    await untilStatus(h, id, 'done')
+    expect(h.did.filter((d) => d.startsWith('startBuild'))).toHaveLength(1)
+  })
+
+  it('a stream open but silent while the draft starts: the instance is read on a timer, and ticks from what it reads', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      autoBuild: true,
+      deploy: (releaseId) => ({ id: 'instance-1', releaseId, state: 'starting' }),
+      waits: { pollMs: 20, buildMs: 60_000, draftMs: 60_000 },
+    })
+    await until(
+      () => h.deployed.length === 1,
+      () => h.did,
+    )
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    expect(stepOf(h, id, 'draft')?.state).toBe('now')
+    h.deployed[0]!.state = 'healthy'
+    await untilStatus(h, id, 'done')
+    expect(h.outputs).toEqual(['instance-1'])
+  })
+
+  it('a build the platform never finishes: needs you, waiting on Manifest, with a reference, and its session kept', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      waits: { pollMs: 20, buildMs: 150, draftMs: 60_000 },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'unreachable', what: 'platform' })
+    expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(stepOf(h, id, 'build')?.state).toBe('halted')
+    expect(h.releasesMade).toEqual([])
+    expect(h.ended).toEqual([])
+
+    // Carry on reads the build it started again, and never builds that commit twice.
+    h.buildStatus.set('build-1', 'succeeded')
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN)
+    await untilStatus(h, id, 'done')
+    expect(h.did.filter((d) => d.startsWith('startBuild'))).toHaveLength(1)
+  })
+
+  it('an instance that never becomes healthy or failed: needs you, waiting on Manifest, with a reference', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      autoBuild: true,
+      deploy: (releaseId) => ({ id: 'instance-1', releaseId, state: 'starting' }),
+      waits: { pollMs: 20, buildMs: 60_000, draftMs: 150 },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'unreachable', what: 'platform' })
+    expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(stepOf(h, id, 'draft')?.state).toBe('halted')
+    expect(h.outputs).toEqual([])
   })
 
   it('the token refused on the stream: needs a token; Carry on with a new one resumes', async () => {

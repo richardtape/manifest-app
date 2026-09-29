@@ -118,6 +118,20 @@ function QuestionCard({
   )
 }
 
+/**
+ * A QUESTION WE WENT ON WITH, ONCE NO ANSWER CAN BE TAKEN (built): the ask and the default we
+ * built with, and no field, since our server takes an answer only while it builds. A change is
+ * F4's moment 8, which the message box's place says is next.
+ */
+function WentWith({ ask, fallback }: { ask: string; fallback: string }) {
+  return (
+    <Card tone="steady">
+      <p className="body-lead">{ask}</p>
+      <p>{words.building.question.wentWith(fallback)}</p>
+    </Card>
+  )
+}
+
 /** Their words while it works: the lead reads them at its next step. */
 function MessageBox({ onMessage }: { onMessage: (words: string) => void }) {
   const [value, setValue] = useState('')
@@ -185,9 +199,19 @@ export function Thread({
           <SaidItem key={i} said={said} timeZone={timeZone} />
         ))}
       </ol>
-      {open.map((question) => (
-        <QuestionCard key={question.id} question={question} onAnswer={onAnswer} />
-      ))}
+      {talking
+        ? open.map((question) => (
+            <QuestionCard key={question.id} question={question} onAnswer={onAnswer} />
+          ))
+        : open.map((question) =>
+            question.default === null ? null : (
+              <WentWith
+                key={question.id}
+                ask={question.ask}
+                fallback={question.default}
+              />
+            ),
+          )}
       {built ? (
         <p className="body-lead">{words.building.thread.changeNext}</p>
       ) : talking ? (

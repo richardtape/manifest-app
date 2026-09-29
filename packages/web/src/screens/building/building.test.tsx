@@ -1023,6 +1023,40 @@ describe('built (Decision 16)', () => {
     expect(screen.queryByLabelText(words.building.thread.messageLabel)).toBeNull()
     noButton(words.building.stop)
   })
+
+  it('a question we went on with is said as what we went with, never an answer our server would refuse once built', async () => {
+    const s = stage()
+    await open(s)
+    const question = {
+      id: 'q-1',
+      ask: 'How many students should the count of who has not posted assume?',
+      default: "We'll show the number of responses received.",
+      answer: null,
+      answered: false,
+      secret: false,
+    }
+    s.state(
+      round(
+        {
+          status: 'done',
+          draft: { address: DRAFT, serving: true, lastAttempt: 'healthy' },
+          questions: [question],
+        },
+        ALL_DONE,
+      ),
+      { state: 'built' },
+    )
+    const talk = screen.getByRole('region', { name: words.building.thread.label })
+    expect(within(talk).getByText(question.ask)).toBeTruthy()
+    expect(
+      within(talk).getByText(words.building.question.wentWith(question.default)),
+    ).toBeTruthy()
+    expect(screen.queryByLabelText(question.ask)).toBeNull()
+    noButton(words.building.question.answer)
+    expect(
+      within(talk).queryByText(words.building.question.meanwhile(question.default)),
+    ).toBeNull()
+  })
 })
 
 describe('Reconnecting… (the page’s stream reopening)', () => {

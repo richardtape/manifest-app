@@ -350,6 +350,8 @@ export const words = {
       waiting: 'It is waiting, not failing.',
       /** Ours: a question with our default, which the work goes on with. */
       meanwhile: (fallback: string) => `Until you say: ${fallback}`,
+      /** Ours: once built, the default we built with; a change is F4's moment 8. */
+      wentWith: (fallback: string) => `We went with: ${fallback}`,
       answer: 'Answer',
       /** Ours: a secret the app needs. */
       secretHint: 'We set it where your app reads it, and never show it again.',

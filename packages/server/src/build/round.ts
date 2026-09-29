@@ -85,6 +85,8 @@ export interface RoundDeps {
   projects: Projects
   trace: Trace
   now: () => Date
+  /** The build's and the instance's waits (`WAITS`); a test shortens them. */
+  waits?: { pollMs: number; buildMs: number; draftMs: number }
 }
 
 /** Decision 9: 40 moves a step. */
@@ -98,6 +100,14 @@ const LOG_TAIL = 200
 const OUTPUT_LINES = 50
 /** Decision 14: spend lands a few seconds after a call. */
 const COST_EVERY_MS = 5_000
+/**
+ * REVIEW FOCUS 5, ON A TIMER TOO (the whole-branch review's I3): a stream open but silent, a
+ * socket that died without closing, would leave a step waiting on an event that never comes. So
+ * while it waits, the build or the instance is read every 30 s, and a wait longer than any the
+ * platform takes (M4: a build of 18 s; a deploy that cannot start answers in 91 s) is needs you,
+ * waiting on Manifest.
+ */
+const WAITS = { pollMs: 30_000, buildMs: 15 * 60_000, draftMs: 5 * 60_000 }
 
 const NOTHING_COMMITTED =
   'Nothing is committed yet in this round: write the pages as commits first, then answer done.'
@@ -165,6 +175,7 @@ const codeOf = (error: unknown): string =>
 
 export function createRounds(deps: RoundDeps): Rounds {
   const { store, hub, work, sessions, source, builds, releases, instances } = deps
+  const waits = deps.waits ?? WAITS
   const lives = new Map<string, Live>()
 
   const current = (live: Live) =>
@@ -205,16 +216,35 @@ export function createRounds(deps: RoundDeps): Rounds {
     for (const waker of [...live.wakers]) waker()
   }
 
-  /** Until the round's signal, a Stop, or the token refused. */
-  function waitFor<T>(live: Live, check: () => T | undefined) {
-    return new Promise<T | 'stopped' | 'refused'>((resolve) => {
+  /**
+   * Until the round's signal, a Stop, or the token refused; and, given a ceiling, the build or
+   * the instance read again on a timer, and `late` once the ceiling passes (`WAITS`).
+   */
+  function waitFor<T>(live: Live, check: () => T | undefined, ceilingMs?: number) {
+    return new Promise<T | 'stopped' | 'refused' | 'late'>((resolve) => {
+      let late = false
+      let poll: ReturnType<typeof setInterval> | undefined
+      let ceiling: ReturnType<typeof setTimeout> | undefined
       const waker = () => {
-        const value = live.stopped ? 'stopped' : live.refused ? 'refused' : check()
+        const value = live.stopped
+          ? 'stopped'
+          : live.refused
+            ? 'refused'
+            : (check() ?? (late ? 'late' : undefined))
         if (value === undefined) return
         live.wakers.delete(waker)
+        clearInterval(poll)
+        clearTimeout(ceiling)
         resolve(value)
       }
       live.wakers.add(waker)
+      if (ceilingMs !== undefined) {
+        poll = setInterval(() => void reread(live).catch(() => undefined), waits.pollMs)
+        ceiling = setTimeout(() => {
+          late = true
+          waker()
+        }, ceilingMs)
+      }
       waker()
     })
   }
@@ -591,6 +621,10 @@ export function createRounds(deps: RoundDeps): Rounds {
         return {
           ...tool,
           async run(input: never, context: RoundContext) {
+            // MOMENT 6'S LINE NOW (the whole-branch review's I1): the lead's own, for the commit
+            // it is making, guarded with it; done's replaces it.
+            d.line = (input as { line: string }).line
+            save(live)
             live.landed = null
             const result = await tool.run(input, context)
             const changes = live.landed as Change[] | null
@@ -851,9 +885,11 @@ export function createRounds(deps: RoundDeps): Rounds {
     }
     if (live.stopped) return STOPPED
     const buildId = d.buildId
-    const outcome = await waitFor(live, () => live.builds.get(buildId))
+    const outcome = await waitFor(live, () => live.builds.get(buildId), waits.buildMs)
     if (outcome === 'stopped') return STOPPED
     if (outcome === 'refused') return needs({ kind: 'token' })
+    if (outcome === 'late')
+      return needs({ kind: 'unreachable', what: 'platform' }, 'ROUND_BUILD_WAIT')
     if (outcome.ok) {
       d.steps.build = { note: null, changed: null, exact: null }
       d.releaseId = null
@@ -904,9 +940,15 @@ export function createRounds(deps: RoundDeps): Rounds {
       if (live.stopped) return STOPPED
     } else await reread(live)
     const instanceId = d.instanceId
-    const outcome = await waitFor(live, () => live.instances.get(instanceId))
+    const outcome = await waitFor(
+      live,
+      () => live.instances.get(instanceId),
+      waits.draftMs,
+    )
     if (outcome === 'stopped') return STOPPED
     if (outcome === 'refused') return needs({ kind: 'token' })
+    if (outcome === 'late')
+      return needs({ kind: 'unreachable', what: 'platform' }, 'ROUND_DRAFT_WAIT')
     if (outcome) {
       d.draft = { address: sandbox.url, serving: true, lastAttempt: 'healthy' }
       d.steps.draft = { note: null, changed: null, exact: null }
