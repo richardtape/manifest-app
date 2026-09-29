@@ -54,7 +54,7 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
 | 2 | 2, 3, 4 | `SegmentedControl` and `Timeline`, ported with parity; Rich's four F3 decisions on the building screen; names people read | **done 2026-09-28**, in session `manifest-app-07`, no platform: `e394339`, `4ec3ca6`, `f3c1d45`; 916 tests (the dated entry below) |
 | 3 | 5 | The app's own pages: the routes, the rail's project section, the Preview's three tabs, *Try it as*, the two facts | **done 2026-09-28**, in session `manifest-app-07` after sitting 2, at Rich's word, no platform: `1ac8647`; 974 tests; FE-38 filed (the dated entry below) |
 | 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | **done 2026-09-29**, in session `manifest-app-f8`, no platform: `d662d29`, `7f7616c`; 1110 tests (the dated entry below) |
-| 5 | 8, 9 | The lead on an app that exists; moment 8's screens | not started |
+| 5 | 8, 9 | The lead on an app that exists; moment 8's screens | **done 2026-09-29**, in session `manifest-app-f8` after sitting 4, at Rich's word, no platform: `8d94539`, `eb44728`, `18b1fe4`; 1162 tests; Rich's *"Stop and ask first"* for `models_withdrawn` (the dated entry below) |
 | 6 | 10 | Trying-out: the button, the question, the deploy from the session, the four stations, the two failures | not started |
 | 7 | 11 | **The acceptance:** `scripts/check-seeing.sh` against the mock; headless Chrome on the real platform; Rich's click. **Alone, and last** | not started |
 
@@ -137,6 +137,8 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
 | The stations | the prototype's: *Waiting its turn* (*"In the queue behind anything else going out"*) · *Making room* (*"Somewhere to run, and a place to keep things"*) · *Starting up* (*"Your app is running its first few seconds"*) · *Answering* (*"It replied to us, so it will reply to people"*); on failure *It never answered* (*"It started, then stopped replying to us"*) |
 | A secret with no value there | walk-through's *"It needs <its plain name> before it can start there."* · **[Set it]**; when we never asked for it by name: *"It needs a setting we asked you for on your draft, before it can start there."* |
 | A fix conversation's title | *"It didn't start on the trying-out address"* |
+| A session the platform ended as `models_withdrawn` (FE-36) ✓ | **Rich, 2026-09-29: stop and ask first.** *"Your app now keeps confidential data, so the model we were using can't work on it. Carry on continues with the on-campus model."* · **[Carry on]** · **[Stop here]** (the option he chose, in its words) |
+| Moment 8, ours (sitting 5) | the waiting chip *"Waiting its turn"*; its place *"Next in line."* / *"Third in line."*; no holder *"It starts in a moment."*; the box while it waits *"Anything to add?"*, *"We add it to what you asked for."*; set aside *"What should change instead?"*; built *"What should change next?"*, *"We'll show you what we'd change before we change anything."*, **[Ask for it]**; Yes's body *"We add it to the plan we agreed, then change it on your draft address, and you watch. You can leave; it keeps going."*; the conversations' chips *Working on it · Needs you · Built · Set aside · Stopped · "Waiting: second in line"*; **[What went wrong]** |
 
 ## Decisions this plan makes, and why
 
@@ -750,7 +752,7 @@ known(path: string): boolean                               // read at the curren
 unread(changes: Change[], tree: { paths: string[] }, known: (path: string) => boolean): string | null   // "read it first"
 ```
 
-- [ ] **Step 1: Tests, failing first:**
+- [x] **Step 1: Tests, failing first:**
   - **`prepare` reads `docs/plan.md` from the tree** for every round; round 1 of a first conversation gets the same text
     as the store's plan would make; an unreadable file falls back to the store's plan;
   - **the view** carries `change` for a change's round and `fix` for a fix's, both within `VIEW_CAP`; neither for a first
@@ -774,10 +776,10 @@ unread(changes: Change[], tree: { paths: string[] }, known: (path: string) => bo
     session, is Rich's: asked when 11a's end reason is in the contract (sitting 7's Step 0 at the latest). With the
     setting's default (the capable model allowed) our sessions are never ended this way;
   - F3's whole-round tests stand, and no credential reaches a prompt or the store.
-- [ ] **Step 2: Red. Step 3: Implement**, and mock mode's lead reads before it writes on a change.
-- [ ] **Step 4: Green; controls:** `unread` not consulted; a read at an older tree counted; the *Changes* commit after the
+- [x] **Step 2: Red. Step 3: Implement**, and mock mode's lead reads before it writes on a change.
+- [x] **Step 4: Green; controls:** `unread` not consulted; a read at an older tree counted; the *Changes* commit after the
   build; `released` on a pause. Each red, restored.
-- [ ] **Step 5: Commit** `feat(server): the lead on an app that exists — docs/plan.md from the tree, the agreed change in
+- [x] **Step 5: Commit** `feat(server): the lead on an app that exists — docs/plan.md from the tree, the agreed change in
   its view, and never a file rewritten unread`.
 
 ## Task 9: Moment 8's screens
@@ -819,7 +821,7 @@ conversationFor(projectId: string, instanceId: string): Promise<{ id: string } |
 - **The Preview's failed draft attempt** gains **[What went wrong]**, which opens the conversation whose round deployed
   that instance (`conversationFor`), and is not drawn when none of ours did.
 
-- [ ] **Step 1: Tests, failing first** (jsdom, a recording `Ours` and `Platform`, frames by hand):
+- [x] **Step 1: Tests, failing first** (jsdom, a recording `Ours` and `Platform`, frames by hand):
   - Ask for a change mints with the changing name, posts the words **and** the token in one request, and navigates; over
     the limit holds the send and keeps their words (F2's `FieldCount`);
   - a waiting frame draws the waiting card with the holder's title and place; *"…which is waiting for you"* only when
@@ -830,11 +832,11 @@ conversationFor(projectId: string, instanceId: string): Promise<{ id: string } |
   - the conversations list draws each chip from the five states, and links each row;
   - the Preview's failed draft attempt links the conversation `conversationFor` answers, and shows no link on `null`;
   - `machineryIn(text())` is empty, and *"It works"* appears nowhere.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the token posted apart from the words; *Not now*
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the token posted apart from the words; *Not now*
   missing; unchanged rows drawn; the box still closed after built. Each red, restored.
-- [ ] **Step 5: Walk it in headless Chrome against the mock, at 1440 and 375**: ask for a change, its plan, *Yes*, its
+- [x] **Step 5: Walk it in headless Chrome against the mock, at 1440 and 375**: ask for a change, its plan, *Yes*, its
   round; a second change waiting behind it, then starting by itself.
-- [ ] **Step 6: Commit** `feat(web): moment 8 — ask for a change, the line, "Here's what we'd change", and the app's
+- [x] **Step 6: Commit** `feat(web): moment 8 — ask for a change, the line, "Here's what we'd change", and the app's
   conversations`.
 
 ## Task 10: Trying-out (moment 9)
@@ -842,6 +844,15 @@ conversationFor(projectId: string, instanceId: string): Promise<{ id: string } |
 **Files:** `web/src/screens/trying-out/{put.tsx,stations.ts,put.test.tsx,stations.test.ts}`,
 `web/src/screens/building/{work.tsx,building.test.tsx}`, `web/src/screens/preview/preview.tsx`,
 `web/src/platform/api.ts`, `server/src/api/{apps.ts,apps.test.ts}`, `web/src/words.ts`.
+
+**(S5) What sittings 4 and 5 built for this task:** `ours.startChange(projectId, { fix: { incidentId }, token })`
+exists, and makes a fix conversation titled *"It didn't start on the trying-out address"*, which the line starts at
+once (a round at the pages, no plan) or queues; mint its token with `mintRequest(title, 'changing')`. The round reads
+staging's incident by our token (`Instances.stagingIncident`); a confidential app's is `confidential`, and the fix's
+view says only that. **The Preview already has `ours`**, and *[What went wrong]* on the **draft** tab
+(`conversationFor`); trying-out's is this task's. **The web's needs switch has no default**: a new `Needs` kind draws
+nothing until its card is added (sitting 5 added `withdrawn`'s). **Walks start from a fresh dev database** (mock mode's
+one project); sitting 5's walk is `walk-change.mjs` in session `manifest-app-f8`'s scratchpad.
 
 **Interfaces:**
 
@@ -1269,3 +1280,82 @@ walk and Task 11's `check-seeing.sh` start from a fresh dev database, or set tho
 **Gates:** `pnpm test` **1110/1110, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock mode.** The
 whole-branch review stays where the plan puts it: sitting 7, over all of F4.
+
+### 2026-09-29 — Sitting 5 (Tasks 8, 9): the lead on an app that exists, and moment 8's screens
+
+*In session `manifest-app-f8`, straight after sitting 4 at Rich's word (*"proceed with the next sitting"*), one agent
+natively, no platform: our mock on 7102 and our server in mock mode on 7105. The platform's sitting 12 (`manifest-8b`,
+its acceptance) introduced itself, and **borrowed 7105 for Rich's clicked half**: we stopped our server's whole tree, and
+started it again when it was returned. Before the walk, **the dev database was set aside** (`app-before-f4s5.sqlite`,
+its WAL and SHM with it) and our server started on a new one.*
+
+**Rich, at Task 8's start** (asked, as Task 8 said, once `models_withdrawn` was in the contract): a session the platform
+ends because the app's data became confidential **stops the round and asks first**. His chosen option's words are the
+card's: *"Your app now keeps confidential data, so the model we were using can't work on it. Carry on continues with the
+on-campus model."*
+
+**Task 8** (`8d94539`): the lead on an app that exists.
+- **`docs/plan.md` from the tree** for every round; the store's plan only when the file cannot be read (round 1 reads
+  the very text the store's plan makes: F2 committed it).
+- **The lead's view** carries the agreed change (their words, and the plan's parts it changed, as they now read) or the
+  fix (staging's incident, read by our token; a confidential app's refused, and said as only that it did not start and
+  why we cannot read it, never read another way, and never shown as a problem), with the paragraph for an app that
+  already works. The system prompt gains two lines for every round: read a file before you rewrite it; a confidential
+  app's own AI is `default-chat-onprem`.
+- **`unread`** sends back a write or a delete of a file already in the app that the lead does not know as it is now:
+  read at the current tree, written this round, or the specialist's proposal for it committed as proposed. **It applies
+  to every round**, the first build's too.
+- **Their messages** the lead read in a round join `docs/plan.md`'s *Changes*, in a commit of ours (dry run first) after
+  `done` and before the build; a file that no longer reads back is left as it is.
+- **`models_withdrawn`** is found by `listAgentSessions` when a key is refused, and is `needs: withdrawn`, never the $2
+  checkpoint; *Carry on* starts a new session. Its card is on the building screen.
+- Mock mode's lead reads the page too when the app has one.
+
+**Task 9** (`eb44728`, and the walk's fixes `18b1fe4`): moment 8's screens.
+- **Ask for a change** mints a token named for it (*"Changing — <their words>"*) and sends their words and the token in
+  one request, then opens the conversation.
+- **The waiting conversation**: *Waiting its turn*, the walk-through's sentence with the holder's title a link to it,
+  *"…which is waiting for you"* when it waits on them, its place, what they asked, a box that adds to it, and **[Leave
+  the line]**.
+- **The change's plan**: *"Here's what we'd change"*, only the parts that change, *"Everything else stays as we
+  agreed."* (only when something is), its questions, **[Yes, change it]**, the correction, and **[Not now]**.
+- **Set aside**, and **built**: the box asks for the next change. **The app's conversations**: a row each, linked, its
+  chip, when, and a waiting one's place. **The Preview's failed draft attempt** opens the conversation whose round put it
+  there.
+
+**The walk** (headless Chrome, mock mode, 1440 and 375: first build, Preview, *Ask for a change*, its plan, a second
+change waiting behind it, the conversations, *Yes*, its round, the second planned **by itself**, *Not now*) **found four
+defects no unit test could**: the conversations list unstyled (the title, chip and time run together at 375); the
+waiting and set-aside pages unlaid-out (a chip as wide as its card); the waiting box saying F3's *"We read it at the
+next step"* (an undefined hint fell back to it: now a test); and *"Everything else…"* said when every part changed (now
+a test). Fixed; the walk again: every check, no overflow, the only failed requests the expected ones.
+
+**Rulings** (the ledger has each with its cost):
+1. `unread` applies to every round, the first build's too; one F3 test's lead now reads before it rewrites.
+2. `known` takes the change, not the path: "committed as proposed" compares the content.
+3. What the lead knows is kept in memory; a tree that moved under us, or a restart, forgets it.
+4. The change paragraph is in the brief, beside the change or the fix; a first round's brief is F3's, byte for byte.
+5. The fix's view says why there is no incident: `confidential` or `missing`.
+6. Staging's incident is read by a new `Instances.stagingIncident`; its refusal is `confidential`, nothing else.
+7. A change's parts in the view are its stored plan's changed rows.
+8. Their messages join the *Changes* once each (`RunDetail.noted`); a conflict tries once more; a hand-edited file is left.
+9. `models_withdrawn` only on a refused key, read from `listAgentSessions`; no reference (not a problem).
+10. The needs card for `withdrawn` is added; the switch's lack of a default is left for the final review.
+11. A change's plan marks no part *Changed* (every part shown is); *Not now* is its own press.
+12. One message box, its words per place; the waiting card's and the conversations' words are ours (*Words proposed*).
+13. *[What went wrong]* is the draft tab's; trying-out's is Task 10's.
+14. Task 9's code was committed before its walk, while 7105 was lent to the platform; the walk's fixes have their own.
+
+**Negative controls**, each red, then restored: `unread` not consulted; a read at an older tree counted; the *Changes*
+commit never made before the build; a paused conversation holding nothing; `withdrawn` read as the checkpoint; the
+`withdrawn` card removed (a first mutation only cast the case, stayed green, and proved nothing: redone); the token
+posted apart from the words; *Not now* missing; unchanged rows drawn; the box closed after built; no *[What went
+wrong]*.
+
+**Also found:** two tests that raced under the larger suite. One was ours (the list read before its rows arrived, 6 runs
+in 8). The other was F1's (*Your apps*'s warning read before its effect ran, 1 in about 12). Both now wait, and eight
+full web runs were clean.
+
+**Gates:** `pnpm test` **1162/1162, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
+8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server is in mock mode**, on a new dev
+database. The whole-branch review stays where the plan puts it: sitting 7, over all of F4.

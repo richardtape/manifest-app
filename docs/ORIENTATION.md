@@ -4,32 +4,34 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-29, early morning: F4's sittings 1 to 4 done; F3 executed)*:
+**Where things stand** *(2026-09-29, morning: F4's sittings 1 to 5 done; F3 executed)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F4's sitting 5, Tasks 8 and 9**: the lead on an app that exists
-  (`docs/plan.md` from the tree, the agreed change in its view, the `unread` guard, a fix's view); then **moment 8's
-  screens** (*Ask for a change*, the waiting card, *"Here's what we'd change"*, the app's conversations). The plan is
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F4's sitting 6, Task 10**: trying-out (moment 9): *[Put this version on
+  trying-out]* on the building screen's end and the Preview's draft tab, the question (the release fixed when it is
+  asked), `deploy` from the person's session, the four stations, and the two failures (*It never answered*, with
+  *[What went wrong]*; a secret with no value there). The plan is
   [`plans/2026-09-28-f4-seeing-and-changing-it.md`](./plans/2026-09-28-f4-seeing-and-changing-it.md), approved by Rich:
-  one agent, natively (superpowers:executing-plans). **Sitting 5 needs no platform**: our mock, and our own fakes.
-  - **Read first:** the plan's *Decided by Rich* (with *Words proposed for Rich*), Decisions 5–10 and 12, Global
-    Constraints, Review Focus 1, 3 and 4, **sittings 1 to 4's dated entries** (sitting 1's M5 and M7; sitting 4's
-    eighteen rulings), then Tasks 8 and 9 in full. Corrections are marked **(S1)**, **(S2)** and **(S4)**: trust those
-    over the unmarked text around them. **Task 8's and Task 9's (S4) notes say what sitting 4 already built for them.**
+  one agent, natively (superpowers:executing-plans). **Sitting 6 needs no platform**: our mock (also under
+  `MANIFEST_MOCK_FAIL=1` for the never-answered path, on a port of its own), and our own fakes.
+  - **Read first:** the plan's *Decided by Rich* (with *Words proposed for Rich*), Decisions 11 and 15, Global
+    Constraints, Review Focus 2 and 5, **sittings 1 to 5's dated entries** (sitting 1's M2, M3 and M4 above all), then
+    Task 10 in full. Corrections are marked **(S1)**, **(S2)**, **(S4)** and **(S5)**: trust those over the unmarked
+    text around them. **Task 10's (S5) note says what sittings 4 and 5 already built for it.**
   - The ledger is `.superpowers/sdd/2026-09-28-f4-seeing-and-changing-it/progress.md` (git-ignored): every run and
     ruling with its cost.
-  - **Task 9's walk starts from a fresh dev database** (§7: mock mode's one project).
-- **What sitting 4 built** (its dated entry has each, and eighteen rulings):
-  - **The line** (`build/line.ts`; the rule, `holds`, in `api/line-state.ts`): one conversation holds an app from the
-    front of the line until its piece is built, stopped or set aside; **work still in flight holds it too** (the hub
-    keeps work's claims, M7-1); every piece of work's end tells the line, which starts the next; at boot, each app's
-    next. **The store is at version 4** (`waiting`, `set-aside`, `waiting_since`).
-  - **Our API**: `POST`/`GET /api/apps/:projectId/conversations` (a change, or a fix of ours, with a freshly minted token
-    checked before anything is stored), and an instance's conversation. F3's routes: a built or set-aside
-    conversation's message is its next change; `/stop` sets a change aside; *Carry on* after a Stop joins the line. The
-    state frame carries `piece` and `line`.
-  - **The change's plan** (`agents/change.ts`, through F2's routes): planned from `docs/plan.md` as the tree holds it
-    (`readPlanMarkdown`, the inverse of `planMarkdown`), the questions asked before **settled**; *Yes* commits the
-    agreement with *Changes since we first agreed* **before** round *n+1*. F2's first plan is unchanged.
+- **What sitting 5 built** (its dated entry has each, and fourteen rulings):
+  - **The lead on an app that exists** (Task 8): `docs/plan.md` from the tree for every round; the agreed change, or a
+    fix (staging's incident, by our token; a confidential app's said as unreadable, never read another way), in its
+    view; **`unread`**, which sends back a rewrite of a file it does not know as it is now (every round); their messages
+    joined to the *Changes* before the build.
+  - **Rich's decision (2026-09-29): a session the platform ends as `models_withdrawn` stops the round and asks first**
+    (`needs: withdrawn`, its card on the building screen, *Carry on* starts a new session).
+  - **Moment 8's screens** (Task 9): *Ask for a change*; the waiting card; *"Here's what we'd change"* with *Yes, change
+    it* and *Not now*; set aside; the box open again once built; the app's conversations; *[What went wrong]* on the
+    Preview's failed draft attempt. **Its walk found four defects no unit test could**, fixed (`18b1fe4`).
+- **What sitting 4 built:** the line (one conversation holds an app; work in flight holds it too; the store's version
+  4); `/api/apps/:projectId/conversations`; the change's plan, planned from `docs/plan.md` and committed with its
+  *Changes* before round *n+1*.
 - **What sitting 3 built:** moment 7. `/apps/:slug` is the Preview (three tabs, the pretend people on the draft only,
   UBC's words and a still *waiting on UBC's identity team* on *Trying out*, the two facts); the rail's project section.
   `/apps/:slug/conversations` and `/change` still say they arrive next: **Task 9 builds them**, and *[What went wrong]*.
@@ -56,15 +58,14 @@ says which plan is current. This file states where things stand and the rules. I
   - **F2 is executed** (2026-09-28): moments 3–5, describe it to the plan committed as `docs/plan.md`.
   - **F3 is executed** (2026-09-28): moment 6. Rich clicked moments 3–6 on the real platform. The whole-branch review's
     minors are deferred (its sitting 7 entry, and the ledger).
-  - **F4 is written and approved** (2026-09-28); **sittings 1 to 4 are done** (1 in `manifest-app-bb`; 2 and 3 in
-    `manifest-app-07`; 4 in `manifest-app-f8`). Its whole-branch review is sitting 7's.
+  - **F4 is written and approved** (2026-09-28); **sittings 1 to 5 are done** (1 in `manifest-app-bb`; 2 and 3 in
+    `manifest-app-07`; 4 and 5 in `manifest-app-f8`). Its whole-branch review is sitting 7's.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
-  - **Its sitting 11a is CLOSED at `90b8e81`** (`manifest-c3`, 2026-09-29; documents only on top of its review's fix
-    pass `8c7eb5e`). **The control plane on 7100 runs `8c7eb5e`** (PID 4563, from Rich's `.env`: the capable model
-    registered, `agentBuilderModels` "capable"), and **its database is empty**. **Next there: its sitting 12, the
-    acceptance** (`make demo-frontend`, on the `app` origin, with a clicked half), which uses 7100 and the edge, and
-    whose session messages us first. **It messages us before any tier and at every contract or mock commit.** Find its
-    live name with `ListAgents`.
+  - **Its sitting 11a is CLOSED at `90b8e81`** (`manifest-c3`). **Its sitting 12, the acceptance, is under way**
+    (`manifest-8b`: `make demo-frontend` on the `app` origin, a clicked half, the whole-branch review; its LAST sitting).
+    It **borrowed 7105 for Rich's clicked half** (sitting 5 stopped our server and started it again when returned), and
+    restarts 7100 onto driver 2 and back for its GitHub-driver runs. **It messages us before any truncation or restart
+    of 7100, at any contract or mock commit, and at its close.** Find its live name with `ListAgents`.
   - **The laptop's on-premise names are `qwen3.8:27b`** (`9c9c500`): `default-chat-large`'s fallback answers as
     `ollama_chat/qwen3.8:27b`, and a cold first call takes about 12 s.
   - **The capable model:** ask for `default-chat-large` (`openai/gpt-6-luna`), read from `session.models`, never
@@ -74,9 +75,10 @@ says which plan is current. This file states where things stand and the rules. I
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
 - **The machine** *(2026-09-29, early morning)*:
-  - **Our server on 7105 is in mock mode** (`pnpm dev:mock`, one watcher), against **our mock on 7102** (node 28239).
-    Our dev database is **at version 4**, every older row intact; in mock mode those rows share the mock's one project
-    and hold it (§7).
+  - **Our server on 7105 is in mock mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102** (node
+    28239). **Its dev database is new** (sitting 5, version 4), holding only sitting 5's walks, none of which holds the
+    mock's project; the one before is kept beside it as `packages/server/.data/app-before-f4s5.sqlite` (with its
+    `-wal` and `-shm`).
   - **Our dev script trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA lives.
   - **The control plane on 7100** is the platform session's. Query it before using it
     (`lsof -nP -iTCP:7100 -sTCP:LISTEN`), ask Rich, and tell the platform session.
@@ -89,8 +91,9 @@ says which plan is current. This file states where things stand and the rules. I
     SideNav's two; FormField's `count`, `FieldCount` and `secret`; LiveSteps' `line` and `detail`; `Disclosure`;
     SegmentedControl's arrow keys, tab order, `controls` and `label`.
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
-    `screens/building/` is moment 6, `screens/preview/` moment 7 (its facts pure, in `facts.ts`), and
-    `ours/pretend-people.ts` the pretend people (FE-3). The router's `remember` keeps an address without a navigation.
+    `screens/building/` is moment 6, `screens/preview/` moment 7 (its facts pure, in `facts.ts`), **`screens/change/`
+    moment 8** (ask, the waiting and set-aside screens, the app's conversations), and `ours/pretend-people.ts` the
+    pretend people (FE-3). The router's `remember` keeps an address without a navigation.
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2).
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
@@ -107,7 +110,7 @@ says which plan is current. This file states where things stand and the rules. I
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session. `platform/sign-in.ts` follows a draft's `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1110 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (1162 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
       (F3's, 12): each in mock mode, `pnpm mock` and `pnpm dev:mock` running.
 
@@ -384,6 +387,16 @@ bash scripts/check-building.sh                                  # F3's acceptanc
 - **A change's planner runs at once when its token is held** (Task 7): a test that wants a change to stay `planning`
   gives its harness a planner that stays at work (a budget read that never answers). A default planner that fails also
   leaves `planning`, for the wrong reason (F4 sitting 4).
+- **An explicit `undefined` takes a parameter's default.** Sitting 5 passed `hint={undefined}` to mean "no hint", and
+  the waiting box said F3's *"We read it at the next step"*, untrue there. Only the walk showed it. Pass the words
+  you mean (F4 sitting 5).
+- **A screen test that reads what arrives later must wait for it**: under the larger suite, a list read right after its
+  heading appeared lost to its rows 6 runs in 8, and an effect's `console.warn` read after its words appeared was
+  missed 1 in 12. `findBy…`/`waitFor`, never `getBy…` on something async (F4 sitting 5).
+- **The web's needs switch has no default**: a new `Needs` kind draws nothing until its card is added, and typecheck
+  says nothing (F4 sitting 5 found it with `withdrawn`).
+- **A mutation that only changes a type proves nothing**: `case 'x' as never` still matches at run time. Remove the
+  code (F4 sitting 5).
 - **Zod strips a key its schema does not name.** A negative control that makes a model's extra field matter (a `slug`
   it was told not to write) must change the schema **and** the code that reads it, or it stays green (F4 sitting 2).
 
