@@ -53,7 +53,7 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
 | 1 | 1 | **The measurements.** The contract at the platform's sitting 11 close; our mock's environments and a staging deploy; **one staging deploy on 7100** from the test user's session (at Rich's word, after telling the platform session); the draft's sign-in as pretend people in a real browser; the change planner and the lead's first moves on a built app, on the capable model; FE-35 once the platform has carried it. **Alone, and first** | **done 2026-09-28**, in the planning session (`manifest-app-bb`) at Rich's word, in the platform's window on 7100 (22:16–22:38). M6 waits on the platform's sitting 11a (the dated entry below) |
 | 2 | 2, 3, 4 | `SegmentedControl` and `Timeline`, ported with parity; Rich's four F3 decisions on the building screen; names people read | **done 2026-09-28**, in session `manifest-app-07`, no platform: `e394339`, `4ec3ca6`, `f3c1d45`; 916 tests (the dated entry below) |
 | 3 | 5 | The app's own pages: the routes, the rail's project section, the Preview's three tabs, *Try it as*, the two facts | **done 2026-09-28**, in session `manifest-app-07` after sitting 2, at Rich's word, no platform: `1ac8647`; 974 tests; FE-38 filed (the dated entry below) |
-| 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | not started |
+| 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | **done 2026-09-29**, in session `manifest-app-f8`, no platform: `d662d29`, `7f7616c`; 1110 tests (the dated entry below) |
 | 5 | 8, 9 | The lead on an app that exists; moment 8's screens | not started |
 | 6 | 10 | Trying-out: the button, the question, the deploy from the session, the four stations, the two failures | not started |
 | 7 | 11 | **The acceptance:** `scripts/check-seeing.sh` against the mock; headless Chrome on the real platform; Rich's click. **Alone, and last** | not started |
@@ -651,7 +651,7 @@ line: { place: number; holder: { id: string; title: string; waitingForYou: boole
 | `POST /api/conversations/:id/stop` | F3's | now also in `waiting`, `planning` and `plan-ready`: the change is **set aside**, and the app freed |
 | `POST /api/conversations/:id/build` | F3's | *Carry on* after *Stop* **joins the line** when another conversation holds the app |
 
-- [ ] **Step 1: Tests, failing first:**
+- [x] **Step 1: Tests, failing first:**
   - **the migration** takes a version-3 file to 4: every row intact, `waiting` and `set-aside` accepted, the dev
     database's shape held (F3's migration test's pattern);
   - **`holds`**, each case its own: making, planning, plan-ready, agreed, building with a working, paused, needs-you or
@@ -669,12 +669,12 @@ line: { place: number; holder: { id: string; title: string; waitingForYou: boole
     stored, and **kept in memory only**, F2's dump of every table after holding no `mft_`;
   - `instances/:id/conversation` answers from `runs.detail.instanceId`, and another person's is `404`;
   - the state frame carries `piece` and `line`, and a reconnect's first frame rebuilds both from the store alone.
-- [ ] **Step 2: Red. Step 3: Implement.** `line.begin` is wired in `app.ts` to Task 7's `planning.begin` (a change),
+- [x] **Step 2: Red. Step 3: Implement.** `line.begin` is wired in `app.ts` to Task 7's `planning.begin` (a change),
   F3's `rounds.start` (a fix), or `rounds.carryOn` (a stopped round that joined the line). Until Task 7 lands in the
   same sitting, a change's `begin` moves it to `planning` alone.
-- [ ] **Step 4: Green; controls:** `holds` true for a stopped run; `released` not called on built; two holders at once;
+- [x] **Step 4: Green; controls:** `holds` true for a stopped run; `released` not called on built; two holders at once;
   `onBoot` never called; the token not checked. Each red, restored.
-- [ ] **Step 5: Commit** `feat(server): conversations on an app, and the line — one works on an app at a time, the others
+- [x] **Step 5: Commit** `feat(server): conversations on an app, and the line — one works on an app at a time, the others
   wait, and the next starts by itself`.
 
 ## Task 7: The change's plan, agreed and committed
@@ -701,7 +701,7 @@ export function writeChange(model: Model, input: {
 export interface Planning { begin(conversation: Conversation): void }    // to `planning`; the planner runs if a token is held
 ```
 
-- [ ] **Step 1: Tests, failing first:**
+- [x] **Step 1: Tests, failing first:**
   - **the round trip:** `readPlanMarkdown(planMarkdown(t, p, a, c))` gives back `t`, `p` (less `changed`), `a` and `c`,
     for F2's walk-through plan with and without changes; a hand-edited file that no longer reads back is `null`;
   - **the planner:** given the current plan and *"also show a word count"*, a scripted model's answer marks exactly the
@@ -720,16 +720,23 @@ export interface Planning { begin(conversation: Conversation): void }    // to `
   - **Not now** (`/stop` in `plan-ready`): `set-aside`, nothing committed, the line released;
   - **a restart during planning:** the conversation is `planning` with no work; `/plan` carries it on;
   - **F2's first plan is unchanged**: its `docs/plan.md` byte for byte (F2's test), and `check-describing.sh` 18/18.
-- [ ] **Step 2: Red. Step 3: Implement**, and mock mode's model answers the change planner.
-- [ ] **Step 4: Green; controls:** the round started before the commit; the changed rows taken from the model; the
+- [x] **Step 2: Red. Step 3: Implement**, and mock mode's model answers the change planner.
+- [x] **Step 4: Green; controls:** the round started before the commit; the changed rows taken from the model; the
   session left running; `Changes` dropped from the file. Each red, restored.
-- [ ] **Step 5: Commit** `feat(server): a change is agreed before it is built — "Here's what we'd change", then Yes commits
+- [x] **Step 5: Commit** `feat(server): a change is agreed before it is built — "Here's what we'd change", then Yes commits
   docs/plan.md with its Changes, then the round`.
 
 ## Task 8: The lead on an app that exists
 
 **Files:** `server/src/build/{round.ts,round.test.ts,moves.ts,guards.ts,guards.test.ts}`,
 `server/src/agents/{lead.ts,building.test.ts}`, `server/src/model/walkthrough.ts`.
+
+**(S4) What sitting 4 built under this task:** the line is already told at the end of **every** piece of work
+(`work.ts`'s `ended`, wired to `line.released` in `app.ts`), and `released` starts nothing while anything holds the app,
+work in flight included. So *"the round ends by telling the line"* is in force: this task's test pins that a round
+ending paused or needs-you starts nothing (round.test's *"the round frees its app"* holds the built case). A fix reaches
+its round through `beginPiece` → `rounds.start`, or `rounds.withoutToken` (an interrupted run) when no token is held.
+A change's round is started by `/plan/agree` after `docs/plan.md` is committed, as round *n+1*.
 
 **Interfaces:**
 
@@ -778,6 +785,14 @@ unread(changes: Change[], tree: { paths: string[] }, known: (path: string) => bo
 **Files:** `web/src/screens/change/{ask.tsx,conversations.tsx,waiting.tsx,change.test.tsx}`,
 `web/src/screens/plan/{plan.tsx,plan.test.tsx}`, `web/src/screens/building/{thread.tsx,building.test.tsx}`,
 `web/src/screens/describe/describe.tsx` (routing the new states), `web/src/ours/api.ts`, `web/src/words.ts`.
+
+**(S4) What sitting 4 built for these screens:** the frame's `line.holder` may be `null` (only between one conversation
+ending and the next starting); `/messages` also takes `set-aside` (the next change); `/stop` on the **first** plan stays
+`409 CONVERSATION_STATE` (only a change has *Not now*); `/stop` on a stopped round waiting to carry on returns it to its
+Stop. `GET /api/apps/:projectId/conversations` answers `AppConversation` (`progress.ts`), its `chip` one of the
+`StateChip` names. **In mock mode** the mock holds no `docs/plan.md`, so a change's plan marks all five parts; and every
+conversation is on the mock's one project, so **the walk starts from a fresh dev database** (the old rows hold "the
+app", and a change would wait for ever).
 
 **Interfaces:**
 
@@ -891,7 +906,8 @@ export function newestAttempt(instances: Schemas['Instance'][], servingAtPress: 
 - [ ] **Step 0: M6, if sitting 1 could not run it** (S1: it could not; FE-35 is Spec action 10, the platform's sitting
   11a). Re-read the contract for 11a's codes (the incident refusal, the session's end reason) and correct Tasks 8 and
   10 to them before the walk.
-- [ ] **Step 1: Against the mock.** `scripts/check-seeing.sh`, beside `check-building.sh`, drives our API as the browser
+- [ ] **Step 1: Against the mock.** *(S4: from a fresh dev database: in mock mode every conversation is on the mock's
+  one project, and older rows hold it.)* `scripts/check-seeing.sh`, beside `check-building.sh`, drives our API as the browser
   does, with mock mode's model, and asserts **what our server sent**, from the trace and the store:
   1. two changes asked at once on one app: one plans, one waits at place 1;
   2. the first's plan is written, and *Yes* commits `docs/plan.md` with its *Changes* (its dry run first) **before** the
@@ -1168,3 +1184,88 @@ expected ones.
 
 **Gates:** `pnpm test` **974/974, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock mode.**
+
+### 2026-09-29 — Sitting 4 (Tasks 6, 7): conversations on an app, the line, and the change's plan
+
+*In session `manifest-app-f8`, at Rich's word (*"proceed with the next sitting"*), one agent natively, no platform: our
+mock on 7102 and our server in mock mode on 7105 throughout. The platform session (`manifest-c3`, its sitting 11a)
+introduced itself and committed its review's fix pass, **`8c7eb5e`, contract text only** (1.4.0, 66 operations, 128
+codes): the Incident's `prompt` is never handed to a model on a confidential project's staging or production; the
+refusal holds after a commit lowers the manifest; a production deploy to a more restrictive release ends the sessions it
+no longer allows. Our typecheck and tests pass against it. The ledger has every run and ruling.*
+
+**Task 6** (`d662d29`): conversations on an app, and the line.
+- **The store's version 4**: `conversations.state` gains `waiting` and `set-aside`, and `waiting_since`, the line's
+  order (one rebuild brings a file at 0, 2 or 3 up to it; the dev database migrated with every row intact).
+- **The line** (`build/line.ts`): a conversation holds its app from the front of the line until its piece is built,
+  stopped or set aside. **The rule is one function, `holds`** (`api/line-state.ts`, beside the other folds, since the
+  state frame needs it too), and **work still in flight holds as well**: work's claims moved into the hub, so a stopped
+  round frees its app when what it had in flight returns, never at the press (M7-1). Each piece of work's end tells the
+  line, which starts the next if nothing holds the app. At boot, every app with a waiting conversation and no holder
+  starts its next.
+- **Each change is one `asked` message**, folded into the conversation's piece (`api/piece-state.ts`).
+- **Our API**: `POST /api/apps/:projectId/conversations` (their words, or a fix of ours, with a token the browser has
+  just minted, checked by `getProject` before anything is stored and kept in memory only); `GET` the person's
+  conversations on the app, each with a chip from the five states and its place when it waits; the conversation whose
+  round deployed an instance. On F3's routes: a built or set-aside conversation's message is its next change; a waiting
+  one's joins what was asked; `/stop` sets a change aside (*Leave the line*, *Not now*) and frees the app; *Carry on*
+  after a Stop joins the line, and carries on the same round when it is freed.
+- **The state frame** carries `piece` and `line`, rebuilt from the store alone; a waiting conversation's frame follows
+  its holder (*"…which is waiting for you"*).
+
+**Task 7** (`7f7616c`): the change's plan, agreed and committed.
+- **`readPlanMarkdown`**, the inverse of `planMarkdown`, held by a round trip: the questions only they know come back
+  apart from the parts, with their answers; a file `planMarkdown` would not write again byte for byte was edited by hand,
+  and the planner reads its text, every part marked.
+- **The change planner** (`agents/change.ts`) on the conversation's own agent session, ended when it has written: given
+  the agreement, what was asked, how apps like this are built, and **every question asked before as settled**. Its check
+  refuses a question holding its answer or one asked again (M5's flaw), and a title with machinery, code, a file, or
+  *"it works"*. **The parts it changed are ours to mark**, word for word against the agreement.
+- **F2's routes carry it**, dispatched on the piece. **Yes commits `docs/plan.md` before round *n+1* starts**, in the same
+  run: the agreement as it now stands, the settled answers kept and the change's added, and *Changes since we first
+  agreed*, each change dated in their own words; its commit says *"The change we agreed: Word count"*. F2's first plan
+  and its commit are unchanged (its test, byte for byte; `check-describing.sh` 18/18).
+- **The line plans a change at once** when its token is held; with none (a restart), it waits in `planning` for the
+  page's handover. *Not now* while the planner writes sets it aside at once, and what it writes is dropped.
+- **Mock mode's model answers the planner.** The mock holds no `docs/plan.md` (only `src/app.js`'s text, FE-27's shape),
+  so in mock mode a change marks all five parts.
+
+**Rulings** (the ledger has each with its cost):
+1. **Work in flight holds its app** (the hub keeps work's claims), and every piece of work's end tells the line.
+2. `holds` lives in `api/line-state.ts`; `build/line.ts` would make a cycle with the state frame.
+3. The store gains `conversationsOn` (every person's: the line is the app's) and `waitingProjects` (boot); `createChange`
+   also takes their words; a wait's time never equals the last, so two joins in one millisecond keep their order.
+4. `LineView.holder` may be null (between one ending and the next starting); `piece` is null in the intake.
+5. A set-aside conversation's message asks for the next change too (Task 9's *"the message box asks for another"*).
+6. **The first plan cannot be set aside**: `/stop` on a first piece's plan stays `409 CONVERSATION_STATE`.
+7. *Leave the line* on a stopped round waiting to carry on returns it to its Stop, never set aside; a message while it
+   waits is the round's.
+8. **No token at the front**: a change waits in `planning`; a stopped round or a fix is saved *interrupted*
+   (`rounds.withoutToken`), so the page's existing Carry on hands one over.
+9. A token not for the project is `400 TOKEN_NOT_FOR_PROJECT` (F2's code, the route table), and a project that is no id
+   is `404`.
+10. The chip: waiting, steady (built), not yet (set aside, a stopped round), working (its machine moving), and needs you
+    (anything waiting on the person).
+11. A change's title is their first line cut at a word to 60 until the planner names it; a fix's is ours, *"It didn't
+    start on the trying-out address"*.
+12. The file does not carry a question's id, so a question read back is named by its place (`q1`, `q2`).
+13. More than two questions only they know are said as many (*"Three things only you know"*).
+14. The planner is given `settled`, every question asked before, answered or not.
+15. The planner's title is held by F3's `words` check, one line, and not reading like an address.
+16. One *Changes* line per change, dated by Vancouver's day (*"29 September 2026"*); the file's title is the project's
+    name.
+17. `Authoring.readPlan` reads `docs/plan.md` at the tree's commit (unreadable: none).
+18. *Not now* while the planner writes drops what it writes, and ends its session.
+
+**Negative controls**, each red, then restored: `holds` true for a stopped run; the line not told when work ends; no
+holder check; `onBoot` never called; the token not checked; the round started before the plan's commit; the changed
+rows taken from the model (a `changed` in the schema **and** read); the planner's session left running; *Changes*
+dropped from the file.
+
+**Found for the next sittings:** in mock mode every conversation is on the mock's one project, so the dev database's
+older conversations (F2's `agreed` ones among them) hold "the app", and a change asked there waits for ever. Task 9's
+walk and Task 11's `check-seeing.sh` start from a fresh dev database, or set those rows aside.
+
+**Gates:** `pnpm test` **1110/1110, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
+8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock mode.** The
+whole-branch review stays where the plan puts it: sitting 7, over all of F4.
