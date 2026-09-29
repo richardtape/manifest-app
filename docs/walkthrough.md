@@ -98,8 +98,11 @@ and what changing course would cost.*
   also work for agentic use"*; *"Faculty members should be able to add other faculty members for now. Perhaps in the
   future they should be able to add TAs"*).
   - **The platform decides** (**FE-39**): faculty by CWL's `eduPersonAffiliation`, administrators by a prescribed list
-    of CWL logins in its settings. It refuses anyone else a project, an intake, or a place on someone's app, whatever
-    client asks, an agent included. `getMe` answers the decision, and our screens only follow it.
+    in its settings, **by PUID** (Rich, 2026-09-29, the platform's recommendation: a CWL login can be reassigned to
+    someone new). It refuses anyone else a project, an intake, or a place on someone's app, whatever client asks, an
+    agent included. `getMe` answers the decision, and our screens only follow it.
+  - **Someone who stops being faculty keeps their apps, and starts nothing new** (Rich, 2026-09-29, the platform's
+    recommendation: a course app mid-term keeps its owner). Their memberships and tokens keep working.
   - *Rejected:* a list of instructors that administrators keep (all faculty needs nobody to keep it);
     deciding in our own screens, which a student calling the API directly would walk past; the IdP refusing everyone
     else at sign-in, which leaves no page to say why.
@@ -149,16 +152,22 @@ the left.
 **They wait:** seconds. No state.
 
 **Someone who isn't faculty** (D7: a student, staff, anyone not on the administrators' list):
-- **They see**, in place of every page, whatever address they came to:
-  - the brand, their name and **[Sign out]**, and no rail items (no *Your apps*, no *Start something new*);
-  - **"Manifest isn't available to you at the moment."** · *"It's open to UBC faculty for now."*
-  - Still, in the *not yet* tone: nobody is working on anything, and nothing is wrong.
-- **Fed by:** `getMe` answering that they may not build (**FE-39**: `mayBuild: false`, its name the platform's). Until
-  the platform ships it, everyone builds, as before.
-- **If it goes wrong:** the platform refuses them part-way (their faculty status changed since they signed in, and
-  `createProject`, `startIntakeSession` or our own routes answer the refusal's code): the same screen, never an error.
-  Our server refuses a new conversation or a change to them with the same code, before the platform has to.
-- **They wait:** nothing.
+- **They see**, with no apps of their own (every student: nobody can add them to one), in place of every page,
+  whatever address they came to:
+  - the brand, **"Manifest isn't available to you at the moment."** · *"It's open to UBC faculty for now."* ·
+    *"You're signed in as <their name>."* · **[Sign out]**; no rail;
+  - still, in the *not yet* tone: nobody is working on anything, and nothing is wrong.
+- **Someone who stopped being faculty, and keeps apps** (D7): *Your apps* with their apps, and they go on working on
+  them, but the rail has no *Start something new*, and `/new` says the same two sentences in the page.
+- **Fed by:** `getMe`'s `mayBuild: false` (**FE-39**), then `listProjects` for whether they keep apps. Until the
+  platform ships it, everyone builds, as before.
+- **If it goes wrong:**
+  - The platform refuses them part-way (their faculty status changed since they signed in: `createProject` or
+    `startIntakeSession` answers `403 BUILDING_NOT_OPEN`): we read `getMe` again, and the page follows. Never an error.
+  - Our server refuses starting something new (`POST /api/conversations`) with the same code, before the platform has
+    to.
+  - `listProjects` fails: moment 2's *"We can't reach Manifest just now…"* and **[Try again]**.
+- **They wait:** under a second.
 
 ## 2. *Your apps*, with nothing in it yet
 

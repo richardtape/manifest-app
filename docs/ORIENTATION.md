@@ -16,6 +16,10 @@ says which plan is current. This file states where things stand and the rules. I
   - **Read first:** the walk-through's moments 10–15; `api-findings.md`'s table rows dated 2026-09-29 (the platform's
     close, its recommendations, Rich's two decisions, real GitHub); F4's plan, sitting 7's dated entry, and its *Open
     for Rich*.
+- **F4a, *Only faculty build*, is written and waits on the platform** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md),
+  walk-through **D7**, **FE-39**; Rich, 2026-09-29, after a student could start an app). When the platform's contract
+  answers `Me.mayBuild` (its launch-path sitting 5a; it messages us at that commit), F4a is one sitting, before or
+  beside F5.
 - **What F4 built** (moments 7–9; the plan's dated entries have each): the app's own pages and the Preview's three
   tabs, *Try it as*, the two facts; a change as its own conversation, **the line** (one at a time, the next starting
   by itself), the change's plan agreed and committed into `docs/plan.md` before its round, the lead on an app that

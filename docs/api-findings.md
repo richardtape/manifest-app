@@ -38,7 +38,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Recommended by the platform, 2026-09-29** (`manifest-8b`, at Rich's asking; **not decided: Rich's word carries them**) | **FE-33**, **FE-34**, **FE-38** | Each as an early task of the platform's **next plan, the launch path (FE-6, FE-25)**, which `manifest-63` is writing | **FE-33**: our (a), revoking, archiving, deleting or expiring a token closes its open streams with a close code of its own (e.g. `4401`); also the platform's own review's M6. For us: keep closing a round's stream at its end; treat `4401` as *"ask for a new token"* once it exists. **FE-34**: our (a) in principle, the fallback only for an unreachable or failing provider, if LiteLLM 1.98's router can restrict it by error type (measured first); else (b), the guide says so. For us: unchanged (a root-object schema, and `x-litellm-attempted-fallbacks` and `model` read on every answer); the on-premise fallback is `qwen3.8:27b` (32k) since 11a. **FE-38**: our (a), `createdAt` on `Instance` and `InstanceSummary`; the last attempt becomes the newest by it. For us: keep Task 5's interim rule; F6's *Start it again* after it ships. Timing it recommends: FE-38 before our F6; FE-33 and member removal before faculty use it for real; FE-34 measured in the next plan's Task 1 |
 | **Decided by Rich, 2026-09-29** (relayed by `manifest-8b`; the platform's next plan builds each, with a spec action) | **FE-11**, **FE-36** | Removing a member; a session whose project went confidential | **FE-11: removing a member revokes that member's tokens on the project and ends their agent sessions** (not built yet; with FE-33 their streams close too). **FE-36 changes: a session holding a model its project no longer allows has its key TRIMMED in place** (the withdrawn models removed) and stays active, ended only when nothing it may use is left (measured first: does LiteLLM's `/key/update` narrow a live key at once). Until it ships, `models_withdrawn` as today. Meanwhile (F4 sitting 7, at Rich's click, **Rich's decision**): our round starts a new session itself after `models_withdrawn`, carries on when it still lists the model we were using, and asks first only when that model is gone (`5a1aa1f`) |
 | **The platform's next sitting** (`manifest-63`, opened 2026-09-29, 13:00) | — | Real GitHub | Rich set `MANIFEST_SOURCE_DRIVER=github` in manifest's `.env`. The next plan's Task 1 restarts 7100 onto driver 2 against **real GitHub**: every driver-1 project then answers `409 SOURCE_PROVIDER_MISMATCH` on source operations (a restart back onto driver 1 restores them), and **anything created through 7100 makes a real private repository on github.com that nothing deletes**. Told by F4's sitting 7 that 7100 is free for it; whether the two acceptance projects are kept usable is Rich's word |
-| **Decided by Rich, 2026-09-29, to carry** (after F4's close; the platform's launch-path plan was being written) | **FE-39** | Only faculty build, for now; and administrators | **Written and decided the same day** (walk-through D7): the platform decides who may build (faculty by CWL's `eduPersonAffiliation`, administrators by a prescribed list of CWL logins in its settings), refuses `createProject`, `startIntakeSession` and `addMember` to anyone else with a code of its own, and `getMe` answers the decision (`mayBuild`). Rich: *"the platform, because this would then also work for agentic use"*. **Carried at Rich's word, 2026-09-29**, to `manifest-63`, for the launch-path plan while it is open |
+| **Decided by Rich, 2026-09-29, to carry** (after F4's close; the platform's launch-path plan was being written) | **FE-39** | Only faculty build, for now; and administrators | **Written and decided the same day** (walk-through D7): the platform decides who may build (faculty by CWL's `eduPersonAffiliation`, administrators by a prescribed list **by PUID** in its settings; someone who stops being faculty keeps their apps and starts nothing new), refuses `createProject`, `startIntakeSession` and `addMember` to anyone else with a code of its own, and `getMe` answers the decision (`mayBuild`). Rich: *"the platform, because this would then also work for agentic use"*. **Carried at Rich's word, 2026-09-29**, to `manifest-63`, for the launch-path plan while it is open |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -1042,8 +1042,8 @@ word the same day** to the platform session (`manifest-63`), for its launch-path
 - **What we would call, and what is missing** (the names are the platform's to choose):
   - **At sign-in**, the platform asks CWL for `eduPersonAffiliation` and keeps whether the person is faculty. Unlike
     the admin role, it is refreshed at every sign-in: it is UBC's current fact about them.
-  - **Administrators are a setting**: a list of CWL logins (for example `MANIFEST_ADMIN_CWL_LOGINS`). How it meets
-    today's `admin` role and `admin-grant.sh` is the platform's to settle.
+  - **Administrators are a setting**: a list, **by PUID** (Rich's decision, below; we first wrote CWL logins). How it
+    meets today's `admin` role and `admin-grant.sh` is the platform's to settle.
   - **One predicate: may build = faculty or administrator.** `createProject`, `startIntakeSession` (which spends the
     platform's money on a model before any project exists) and `addMember` (someone who may not build) refuse anyone
     else with a code of their own (for example `403 BUILDING_NOT_OPEN`, and one for `addMember`'s target).
@@ -1051,8 +1051,8 @@ word the same day** to the platform session (`manifest-63`), for its launch-path
     and none re-derives the rule.
   - **Unchanged:** a token a faculty member minted keeps working (it is how their agents act), and a project's members
     keep their roles.
-  - **Left to the platform, with our recommendation:** a member who stops being faculty loses access as a non-member
-    would.
+  - **A member who stops being faculty keeps their apps and starts nothing new** (Rich's decision, below; we first
+    recommended losing access).
   - **The mock** answers `mayBuild: true`, and a switch (for example `MANIFEST_MOCK_MAY_BUILD=0`) answers `false` and
     refuses the three operations, so we test and walk both ways.
   - **On the laptop:** `instructor` is faculty; `student` and the staff test user are not.
@@ -1068,6 +1068,19 @@ word the same day** to the platform session (`manifest-63`), for its launch-path
   1), our server refusing new conversations and changes with the same code, and moment 18's faculty-only words. A
   small plan of our own, *"Only faculty build"*, written now and built when it lands.
 - **Later:** TAs (Rich: *"Perhaps in the future"*), as a change to the one predicate.
+- **In the platform's launch-path plan** (`manifest-63`, `3f20f83`, 2026-09-29): *proposed* Task 8a in its sitting 5a,
+  with Spec action 7, waiting on Rich's own confirmation there. Its shape: `users.affiliations`, refreshed at every
+  sign-in (an assertion without the attribute is `[]`, not faculty); `mayBuild(user)` = administrator, or an
+  affiliation in `MANIFEST_BUILDER_AFFILIATIONS` (default `faculty`: UBC may not mark sessional lecturers so, a question
+  for UBC IAM); **`Me.mayBuild: boolean`**; `createProject` and `startIntakeSession` **`403 BUILDING_NOT_OPEN`**;
+  `addMember` with a target who may not build **`409 MEMBER_MAY_NOT_BUILD`**, naming them; the mock's
+  **`MANIFEST_MOCK_MAY_BUILD=0`**; a second faculty test user, `colleague`. It messages us at the contract commit.
+- **Rich decided the platform's two differences, 2026-09-29, each its recommendation:** administrators **by PUID**
+  (`MANIFEST_ADMIN_PUIDS`: UBC can reassign a CWL login, which would hand admin to a stranger; when set, authoritative
+  and reconciled at every sign-in; when empty, `admin-grant.sh` stays the way in); and **someone who stops being faculty
+  keeps their memberships and tokens, and starts nothing new** (a course app mid-term keeps its owner). Our part
+  follows: the *not available* screen for someone with no apps, *Your apps* without *Start something new* for someone
+  who keeps apps, and our server refusing only a new start.
 
 ## Not a gap: decisions that are Rich's
 
