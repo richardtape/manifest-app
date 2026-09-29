@@ -211,10 +211,7 @@ describe('suggestNames (moment 4)', () => {
     [
       'one address twice',
       {
-        names: [
-          ...NAMES.names.slice(0, 2),
-          { name: 'Readings', slug: 'reading-responses' },
-        ],
+        names: [...NAMES.names.slice(0, 2), { name: 'Reading responses.' }],
       },
     ],
     [
@@ -225,10 +222,6 @@ describe('suggestNames (moment 4)', () => {
           { name: 'Reading responses', slug: 'reading-responses-2' },
         ],
       },
-    ],
-    [
-      'an address that is not one',
-      { names: [...NAMES.names.slice(0, 2), { name: 'Readings', slug: 'Readings!' }] },
     ],
     ['only two', { names: NAMES.names.slice(0, 2) }],
     [

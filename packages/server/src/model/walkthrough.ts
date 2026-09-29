@@ -1,3 +1,4 @@
+import { slugOf } from '../agents/naming.js'
 import { answered, type Message, type Model } from './client.js'
 
 /**
@@ -20,15 +21,16 @@ const QUESTIONS = [
     choices: ['On a set date', 'All at once'],
   },
 ]
+/** Names only, as the real model writes them: our code makes each address (F4 Task 4). */
 const NAMES = [
-  { name: 'Reading responses', slug: 'reading-responses' },
-  { name: 'Weekly responses', slug: 'weekly-responses' },
-  { name: 'Seminar reading log', slug: 'seminar-reading-log' },
+  { name: 'Reading responses' },
+  { name: 'Weekly responses' },
+  { name: 'Seminar reading log' },
 ]
 const MORE_NAMES = [
-  { name: 'Response board', slug: 'response-board' },
-  { name: 'Reading circle', slug: 'reading-circle' },
-  { name: 'Week by week', slug: 'week-by-week' },
+  { name: 'Response board' },
+  { name: 'Reading circle' },
+  { name: 'Week by week' },
 ]
 const WALKTHROUGH_RESTATEMENT =
   "A page where your students post a response to the week's reading and see everyone else's once they have posted, and you can skim them all at once."
@@ -54,7 +56,9 @@ function understanding(user: string): unknown {
 function naming(user: string): unknown {
   const taken =
     /taken, so suggest none of them: (.*)$/m.exec(user)?.[1]?.split(', ') ?? []
-  return { names: NAMES.some((n) => taken.includes(n.slug)) ? MORE_NAMES : NAMES }
+  return {
+    names: NAMES.some((n) => taken.includes(slugOf(n.name) ?? '')) ? MORE_NAMES : NAMES,
+  }
 }
 
 function blueprint(user: string): unknown {

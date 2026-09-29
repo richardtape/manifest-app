@@ -40,6 +40,7 @@ const understood = (questions: object[]) => ({
   audience: { scale: 'class', burst: 'synchronised', from: 'About 200 students' },
   cannot: [],
 })
+/** What the page is given: each name with the address WE made from it (F4 Task 4). */
 const NAMES = {
   names: [
     { name: 'Reading responses', slug: 'reading-responses' },
@@ -47,6 +48,8 @@ const NAMES = {
     { name: 'Seminar reading log', slug: 'seminar-reading-log' },
   ],
 }
+/** What the model writes: names only. */
+const MODEL_NAMES = { names: NAMES.names.map(({ name }) => ({ name })) }
 const BLUEPRINTS: Schemas['BlueprintList'] = [
   {
     ref: 'node-ts-mongo@1',
@@ -350,7 +353,7 @@ describe('POST /api/conversations/:id/names (moment 4)', () => {
   }
 
   it('suggests names from the restatement, naming the addresses the browser found taken (Review Focus 3)', async () => {
-    const model = scripted({ understanding: [understood([])], naming: [NAMES] })
+    const model = scripted({ understanding: [understood([])], naming: [MODEL_NAMES] })
     const s = await naming(model)
     const answer = await post(s, 'names', { taken: ['mock-app'] })
     expect(answer.status).toBe(202)
@@ -362,7 +365,7 @@ describe('POST /api/conversations/:id/names (moment 4)', () => {
   })
 
   it('from their own words when they skipped the understanding', async () => {
-    const model = scripted({ naming: [NAMES] })
+    const model = scripted({ naming: [MODEL_NAMES] })
     const s = await setUp(model)
     await post(s, 'intake', { skip: true })
     await post(s, 'names', { taken: [] })
@@ -372,13 +375,13 @@ describe('POST /api/conversations/:id/names (moment 4)', () => {
   it('a second round is allowed, and a third is 409 NAMES_EXHAUSTED', async () => {
     const more = {
       names: [
-        { name: 'Response board', slug: 'response-board' },
-        { name: 'Reading circle', slug: 'reading-circle' },
-        { name: 'Week by week', slug: 'week-by-week' },
+        { name: 'Response board' },
+        { name: 'Reading circle' },
+        { name: 'Week by week' },
       ],
     }
     const s = await naming(
-      scripted({ understanding: [understood([])], naming: [NAMES, more] }),
+      scripted({ understanding: [understood([])], naming: [MODEL_NAMES, more] }),
     )
     expect((await post(s, 'names', { taken: [] })).state?.intake.namesAsked).toBe(1)
     expect(
