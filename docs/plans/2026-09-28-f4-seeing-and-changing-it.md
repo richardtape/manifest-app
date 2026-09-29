@@ -51,7 +51,7 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements.** The contract at the platform's sitting 11 close; our mock's environments and a staging deploy; **one staging deploy on 7100** from the test user's session (at Rich's word, after telling the platform session); the draft's sign-in as pretend people in a real browser; the change planner and the lead's first moves on a built app, on the capable model; FE-35 once the platform has carried it. **Alone, and first** | **done 2026-09-28**, in the planning session (`manifest-app-bb`) at Rich's word, in the platform's window on 7100 (22:16–22:38). M6 waits on the platform's sitting 11a (the dated entry below) |
-| 2 | 2, 3, 4 | `SegmentedControl` and `Timeline`, ported with parity; Rich's four F3 decisions on the building screen; names people read | not started |
+| 2 | 2, 3, 4 | `SegmentedControl` and `Timeline`, ported with parity; Rich's four F3 decisions on the building screen; names people read | **done 2026-09-28**, in session `manifest-app-07`, no platform: `e394339`, `4ec3ca6`, `f3c1d45`; 916 tests (the dated entry below) |
 | 3 | 5 | The app's own pages: the routes, the rail's project section, the Preview's three tabs, *Try it as*, the two facts | not started |
 | 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | not started |
 | 5 | 8, 9 | The lead on an app that exists; moment 8's screens | not started |
@@ -122,9 +122,9 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
 |---|---|
 | Step lines after the pages ✓ | *"Building it. This usually takes under a minute."* · *"Putting it on your draft address. Under a minute and a half."* · *"Opening it, and starting a sign-in, to check it answers."* |
 | The step line for *Checking it holds together* | *"Checking that everything it needs is there."* |
-| *Try it as*, on the laptop **(S1: M4)** | *"On this laptop, Sign in takes you straight in as yourself. To try it as a student, use Sign out inside the app first, then sign in as the student."* (the walk-through's *"If it opens as you…"*, corrected to what M4 measured: opening signs no one in; **signing in** does, as the Manifest person). **For Rich at sitting 2's start** |
+| *Try it as*, on the laptop **(S1: M4)** ✓ | *"On this laptop, Sign in takes you straight in as yourself. To try it as a student, use Sign out inside the app first, then sign in as the student."* (the walk-through's *"If it opens as you…"*, corrected to what M4 measured: opening signs no one in; **signing in** does, as the Manifest person). **Approved by Rich at sitting 2's start** (*"Use it as written"*, 2026-09-28) |
 | The waiting conversation | **[Leave the line]**, which sets the change aside |
-| A Stop they chose ✓ | chip *"Stopped. Nothing is lost."* |
+| A Stop they chose ✓ | chip *"Stopped. Nothing is lost."*; under it, ours (sitting 2), so the card does not repeat the chip: *"Your draft address keeps whatever was last put there."* with **[Carry on]** |
 | The line ✓ | *"Waiting for 'Word count' to finish. It starts by itself."* (walk-through), and *"…which is waiting for you."* |
 | The change's plan ✓ | *"Here's what we'd change"* · **[Yes, change it]** |
 | The change's plan | *"Everything else stays as we agreed."* under the changed parts · **[Not now]**, which sets the change aside: *"Set aside. Nothing was changed."* |
@@ -468,14 +468,14 @@ export interface Station { label: string; note?: string; state?: 'done' | 'now' 
 export function Timeline(props: { stations: Station[]; className?: string }): JSX.Element
 ```
 
-- [ ] **Step 1: Tests, failing first:**
+- [x] **Step 1: Tests, failing first:**
   - **parity:** without `controls` and `label`, each renders the reference's markup byte for byte, in `tablist` and
     `radiogroup`, and `Timeline` in each station state, with and without notes;
   - **ours:** ArrowRight and ArrowLeft move the selection and the focus, wrapping; Home and End; only the selected tab is
     in the tab order (`tabIndex` 0, the rest −1); `controls` sets `aria-controls`; `label` sets `aria-label`.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** arrow keys not wrapping; every tab in the tab order;
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** arrow keys not wrapping; every tab in the tab order;
   the `now` dot not pulsing. Each red, restored.
-- [ ] **Step 5: Commit** `feat(ui): SegmentedControl and Timeline, ported with parity; arrow keys ours`.
+- [x] **Step 5: Commit** `feat(ui): SegmentedControl and Timeline, ported with parity; arrow keys ours`.
 
 ## Task 3: Rich's F3 decisions, on the building screen
 
@@ -495,7 +495,7 @@ export function Timeline(props: { stations: Station[]; className?: string }): JS
 // web: chipOf(stopped) = { state: 'notyet', label: words.building.chip.stopped, pulse: false }
 ```
 
-- [ ] **Step 1: Tests, failing first:**
+- [x] **Step 1: Tests, failing first:**
   - **server:** a `done` without `account` is refused by the schema; its `account` passes `words()` (machinery refused);
     the folded round's `changed` is `done`'s account, and `exact` lists each commit's account above its files; a
     stopped run's current step folds `next`, and an interrupted one's still `halted`; two conflicts leave
@@ -503,10 +503,10 @@ export function Timeline(props: { stations: Station[]; className?: string }): JS
   - **web:** under `build`, `draft` and `answers`, the line is `words.building.stepLine[key]`, never `round.line`; under
     `pages` it is the lead's; a stopped round shows no step in red (no `halted` class) and the chip *"Stopped. Nothing is
     lost."* in the not-yet tone, still; *What changed* shows one sentence; the thread's folded round shows the same one.
-- [ ] **Step 2: Red. Step 3: Implement**, and mock mode's lead answers `done` with an `account`.
-- [ ] **Step 4: Green; controls:** the lead's line kept under *Building it*; a stopped step `halted`; the accounts joined
+- [x] **Step 2: Red. Step 3: Implement**, and mock mode's lead answers `done` with an `account`.
+- [x] **Step 4: Green; controls:** the lead's line kept under *Building it*; a stopped step `halted`; the accounts joined
   again; a conflict counted as a try. Each red, restored.
-- [ ] **Step 5: Commit** `feat(server,web): Rich's F3 decisions — our line per step, a Stop that is still, one account a
+- [x] **Step 5: Commit** `feat(server,web): Rich's F3 decisions — our line per step, a Stop that is still, one account a
   round, a conflict no try until three`.
 
 ## Task 4: Names people read
@@ -524,7 +524,7 @@ export function slugOf(name: string): string | null
 export type Named = { names: { name: string; slug: string }[] }
 ```
 
-- [ ] **Step 1: Tests, failing first:**
+- [x] **Step 1: Tests, failing first:**
   - `slugOf('Reading responses')` is `reading-responses`; `'Week 3: responses!'` is `week-3-responses`; a name with no
     letter first is `null`; a long one is trimmed to 39 at a hyphen;
   - **the check refuses a name that reads like an address**, on the five real ones from our dev database
@@ -532,10 +532,10 @@ export type Named = { names: { name: string; slug: string }[] }
     `Reading responses`, `Q&A for the course`;
   - two names that make the same address are refused as *"an address twice"*; a taken address as now;
   - the page's `names` said are `{ name, slug }`, the slug ours.
-- [ ] **Step 2: Red. Step 3: Implement**, and the prompt: *"A name is words people read, with spaces: 'Reading
+- [x] **Step 2: Red. Step 3: Implement**, and the prompt: *"A name is words people read, with spaces: 'Reading
   responses'. Never write an address: we make it."*
-- [ ] **Step 4: Green; controls:** the address-like check removed; the slug taken from the model. Each red, restored.
-- [ ] **Step 5: Commit** `fix(server): the names we offer read as names — we make each address from it (Rich, F3's
+- [x] **Step 4: Green; controls:** the address-like check removed; the slug taken from the model. Each red, restored.
+- [x] **Step 5: Commit** `fix(server): the names we offer read as names — we make each address from it (Rich, F3's
   sitting 7)`.
 
 ## Task 5: The app's own pages, and the Preview (moment 7)
@@ -573,7 +573,7 @@ export function attemptFact(env: Schemas['Environment'], instances: Schemas['Ins
 - ***Your draft***: *"Your draft is a practice copy. Everyone in it is pretend, and so is anything they post."*; the *Try
   it as* card, one row per pretend person, each with its login and password in mono and a copy button; the laptop
   sentence **as M4 corrected it (S1)** (*Words proposed for Rich*: signing in, not opening, takes them in as
-  themselves), **once Rich has read it**. Nothing there yet: *"Nothing there yet. It appears when the first build is done."* A failed
+  themselves), **approved by Rich at sitting 2's start (S2)**. Nothing there yet: *"Nothing there yet. It appears when the first build is done."* A failed
   last attempt shows its fact here; its **[What went wrong]** is Task 9's, since it needs Task 6's route.
 - ***Trying out***: Rich's words; **waiting on someone**, *UBC's identity team*, still, no number (Decision 4). No logins.
 - ***For your students***: *"Not live yet. This is the address your students will use."*
@@ -1037,3 +1037,74 @@ script without a session could not revoke. Its file was deleted.
 (7105 → our mock on 7102).
 
 **Spent:** about $0.04 of the test user's month on Rich's OpenAI key (the round's $0.02, M5's $0.014, the plan's cents).
+
+### 2026-09-28 — Sitting 2 (Tasks 2, 3, 4): two components, Rich's F3 decisions, names people read
+
+*In session `manifest-app-07`, at Rich's word (*"proceed with the next sitting"*), one agent natively, no platform: our
+mock on 7102 and our server in mock mode on 7105 throughout. The ledger has every run and ruling.*
+
+**At the start:**
+- **Rich approved the laptop sentence on *Try it as* as written** (*"Use it as written"*): *Words proposed* marks it ✓.
+  Task 5 uses it.
+- We introduced ourselves to the platform session (**`manifest-c3`, its sitting 11a**). It answered our three asks,
+  ruled: `403 INCIDENT_LOG_CONFIDENTIAL` (a delegated token, staging or production, a confidential project, while the
+  setting is `capable`); a new `endReason`, **`models_withdrawn`** (not `classification_raised`: narrowing the setting
+  raises nothing); a confidential session under `capable` lists `default-chat-onprem`, `default-chat-onprem-reasoning`
+  and `default-chat-large` (last, when registered). A session at its $2 cap stays `active` with `endReason` null
+  (`spentUsd` against `capUsd` tells it); `expired` is its time running out.
+- **During the sitting the contract moved, additively** (manifest `4f261e9`, still 1.4.0, 66 operations, 127 codes):
+  `models_withdrawn` in `AgentSession.endReason` and `agent_session.ended`. After every valid `manifest.yaml` recorded,
+  and at every boot, an active session holding a model its project no longer allows is ended, and its key refused
+  for every model: **the next piece of work must start a new session** (Task 8). `ad4e94c` built the setting. **Our
+  typecheck and 916 tests pass against it.** The incident refusal is still to come.
+
+**Task 2** (`e394339`): `SegmentedControl` and `Timeline`, ported from the bundle, held byte for byte by the parity
+test (the previews' cases, strings and options in both roles, every station state at each end). Ours, tested apart:
+arrow keys move the selection and the focus, wrapping; Home and End; up and down in a radiogroup; only the selected
+segment in the tab order (the first when none is); `controls`; `label`.
+
+**Task 3** (`4ec3ca6`): Rich's four F3 decisions.
+- The line under *Checking it holds together*, *Building it*, *Putting it on your draft address* and *Checking it
+  answers* is ours (`words.building.stepLine`); the lead's stays under *Writing the pages*.
+- A Stop he chose is still: the step goes back to not started, the chip reads *"Stopped. Nothing is lost."* in the
+  not-yet tone, and the card under it is plain, not red, with **[Carry on]**. `halted` stays for what went wrong.
+- *What changed* is **one account a round**, from the lead's `done` (`runs.detail.account`, and the version's summary);
+  each commit's own account sits behind the disclosure, above its files, in order. A round saved before F4 still folds
+  the accounts it joined.
+- A conflict is no try on the pages; three are still `needs: conflict`.
+
+**Task 4** (`f3c1d45`): the model writes **names only**; our `slugOf` makes each address (lower case, accents dropped,
+each run of anything else one hyphen, trimmed to 39 at a hyphen, a letter first). The check refuses a name that reads
+like an address, one that makes none, and two that make the same one, and the model is asked again. The five real
+names from F3's walks are refused; *"Sign-up sheet for office hours"* is taken.
+
+**Rulings** (the ledger has each with its cost):
+1. The parity test excuses exactly one attribute, SegmentedControl's `tabindex`: a tab order cannot be byte-identical
+   to a reference that has none.
+2. A radiogroup's segments answer up and down too; with none selected, the first takes the tab stop.
+3. `done`'s account reaches the round through `RoundContext.account()`, as `cannot` does: the runtime's `Stop` stays
+   generic.
+4. `runs.detail.account` is the one place; a round from before F4 falls back to its joined accounts.
+5. The pages' exact lines are always labelled *"The exact changes…"*, before `done` too: they are its commits.
+6. **The stopped card no longer repeats the chip**: *"Your draft address keeps whatever was last put there."* (ours),
+   in the plain tone. Rich's chip is unchanged.
+7. A message waiting still says *"Got it, after this step."* under any step; only the lead's line is replaced.
+8. **"Reads like an address" is words joined by hyphens with no space**, not *any* hyphen between two words: it refuses
+   all five real ones, and keeps names people read that hold a hyphenated word.
+9. `slugOf` drops accents (*"Café notes"* is `cafe-notes`); a name too short for a 3-character address makes none.
+
+**Negative controls**, each red, then restored: arrows not wrapping; every tab in the tab order; the `now` dot not
+pulsing; `aria-controls` always drawn (the excuse excuses nothing else); the lead's line under *Building it*; a
+stopped step `halted`; `done`'s account dropped; a conflict counted as a try; the stopped chip and card red; no
+fallback for a pre-F4 round; the address-like check removed; the model's slug kept **and** used (the schema alone
+keeping it changed nothing: zod strips it); the address-twice check removed.
+
+**Walked in headless Chrome, mock mode, at 1440 and 375** (the scratchpad's `walk.mjs`, F3's adapted): a plain round and
+a *Stop* round. The names read as names, each with our address; our line under *Building it*; the stopped round grey,
+still, with no red and no step halted; *What changed* one sentence on the step and in the folded round, each commit's
+account with its file behind the disclosure. No overflow; the only failed requests the expected ones (the favicon, and
+`/v1/me` before sign-in).
+
+**Gates:** `pnpm test` **916/916, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass;
+`check-slice.sh` 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock
+mode** (7105 → our mock on 7102). The whole-branch review stays where the plan puts it: sitting 7, over all of F4.
