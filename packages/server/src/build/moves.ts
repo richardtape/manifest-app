@@ -46,6 +46,8 @@ export interface RoundContext {
    * lead that read a file after asking lost the proposal, and asked again, 15 times).
    */
   propose(proposal: { changes: Change[]; summary: string }): void
+  /** A commit refused as leaving every file as it was: those files are already as proposed. */
+  unchanged(changes: Change[]): void
   /** Their description, their messages, their answers: whose emails staff may be (Decision 13). */
   theirWords(): string[]
 }
@@ -172,6 +174,8 @@ const commit = defineTool({
           ].join('\n'),
           refused: error.code,
         }
+      if (error instanceof PlatformRefusal && error.code === 'SOURCE_NOTHING_TO_COMMIT')
+        context.unchanged(changes)
       if (error instanceof PlatformRefusal && ANSWERABLE[error.code] !== undefined)
         return {
           report: `The platform refused this commit, and nothing was written (${error.code}): ${ANSWERABLE[error.code]}.`,

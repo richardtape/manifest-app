@@ -670,6 +670,86 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(prompts[3]).not.toMatch(/not yet committed/i)
   })
 
+  it("a proposed file already as it is leaves the proposal, and once all of it is in place the lead is told it is settled (the real platform's recommits)", async () => {
+    const STAFF = write(
+      'config/staff.json',
+      JSON.stringify({ puids: ['ins000001'], emails: [] }),
+    )
+    const ASK_CWL = {
+      move: {
+        kind: 'ask_cwl',
+        brief: {
+          whoGetsIn: 'Anyone with a CWL.',
+          youSee: 'Every response.',
+          studentsSee: 'Their own.',
+          namedEmails: [],
+        },
+      },
+    }
+    const { h, id } = await startedRound({
+      script: {
+        lead: [ASK_CWL, commit([STAFF]), read('server.js'), commit(), done()],
+        cwl: [{ changes: [STAFF], summary: 'Only you see every response.' }],
+      },
+      commit: (n) => {
+        if (n === 1) throw new PlatformRefusal('SOURCE_NOTHING_TO_COMMIT', 409)
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    const prompts = leadPrompts(h)
+    expect(prompts[1]).toMatch(/proposal, not yet committed/i)
+    expect(prompts[2]).not.toMatch(/proposal, not yet committed/i)
+    expect(prompts[2]).toMatch(/specialist's proposal is committed/i)
+    expect(prompts[3]).toMatch(/specialist's proposal is committed/i)
+  })
+
+  it('the questions it asked this round stay in its view, with what we went on with, so it never asks them again', async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          ask('When do posts close?', 'No deadline until you give one.'),
+          read('server.js'),
+          commit(),
+          done(),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    const prompts = leadPrompts(h)
+    for (const prompt of prompts.slice(2)) {
+      expect(prompt).toMatch(/What you have asked this round/)
+      expect(prompt).toContain('When do posts close?')
+      expect(prompt).toContain('No deadline until you give one.')
+    }
+    expect(prompts[0]).not.toMatch(/What you have asked this round/)
+  })
+
+  it("What changed joins the commits' own accounts with one full stop each, and says a repeated one once (the real platform's accounts end with one)", async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          commit([write('public/weeks.html', PAGE)], {
+            account: 'One page listing the weeks.',
+          }),
+          commit([write('config/staff.json', '{"puids":["ins000001"],"emails":[]}')], {
+            account: 'The rule about who sees what.',
+          }),
+          commit([write('public/post.html', PAGE)], {
+            account: 'One page listing the weeks.',
+          }),
+          done(),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(stepOf(h, id, 'pages')?.changed).toBe(
+      'One page listing the weeks. The rule about who sees what',
+    )
+  })
+
   it('Writing the pages stays now on a done with nothing committed: the lead is told, and ticks after a commit lands', async () => {
     const { h, id } = await startedRound({
       script: { lead: [done(), commit(), done()] },

@@ -26,6 +26,10 @@ export interface LeadView {
   failures: string[]
   /** The sign-in specialist's proposal, until each of its paths is committed. */
   proposal: { changes: Change[]; summary: string } | null
+  /** Every path of the specialist's last proposal is committed, or already so. */
+  settled: boolean
+  /** This round's questions, and what we went on with: null while it waits for their answer. */
+  asked: { ask: string; wentWith: string | null }[]
 }
 
 export type LeadMove =
@@ -136,6 +140,23 @@ function brief(view: LeadView): { role: 'user'; content: string }[] {
       : []),
     lastMove(view.last),
     ...proposalOf(view.proposal),
+    ...(view.settled && view.proposal === null
+      ? [
+          '',
+          "The sign-in specialist's proposal is committed. Ask it again only if who gets in or who is staff must change.",
+        ]
+      : []),
+    ...(view.asked.length > 0
+      ? [
+          '',
+          'What you have asked this round, and what we went on with (never ask these again: an answer arrives as their message):',
+          ...view.asked.map((q) =>
+            q.wentWith === null
+              ? `- ${q.ask} (waiting for their answer)`
+              : `- ${q.ask} We went on with: ${q.wentWith}`,
+          ),
+        ]
+      : []),
     '',
     'Files you have read, newest first:',
   ].join('\n')

@@ -99,6 +99,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
     },
     cannot: (what) => void cannot.push(what),
     propose: (proposal) => void proposals.push(proposal),
+    unchanged: () => undefined,
     askCwl: async (brief) => {
       briefs.push(brief)
       return {
@@ -510,6 +511,33 @@ describe("the lead's view (Decision 3)", () => {
     messages: ['Can a late post still count?'],
     failures: [],
     proposal: null,
+    settled: false,
+    asked: [],
+  })
+
+  it('what it asked and what we went on with, and a settled proposal, are said; neither when there is none', () => {
+    const user = lead
+      .brief({
+        ...view([]),
+        settled: true,
+        asked: [
+          { ask: 'When do posts close?', wentWith: 'No deadline until you give one.' },
+          { ask: 'The key for the library catalogue', wentWith: null },
+        ],
+      })
+      .map((m) => m.content)
+      .join('\n')
+    expect(user).toMatch(/What you have asked this round/)
+    expect(user).toContain(
+      'When do posts close? We went on with: No deadline until you give one.',
+    )
+    expect(user).toContain('The key for the library catalogue (waiting for their answer)')
+    expect(user).toMatch(/specialist's proposal is committed/i)
+    const none = lead
+      .brief(view([]))
+      .map((m) => m.content)
+      .join('\n')
+    expect(none).not.toMatch(/What you have asked this round|proposal is committed/)
   })
 
   it("the specialist's proposal has its own section, whole, beside a read; the files give way first; none, no section", () => {
@@ -754,6 +782,8 @@ describe('mock mode: the walk-through answers the three (F2 Decision 7)', () => 
         messages: [],
         failures: [],
         proposal: null,
+        settled: false,
+        asked: [],
       }),
       state: {
         runId: 'run-walk',

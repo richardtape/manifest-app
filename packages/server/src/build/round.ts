@@ -154,6 +154,8 @@ interface Live {
   files: { path: string; content: string }[]
   /** The sign-in specialist's proposal, until each of its paths is committed (the lead's view). */
   proposal: { changes: Change[]; summary: string } | null
+  /** Every path of the specialist's last proposal is committed, or was already so. */
+  settled: boolean
   plan: string
   pack: string | null
   sandbox: Sandbox | null
@@ -578,11 +580,7 @@ export function createRounds(deps: RoundDeps): Rounds {
       paths: () => live.paths,
       packageJson: () => live.packageJson,
       wrote(changes) {
-        if (live.proposal !== null) {
-          const written = new Set(changes.map((change) => change.path))
-          const left = live.proposal.changes.filter((change) => !written.has(change.path))
-          live.proposal = left.length === 0 ? null : { ...live.proposal, changes: left }
-        }
+        settle(live, changes)
         for (const change of changes) {
           live.files = live.files.filter((file) => file.path !== change.path)
           if (change.op === 'delete') {
@@ -615,6 +613,10 @@ export function createRounds(deps: RoundDeps): Rounds {
       askCwl: (brief) => askAgent(cwl, live.session!.model, brief),
       propose(proposal) {
         live.proposal = proposal
+        live.settled = false
+      },
+      unchanged(changes) {
+        settle(live, changes)
       },
       theirWords: () => theirWords(live),
       cannot(what) {
@@ -627,6 +629,15 @@ export function createRounds(deps: RoundDeps): Rounds {
    * THE LEAD'S MOVES, AS THIS ROUND HOLDS THEM: `done` is sent back until a commit has landed
    * (Decision 5), and each landed commit's account is what changed.
    */
+  /** The proposal's paths a commit wrote, or found already so, leave it; none left is settled. */
+  function settle(live: Live, changes: Change[]) {
+    if (live.proposal === null) return
+    const done = new Set(changes.map((change) => change.path))
+    const left = live.proposal.changes.filter((change) => !done.has(change.path))
+    live.proposal = left.length === 0 ? null : { ...live.proposal, changes: left }
+    if (live.proposal === null) live.settled = true
+  }
+
   function movesFor(live: Live): ToolDef<RoundContext, never>[] {
     const d = detail(live)
     return leadMoves.map((tool) => {
@@ -649,11 +660,20 @@ export function createRounds(deps: RoundDeps): Rounds {
             const changes = live.landed as Change[] | null
             if (changes !== null) {
               const pages = d.steps.pages ?? { note: null, changed: null, exact: null }
+              // One full stop between accounts, whatever the lead ends each with, and a repeated
+              // account said once (Task 12's walk: "…their answers.. The instructor…").
               const account = (input as { account: string }).account
+                .trim()
+                .replace(/\.+$/, '')
+              const said = pages.changed === null ? '' : `. ${pages.changed}. `
               d.steps.pages = {
                 note: null,
                 changed:
-                  pages.changed === null ? account : `${pages.changed}. ${account}`,
+                  pages.changed === null
+                    ? account
+                    : said.includes(`. ${account}. `)
+                      ? pages.changed
+                      : `${pages.changed}. ${account}`,
                 exact: [
                   ...new Set([...(pages.exact ?? []), ...changes.map((c) => c.path)]),
                 ],
@@ -685,6 +705,16 @@ export function createRounds(deps: RoundDeps): Rounds {
       messages: words.slice(d.heard).map((word) => word.text),
       failures: d.failures,
       proposal: live.proposal,
+      settled: live.settled,
+      asked: store.listQuestions(live.run.id).map((q) => ({
+        ask: q.ask,
+        wentWith:
+          q.secret !== null
+            ? q.answered
+              ? 'set where the app reads it'
+              : null
+            : q.answer,
+      })),
     }
   }
 
@@ -1168,6 +1198,7 @@ export function createRounds(deps: RoundDeps): Rounds {
       packageJson: null,
       files: [],
       proposal: null,
+      settled: false,
       plan: '',
       pack: null,
       sandbox: null,
