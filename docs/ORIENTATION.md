@@ -48,7 +48,7 @@ says which plan is current. This file states where things stand and the rules. I
   piece of work starts a new one (Task 8); a delegated token on a confidential project's staging or production
   `listIncidents` is **`403 INCIDENT_LOG_CONFIDENTIAL`** (Tasks 8–10 meet it, and never hand the person's own reading
   to our server or a model; **`8c7eb5e`** made that the contract's words too). **The contract: 1.4.0, 66 operations,
-  128 codes** (manifest `8c7eb5e`, text only since `38c2ade`). **Our mock has `MANIFEST_MOCK_CONFIDENTIAL=1`**; our 7102
+  128 codes** (manifest `90b8e81`; text only since `38c2ade`). **Our mock has `MANIFEST_MOCK_CONFIDENTIAL=1`**; our 7102
   mock has not reloaded it (restart it with the variable when a test needs it).
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md)).
@@ -59,9 +59,11 @@ says which plan is current. This file states where things stand and the rules. I
   - **F4 is written and approved** (2026-09-28); **sittings 1 to 4 are done** (1 in `manifest-app-bb`; 2 and 3 in
     `manifest-app-07`; 4 in `manifest-app-f8`). Its whole-branch review is sitting 7's.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
-  - **Its sitting 11a is built** (`manifest-c3`), its review's fix pass committed (`8c7eb5e`). At sitting 4's close it
-    was running its tests, then **restarting the control plane on 7100** with the new code; then its close-out, then
-    its sitting 12 (the acceptance). **It messages us before any tier and at every contract or mock commit.** Find its
+  - **Its sitting 11a is CLOSED at `90b8e81`** (`manifest-c3`, 2026-09-29; documents only on top of its review's fix
+    pass `8c7eb5e`). **The control plane on 7100 runs `8c7eb5e`** (PID 4563, from Rich's `.env`: the capable model
+    registered, `agentBuilderModels` "capable"), and **its database is empty**. **Next there: its sitting 12, the
+    acceptance** (`make demo-frontend`, on the `app` origin, with a clicked half), which uses 7100 and the edge, and
+    whose session messages us first. **It messages us before any tier and at every contract or mock commit.** Find its
     live name with `ListAgents`.
   - **The laptop's on-premise names are `qwen3.8:27b`** (`9c9c500`): `default-chat-large`'s fallback answers as
     `ollama_chat/qwen3.8:27b`, and a cold first call takes about 12 s.
