@@ -52,7 +52,7 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
 |---|---|---|---|
 | 1 | 1 | **The measurements.** The contract at the platform's sitting 11 close; our mock's environments and a staging deploy; **one staging deploy on 7100** from the test user's session (at Rich's word, after telling the platform session); the draft's sign-in as pretend people in a real browser; the change planner and the lead's first moves on a built app, on the capable model; FE-35 once the platform has carried it. **Alone, and first** | **done 2026-09-28**, in the planning session (`manifest-app-bb`) at Rich's word, in the platform's window on 7100 (22:16–22:38). M6 waits on the platform's sitting 11a (the dated entry below) |
 | 2 | 2, 3, 4 | `SegmentedControl` and `Timeline`, ported with parity; Rich's four F3 decisions on the building screen; names people read | **done 2026-09-28**, in session `manifest-app-07`, no platform: `e394339`, `4ec3ca6`, `f3c1d45`; 916 tests (the dated entry below) |
-| 3 | 5 | The app's own pages: the routes, the rail's project section, the Preview's three tabs, *Try it as*, the two facts | not started |
+| 3 | 5 | The app's own pages: the routes, the rail's project section, the Preview's three tabs, *Try it as*, the two facts | **done 2026-09-28**, in session `manifest-app-07` after sitting 2, at Rich's word, no platform: `1ac8647`; 974 tests; FE-38 filed (the dated entry below) |
 | 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | not started |
 | 5 | 8, 9 | The lead on an app that exists; moment 8's screens | not started |
 | 6 | 10 | Trying-out: the button, the question, the deploy from the session, the four stations, the two failures | not started |
@@ -579,7 +579,7 @@ export function attemptFact(env: Schemas['Environment'], instances: Schemas['Ins
 - ***For your students***: *"Not live yet. This is the address your students will use."*
 - Under the tabs: *"Not right? Tell us what to change."* **[Ask for a change]** → `/apps/:slug/change`.
 
-- [ ] **Step 1: Tests, failing first** (`preview.test.tsx`, jsdom, a recording `Platform`; `facts.test.ts`, node):
+- [x] **Step 1: Tests, failing first** (`preview.test.tsx`, jsdom, a recording `Platform`; `facts.test.ts`, node):
   - the routes parse, and a malformed slug is `unknown`, never a crash;
   - the rail's project section shows on the app's routes, with the app's name, and on `/new/:id` once its project exists;
   - each tab shows its address and a link that opens a new tab; the switcher is arrow-navigable (Task 2);
@@ -595,12 +595,12 @@ export function attemptFact(env: Schemas['Environment'], instances: Schemas['Ins
     team and carries no number;
   - `machineryIn(text())` is empty (C3), and ***"It works"* appears nowhere**;
   - a refused read shows F1's words with a reference.
-- [ ] **Step 2: Red. Step 3: Implement.**
-- [ ] **Step 4: Green; controls:** *Try it as* on every tab; serving read from `listInstances`; a date on *Trying out*;
+- [x] **Step 2: Red. Step 3: Implement.**
+- [x] **Step 4: Green; controls:** *Try it as* on every tab; serving read from `listInstances`; a date on *Trying out*;
   the rail's section on *Your apps*. Each red, restored.
-- [ ] **Step 5: Walk it in headless Chrome against the mock, at 1440 and 375** (ORIENTATION §7's way): each tab, the copy
+- [x] **Step 5: Walk it in headless Chrome against the mock, at 1440 and 375** (ORIENTATION §7's way): each tab, the copy
   buttons, *Ask for a change*. No console error, no failed request, no overflow.
-- [ ] **Step 6: Commit** `feat(web): moment 7 — the app's own pages: the Preview's three tabs, the pretend people on the
+- [x] **Step 6: Commit** `feat(web): moment 7 — the app's own pages: the Preview's three tabs, the pretend people on the
   draft, UBC's words on trying out, the two facts`.
 
 ## Task 6: Conversations on an app, and the line
@@ -1115,3 +1115,56 @@ account with its file behind the disclosure. No overflow; the only failed reques
 **Gates:** `pnpm test` **916/916, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass;
 `check-slice.sh` 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock
 mode** (7105 → our mock on 7102). The whole-branch review stays where the plan puts it: sitting 7, over all of F4.
+
+### 2026-09-28 — Sitting 3 (Task 5): the app's own pages, and the Preview (moment 7)
+
+*In session `manifest-app-07`, straight after sitting 2 at Rich's word (*"proceed with the next sitting"*), one agent
+natively, no platform: our mock on 7102 and our server in mock mode on 7105. The platform session ran a Docker tier
+meanwhile (it asked; nothing of ours was on 7100), and moved the laptop's on-premise names to `qwen3.8:27b` (`9c9c500`,
+infra only): `default-chat-large`'s fallback now answers as it, a cold first call about 12 s.*
+
+**Task 5** (`1ac8647`):
+- **The routes**: `/apps/:slug` is the Preview (`?tab=` keeps the tab); `/apps/:slug/conversations` and `/change` say
+  they arrive next (Task 9); `/apps/:slug/conversations/:id` is a conversation, drawn by the same screen as `/new/:id`.
+- **The rail's project section**: the app's name, **Preview** and **Conversations**, on an app's pages and on a
+  conversation once its project exists (the conversation screen reports it up).
+- **The Preview** reads in the person's session (`listProjects`, `listEnvironments`, `listInstances`, `getRelease`,
+  `listIncidents`): a switcher of three (sitting 2's `SegmentedControl`, arrow keys keeping the focus on the tab); each
+  address in mono, **[Open it in a new tab]** where something is there; *Your draft*'s words, the pretend people (ours,
+  FE-3) with copy buttons, and Rich's laptop sentence; *Trying out*'s waiting card, **UBC's identity team**, still, no
+  number, and Rich's sentence; *For your students*'s *"Not live yet…"*; the two facts; *Ask for a change*.
+
+**FE-38, written**: the last attempt cannot be told. `listInstances` is *"the one seen most recently first"* (M3), and
+an instance has no time of its own, so FE-13's *"newest first, so its first entry"* is wrong. Meanwhile a failure is
+the last attempt when nothing serves or **its version is newer than the one serving**; the same version failing is an
+earlier try. Right for every F4 flow; wrong for a rollback (F6). Option (a): `createdAt` on an instance.
+
+**Rulings** (the ledger has each with its cost):
+1. The last attempt, by the versions' dates (FE-38 above).
+2. **"Never a date" on *Trying out* is the registration's** (the walk-through's reason: nothing records it). The two
+   facts there name a version as every version is named, as moment 9's own failure case does (*"Serving right now:
+   the version from 18 September"*) and F1's *Your apps* already does. The test pins no date in the waiting card, and
+   no *"We asked"* or *"weeks"* anywhere on the tab.
+3. **Rich's sentence says *"UBC's real staging sign-in"***, and *staging* is on our machinery list: the checks set aside
+   exactly his sentence, and nothing else.
+4. *[What went wrong]* is Task 9's (its target is Task 6's route); `attemptFact` returns the failed instance for it.
+5. The facts take `listInstances`' own shape (`InstanceSummary`, with `serving`) and the versions they must date, and
+   return words with a tone for `TwoFacts`, whose overlines carry *"Serving right now"* and *"The last attempt"*.
+6. **[Open it in a new tab] and *Try it as* only where something is there**; the address always.
+7. The tab is kept in the address without a navigation (`router.remember`): a navigation moves the focus to the page.
+8. Nothing tried on trying-out or for students shows no facts: the tab's own words say it.
+9. *"Sign in as"* and *"Password"* are row labels, capitalized (the walk-through's inline words, laid out as a grid).
+
+**Negative controls**, each red, then restored: *Try it as* on every tab; serving read from `listInstances`' first;
+*"3 weeks"* and *"We asked on 18 September"* on *Trying out*; the rail's section on *Your apps*; the same version's
+failure taken as the last attempt; the tab choice as a navigation (re-run with its import, so it failed on the focus).
+
+**Walked in headless Chrome, mock mode, at 1440 and 375** (the scratchpad's `walk-preview.mjs`): each tab, the copy
+buttons, the arrow keys, *Ask for a change*, *Conversations*. **The walk found a defect no unit test could**: at 375,
+*"Copied"* pushed a row 13 px past the phone, and *"sign in as"* broke over three lines. Fixed as a grid of label, value
+and copy. Headless Chrome refuses the clipboard until focus is emulated, and reads back an empty clipboard even after a
+write, so the walk trusts the *"Copied"* status. The last walk: every check, no overflow, the only failed requests the
+expected ones.
+
+**Gates:** `pnpm test` **974/974, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
+8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock mode.**
