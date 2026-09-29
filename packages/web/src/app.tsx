@@ -5,6 +5,8 @@ import { createOurs, type Ours } from './ours/api.js'
 import type { Platform } from './platform/api.js'
 import { linkTo, navigate, useRoute } from './router.js'
 import { Describing } from './screens/describe/describe.js'
+import { Preview } from './screens/preview/preview.js'
+import { useApp } from './screens/preview/use-app.js'
 import { Profile } from './screens/profile.js'
 import { SignIn } from './screens/sign-in.js'
 import { TroubleNotice } from './screens/trouble.js'
@@ -36,6 +38,31 @@ export function App({
   const { route, here } = useRoute()
   const [signOutFailed, setSignOutFailed] = useState(false)
 
+  // AN APP'S OWN PAGES (F4 Task 5): the app their address names, once someone is signed in.
+  const slug =
+    route.name === 'app-preview' ||
+    route.name === 'app-conversations' ||
+    route.name === 'app-change' ||
+    route.name === 'conversation'
+      ? route.slug
+      : undefined
+  const signedIn = session.state === 'signed-in' || session.state === 'expired'
+  const { lookup, retry: retryApp } = useApp(
+    platform,
+    signedIn ? slug : undefined,
+    expire,
+  )
+  // A conversation's project, as its screen reports it: the rail names it once it exists.
+  const [talking, setTalking] = useState<{ name: string; slug: string } | null>(null)
+  const conversationId = route.name === 'conversation' ? route.id : undefined
+  useEffect(() => setTalking(null), [conversationId])
+  const app =
+    lookup.state === 'found'
+      ? { name: lookup.project.name, slug: lookup.project.slug }
+      : route.name === 'conversation'
+        ? talking
+        : null
+
   // FOCUS FOLLOWS AN IN-APP NAVIGATION TO THE PAGE (the final review): otherwise it stays on
   // the rail's link, or falls to <body> when the link it was on goes. Not on first load,
   // where the browser's own place is right.
@@ -62,8 +89,10 @@ export function App({
             ? words.profile.title
             : route.name === 'new' || route.name === 'conversation'
               ? words.describe.tab
-              : words.shell.manifest
-  }, [session.state, route.name])
+              : lookup.state === 'found'
+                ? lookup.project.name
+                : words.shell.manifest
+  }, [session.state, route.name, lookup])
 
   if (session.state === 'loading') return null
   if (session.state === 'signed-out') return <SignIn returnTo={here} />
@@ -115,6 +144,38 @@ export function App({
     page = <YourApps platform={platform} me={session.me} expire={expire} />
   else if (route.name === 'profile')
     page = <Profile me={session.me} onSignOut={() => void leave()} />
+  else if (
+    route.name === 'app-preview' ||
+    route.name === 'app-conversations' ||
+    route.name === 'app-change'
+  )
+    page =
+      lookup.state === 'trouble' ? (
+        <TroubleNotice trouble={lookup.trouble} onRetry={retryApp} />
+      ) : lookup.state === 'missing' ? (
+        <p className="body-lead">
+          {words.notFound.body} <a {...linkTo('/')}>{words.notFound.link}</a>
+        </p>
+      ) : lookup.state !== 'found' ? null : route.name === 'app-preview' ? (
+        <Preview
+          key={lookup.project.id}
+          platform={platform}
+          project={lookup.project}
+          tab={route.tab}
+          expire={expire}
+          {...(now === undefined ? {} : { now })}
+          {...(timeZone === undefined ? {} : { timeZone })}
+        />
+      ) : (
+        <>
+          <h1 className="page-title">{lookup.project.name}</h1>
+          <p className="body-lead">
+            {route.name === 'app-change'
+              ? words.preview.changeNext
+              : words.preview.conversationsNext}
+          </p>
+        </>
+      )
   else if (route.name === 'new' || route.name === 'conversation') {
     const from = new URLSearchParams(here.split('?')[1] ?? '').get('from') ?? undefined
     // One element for both, in one place: what a press began survives the id arriving.
@@ -128,6 +189,7 @@ export function App({
         {...(timeZone === undefined ? {} : { timeZone })}
         {...(route.name === 'conversation' ? { id: route.id } : {})}
         {...(from === undefined ? {} : { from })}
+        onProject={setTalking}
       />
     )
   } else if (route.name === 'signed-out')
@@ -144,9 +206,6 @@ export function App({
   else
     page = (
       <>
-        {route.name === 'app' ? (
-          <p className="body-lead">{words.notFound.appPageNext}</p>
-        ) : null}
         <p className="body-lead">
           {words.notFound.body} <a {...linkTo('/')}>{words.notFound.link}</a>
         </p>
@@ -166,9 +225,32 @@ export function App({
           userHref="/profile"
           {...(route.name === 'your-apps'
             ? { active: words.shell.yourApps }
-            : route.name === 'new' || route.name === 'conversation'
-              ? { active: words.shell.startNew }
-              : {})}
+            : route.name === 'app-preview'
+              ? { active: words.preview.rail.preview }
+              : route.name === 'app-conversations' ||
+                  route.name === 'app-change' ||
+                  (route.name === 'conversation' && route.slug !== undefined)
+                ? { active: words.preview.rail.conversations }
+                : route.name === 'new' || route.name === 'conversation'
+                  ? { active: words.shell.startNew }
+                  : {})}
+          {...(app === null
+            ? {}
+            : {
+                projectName: app.name,
+                items: [
+                  {
+                    label: words.preview.rail.preview,
+                    icon: 'preview',
+                    href: `/apps/${encodeURIComponent(app.slug)}`,
+                  },
+                  {
+                    label: words.preview.rail.conversations,
+                    icon: 'talk',
+                    href: `/apps/${encodeURIComponent(app.slug)}/conversations`,
+                  },
+                ],
+              })}
           homeHref="/"
           newLabel={words.shell.startNew}
           newHref="/new"

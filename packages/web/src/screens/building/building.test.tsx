@@ -123,6 +123,9 @@ function stage(refusals: Refusals = {}) {
     listProjects: () => Promise.resolve([]),
     getProject: never,
     getRelease: never,
+    listEnvironments: never,
+    listInstances: never,
+    listIncidents: never,
     startIntakeSession: never,
     endIntakeSession: never,
     checkSlug: never,
@@ -1305,5 +1308,50 @@ describe("Rich's F3 decisions", () => {
     await open(s)
     s.state(round({}, { pages: { state: 'now', tries: 0 } }))
     expect(stepItem(words.building.steps.pages).textContent).not.toMatch(/try\)/)
+  })
+})
+
+/**
+ * THE RAIL'S PROJECT SECTION ON A CONVERSATION (F4 Task 5, Decision 1): once the conversation's
+ * project exists, the rail names it and offers its Preview and Conversations.
+ */
+describe("the rail's project section, on a conversation", () => {
+  const nav = () => screen.getByRole('navigation', { name: 'Manifest' })
+
+  it('shows once its project exists: the name, Preview and Conversations; Start something new stays current', async () => {
+    const s = stage()
+    await open(s)
+    s.state(round())
+    await waitFor(() =>
+      expect(nav().querySelector('.mf-rail__over')?.textContent).toBe(PROJECT.name),
+    )
+    expect(
+      within(nav())
+        .getByRole('link', { name: words.preview.rail.preview })
+        .getAttribute('href'),
+    ).toBe(`/apps/${PROJECT.slug}`)
+    expect(
+      within(nav())
+        .getByRole('link', { name: words.preview.rail.conversations })
+        .getAttribute('href'),
+    ).toBe(`/apps/${PROJECT.slug}/conversations`)
+    expect(nav().querySelector('[aria-current="page"]')?.textContent).toBe(
+      words.shell.startNew,
+    )
+  })
+
+  it('not before it has one', async () => {
+    const s = stage()
+    await open(s)
+    s.say({
+      kind: 'state',
+      conversation: { ...CONVERSATION, projectId: null, state: 'naming' },
+      intake: { ...INTAKE, project: null },
+      plan: null,
+      round: null,
+      thread: [],
+    })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(nav().querySelector('.mf-rail__over')).toBeNull()
   })
 })

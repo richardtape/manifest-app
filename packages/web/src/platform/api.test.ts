@@ -79,6 +79,41 @@ describe('the five reads F1 makes, against manifest-mock', () => {
   })
 })
 
+describe('the Preview’s reads (F4 Task 5), against manifest-mock', () => {
+  it('listEnvironments answers the three, as a bare array (M1)', async () => {
+    await withMock(async (origin) => {
+      const environments = await platform(origin).listEnvironments(fixtures.PROJECT_ID)
+      expect(Array.isArray(environments)).toBe(true)
+      expect(environments.map((e) => e.kind)).toEqual([
+        'sandbox',
+        'staging',
+        'production',
+      ])
+      expect(environments[0]?.hostname).toMatch(/\.sandbox\./)
+    })
+  })
+
+  it('listInstances answers { environmentId, instances, truncated }, each marked serving (M1)', async () => {
+    await withMock(async (origin) => {
+      const list = await platform(origin).listInstances(fixtures.SANDBOX_ID)
+      expect(list.environmentId).toBe(fixtures.SANDBOX_ID)
+      expect(list.truncated).toBe(false)
+      expect(list.instances.map((i) => [i.state, i.serving])).toEqual([
+        ['healthy', true],
+        ['failed', false],
+      ])
+    })
+  })
+
+  it('listIncidents answers { environmentId, incidents }, newest first', async () => {
+    await withMock(async (origin) => {
+      const list = await platform(origin).listIncidents(fixtures.STAGING_ID)
+      expect(list.environmentId).toBe(fixtures.STAGING_ID)
+      expect(list.incidents[0]?.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    })
+  })
+})
+
 describe('moments 3 and 4 (F2 Task 7), against manifest-mock', () => {
   it('startIntakeSession answers a session, its one model, and its key; endIntakeSession ends it', async () => {
     await withMock(async (origin) => {

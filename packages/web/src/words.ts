@@ -57,8 +57,6 @@ export const words = {
   notFound: {
     body: "There's nothing here.",
     link: 'Your apps',
-    /** On an app's own page, until a later plan builds it. */
-    appPageNext: "An app's own page arrives next.",
   },
   /** Moments 2 and 16. */
   yourApps: {
@@ -400,6 +398,77 @@ export const words = {
     busy: "We're still finishing what we were doing. Try again in a moment.",
     /** Ours: a press our server did not take. */
     couldntPress: "We couldn't do that just now. Nothing is lost.",
+  },
+  /**
+   * MOMENT 7, SEEING IT (F4 Task 5): the walk-through's words, Rich's, and ours where neither has
+   * any (the plan's *Words proposed for Rich*, approved with it), marked "ours".
+   */
+  preview: {
+    /** The rail's project section (Decision 1): two items until later plans build the rest. */
+    rail: { preview: 'Preview', conversations: 'Conversations' },
+    /** Ours: the switcher's name for a screen reader (SegmentedControl's preview says so). */
+    switcherLabel: 'Which address you are looking at',
+    tabs: {
+      draft: 'Your draft',
+      'trying-out': 'Trying out',
+      students: 'For your students',
+    },
+    open: 'Open it in a new tab',
+    draftIs:
+      'Your draft is a practice copy. Everyone in it is pretend, and so is anything they post.',
+    tryItAs: 'Try it as',
+    who: { student: 'A student', instructor: 'An instructor' },
+    /** The walk-through's "sign in as `student`, password `student`", as two labelled rows. */
+    signInAs: 'Sign in as',
+    password: 'Password',
+    /**
+     * Ours: each copy button is "Copy" to the eye, and "Copy a student's password" to a screen
+     * reader: these are the words after "Copy".
+     */
+    copy: 'Copy',
+    copyLogin: (who: string) => `${who.toLowerCase()}'s sign-in name`,
+    copyPassword: (who: string) => `${who.toLowerCase()}'s password`,
+    copied: 'Copied',
+    /**
+     * The laptop only (the pretend people are the laptop's IdP's, FE-3): corrected to what F4's
+     * M4 measured, and approved by Rich at sitting 2's start ("Use it as written").
+     */
+    laptop:
+      'On this laptop, Sign in takes you straight in as yourself. To try it as a student, use Sign out inside the app first, then sign in as the student.',
+    /** Rich (2026-09-28): UBC's words, everywhere, the laptop included. Never a date, never "We asked…". */
+    tryingOut:
+      "Trying out uses UBC's real staging sign-in, so UBC's identity team registers it first. That takes some time, as several teams at UBC help make sure the app and its data are kept safe and secure. Meanwhile, your draft is ready to try now.",
+    /** Waiting on someone, its owner named, still, with no number (Decision 4). */
+    waitingOn: "Waiting on UBC's identity team",
+    students: 'Not live yet. This is the address your students will use.',
+    notRight: 'Not right? Tell us what to change.',
+    askForChange: 'Ask for a change',
+    /** Ours: until F4's Task 9 builds them. */
+    conversationsNext: "This app's conversations arrive next.",
+    changeNext: 'Asking for a change arrives next.',
+    /** The two facts (TwoFacts), for the chosen address. */
+    facts: {
+      serving: 'Serving right now',
+      attempt: 'The last attempt',
+      /** The walk-through's, for the draft. */
+      nothingDraft: 'Nothing there yet. It appears when the first build is done.',
+      /** Ours: anywhere else. */
+      nothing: 'Nothing there yet.',
+      same: "The same version. It's the one answering.",
+      /** "Didn't start, 4 minutes ago. Nobody lost anything." (walk-through); `when` null when nothing dates it. */
+      failed: (when: string | null) =>
+        `Didn't start${when === null ? '' : `, ${when}`}. Nobody lost anything.`,
+      underWay: 'Under way, started a moment ago.',
+    },
+    /** How long ago, in their own time zone past a day. */
+    ago: {
+      moment: 'a moment ago',
+      minute: 'a minute ago',
+      minutes: (n: number) => `${n} minutes ago`,
+      hour: 'an hour ago',
+      hours: (n: number) => `${n} hours ago`,
+      on: (when: string) => `on ${when}`,
+    },
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
   /** How much we read at once, near and past a limit (F2's deferred Minor, Rich: say it). */

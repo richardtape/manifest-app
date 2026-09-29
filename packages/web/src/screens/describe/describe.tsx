@@ -50,6 +50,7 @@ export function Describing({
   expire,
   now = () => new Date(),
   timeZone,
+  onProject,
 }: {
   platform: Platform
   ours: Ours
@@ -60,8 +61,16 @@ export function Describing({
   expire: () => void
   now?: () => Date
   timeZone?: string
+  /** F4 Task 5: the conversation's project, once it exists, for the rail's project section. */
+  onProject?: (project: { name: string; slug: string } | null) => void
 }) {
   const view = useConversation(id, ours.events)
+  const project = view.intake?.project ?? null
+  const projectKey = project === null ? '' : `${project.slug}\n${project.name}`
+  useEffect(() => {
+    onProject?.(project === null ? null : { name: project.name, slug: project.slug })
+    // Told when the project's name or address changes, never on every frame.
+  }, [projectKey])
   /**
    * WHERE A PRESS WAS MADE: the state and the intake round. The press is over when the page
    * it was made on is gone, so a stream that connects late, or reconnects and never hears

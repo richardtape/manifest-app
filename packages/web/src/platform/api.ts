@@ -26,6 +26,18 @@ export interface Platform {
   getProject(projectId: string): Promise<Schemas['Project']>
   getRelease(releaseId: string): Promise<Schemas['Release']>
   /**
+   * THE PREVIEW (F4 Task 5, Decision 2), in the person's session: an app's three addresses, each
+   * with `instance`, *"the instance the hostname reaches"*. A bare array (F4 M1).
+   */
+  listEnvironments(projectId: string): Promise<Schemas['EnvironmentList']>
+  /**
+   * An address's instances, each marked `serving`, **"the one seen most recently first"**: never
+   * the newest first (F4 M3), so the last attempt is never read from its order (FE-38).
+   */
+  listInstances(environmentId: string): Promise<Schemas['InstanceList']>
+  /** Why an attempt failed, newest first: its time is when it did not start. */
+  listIncidents(environmentId: string): Promise<Schemas['IncidentList']>
+  /**
    * MOMENT 3 (FE-1, as it landed): a model for describing an app, in the person's own
    * session (a token is refused). **A new `Idempotency-Key` for every attempt**: the key is in
    * the first answer and nowhere else, and the same key again answers `409
@@ -107,6 +119,30 @@ export function createPlatform(options: {
       return unwrap(
         await client.GET('/v1/releases/{releaseId}', { params: { path: { releaseId } } }),
         'getRelease',
+      )
+    },
+    async listEnvironments(projectId) {
+      return unwrap(
+        await client.GET('/v1/projects/{projectId}/environments', {
+          params: { path: { projectId } },
+        }),
+        'listEnvironments',
+      )
+    },
+    async listInstances(environmentId) {
+      return unwrap(
+        await client.GET('/v1/environments/{environmentId}/instances', {
+          params: { path: { environmentId } },
+        }),
+        'listInstances',
+      )
+    },
+    async listIncidents(environmentId) {
+      return unwrap(
+        await client.GET('/v1/environments/{environmentId}/incidents', {
+          params: { path: { environmentId } },
+        }),
+        'listIncidents',
       )
     },
     async startIntakeSession(idempotencyKey) {

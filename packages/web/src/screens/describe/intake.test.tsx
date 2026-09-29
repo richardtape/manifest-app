@@ -156,6 +156,9 @@ function stage(
     listProjects: () => Promise.resolve([]),
     getProject: () => new Promise(() => undefined),
     getRelease: () => new Promise(() => undefined),
+    listEnvironments: () => new Promise(() => undefined),
+    listInstances: () => new Promise(() => undefined),
+    listIncidents: () => new Promise(() => undefined),
     startIntakeSession: (key) => {
       calls.push(['startIntakeSession', key])
       return options.start?.() ?? Promise.resolve(STARTED)

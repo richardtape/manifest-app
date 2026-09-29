@@ -43,6 +43,9 @@ function platform(
     listProjects: (answers.listProjects ?? never) as Platform['listProjects'],
     getProject: (answers.getProject ?? never) as Platform['getProject'],
     getRelease: (answers.getRelease ?? never) as Platform['getRelease'],
+    listEnvironments: (answers.listEnvironments ?? never) as Platform['listEnvironments'],
+    listInstances: (answers.listInstances ?? never) as Platform['listInstances'],
+    listIncidents: (answers.listIncidents ?? never) as Platform['listIncidents'],
     startIntakeSession: (answers.startIntakeSession ??
       never) as Platform['startIntakeSession'],
     endIntakeSession: (answers.endIntakeSession ?? never) as Platform['endIntakeSession'],
@@ -232,7 +235,9 @@ function wordsOnScreen(): string {
   const texts: string[] = []
   const walker = document.createTreeWalker(copy, NodeFilter.SHOW_TEXT)
   for (let node = walker.nextNode(); node !== null; node = walker.nextNode())
-    texts.push(node.nodeValue ?? '')
+    // Rich's own sentence for trying out names UBC's "staging sign-in" (F4 Task 5's ruling):
+    // the one place the word may be said, and only in his words.
+    texts.push(node.nodeValue === words.preview.tryingOut ? '' : (node.nodeValue ?? ''))
   return texts.join(' ')
 }
 
@@ -244,6 +249,10 @@ function mockPlatform(overrides: Partial<Schemas['Project']> = {}, me = fixtures
     listProjects: () => Promise.resolve([{ ...fixtures.PROJECT, ...overrides }]),
     getProject: () => Promise.resolve(project),
     getRelease: () => Promise.resolve(fixtures.RELEASE),
+    listEnvironments: () => Promise.resolve(fixtures.ENVIRONMENTS),
+    listInstances: (id: string) => Promise.resolve(fixtures.INSTANCE_LISTS[id]!),
+    listIncidents: (id: string) =>
+      Promise.resolve({ environmentId: id, incidents: [] as Schemas['Incident'][] }),
   })
 }
 
@@ -434,14 +443,14 @@ describe('the keyboard reaches the page, not only the rail (Rich’s click-throu
     expect(main?.getAttribute('tabindex')).toBe('-1')
   })
 
-  it('an app’s name is a link, to a page that says it arrives next', async () => {
+  it('an app’s name is a link, to its own page (F4 Task 5: the Preview)', async () => {
     render(<App platform={mockPlatform()} />)
     const name = await screen.findByRole('link', { name: 'Mock course app' })
     expect(name.getAttribute('href')).toBe('/apps/mock-app')
     await act(async () => {
       fireEvent.click(name)
     })
-    expect(await screen.findByText(words.notFound.appPageNext)).toBeTruthy()
+    expect(await screen.findByRole('tablist')).toBeTruthy()
     expect(window.location.pathname).toBe('/apps/mock-app')
   })
 })
@@ -473,7 +482,7 @@ describe('focus follows an in-app navigation to the page (review, accessibility)
     await act(async () => {
       fireEvent.click(name)
     })
-    await screen.findByText(words.notFound.appPageNext)
+    await screen.findByRole('tablist')
     expect(document.activeElement).toBe(document.getElementById('main'))
   })
 })
@@ -599,11 +608,19 @@ describe('no machinery on EVERY screen and state (Decision 9; the final review)'
     ],
     ['not found', '/nowhere', signedIn, words.notFound.body],
     ['Describe it (moment 3)', '/new', signedIn, words.describe.title],
+    ['an app that is not theirs', '/apps/mock-app', signedIn, words.notFound.body],
     [
-      'an app’s page, not built yet',
+      'an app’s own page: the Preview (F4 Task 5)',
       '/apps/mock-app',
-      signedIn,
-      words.notFound.appPageNext,
+      {
+        getMe: () => Promise.resolve(ME),
+        listProjects: () => Promise.resolve([fixtures.PROJECT]),
+        listEnvironments: () => Promise.resolve(fixtures.ENVIRONMENTS),
+        listInstances: (id: string) => Promise.resolve(fixtures.INSTANCE_LISTS[id]!),
+        listIncidents: () => new Promise(() => undefined),
+        getRelease: () => Promise.resolve(fixtures.RELEASE),
+      },
+      words.preview.facts.serving,
     ],
     ['signed out, the fallback page', '/signed-out', signedIn, words.signOut.title],
     ['the profile', '/profile', signedIn, words.profile.title],

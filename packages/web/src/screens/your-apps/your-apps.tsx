@@ -190,7 +190,7 @@ function AddressView({ label, address }: { label: string; address: Address }) {
 }
 
 /** A hostname that breaks, when it must, after a dot: never mid-label, as `mock-` did. */
-function Hostname({ name }: { name: string }) {
+export function Hostname({ name }: { name: string }) {
   const labels = name.split('.')
   return (
     <>

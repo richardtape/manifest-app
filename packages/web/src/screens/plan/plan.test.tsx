@@ -95,6 +95,9 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     listProjects: () => Promise.resolve([]),
     getProject: never,
     getRelease: never,
+    listEnvironments: never,
+    listInstances: never,
+    listIncidents: never,
     startIntakeSession: () => {
       calls.push(['startIntakeSession'])
       return never()

@@ -329,7 +329,8 @@ raised follows.
 
 ### FE-13 — What is serving and what the last attempt did: still two reads, and a refused deploy leaves nothing
 
-- **What exists:** `listInstances` marks `serving` ✓, newest first, so the last attempt is its first entry.
+- **What exists:** `listInstances` marks `serving` ✓. ~~Newest first, so the last attempt is its first entry.~~ **Not
+  so** (F4 sitting 1, M3): it is *"the one seen most recently first"*, and an instance has no time of its own: **FE-38**.
 - **What is missing:** a deploy refused before an instance exists (a secret not set; the launch gate) leaves no
   row anywhere. The person's *"what you tried last"* then has nothing to show.
 - **Options:**
@@ -970,6 +971,34 @@ code. Not carried: Rich's word decides that.*
     reaches the IdP's login form. An app already deployed is fixed by deploying its release again.
   - (b) A sandbox app's IdP row has `validate.authnrequest: false`, as the injection's comment assumes.
 - **When:** now. It blocks every draft address's sign-in, and F4 builds on it.
+
+### FE-38 — The last attempt cannot be told: instances are listed "seen most recently", and carry no time of their own
+
+*Found 2026-09-28 by F4's sitting 3, from what F4's sitting 1 measured (M3) against manifest `d82b3a2`, and the
+contract at `38c2ade`. Not carried: Rich's word decides that. It corrects FE-13's premise.*
+
+- **Screen and moment:** the Preview's two facts (moment 7), on every address: *serving right now* and **the last
+  attempt**; and moment 9, where a failed attempt on the trying-out address offers *[What went wrong]*.
+- **What we would call:** `listInstances`, and read the last attempt from it.
+- **What is missing:** its order is *"the one seen most recently first"* (the contract), **not newest made**: F4's M3
+  saw a new staging instance listed **second** while it started, below the one serving. And an `Instance` carries no
+  time of its own: `lastSeenAt` only, which the serving one renews all the time, and which is `null` for one that
+  never started. So a failure **before** a fix and a failure **after** the version serving are listed the same way,
+  after the serving one. FE-13 assumed "newest first, so the last attempt is its first entry": it is not.
+- **What we do meanwhile** (F4 Task 5's ruling, `screens/preview/facts.ts`): one on its way up is under way; else a
+  failure is the last attempt when nothing serves, or when **its version is newer** than the one serving (the
+  releases' `createdAt`); the same version failing is an earlier try. Right for every flow F4 builds (the draft only
+  ever deploys newer versions; trying-out never puts the version already there). **Wrong for a rollback** (F6's *Start
+  it again*, an older version put back): the older version answers, and the newer failure still reads as the last
+  attempt.
+- **Why it matters:** the two facts exist so a person is never told a failure is current when it is not, or the
+  reverse. *"Didn't start, 4 minutes ago"* over a version that has since started and answered is exactly that.
+- **Options:**
+  - **(a) Recommended:** `createdAt` on `Instance` and `InstanceSummary` (when the deploy made it). The last attempt is
+    then the newest, whatever the order.
+  - (b) `Environment.lastAttempt`, as FE-13 (a) proposed: the instance, its state, and when.
+  - (c) `listInstances` newest made first, as FE-13 assumed. It would change a published order.
+- **When:** before F6's *Start it again*, which is the first flow our rule reads wrongly.
 
 ---
 
