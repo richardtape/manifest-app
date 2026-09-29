@@ -10,8 +10,9 @@ says which plan is current. This file states where things stand and the rules. I
   the clocks, the checklist in our words, the dry run, waiting on sign-off, step-up, the address handed over).
   [`plans/roadmap.md`](./plans/roadmap.md) says so. Nothing is built for it.
   - **How:** superpowers:brainstorming, then writing-plans, as F4 was written (one session, with Rich, then his
-    approval). Ask Rich first whether F5 waits for **the platform's next plan, the launch path** (FE-6, FE-25), which
-    `manifest-63` began writing on 2026-09-29, so F5 can argue from what it will build.
+    approval). Ask Rich first whether F5 waits for **the platform's next plan, the launch path** (FE-6, FE-25), **written by
+    `manifest-63` on 2026-09-29** (manifest's `docs/superpowers/plans/2026-09-29-launch-path.md`, `0904ad5`; read-only),
+    so F5 can argue from what it will build.
   - **Read first:** the walk-through's moments 10–15; `api-findings.md`'s table rows dated 2026-09-29 (the platform's
     close, its recommendations, Rich's two decisions, real GitHub); F4's plan, sitting 7's dated entry, and its *Open
     for Rich*.
@@ -43,11 +44,12 @@ says which plan is current. This file states where things stand and the rules. I
     clicked moments 7–9 on the real platform.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
   - **Its sitting 12 closed at `e824956` (2026-09-29): the front-end enablement plan is EXECUTED.** The contract is
-    **1.4.0, 66 operations, 128 codes**, unchanged since `16c3357`. **Its next session, `manifest-63`**, is writing the
-    next platform plan: the launch path (FE-6, FE-25), with FE-33, FE-34, FE-38, member removal and the key trim. It
-    messages us before any commit to `packages/contract` or `packages/mock`.
-  - **7100 is moving to real GitHub.** Rich set `MANIFEST_SOURCE_DRIVER=github` in manifest's `.env`; that plan's Task
-    1 restarts the control plane onto driver 2. Then every driver-1 project answers `409 SOURCE_PROVIDER_MISMATCH`
+    **1.4.0, 66 operations, 128 codes**, unchanged since `16c3357`. **Its next session, `manifest-63`**, wrote the
+    next platform plan: the launch path (FE-6, FE-25; `0904ad5`), with **FE-38 as its Task 4, FE-33 as Task 5, FE-34 as
+    Task 6** (measured first: LiteLLM 1.98's router has no setting for it), member removal and the key trim. It messages
+    us before any commit to `packages/contract` or `packages/mock`.
+  - **7100 is moving to real GitHub.** Rich set `MANIFEST_SOURCE_DRIVER=github` in manifest's `.env`; **`manifest-63`
+    restarted the control plane onto driver 2 (real GitHub, `Manifest-local-dev`) on 2026-09-29**, after F4's close. Then every driver-1 project answers `409 SOURCE_PROVIDER_MISMATCH`
     (F4's `my-weekly-thoughts` and `notes-and-answers` among them), and **anything created through 7100 makes a real
     private repository on github.com that nothing deletes**. A real-platform walk from then on is Rich's word, every
     time. **Never restart the control plane yourself.**
