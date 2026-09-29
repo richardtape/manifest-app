@@ -159,6 +159,11 @@ export type Needs =
   | { kind: 'conflict' }
   /** The piece of work's $2 is used: Carry on starts another session, if they say so. */
   | { kind: 'checkpoint'; capUsd: number; monthLeftUsd: number | null }
+  /**
+   * FE-36: the platform ended the session because the app's data is now confidential
+   * (`models_withdrawn`). Rich, 2026-09-29: stop and ask first; Carry on starts a new session.
+   */
+  | { kind: 'withdrawn' }
   /** The month's allowance is spent. */
   | { kind: 'month'; resetsAt: string | null }
   /** 40 moves in one step, or the same refusal three times in a row (Review Focus 2). */

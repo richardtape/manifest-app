@@ -2,9 +2,11 @@ import { randomUUID } from 'node:crypto'
 import { cwl } from '../agents/cwl.js'
 import { explaining } from '../agents/explaining.js'
 import { lead, type LeadView } from '../agents/lead.js'
-import { planMarkdown, type Plan } from '../agents/plan.js'
+import { dayOf } from '../agents/change.js'
+import { HEADINGS, planMarkdown, readPlanMarkdown, type Plan } from '../agents/plan.js'
 import { publishRefusal, publishState, type Hub } from '../api/events.js'
 import { intakeOf, planOf } from '../api/intake-state.js'
+import { pieceOf } from '../api/piece-state.js'
 import { problem } from '../api/problems.js'
 import type { BuildStep, ConversationState, Needs } from '../api/progress.js'
 import { heardIn, NO_DETAIL, type RoundSaid } from '../api/round-state.js'
@@ -123,6 +125,8 @@ const NOTHING_COMMITTED =
 const CONFLICT =
   'Someone else changed the app while we worked, and nothing of that commit was written. The files are as they are now: read what you need, and commit again on them.'
 const STEP_WORDS = { build: 'Building it', draft: 'Putting it on the draft address' }
+/** The agreement, as the app holds it (D6). */
+const PLAN_FILE = 'docs/plan.md'
 
 type Ending =
   | { kind: 'done' }
@@ -175,6 +179,14 @@ interface Live {
   shown: number
   /** The changes the commit in flight landed, if it did. */
   landed: Change[] | null
+  /**
+   * F4 Decision 9: the paths the lead knows as they are now: read at the current tree, or written
+   * this round. Someone else's commit (the tree moved under us) forgets them all.
+   */
+  known: Set<string>
+  /** F4: the agreed change, or the fix, as the lead's view carries it; read once a leg. */
+  change: LeadView['change']
+  fix: LeadView['fix']
 }
 
 const detail = (live: Live): RunDetail => live.run.detail as RunDetail
@@ -423,6 +435,8 @@ export function createRounds(deps: RoundDeps): Rounds {
   async function readTree(live: Live) {
     const tree = await source.tree(live.token, live.projectId)
     record(live, 'getTree', tree.commitSha, null)
+    // Someone else's commit since: nothing the lead read is as it is now (F4 Decision 9).
+    if (tree.commitSha !== live.base) live.known.clear()
     live.base = tree.commitSha
     live.paths = tree.paths.map((entry) => entry.path)
     const packageJson = await source.file(
@@ -502,11 +516,17 @@ export function createRounds(deps: RoundDeps): Rounds {
     await readTree(live)
     if (live.pack === null)
       live.pack = await deps.projects.knowledgePack(live.token, project.blueprint)
+    // F4 Decision 8: the agreement as the tree holds it, for every round; the store's plan
+    // only when the file cannot be read.
     const latest = planOf(store, live.conversation.id)
+    const committed = await source.file(live.token, live.projectId, PLAN_FILE, live.base)
     live.plan =
-      latest === null
-        ? ''
-        : planMarkdown(project.name, latest.plan as Plan, agreedAnswers(live))
+      'content' in committed
+        ? committed.content
+        : latest === null
+          ? ''
+          : planMarkdown(project.name, latest.plan as Plan, agreedAnswers(live))
+    await pieceFor(live, latest?.plan as Plan | undefined)
     if (live.sandbox === null)
       live.sandbox = await releases.sandbox(live.token, live.projectId)
     d.draft ??= {
@@ -518,6 +538,42 @@ export function createRounds(deps: RoundDeps): Rounds {
     void refreshCost(live, true)
     save(live)
     return null
+  }
+
+  /**
+   * F4 DECISION 9: WHAT THIS ROUND IS FOR, IN THE LEAD'S VIEW: the agreed change (their words, and
+   * the plan's parts it changed, as they now read), or the fix (staging's incident, as our token
+   * may read it). A confidential app's incident refused to our token is said as that, and never
+   * read another way: the person's own reading of it never reaches us (S1).
+   */
+  async function pieceFor(live: Live, plan: Plan | undefined) {
+    const piece = pieceOf(store, live.conversation.id)
+    if (piece.kind === 'change')
+      live.change = {
+        asked: piece.asked,
+        parts: (plan?.changed ?? []).map((row) => `${HEADINGS[row]}: ${plan![row]}`),
+      }
+    if (piece.kind === 'fix' && piece.incidentId !== null && live.fix === null) {
+      const incidentId = piece.incidentId
+      const read = await call(live, 'listIncidents', 'staging', () =>
+        instances.stagingIncident(live.token, live.projectId, incidentId),
+      )
+      live.fix =
+        read === 'confidential'
+          ? { incident: null, unread: 'confidential' }
+          : read === undefined
+            ? { incident: null, unread: 'missing' }
+            : {
+                incident: {
+                  exitReason: read.exitReason,
+                  failedCheck: read.failedCheck,
+                  logTail: read.logTail,
+                  prompt: read.prompt,
+                  diffSinceHealthy: read.diffSinceHealthy,
+                },
+                unread: null,
+              }
+    }
   }
 
   function agreedAnswers(live: Live): Record<string, string> {
@@ -599,12 +655,25 @@ export function createRounds(deps: RoundDeps): Rounds {
           if (!live.paths.includes(change.path)) live.paths = [...live.paths, change.path]
           if (change.path === 'package.json') live.packageJson = parsed(change.content)
         }
+        for (const change of changes) live.known.add(change.path)
         d.landed = true
         live.landed = changes
       },
       keep(files) {
         const paths = new Set(files.map((file) => file.path))
         live.files = [...files, ...live.files.filter((file) => !paths.has(file.path))]
+        for (const path of paths) live.known.add(path)
+      },
+      known(change) {
+        if (live.known.has(change.path)) return true
+        // The specialist read the file for its proposal: committed exactly as proposed, it is known.
+        return (live.proposal?.changes ?? []).some(
+          (proposed) =>
+            proposed.path === change.path &&
+            proposed.op === change.op &&
+            (proposed.op === 'delete' ||
+              (change.op === 'write' && proposed.content === change.content)),
+        )
       },
       question(ask, fallback, secret) {
         const id = randomUUID()
@@ -712,6 +781,8 @@ export function createRounds(deps: RoundDeps): Rounds {
       failures: d.failures,
       proposal: live.proposal,
       settled: live.settled,
+      change: live.change,
+      fix: live.fix,
       asked: store.listQuestions(live.run.id).map((q) => ({
         ask: q.ask,
         wentWith:
@@ -776,6 +847,7 @@ export function createRounds(deps: RoundDeps): Rounds {
         case 'done':
           d.line = stop.line
           d.failures = []
+          await noteTheirWords(live)
           return next(live, 'holds')
         case 'paused':
           return { kind: 'paused' }
@@ -803,6 +875,58 @@ export function createRounds(deps: RoundDeps): Rounds {
           throw stop.error
       }
     }
+  }
+
+  /**
+   * F4 DECISION 10: THEIR WORDS WHILE IT WORKED JOIN THE AGREEMENT. After the lead's done, each
+   * message of theirs it read this round, and not yet noted, is added to docs/plan.md's Changes in
+   * their own words, in one commit of ours (its dry run first) with no model, before the build: so
+   * the file stays the agreement, and the build holds it. A file that no longer reads back as ours
+   * is left as it is.
+   */
+  async function noteTheirWords(live: Live) {
+    const d = detail(live)
+    const read = heardIn(store, live.conversation.id, live.run.round)
+      .slice(0, d.heard)
+      .filter((word) => word.kind === 'message')
+    const noted = d.noted ?? 0
+    const fresh = read.slice(noted).map((word) => word.text)
+    if (fresh.length === 0) return
+    const project = intakeOf(store, live.conversation.id).project
+    for (let attempt = 1; ; attempt++) {
+      const file = await source.file(live.token, live.projectId, PLAN_FILE, live.base)
+      const plan = 'content' in file ? readPlanMarkdown(file.content) : null
+      if (plan === null) break
+      const at = dayOf(deps.now())
+      const markdown = planMarkdown(
+        project?.name ?? plan.title,
+        plan.plan,
+        plan.answers,
+        [...plan.changes, ...fresh.map((words) => ({ at, words }))],
+      )
+      try {
+        const made = await tracedSource(live).commit(live.token, live.projectId, {
+          baseCommit: live.base,
+          message: 'What they asked for while we worked',
+          changes: [{ op: 'write', path: PLAN_FILE, content: markdown }],
+        })
+        live.base = made.commitSha
+        live.plan = markdown
+        live.known.delete(PLAN_FILE)
+        break
+      } catch (error) {
+        // Someone moved main: read it again, and add their words once more on it.
+        if (
+          !(error instanceof PlatformRefusal) ||
+          error.code !== 'SOURCE_CONFLICT' ||
+          attempt > 1
+        )
+          throw error
+        await readTree(live)
+      }
+    }
+    d.noted = read.length
+    save(live)
   }
 
   function next(live: Live, step: BuildStep): Outcome {
@@ -1095,9 +1219,21 @@ export function createRounds(deps: RoundDeps): Rounds {
     }
   }
 
+  /** Whether the platform ended this leg's session as `models_withdrawn` (FE-36): its key is refused for every model. */
+  async function withdrawn(live: Live): Promise<boolean> {
+    const id = live.session?.id ?? live.run.sessionIds.at(-1)
+    if (id === undefined) return false
+    const listed = await sessions.list(live.token, live.projectId).catch(() => [])
+    return listed.some((s) => s.id === id && s.endReason === 'models_withdrawn')
+  }
+
   /** What a refusal nobody in the round answered means for the person. */
   async function fromError(live: Live, error: unknown): Promise<Ending> {
     if (error instanceof ModelError) {
+      if (error.code === 'MODEL_KEY_REFUSED' && (await withdrawn(live)))
+        // FE-36: the platform ended it (the app's data is now confidential). Rich: stop and ask
+        // first; Carry on starts a new session, on what the app now allows.
+        return needs({ kind: 'withdrawn' })
       if (error.code === 'MODEL_BUDGET_EXHAUSTED' || error.code === 'MODEL_KEY_REFUSED') {
         // The gateway's 429 is the session's cap or the month alike; an expired key is the
         // session's clock. The budget says which (Decision 9).
@@ -1225,6 +1361,9 @@ export function createRounds(deps: RoundDeps): Rounds {
       costAt: 0,
       shown: 0,
       landed: null,
+      known: new Set(),
+      change: null,
+      fix: null,
     }
   }
 
@@ -1303,7 +1442,8 @@ export function createRounds(deps: RoundDeps): Rounds {
           live.run.sameRefusal = null
           break
         case 'checkpoint':
-          // Its $2 is used: ended, and the next is started because they said so.
+        case 'withdrawn':
+          // Its $2 is used, or the platform ended it: the next is started because they said so.
           void endSession(live)
           break
       }

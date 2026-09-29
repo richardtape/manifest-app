@@ -76,6 +76,11 @@ export interface RunDetail {
    * none, and its joined accounts are `steps.pages.changed`.
    */
   account: string | null
+  /**
+   * F4 Decision 10: how many of their messages this round are already in docs/plan.md's Changes.
+   * Absent on a run saved before F4.
+   */
+  noted?: number
 }
 
 /** One question a round asked (F3 Decision 10). A secret's answer is never here. */

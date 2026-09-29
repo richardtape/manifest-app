@@ -100,6 +100,14 @@ function needCard(
           {stopHere(presses)}
         </NeedsCard>
       )
+    case 'withdrawn':
+      // Not a problem, and not the $2: the platform's rule for confidential data (Rich: ask first).
+      return (
+        <NeedsCard tone="attention" said={said.withdrawn} reference={null}>
+          {carryOn(presses)}
+          {stopHere(presses)}
+        </NeedsCard>
+      )
     case 'month': {
       // Before a first session there is no reset: the contract's rule, the first of the month.
       const resets =

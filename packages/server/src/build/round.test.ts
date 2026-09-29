@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
+import { planMarkdown } from '../agents/plan.js'
 import { roundOf } from '../api/round-state.js'
 import { createHub, type Hub } from '../api/events.js'
 import type { Progress, RoundView } from '../api/progress.js'
@@ -203,6 +204,12 @@ interface Options {
   signIn?: (n: number) => 'ok' | 'refused' | 'unknown'
   /** Told when a piece of work ends (F4: the app's line starts its next). */
   ended?: (conversation: Conversation) => void
+  /** Files of the tree's own beside FILES: docs/plan.md, as committed (F4 Task 8). */
+  files?: Record<string, string>
+  /** Staging's incident a fix names, as our token reads it (F4 Task 8). */
+  stagingIncident?: (incidentId: string) => Incident | 'confidential' | undefined
+  /** Why the platform ended each session (its index), when it did: models_withdrawn (FE-36). */
+  endReason?: (n: number) => string | null
 }
 
 function harness(options: Options, file?: string, store0?: Store) {
@@ -256,6 +263,7 @@ function harness(options: Options, file?: string, store0?: Store) {
       Array.from({ length: sessionsStarted }, (_, i) => ({
         id: `${options.sessionIds ?? 'session'}-${i + 1}`,
         spentUsd: options.spent?.[i] === undefined ? 0.1 : options.spent[i]!,
+        endReason: options.endReason?.(i) ?? null,
       })),
   }
 
@@ -269,7 +277,11 @@ function harness(options: Options, file?: string, store0?: Store) {
       const sha = (await options.tree?.(trees))?.commitSha ?? BASE
       return {
         commitSha: sha,
-        paths: Object.keys(FILES).map((path) => ({ path, size: 1, binary: false })),
+        paths: Object.keys({ ...FILES, ...options.files }).map((path) => ({
+          path,
+          size: 1,
+          binary: false,
+        })),
         truncated: false,
       }
     },
@@ -279,7 +291,7 @@ function harness(options: Options, file?: string, store0?: Store) {
         .filter((c) => c.path === path)
         .at(-1)
       if (landed?.op === 'write') return { content: landed.content }
-      const content = FILES[path]
+      const content = { ...FILES, ...options.files }[path]
       return content === undefined ? { unreadable: 'not-found' } : { content }
     },
     commit: async (_token, _project, body, sent = []) => {
@@ -356,7 +368,7 @@ function harness(options: Options, file?: string, store0?: Store) {
   }
 
   const outputs: string[] = []
-  const INCIDENT: Omit<Incident, 'instanceId' | 'releaseId'> = {
+  const INCIDENT: Omit<Incident, 'id' | 'instanceId' | 'releaseId'> = {
     exitReason: 'the process exited with code 1',
     failedCheck: 'readiness: GET /healthz … the edge last answered 0 after 87 attempt(s)',
     logTail:
@@ -380,7 +392,16 @@ function harness(options: Options, file?: string, store0?: Store) {
     incidents: async () =>
       deployed
         .filter((i) => i.state === 'failed')
-        .map((i) => ({ ...INCIDENT, instanceId: i.id, releaseId: i.releaseId })),
+        .map((i, n) => ({
+          ...INCIDENT,
+          id: `incident-${n + 1}`,
+          instanceId: i.id,
+          releaseId: i.releaseId,
+        })),
+    stagingIncident: async (_token, _project, incidentId) => {
+      did.push(`listIncidents staging ${incidentId}`)
+      return options.stagingIncident?.(incidentId)
+    },
   }
 
   const secretsSet: { token: string; projectId: string; name: string; value: string }[] =
@@ -754,6 +775,8 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
           commit([write('public/weeks.html', PAGE)], {
             account: 'One page listing the weeks.',
           }),
+          // F4's `unread`: server.js is already in the app, so it is read before it is rewritten.
+          read('server.js'),
           commit(
             [
               write('config/staff.json', '{"puids":["ins000001"],"emails":[]}'),
@@ -1643,5 +1666,347 @@ describe('the round frees its app (F4 Task 6, Decision 5)', () => {
     )
     expect(stateOf(h, conversation.id)).toBe('built')
     expect(begun).toEqual([next.id])
+  })
+})
+
+describe('the lead on an app that exists (F4 Task 8)', () => {
+  /** docs/plan.md as F2 committed it: what round 1 reads from the tree. */
+  const TREE_PLAN = planMarkdown(PROJECT.name, PLAN, {
+    late: 'It closes at the deadline.',
+  })
+  const WORD_COUNT = 'Also show a word count on each response.'
+  const STAGING: Incident = {
+    id: 'incident-9',
+    instanceId: 'instance-staging-2',
+    releaseId: 'release-1',
+    exitReason: 'the process exited with code 1',
+    failedCheck: 'readiness: GET /healthz, no answer after 87 attempts',
+    logTail: "Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/app/count.js'",
+    diffSinceHealthy: '+ import ./count.js',
+    prompt: 'The app could not start on staging: a module it imports is missing.',
+  }
+
+  /** A change on the app, agreed and committed: its round is next. */
+  function agreedChange(h: H) {
+    h.store.rememberPerson(ALICE)
+    const change = h.store.createChange(ALICE.id, PROJECT.id, 'Word count', WORD_COUNT)
+    h.store.addMessage(change.id, 'we', { kind: 'project', project: PROJECT })
+    h.store.addMessage(change.id, 'person', {
+      kind: 'asked',
+      change: 1,
+      words: WORD_COUNT,
+      fix: null,
+    })
+    h.store.savePlan(change.id, {
+      ...PLAN,
+      youSee: `${PLAN.youSee} Each response shows its word count.`,
+      onlyYouKnow: [],
+      changed: ['youSee'],
+    })
+    h.store.addMessage(change.id, 'person', {
+      kind: 'agreed',
+      version: 1,
+      answers: {},
+      commitSha: BASE,
+      sent: [],
+    })
+    const made = h.store.setState(change.id, 'agreed')
+    h.hub.subscribe(made.id, (frame) => h.frames.push(frame))
+    return made
+  }
+
+  /** A fix of ours, carrying staging's incident: no plan to agree. */
+  function fixing(h: H) {
+    h.store.rememberPerson(ALICE)
+    const fix = h.store.createChange(
+      ALICE.id,
+      PROJECT.id,
+      "It didn't start on the trying-out address",
+      "It didn't start on the trying-out address",
+    )
+    h.store.addMessage(fix.id, 'we', { kind: 'project', project: PROJECT })
+    h.store.addMessage(fix.id, 'we', {
+      kind: 'asked',
+      change: 1,
+      words: "It didn't start on the trying-out address",
+      fix: { incidentId: STAGING.id },
+    })
+    return fix
+  }
+
+  function started(options: Options, make: (h: H) => Conversation = agreed) {
+    const h = harness(options)
+    const conversation = make(h)
+    h.tokens.put(conversation.id, TOKEN)
+    h.rounds.start(conversation, TOKEN)
+    return { h, id: conversation.id, conversation }
+  }
+
+  const firstPrompt = async (h: H) => {
+    await until(
+      () => leadPrompts(h).length > 0,
+      () => h.did,
+    )
+    return leadPrompts(h)[0]!
+  }
+
+  it('reads docs/plan.md from the tree for its round, never the store’s', async () => {
+    const { h } = started({
+      script: STRAIGHT,
+      files: { 'docs/plan.md': `${TREE_PLAN}\nEdited in the tree since.\n` },
+    })
+    expect(await firstPrompt(h)).toContain('Edited in the tree since.')
+  })
+
+  it("round 1 of a first conversation reads the very text the store's plan makes: F2 committed it", async () => {
+    const { h } = started({ script: STRAIGHT, files: { 'docs/plan.md': TREE_PLAN } })
+    const prompt = await firstPrompt(h)
+    expect(prompt).toContain(
+      `The plan we agreed (docs/plan.md, committed):\n${TREE_PLAN}`,
+    )
+    // The same text it read before F4, from the store.
+    const { h: before } = started({ script: STRAIGHT })
+    expect(await firstPrompt(before)).toContain(TREE_PLAN)
+  })
+
+  it("a docs/plan.md it cannot read falls back to the store's plan", async () => {
+    const { h } = started({ script: STRAIGHT })
+    expect(await firstPrompt(h)).toContain(TREE_PLAN)
+  })
+
+  it('a change’s round carries what they asked and the parts that changed, as they now read; a first round neither', async () => {
+    const { h } = started(
+      { script: STRAIGHT, files: { 'docs/plan.md': TREE_PLAN } },
+      agreedChange,
+    )
+    const prompt = await firstPrompt(h)
+    expect(prompt).toContain(`- "${WORD_COUNT}"`)
+    expect(prompt).toContain(
+      `- What you see: ${PLAN.youSee} Each response shows its word count.`,
+    )
+    expect(prompt).not.toContain('- What students see:')
+    expect(prompt).toMatch(/already works/)
+    const { h: first } = started({ script: STRAIGHT })
+    expect(await firstPrompt(first)).not.toMatch(
+      /The change we agreed|trying-out address/,
+    )
+  })
+
+  it("a fix's round starts at the pages, no plan agreed, with staging's incident in its view", async () => {
+    const { h, id } = started(
+      {
+        script: { lead: [] },
+        stagingIncident: (incidentId) =>
+          incidentId === STAGING.id ? STAGING : undefined,
+      },
+      fixing,
+    )
+    const prompt = await firstPrompt(h)
+    expect(viewOf(h, id)?.steps[0]).toMatchObject({ key: 'pages', state: 'now' })
+    expect(h.did).toContain(`listIncidents staging ${STAGING.id}`)
+    for (const said of [
+      STAGING.exitReason,
+      STAGING.failedCheck,
+      STAGING.logTail,
+      STAGING.prompt,
+      STAGING.diffSinceHealthy,
+    ])
+      expect(prompt).toContain(said)
+    expect(h.store.latestPlan(id)).toBeUndefined()
+  })
+
+  it("a staging incident refused to our token (a confidential app's): only that it did not start, and why we cannot read it; nothing shown as a problem", async () => {
+    const { h, id } = started(
+      { script: { lead: [] }, stagingIncident: () => 'confidential' },
+      fixing,
+    )
+    const prompt = await firstPrompt(h)
+    expect(prompt).toMatch(/did not start on the trying-out address/)
+    expect(prompt).toMatch(/cannot read why/i)
+    expect(prompt).not.toContain(STAGING.logTail)
+    expect(viewOf(h, id)).toMatchObject({
+      status: 'working',
+      needs: null,
+      reference: null,
+    })
+    expect(JSON.parse(dumpAll(h.file)['problems']!)).toEqual([])
+  })
+
+  it('unread (Review Focus 3): a first move that writes server.js whole is sent back, read it first; read, the same commit is taken', async () => {
+    const WHOLE = [
+      write('server.js', "import express from 'express'\n// with a word count\n"),
+    ]
+    const { h, id } = started({
+      script: { lead: [commit(WHOLE), read('server.js'), commit(WHOLE), done()] },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(h.attempts).toHaveLength(1)
+    expect(h.attempts[0]!.changes).toEqual(WHOLE)
+    expect(leadPrompts(h)[1]).toMatch(
+      /server\.js is already in the app[^\n]*read it first/,
+    )
+  })
+
+  it('a read at an older tree does not count: after someone else’s commit, the write is sent back until it reads again', async () => {
+    const WHOLE = [write('server.js', "import express from 'express'\n// ours\n")]
+    const { h, id } = started({
+      script: {
+        lead: [
+          read('server.js'),
+          commit(WHOLE),
+          commit(WHOLE),
+          read('server.js'),
+          commit(WHOLE),
+          done(),
+        ],
+      },
+      commit: (n) => {
+        if (n === 1) throw new PlatformRefusal('SOURCE_CONFLICT', 409)
+      },
+      tree: (n) => ({ commitSha: n === 1 ? BASE : 'e'.repeat(40) }),
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    // The conflict's attempt, then only the one after the second read.
+    expect(h.attempts).toHaveLength(2)
+    expect(leadPrompts(h)[3]).toMatch(/read it first/)
+  })
+
+  it("the specialist's proposal committed as proposed is taken unread; changed by the lead, it is sent back", async () => {
+    const STAFF = write(
+      'config/staff.json',
+      JSON.stringify({ puids: ['ins000001'], emails: [] }),
+    )
+    const WIRED = write('server.js', "import express from 'express'\n// staff only\n")
+    const ASK_CWL = {
+      move: {
+        kind: 'ask_cwl',
+        brief: {
+          whoGetsIn: 'Anyone with a CWL.',
+          youSee: 'Every response.',
+          studentsSee: 'Their own.',
+          namedEmails: [],
+        },
+      },
+    }
+    const { h, id } = started({
+      script: {
+        lead: [
+          ASK_CWL,
+          commit([STAFF, write('server.js', 'our own guess\n')]),
+          commit([STAFF, WIRED]),
+          done(),
+        ],
+        cwl: [{ changes: [STAFF, WIRED], summary: 'Only you see every response.' }],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(h.attempts.map((a) => a.changes)).toEqual([[STAFF, WIRED]])
+    expect(leadPrompts(h)[2]).toMatch(/read it first/)
+  })
+
+  it('a message the lead read during the round joins docs/plan.md’s Changes after done, in one commit of ours, dry run first, before the build', async () => {
+    const heldCommit = held<unknown>()
+    const { h, id, conversation } = started({
+      script: { lead: [read('server.js'), () => heldCommit.promise, done()] },
+      files: { 'docs/plan.md': TREE_PLAN },
+      autoBuild: true,
+    })
+    await until(
+      () => leadPrompts(h).length === 2,
+      () => h.did,
+    )
+    h.rounds.message(conversation, 'Show the count beside each name, please.')
+    heldCommit.resolve(commit())
+    await untilStatus(h, id, 'done')
+    expect(h.commits).toHaveLength(2)
+    const ours = h.commits[1]!
+    expect(ours.baseCommit).toBe('c1'.padEnd(40, '0'))
+    expect(ours.changes).toHaveLength(1)
+    const [plan] = ours.changes as [{ op: 'write'; path: string; content: string }]
+    expect(plan.path).toBe('docs/plan.md')
+    expect(plan.content.startsWith(TREE_PLAN)).toBe(true)
+    expect(plan.content).toMatch(
+      /## Changes since we first agreed\n\n- \d{1,2} [A-Z][a-z]+ \d{4}: Show the count beside each name, please\.\n$/,
+    )
+    // Ours, then the build: the build holds the agreement as it now stands.
+    const order = h.did.filter(
+      (d) => d.startsWith('createCommit') || d.startsWith('startBuild'),
+    )
+    expect(order).toEqual([
+      'createCommit c2ac211',
+      'createCommit c100000',
+      'startBuild c200000',
+    ])
+  })
+
+  it('no message read, no commit of ours', async () => {
+    const { h, id } = started({
+      script: STRAIGHT,
+      files: { 'docs/plan.md': TREE_PLAN },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(h.commits).toHaveLength(1)
+  })
+
+  it.each([
+    ['paused on a question', [ask('When do posts close?', null)], 'paused'],
+    ['needing them', [new ModelError('MODEL_UNREACHABLE')], 'needs-you'],
+  ] as const)(
+    'a round %s keeps its app: the line starts nothing',
+    async (_, lead, status) => {
+      const begun: string[] = []
+      const h = harness({
+        script: { lead: [...lead] },
+        ended: (conversation) => line.released(conversation.projectId),
+      })
+      const conversation = agreed(h)
+      h.tokens.put(conversation.id, TOKEN)
+      const line: Line = createLine({
+        store: h.store,
+        hub: h.hub,
+        now: () => new Date(),
+        begin: (next) => void begun.push(next.id),
+      })
+      line.join(h.store.createChange(ALICE.id, PROJECT.id, 'Next', 'Next.'))
+      h.rounds.start(conversation, TOKEN)
+      await untilStatus(h, conversation.id, status)
+      await new Promise((resolve) => setTimeout(resolve, 20))
+      expect(begun).toEqual([])
+      expect(line.holder(PROJECT.id)?.id).toBe(conversation.id)
+    },
+  )
+
+  it('models_withdrawn (FE-36): a key refused because the platform ended the session is needs withdrawn, never the $2 checkpoint; Carry on starts a new session (Rich: stop and ask first)', async () => {
+    const { h, id, conversation } = started({
+      script: {
+        lead: [
+          new ModelError('MODEL_KEY_REFUSED', 401),
+          read('server.js'),
+          commit(),
+          done(),
+        ],
+      },
+      endReason: (n) => (n === 0 ? 'models_withdrawn' : null),
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)).toMatchObject({ needs: { kind: 'withdrawn' }, reference: null })
+    expect(h.sessionStarts).toHaveLength(1)
+    h.rounds.carryOn(h.store.getConversation(conversation.id, ALICE.id)!, TOKEN)
+    await untilStatus(h, id, 'done')
+    expect(h.sessionStarts).toHaveLength(2)
+  })
+
+  it('a key refused with no such reason (its clock ran out) is still the checkpoint', async () => {
+    const { h, id } = started({
+      script: { lead: [new ModelError('MODEL_KEY_REFUSED', 401)] },
+      endReason: () => null,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toMatchObject({ kind: 'checkpoint' })
   })
 })

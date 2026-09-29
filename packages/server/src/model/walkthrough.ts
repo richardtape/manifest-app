@@ -165,7 +165,16 @@ function lead(user: string): unknown {
         account: 'One page listing the weeks',
       },
     }
-  return { move: { kind: 'read', paths: ['server.js'] } }
+  // On an app that already has its page (a change), it reads the page too: never rewritten unread.
+  const files = /The app's files:\n([\s\S]*?)\n\n/.exec(user)?.[1]?.split('\n') ?? []
+  return {
+    move: {
+      kind: 'read',
+      paths: files.includes('public/weeks.html')
+        ? ['server.js', 'public/weeks.html']
+        : ['server.js'],
+    },
+  }
 }
 
 /** F3's CWL specialist in mock mode: staff exactly as briefed, and the check in front of the instructor's pages. */

@@ -336,6 +336,12 @@ export const words = {
         `This piece of work has used what we allow in one go. Carry on? It can use up to ${cap} more${
           monthLeft === null ? '' : ` of the ${monthLeft} you have this month`
         }.`,
+      /**
+       * Rich's choice (2026-09-29, F4 sitting 5): the platform ended the session because the app's
+       * data is now confidential (FE-36's `models_withdrawn`). Stop and ask first.
+       */
+      withdrawn:
+        "Your app now keeps confidential data, so the model we were using can't work on it. Carry on continues with the on-campus model.",
       /** In their own time: the month resets at the first, 00:00 UTC. */
       month: (when: string) =>
         `Your AI allowance for this month is used up, part-way through. What's done is kept. It comes back at ${when}.`,

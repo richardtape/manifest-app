@@ -132,7 +132,7 @@ export async function writePlan(model: Model, input: PlanInput): Promise<Plan> {
 }
 
 /** docs/plan.md's headings: ours, as the plan screen's are. */
-const HEADINGS: Record<Row, string> = {
+export const HEADINGS: Record<Row, string> = {
   studentsSee: 'What students see',
   youSee: 'What you see',
   itKeeps: 'What it keeps',

@@ -517,6 +517,16 @@ const CARDS: [
     [[words.building.carryOn, 'build', ['c-1']]],
   ],
   [
+    'its session ended, the app now confidential (FE-36; Rich: stop and ask first)',
+    { kind: 'withdrawn' },
+    "Your app now keeps confidential data, so the model we were using can't work on it. Carry on continues with the on-campus model.",
+    false,
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
+  ],
+  [
     'the month spent',
     { kind: 'month', resetsAt: '2026-10-01T00:00:00.000Z' },
     words.building.needs.month('5pm on 30 September'),

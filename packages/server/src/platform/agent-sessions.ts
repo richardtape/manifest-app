@@ -31,11 +31,14 @@ export interface AgentSessions {
     capUsd: number
   }>
   end(token: string, sessionId: string): Promise<void>
-  /** Each of the project's sessions and what it has spent: `null` when the gateway did not say (F3 Decision 14). */
+  /**
+   * Each of the project's sessions, what it has spent (`null` when the gateway did not say, F3
+   * Decision 14), and why the platform ended it, if it did (`models_withdrawn`: FE-36).
+   */
   list(
     token: string,
     projectId: string,
-  ): Promise<{ id: string; spentUsd: number | null }[]>
+  ): Promise<{ id: string; spentUsd: number | null; endReason: string | null }[]>
 }
 
 /**
@@ -112,7 +115,11 @@ export function platformAgentSessions(origin: string): AgentSessions {
             params: { path: { projectId } },
           }),
           'listAgentSessions',
-        ).sessions.map((session) => ({ id: session.id, spentUsd: session.spentUsd })),
+        ).sessions.map((session) => ({
+          id: session.id,
+          spentUsd: session.spentUsd,
+          endReason: session.endReason ?? null,
+        })),
       ),
     end: (token, sessionId) =>
       asked(async () => {

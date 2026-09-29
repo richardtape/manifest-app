@@ -15,7 +15,7 @@ import { storeTrace } from '../runtime/trace.js'
 import { openStore } from '../store/db.js'
 import { cwl, type CwlBrief } from './cwl.js'
 import { explaining } from './explaining.js'
-import { LEAD_PROMPT, VIEW_CAP, lead, type LeadView } from './lead.js'
+import { CHANGE_PARAGRAPH, LEAD_PROMPT, VIEW_CAP, lead, type LeadView } from './lead.js'
 
 /**
  * F3 TASK 7: THE LEAD, THE CWL SPECIALIST AND THE EXPLAINING AGENT, and the lead's five moves
@@ -35,6 +35,8 @@ const FILES: Record<string, string> = {
   'auth/attributes.js': 'export function bridge(profile) { return profile }\n',
   'manifest.yaml':
     'manifest: 1\nauth:\n  provider: cwl\n  attributes: [ubcEduCwlPuid, mail]\n',
+  // Round 1's page, there for a change round to read (F4 Task 8).
+  'public/weeks.html': '<!doctype html>\n<h1>This week’s reading</h1>\n',
 }
 
 function roundContext(over: Partial<RoundContext> = {}) {
@@ -102,6 +104,8 @@ function roundContext(over: Partial<RoundContext> = {}) {
     account: (sentence) => void accounts.push(sentence),
     propose: (proposal) => void proposals.push(proposal),
     unchanged: () => undefined,
+    // Every file read as it is now, unless a test says otherwise (F4's `unread`).
+    known: () => true,
     askCwl: async (brief) => {
       briefs.push(brief)
       return {
@@ -167,6 +171,18 @@ describe("the lead's prompt", () => {
     // Task 12's walk: strict mode cuts a line at the schema's ceiling, mid-word ("…the full-in-").
     expect(LEAD_PROMPT).toMatch(/one short sentence, under 100 characters/)
     for (const move of leadMoves) expect(LEAD_PROMPT).toContain(move.describe)
+  })
+
+  it('reads a file before it rewrites it, and a confidential app keeps its own AI on the on-campus model (F4 Decision 9)', () => {
+    expect(LEAD_PROMPT).toMatch(/read a file before you rewrite it/i)
+    expect(LEAD_PROMPT).toMatch(/confidential[^.]*default-chat-onprem/i)
+  })
+
+  it('the change paragraph holds its three rules: an app that already works, read before rewriting, only what the change needs', () => {
+    expect(CHANGE_PARAGRAPH).toMatch(/already works/)
+    expect(CHANGE_PARAGRAPH).toMatch(/read .* before you (re)?write/i)
+    expect(CHANGE_PARAGRAPH).toMatch(/only what the (agreed )?change needs/i)
+    expect(machineryIn(CHANGE_PARAGRAPH)).toEqual([])
   })
 })
 
@@ -313,6 +329,17 @@ describe('commit', () => {
     ).rejects.toMatchObject({
       code: 'SOURCE_CONFLICT',
     })
+  })
+
+  it('is guarded: a file already in the app that it never read as it is now is sent back, read it first (F4 Decision 9)', () => {
+    const { context } = roundContext({
+      known: (change: Change) => change.path !== 'server.js',
+    })
+    const rewrite = commitMove({
+      changes: [{ op: 'write', path: 'server.js', content: 'console.log(1)\n' }],
+    })
+    expect(guardOf('commit', rewrite, context)).toMatch(/server\.js.*read it first/)
+    expect(guardOf('commit', commitMove(), context)).toBeNull()
   })
 
   it('is guarded: a Dockerfile, a line of machinery, an account with a path, and a staff email nobody wrote', () => {
@@ -585,6 +612,8 @@ describe("the lead's view (Decision 3)", () => {
     proposal: null,
     settled: false,
     asked: [],
+    change: null,
+    fix: null,
   })
 
   it('what it asked and what we went on with, and a settled proposal, are said; neither when there is none', () => {
@@ -686,6 +715,80 @@ describe("the lead's view (Decision 3)", () => {
     )
     expect(user).toContain('Can a late post still count?')
     expect(user).toContain('Committed 23ed148')
+  })
+
+  const INCIDENT = {
+    exitReason: 'the process exited with code 1',
+    failedCheck: 'readiness: GET /healthz, no answer after 87 attempts',
+    logTail: "Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/app/count.js'",
+    prompt: 'The app could not start: a module it imports is missing.',
+    diffSinceHealthy: '+ import ./count.js',
+  }
+  const said = (input: LeadView) =>
+    lead
+      .brief(input)
+      .map((m) => m.content)
+      .join('\n')
+
+  it('a change round: their words, the parts it changed as they now read, and the change paragraph (F4 Decision 9)', () => {
+    const user = said({
+      ...view([]),
+      change: {
+        asked: ['Also show a word count on each response.'],
+        parts: [
+          'What students see: One page listing the weeks. Each response shows its words.',
+        ],
+      },
+    })
+    expect(user).toMatch(/The change we agreed/)
+    expect(user).toContain('- "Also show a word count on each response."')
+    expect(user).toContain(
+      '- What students see: One page listing the weeks. Each response shows its words.',
+    )
+    expect(user).toContain(CHANGE_PARAGRAPH)
+  })
+
+  it('a fix round: what the platform recorded where it did not start, and the change paragraph', () => {
+    const user = said({ ...view([]), fix: { incident: INCIDENT, unread: null } })
+    expect(user).toMatch(/did not start on the trying-out address/)
+    for (const value of Object.values(INCIDENT)) expect(user).toContain(value)
+    expect(user).toContain(CHANGE_PARAGRAPH)
+  })
+
+  it("a fix whose record the platform keeps to the person (a confidential app's): only that it did not start, and why we cannot read it", () => {
+    const user = said({ ...view([]), fix: { incident: null, unread: 'confidential' } })
+    expect(user).toMatch(/did not start on the trying-out address/)
+    expect(user).toMatch(/cannot read why/i)
+    expect(user).toMatch(/confidential/)
+    expect(user).not.toMatch(/exited|readiness/)
+  })
+
+  it('a first round has no change and no fix, and no change paragraph', () => {
+    const user = said(view([]))
+    expect(user).not.toMatch(
+      /The change we agreed|did not start on the trying-out address/,
+    )
+    expect(user).not.toContain(CHANGE_PARAGRAPH)
+  })
+
+  it('a change and a fix of any size keep everything the lead is sent to VIEW_CAP', () => {
+    const huge = 'x'.repeat(30_000)
+    const input: LeadView = {
+      ...view([{ path: 'server.js', content: 's'.repeat(10_000) }]),
+      change: { asked: [huge], parts: [huge] },
+      fix: {
+        incident: { ...INCIDENT, logTail: huge, prompt: huge, diffSinceHealthy: huge },
+        unread: null,
+      },
+    }
+    const messages = [
+      { role: 'system', content: lead.instructions },
+      ...lead.brief(input),
+    ]
+    expect(messages.reduce((n, m) => n + m.content.length, 0)).toBeLessThanOrEqual(
+      VIEW_CAP,
+    )
+    expect(said(input)).toContain(input.plan)
   })
 
   it('never carries a token or a key, whatever the context holds', () => {
@@ -856,6 +959,8 @@ describe('mock mode: the walk-through answers the three (F2 Decision 7)', () => 
         proposal: null,
         settled: false,
         asked: [],
+        change: null,
+        fix: null,
       }),
       state: {
         runId: 'run-walk',
@@ -875,6 +980,52 @@ describe('mock mode: the walk-through answers the three (F2 Decision 7)', () => 
     expect(r.commits).toHaveLength(1)
     // Its done carries the round's one account, as the real lead's must.
     expect(r.accounts).toHaveLength(1)
+  })
+
+  it('on an app that already has its page (a change), its lead reads the page before it rewrites it (F4 Task 8)', async () => {
+    const kept: { path: string; content: string }[] = []
+    const r = roundContext({
+      paths: () => ['server.js', 'public/weeks.html', 'package.json'],
+      keep: (files) => void kept.push(...files),
+      known: (change) => kept.some((file) => file.path === change.path),
+    })
+    const saved: RunState[] = []
+    await run({
+      agent: lead,
+      tools: leadMoves,
+      context: r.context,
+      view: (state) => ({
+        plan: '# Reading responses\n',
+        pack: '# pack\n',
+        paths: r.context.paths(),
+        files: kept,
+        step: 'pages' as const,
+        tries: { build: 0, draft: 0, conflict: 0 },
+        last: state.last,
+        messages: [],
+        failures: [],
+        proposal: null,
+        settled: false,
+        asked: [],
+        change: { asked: ['Also show a word count.'], parts: [] },
+        fix: null,
+      }),
+      state: {
+        runId: 'run-walk',
+        step: 'pages',
+        moves: 0,
+        last: null,
+        sameRefusal: null,
+      },
+      model: walkthroughModel(),
+      maxMoves: 40,
+      stopped: () => false,
+      save: (s) => saved.push(s),
+      trace: storeTrace(openStore(':memory:')),
+    })
+    expect(kept.map((f) => f.path)).toContain('public/weeks.html')
+    expect(r.commits).toHaveLength(1)
+    expect(saved.map((s) => s.last?.kind)).toEqual(['read', 'commit', 'done'])
   })
 
   it('its CWL specialist writes the brief’s own staff, and its explaining agent is plain', async () => {

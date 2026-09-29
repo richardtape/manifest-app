@@ -17,6 +17,16 @@ export interface Guards {
   words(text: string): string | null
   /** Decision 13: every staff email is one the person wrote themselves. */
   staff(emails: string[], theirWords: string[]): string | null
+  /**
+   * F4 Decision 9: a file already in the app is written or deleted only when the lead knows it as
+   * it is now (read at the current tree, written this round, or the specialist's proposal for it
+   * committed as proposed). The lead writes whole files: one it never saw would be its guess.
+   */
+  unread(
+    changes: Change[],
+    tree: { paths: string[] },
+    known: (change: Change) => boolean,
+  ): string | null
 }
 
 const OUTSIDE =
@@ -165,6 +175,15 @@ export function guards(): Guards {
         return `say what the person will see, never how it is built ("${machine}")`
       if (FILE.test(text)) return 'say what the person will see, never a file or a path'
       return null
+    },
+
+    unread(changes, tree, known) {
+      const unread = changes.find(
+        (change) => tree.paths.includes(change.path) && !known(change),
+      )
+      return unread === undefined
+        ? null
+        : `${unread.path} is already in the app, and you have not read it as it is now: read it first, then write it whole on what is there`
     },
 
     staff(emails, theirWords) {

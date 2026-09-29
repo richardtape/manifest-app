@@ -52,6 +52,11 @@ export interface RoundContext {
   unchanged(changes: Change[]): void
   /** Their description, their messages, their answers: whose emails staff may be (Decision 13). */
   theirWords(): string[]
+  /**
+   * F4 Decision 9: whether the lead knows this file as it is now: read at the current tree,
+   * written this round, or the specialist's proposal for it, committed exactly as proposed.
+   */
+  known(change: Change): boolean
 }
 
 /** One change of a commit: a whole file written, or one deleted. */
@@ -142,6 +147,9 @@ const commit = defineTool({
   }),
   guard: ({ changes, line, account }, context: RoundContext) =>
     context.guards.commit(changes, { paths: context.paths() }, context.packageJson()) ??
+    context.guards.unread(changes, { paths: context.paths() }, (change) =>
+      context.known(change),
+    ) ??
     context.guards.words(line) ??
     context.guards.words(account) ??
     context.guards.staff(staffEmails(changes), context.theirWords()),

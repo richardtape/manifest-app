@@ -605,6 +605,7 @@ describe('instances: what is on the draft address, and what it printed', () => {
     )
     expect(await platformInstances(fake.origin).incidents(TOKEN, SANDBOX)).toEqual([
       {
+        id: '98164f37-b25e-4e29-b448-47971377a346',
         instanceId: 'c9e0a517-631a-4759-87e0-21ec3f19d857',
         releaseId: RELEASE,
         exitReason: 'the process exited with code 1',
@@ -615,6 +616,73 @@ describe('instances: what is on the draft address, and what it printed', () => {
       },
     ])
     expect(path(fake.seen[0]!)).toBe(`/v1/environments/${SANDBOX}/incidents`)
+  })
+
+  const STAGING_INCIDENT = {
+    id: '4b2f3a60-0c38-4f86-9d43-4f7c1f2f7a10',
+    instanceId: 'd1e0a517-631a-4759-87e0-21ec3f19d857',
+    releaseId: RELEASE,
+    exitReason: 'the process exited with code 1',
+    logTail: "Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/app/count.js'",
+    failedCheck: 'readiness: GET /healthz … after 87 attempt(s)',
+    diffSinceHealthy: '- the code changed',
+    createdAt: '2026-09-29T01:00:00Z',
+    prompt: 'The application failed to start in its staging environment.',
+  }
+
+  it("stagingIncident finds a fix's incident by its id on the staging environment, by its kind (F4 Task 8)", async () => {
+    const fake = await fakePlatform((seen) =>
+      seen.url?.endsWith('/environments')
+        ? ok(ENVIRONMENTS)
+        : ok({ environmentId: STAGING, incidents: [STAGING_INCIDENT] }),
+    )
+    const instances = platformInstances(fake.origin)
+    expect(
+      await instances.stagingIncident(TOKEN, PROJECT, STAGING_INCIDENT.id),
+    ).toMatchObject({
+      id: STAGING_INCIDENT.id,
+      logTail: STAGING_INCIDENT.logTail,
+      prompt: STAGING_INCIDENT.prompt,
+    })
+    expect(fake.seen.map(path)).toEqual([
+      `/v1/projects/${PROJECT}/environments`,
+      `/v1/environments/${STAGING}/incidents`,
+    ])
+    expect(
+      await instances.stagingIncident(
+        TOKEN,
+        PROJECT,
+        '00000000-0000-4000-8000-000000000000',
+      ),
+    ).toBeUndefined()
+  })
+
+  it("a confidential app's staging incident refused to our token is `confidential`, and read no other way", async () => {
+    const fake = await fakePlatform((seen) =>
+      seen.url?.endsWith('/environments')
+        ? ok(ENVIRONMENTS)
+        : refusal(403, 'INCIDENT_LOG_CONFIDENTIAL'),
+    )
+    expect(
+      await platformInstances(fake.origin).stagingIncident(
+        TOKEN,
+        PROJECT,
+        STAGING_INCIDENT.id,
+      ),
+    ).toBe('confidential')
+    expect(fake.seen).toHaveLength(2)
+  })
+
+  it('any other refusal is thrown, by its code', async () => {
+    const fake = await fakePlatform((seen) =>
+      seen.url?.endsWith('/environments')
+        ? ok(ENVIRONMENTS)
+        : refusal(503, 'PLATFORM_UNAVAILABLE'),
+    )
+    const error = await failure(
+      platformInstances(fake.origin).stagingIncident(TOKEN, PROJECT, STAGING_INCIDENT.id),
+    )
+    expect((error as PlatformRefusal).code).toBe('PLATFORM_UNAVAILABLE')
   })
 })
 
@@ -750,10 +818,29 @@ describe('agent sessions, with their cap and their clock (Decision 9)', () => {
       }),
     )
     expect(await platformAgentSessions(fake.origin).list(TOKEN, PROJECT)).toEqual([
-      { id: SESSION.session.id, spentUsd: 0.021253 },
-      { id: 'c988abc1-c8ee-4ac8-b499-52f37c9f9b52', spentUsd: null },
+      { id: SESSION.session.id, spentUsd: 0.021253, endReason: null },
+      { id: 'c988abc1-c8ee-4ac8-b499-52f37c9f9b52', spentUsd: null, endReason: null },
     ])
     expect(path(fake.seen[0]!)).toBe(`/v1/projects/${PROJECT}/agent-sessions`)
+  })
+
+  it('list says why the platform ended a session: models_withdrawn (FE-36, F4 Task 8)', async () => {
+    const fake = await fakePlatform(() =>
+      ok({
+        sessions: [
+          {
+            ...SESSION.session,
+            state: 'ended',
+            endReason: 'models_withdrawn',
+            spentUsd: 0.4,
+          },
+        ],
+        truncated: false,
+      }),
+    )
+    expect(await platformAgentSessions(fake.origin).list(TOKEN, PROJECT)).toEqual([
+      { id: SESSION.session.id, spentUsd: 0.4, endReason: 'models_withdrawn' },
+    ])
   })
 })
 

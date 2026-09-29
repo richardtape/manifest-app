@@ -296,3 +296,39 @@ describe('importsHold: every import resolves (Decision 6; M6: ES modules)', () =
     ).toEqual([{ path: 'server.js', missing: 'vitest' }])
   })
 })
+
+describe('unread: never a file rewritten unread (F4 Decision 9, Review Focus 3)', () => {
+  /** What the round knows: read at the current tree, written this round, or proposed as is. */
+  const known =
+    (...paths: string[]) =>
+    (change: Change) =>
+      paths.includes(change.path)
+  const unread = (changes: Change[], ...paths: string[]) =>
+    guards().unread(changes, TREE, known(...paths))
+
+  it('a write to a file already in the app, never read as it is now, is sent back: read it first', () => {
+    const reason = unread([write('server.js')])
+    expect(reason).toMatch(/server\.js/)
+    expect(reason).toMatch(/read it first/)
+  })
+
+  it('a file read as it is now, or written this round, is taken', () => {
+    expect(unread([write('server.js')], 'server.js')).toBeNull()
+  })
+
+  it('a new file needs no read', () => {
+    expect(unread([write('routes/word-count.js')])).toBeNull()
+  })
+
+  it('a delete of a file never read is sent back too', () => {
+    expect(unread([{ op: 'delete', path: 'public/app.js' }])).toMatch(
+      /public\/app\.js.*read it first/,
+    )
+  })
+
+  it('among several, the unread one is named', () => {
+    const reason = unread([write('server.js'), write('public/app.js')], 'server.js')
+    expect(reason).toMatch(/public\/app\.js/)
+    expect(reason).not.toMatch(/server\.js/)
+  })
+})

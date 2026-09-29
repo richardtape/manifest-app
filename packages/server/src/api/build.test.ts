@@ -186,6 +186,7 @@ function setUp(script: unknown[] = []) {
           list: async () => [],
           output: async () => ({ lines: [], failure: null }),
           incidents: async () => [],
+          stagingIncident: async () => undefined,
         },
         secrets: { setInSandbox: async () => undefined },
         members: { instructor: async () => ({ puid: 'ins000001', email: 'a@ubc.ca' }) },

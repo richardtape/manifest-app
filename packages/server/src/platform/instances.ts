@@ -9,6 +9,7 @@ import { instanceOf, sandboxOf, type Instance } from './releases.js'
  * on the answer (M2: the mock answers staging's instance whatever is named).
  */
 export interface Incident {
+  id: string
   instanceId: string
   releaseId: string
   exitReason: string
@@ -30,6 +31,16 @@ export interface Instances {
     lines: number,
   ): Promise<{ lines: string[]; failure: string | null } | { unavailable: true }>
   incidents(token: string, environmentId: string): Promise<Incident[]>
+  /**
+   * F4 Decision 9: the trying-out address's incident a fix names, by its id; `undefined` when it
+   * is not there. A confidential app's is refused to our token while the capable model builds it
+   * (`403 INCIDENT_LOG_CONFIDENTIAL`): `confidential`, and never read another way.
+   */
+  stagingIncident(
+    token: string,
+    projectId: string,
+    incidentId: string,
+  ): Promise<Incident | 'confidential' | undefined>
 }
 
 export function platformInstances(origin: string): Instances {
@@ -49,8 +60,54 @@ export function platformInstances(origin: string): Instances {
       })),
     )
 
+  const incidents = (token: string, environmentId: string) =>
+    called(async () =>
+      unwrap(
+        await tokenClient(origin, token).GET(
+          '/v1/environments/{environmentId}/incidents',
+          {
+            params: { path: { environmentId } },
+          },
+        ),
+        'listIncidents',
+      ).incidents.map((incident): Incident => ({
+        id: incident.id,
+        instanceId: incident.instanceId,
+        releaseId: incident.releaseId,
+        exitReason: incident.exitReason,
+        logTail: incident.logTail,
+        failedCheck: incident.failedCheck,
+        diffSinceHealthy: incident.diffSinceHealthy,
+        prompt: incident.prompt,
+      })),
+    )
+
   return {
     list,
+    incidents,
+    async stagingIncident(token, projectId, incidentId) {
+      const environments = await called(async () =>
+        unwrap(
+          await tokenClient(origin, token).GET('/v1/projects/{projectId}/environments', {
+            params: { path: { projectId } },
+          }),
+          'listEnvironments',
+        ),
+      )
+      // By its kind, never its place in the list.
+      const staging = environments.find((environment) => environment.kind === 'staging')
+      if (staging === undefined) return undefined
+      try {
+        return (await incidents(token, staging.id)).find((i) => i.id === incidentId)
+      } catch (error) {
+        if (
+          error instanceof PlatformRefusal &&
+          error.code === 'INCIDENT_LOG_CONFIDENTIAL'
+        )
+          return 'confidential'
+        throw error
+      }
+    },
     async output(token, projectId, instanceId, lines) {
       const { environmentId } = await sandboxOf(origin, token, projectId)
       const sandboxed = await list(token, environmentId)
@@ -70,25 +127,5 @@ export function platformInstances(origin: string): Instances {
         throw refusal
       }
     },
-    incidents: (token, environmentId) =>
-      called(async () =>
-        unwrap(
-          await tokenClient(origin, token).GET(
-            '/v1/environments/{environmentId}/incidents',
-            {
-              params: { path: { environmentId } },
-            },
-          ),
-          'listIncidents',
-        ).incidents.map((incident) => ({
-          instanceId: incident.instanceId,
-          releaseId: incident.releaseId,
-          exitReason: incident.exitReason,
-          logTail: incident.logTail,
-          failedCheck: incident.failedCheck,
-          diffSinceHealthy: incident.diffSinceHealthy,
-          prompt: incident.prompt,
-        })),
-      ),
   }
 }

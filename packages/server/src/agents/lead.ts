@@ -30,6 +30,22 @@ export interface LeadView {
   settled: boolean
   /** This round's questions, and what we went on with: null while it waits for their answer. */
   asked: { ask: string; wentWith: string | null }[]
+  /** F4: the agreed change: their words, and the plan's parts that changed, as they now read. */
+  change: { asked: string[]; parts: string[] } | null
+  /**
+   * F4: a fix of ours, when the app did not start on the trying-out address: what the platform
+   * recorded there, or none, and why (a confidential app's record is the person's alone).
+   */
+  fix: {
+    incident: {
+      exitReason: string
+      failedCheck: string
+      logTail: string
+      prompt: string
+      diffSinceHealthy: string
+    } | null
+    unread: 'confidential' | 'missing' | null
+  } | null
 }
 
 export type LeadMove =
@@ -57,12 +73,27 @@ export const VIEW_CAP = 48_000
 const LAST_CAP = 12_000
 /** The specialist's proposal, whole: its four sign-in files come to about 22,000 at most (M6). */
 const PROPOSAL_CAP = 24_000
+/** A change's words and parts, and each thing a fix's record says: whole enough, never the view. */
+const CHANGE_CAP = 4_000
+const FIX_FIELD_CAP = 2_000
+
+/**
+ * F4 DECISION 9: WHAT A ROUND ON AN APP THAT ALREADY WORKS IS TOLD, beside the change or the fix.
+ * M5 measured it on the capable model: the lead read the files it would change first, 5 of 5.
+ */
+export const CHANGE_PARAGRAPH = [
+  'You are changing an app that already works, and people use it.',
+  'Read each file before you rewrite it, and write it whole on what is there.',
+  'Change only what the agreed change needs: keep everything else as it is.',
+].join(' ')
 
 export const LEAD_PROMPT = [
   'You are the lead builder of a small web app a university instructor described. We build it together with them, and you always speak as "we".',
   "You write the app from the plan we agreed, on its blueprint. The stack is fixed: never add a package or a dependency, and never change package.json's dependencies or package-lock.json. If what they asked for needs a package the app does not have, say so plainly in your line, and build the rest.",
   'Never write a Dockerfile or an .npmrc, and never a build block in manifest.yaml: the blueprint owns how the app is built.',
   "The app is JavaScript, as ES modules, and server.js is its entry. A relative import names its file exactly, with its extension: './routes/posts.js'. Never put a secret in a file or a message.",
+  'Read a file before you rewrite it: a write to a file already in the app that you have not read as it is now is sent back.',
+  'An app whose data is confidential asks only default-chat-onprem when it uses AI itself (ai.models in manifest.yaml): the platform refuses any other model for it.',
   'Each turn you answer with exactly one move:',
   ...leadMoves.map((move) => `- ${move.describe}`),
   "Write whole files: each write is the file's complete new content, on the files as they are now. Commit small steps that hold together.",
@@ -114,6 +145,46 @@ function proposalOf(proposal: LeadView['proposal']): string[] {
       ]
 }
 
+const cut = (text: string, max: number) =>
+  text.length <= max ? text : `${text.slice(0, max)}\n…(cut)`
+
+/** F4: the agreed change, or the fix, and the paragraph for an app that already works. */
+function pieceOf(view: LeadView): string[] {
+  if (view.change !== null)
+    return [
+      '',
+      'The change we agreed with them, in their words:',
+      ...view.change.asked.map((words) => `- "${cut(words, CHANGE_CAP)}"`),
+      'The parts of the plan it changed, as they now read:',
+      ...view.change.parts.map((part) => `- ${cut(part, CHANGE_CAP)}`),
+      CHANGE_PARAGRAPH,
+    ]
+  if (view.fix !== null) {
+    const incident = view.fix.incident
+    return [
+      '',
+      'The app did not start on the trying-out address, and we are fixing that.',
+      ...(incident !== null
+        ? [
+            `How it ended: ${cut(incident.exitReason, FIX_FIELD_CAP)}`,
+            `The check it failed: ${cut(incident.failedCheck, FIX_FIELD_CAP)}`,
+            `Its last lines:\n${cut(incident.logTail, FIX_FIELD_CAP)}`,
+            `What the platform wrote for an agent to work from: ${cut(incident.prompt, FIX_FIELD_CAP)}`,
+            `What changed since it last started there: ${cut(incident.diffSinceHealthy, FIX_FIELD_CAP)}`,
+          ]
+        : view.fix.unread === 'confidential'
+          ? [
+              "We cannot read why there: the platform keeps a confidential app's record of it to the person. Look for what would stop it starting, and change only that.",
+            ]
+          : [
+              'We cannot read why there: its record was not found. Look for what would stop it starting, and change only that.',
+            ]),
+      CHANGE_PARAGRAPH,
+    ]
+  }
+  return []
+}
+
 function brief(view: LeadView): { role: 'user'; content: string }[] {
   const head = [
     'The plan we agreed (docs/plan.md, committed):',
@@ -124,6 +195,7 @@ function brief(view: LeadView): { role: 'user'; content: string }[] {
     '',
     "The app's files:",
     view.paths.join('\n'),
+    ...pieceOf(view),
     '',
     `The step: ${STEPS[view.step]}. Tries so far: building ${view.tries.build}, the draft address ${view.tries.draft}, someone else's changes ${view.tries.conflict}.`,
     ...(view.failures.length > 0
