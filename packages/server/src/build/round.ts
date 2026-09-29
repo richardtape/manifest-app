@@ -187,6 +187,11 @@ interface Live {
   /** F4: the agreed change, or the fix, as the lead's view carries it; read once a leg. */
   change: LeadView['change']
   fix: LeadView['fix']
+  /**
+   * FE-36: the model we were using when the platform withdrew the session. The next session
+   * carries on by itself if it still lists that model, and asks them first if not (Rich).
+   */
+  renewing: string | null
 }
 
 const detail = (live: Live): RunDetail => live.run.detail as RunDetail
@@ -487,6 +492,17 @@ export function createRounds(deps: RoundDeps): Rounds {
           { kind: 'refused', code: 'MODEL_NOT_AVAILABLE' },
           'MODEL_NOT_AVAILABLE',
         )
+      }
+      if (live.renewing !== null) {
+        if (name !== live.renewing) {
+          // The model we were using is gone (Rich: stop and ask first). Nothing was spent on it.
+          live.ended.add(started.sessionId)
+          await call(live, 'endAgentSession', started.sessionId, () =>
+            sessions.end(live.token, started.sessionId),
+          ).catch(() => undefined)
+          return needs({ kind: 'withdrawn' })
+        }
+        say(live, 'we', { kind: 'carried', round: live.run.round })
       }
       live.run.model = name
       // RICH, 2026-09-28: a confidential app's sessions list only the on-campus model (the
@@ -1325,6 +1341,24 @@ export function createRounds(deps: RoundDeps): Rounds {
         } catch (error) {
           ending = await fromError(live, error)
         }
+        // RICH, 2026-09-29 (at his click): the platform withdrew the session because the app's
+        // data is now confidential. When a new session still lists the model we were using, we
+        // carry on by ourselves and say so; only a model that is gone stops and asks (once a leg).
+        if (
+          ending.kind === 'needs' &&
+          ending.needs.kind === 'withdrawn' &&
+          !live.stopped
+        ) {
+          live.renewing = live.run.model
+          await endSession(live)
+          try {
+            ending = await steps(live)
+          } catch (error) {
+            ending = await fromError(live, error)
+          } finally {
+            live.renewing = null
+          }
+        }
         await end(live, ending)
       } finally {
         live.running = false
@@ -1364,6 +1398,7 @@ export function createRounds(deps: RoundDeps): Rounds {
       known: new Set(),
       change: null,
       fix: null,
+      renewing: null,
     }
   }
 

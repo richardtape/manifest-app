@@ -134,17 +134,17 @@ export function modelFor(listed: string[]): string | undefined {
 }
 
 /**
- * AN OPENAI-COMPATIBLE GATEWAY: the platform's LiteLLM, with an intake or agent session's
- * key. It sends no reasoning setting of its own: the gateway's `think: false` on
- * `default-chat` is load-bearing, and only a request's own `think: true` beats it (F2 M3).
- */
-/**
  * A ROUND'S MODEL WAITS LONGER THAN THE INTAKE'S 60 s: the lead writes whole files, and on the real
  * platform one commit took 68.9 s (9,564 tokens written; F4 Step 3, Rich's click), cut off and said
  * as unreachable. Nobody waits on the page for a round, and a call that answers is paid for.
  */
 export const ROUND_MODEL_TIMEOUT_MS = 5 * 60_000
 
+/**
+ * AN OPENAI-COMPATIBLE GATEWAY: the platform's LiteLLM, with an intake or agent session's
+ * key. It sends no reasoning setting of its own: the gateway's `think: false` on
+ * `default-chat` is load-bearing, and only a request's own `think: true` beats it (F2 M3).
+ */
 export function openAiCompatible(options: {
   baseUrl: string
   key: string

@@ -999,6 +999,7 @@ describe('the conversation, on the left', () => {
       },
       { kind: 'fallback', round: 1, at: '2026-09-28T16:06:00.000Z' },
       { kind: 'campus', round: 1, at: '2026-09-28T16:07:00.000Z' },
+      { kind: 'carried', round: 1, at: '2026-09-28T16:08:00.000Z' },
       {
         kind: 'built',
         round: 1,
@@ -1037,6 +1038,10 @@ describe('the conversation, on the left', () => {
     ).toBeTruthy()
     expect(within(talk).getByText(words.building.fallback)).toBeTruthy()
     expect(within(talk).getByText(words.building.campus)).toBeTruthy()
+    // Rich, 2026-09-29: the platform withdrew the session, and we carried on by ourselves.
+    expect(
+      within(talk).getByText('Your app now keeps confidential data. We carried on.'),
+    ).toBeTruthy()
     // 16:12 UTC is 9:12am in Vancouver.
     expect(
       within(talk).getByText(words.building.thread.built('28 Sep, 9:12am')),

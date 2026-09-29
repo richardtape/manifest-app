@@ -311,6 +311,11 @@ export const words = {
     /** Rich (2026-09-28): a confidential app is built with the on-campus model; said once. */
     campus:
       "This app keeps personal information, so we're building it with a smaller model that runs at UBC. It may take a few more tries.",
+    /**
+     * Rich (2026-09-29, at his click): the platform withdrew the session when the app's data became
+     * confidential, and a new one still lists the model we were using, so we carried on.
+     */
+    carried: 'Your app now keeps confidential data. We carried on.',
     whatChanged: 'What changed',
     exactChanges: 'The exact changes, for whoever you ask for help',
     exactWords: 'The exact words, for whoever you ask for help',

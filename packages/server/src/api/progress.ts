@@ -239,6 +239,8 @@ export type Said =
   | { kind: 'fallback'; round: number; at: string }
   /** A confidential app: we build it with the on-campus model; once in the conversation. */
   | { kind: 'campus'; round: number; at: string }
+  /** FE-36: the app's data became confidential, and we carried on in a new session (Rich). */
+  | { kind: 'carried'; round: number; at: string }
   /** A round, folded into one line (Decision 16): what changed, in the lead's own accounts. */
   | {
       kind: 'built'

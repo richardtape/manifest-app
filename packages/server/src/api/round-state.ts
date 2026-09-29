@@ -25,6 +25,8 @@ export type RoundSaid =
   | { kind: 'fallback'; round: number }
   /** A confidential app's sessions list only the on-campus model (Rich: carry on, and say so); once. */
   | { kind: 'campus'; round: number }
+  /** FE-36: the platform withdrew the session, and we carried on in a new one (Rich, 2026-09-29). */
+  | { kind: 'carried'; round: number }
   /** The round, folded into one line (Decision 16). */
   | { kind: 'built'; round: number; line: string | null; cannot: string | null }
 
@@ -178,6 +180,9 @@ export function threadOf(store: Store, conversationId: string): Said[] {
         break
       case 'campus':
         thread.push({ kind: 'campus', round: said.round, at })
+        break
+      case 'carried':
+        thread.push({ kind: 'carried', round: said.round, at })
         break
       case 'built':
         thread.push({

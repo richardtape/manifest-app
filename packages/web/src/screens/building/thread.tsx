@@ -53,6 +53,12 @@ function SaidItem({ said, timeZone }: { said: Said; timeZone: string | undefined
           <p className="said__text">{words.building.campus}</p>
         </li>
       )
+    case 'carried':
+      return (
+        <li className="said said--ours">
+          <p className="said__text">{words.building.carried}</p>
+        </li>
+      )
     case 'built':
       return (
         <li className="said said--ours said--folded">

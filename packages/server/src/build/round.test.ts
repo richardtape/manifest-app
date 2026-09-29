@@ -200,6 +200,8 @@ interface Options {
   waits?: { pollMs: number; buildMs: number; draftMs: number }
   /** What each session lists: a confidential project's lists only the on-campus model. */
   models?: string[]
+  /** What each session lists, by its index, when they differ (FE-36: a setting that withdraws a model). */
+  modelsOf?: (n: number) => string[]
   /** Whether the draft's sign-in starts, each time it is checked (FE-37). */
   signIn?: (n: number) => 'ok' | 'refused' | 'unknown'
   /** Told when a piece of work ends (F4: the app's line starts its next). */
@@ -250,7 +252,8 @@ function harness(options: Options, file?: string, store0?: Store) {
         sessionId: `${options.sessionIds ?? 'session'}-${sessionsStarted}`,
         key: `sk-test-key-${sessionsStarted}`,
         baseUrl: GATEWAY,
-        models: options.models ?? ['default-chat', 'default-chat-large', 'default-embed'],
+        models: options.modelsOf?.(sessionsStarted - 1) ??
+          options.models ?? ['default-chat', 'default-chat-large', 'default-embed'],
         expiresAt: '2026-09-28T23:00:00.000Z',
         capUsd: 2,
       }
@@ -1980,8 +1983,8 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     },
   )
 
-  it('models_withdrawn (FE-36): a key refused because the platform ended the session is needs withdrawn, never the $2 checkpoint; Carry on starts a new session (Rich: stop and ask first)', async () => {
-    const { h, id, conversation } = started({
+  it("models_withdrawn (FE-36) with the model we were using still listed: we carry on by ourselves in a new session, and say so once, never the card (Rich, 2026-09-29, at his click: the lead's own commit made the app confidential, and the capable model stays allowed)", async () => {
+    const { h, id } = started({
       script: {
         lead: [
           new ModelError('MODEL_KEY_REFUSED', 401),
@@ -1993,12 +1996,44 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
       endReason: (n) => (n === 0 ? 'models_withdrawn' : null),
       autoBuild: true,
     })
-    await untilStatus(h, id, 'needs-you')
-    expect(viewOf(h, id)).toMatchObject({ needs: { kind: 'withdrawn' }, reference: null })
-    expect(h.sessionStarts).toHaveLength(1)
-    h.rounds.carryOn(h.store.getConversation(conversation.id, ALICE.id)!, TOKEN)
     await untilStatus(h, id, 'done')
     expect(h.sessionStarts).toHaveLength(2)
+    expect(h.models.map((m) => m.model)).toEqual([
+      'default-chat-large',
+      'default-chat-large',
+    ])
+    expect(said(h, id).filter((m) => m.kind === 'carried')).toEqual([
+      { from: 'we', kind: 'carried', round: 1 },
+    ])
+    expect(viewOf(h, id)?.needs ?? null).toBeNull()
+  })
+
+  it('models_withdrawn with the model we were using gone (an on-campus-only setting): stop and ask first — the new session ended unused, the card; Carry on continues on what the app now allows (Rich: stop and ask first)', async () => {
+    const { h, id, conversation } = started({
+      script: {
+        lead: [
+          new ModelError('MODEL_KEY_REFUSED', 401),
+          read('server.js'),
+          commit(),
+          done(),
+        ],
+      },
+      endReason: (n) => (n === 0 ? 'models_withdrawn' : null),
+      modelsOf: (n) =>
+        n === 0
+          ? ['default-chat', 'default-chat-large', 'default-embed']
+          : ['default-chat-onprem', 'default-chat-onprem-reasoning', 'default-embed'],
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)).toMatchObject({ needs: { kind: 'withdrawn' }, reference: null })
+    expect(h.sessionStarts).toHaveLength(2)
+    expect(h.ended).toContain('session-2')
+    expect(said(h, id).filter((m) => m.kind === 'carried')).toEqual([])
+    h.rounds.carryOn(h.store.getConversation(conversation.id, ALICE.id)!, TOKEN)
+    await untilStatus(h, id, 'done')
+    expect(h.sessionStarts).toHaveLength(3)
+    expect(h.models.at(-1)?.model).toBe('default-chat-onprem')
   })
 
   it('a key refused with no such reason (its clock ran out) is still the checkpoint', async () => {
