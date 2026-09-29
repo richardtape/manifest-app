@@ -431,7 +431,10 @@ export function PlanScreen({
         <p className="body-lead">{words.plan.lead}</p>
         {noticeCard}
         {rows}
-        {change ? <p className="body-lead">{words.change.unchanged}</p> : null}
+        {/* Said only when something is left as agreed: never about nothing. */}
+        {change && shown.changed.length < ROWS.length ? (
+          <p className="body-lead">{words.change.unchanged}</p>
+        ) : null}
         {shown.assumed.length > 0 ? (
           <section className="plan__section">
             <h3 className="subheading">{words.plan.assumedTitle}</h3>

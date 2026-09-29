@@ -336,8 +336,10 @@ describe('the line: a waiting conversation (Decision 5)', () => {
     expect(document.querySelector('.mf-chip.mf-is-waiting')).not.toBeNull()
     expect(screen.getByText('Next in line.')).toBeTruthy()
     expect(text()).not.toMatch(/which is waiting for you/)
-    // What they asked, and a box for more.
+    // What they asked, and a box for more, whose hint is true here (the walk: F3's said "the next step").
     expect(screen.getByText(WORDS)).toBeTruthy()
+    expect(screen.getByText('We add it to what you asked for.')).toBeTruthy()
+    expect(text()).not.toMatch(/next step/)
     fireEvent.change(screen.getByLabelText('Anything to add?'), {
       target: { value: 'And bold, please.' },
     })
@@ -398,6 +400,25 @@ describe("the change's plan: \"Here's what we'd change\" (Rich: agree the change
       ['c-2', { version: 1, answers: { count: 'Yes, as they type.' } }],
     ])
     plain()
+  })
+
+  it('every part changed (a plan that no longer read back): all five shown, and no "Everything else…" about nothing', async () => {
+    const s = await conversation()
+    s.state(
+      { state: 'plan-ready', title: 'Word count' },
+      {
+        plan: {
+          version: 1,
+          plan: {
+            ...CHANGE,
+            changed: ['studentsSee', 'youSee', 'itKeeps', 'whoGetsIn', 'ai'],
+          },
+        },
+      },
+    )
+    await screen.findByRole('heading', { name: "Here's what we'd change" })
+    expect(screen.getByText('What it keeps')).toBeTruthy()
+    expect(screen.queryByText('Everything else stays as we agreed.')).toBeNull()
   })
 
   it('Not now sets it aside (/stop); a correction is one sentence, as the first plan’s', async () => {

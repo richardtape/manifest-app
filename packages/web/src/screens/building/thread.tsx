@@ -152,7 +152,7 @@ export function MessageBox({
   onMessage: (words: string) => void
   id?: string
   label?: string
-  hint?: string | undefined
+  hint?: string
   send?: string
 }) {
   const [value, setValue] = useState('')

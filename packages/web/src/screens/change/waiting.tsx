@@ -86,7 +86,7 @@ export function WaitingScreen({
     <div className="waiting">
       <h1 className="page-title">{intake.project?.name ?? conversation.title}</h1>
       {notice}
-      <Card tone="waiting">
+      <Card tone="waiting" className="waiting__card">
         <StateChip state="waiting" label={w.waitingChip} />
         {holder === null ? (
           <p className="body-lead">{w.startsSoon}</p>
@@ -118,7 +118,7 @@ export function WaitingScreen({
       <MessageBox
         id="waiting-message"
         label={w.addLabel}
-        hint={undefined}
+        hint={w.addHint}
         send={w.send}
         onMessage={(said) => void send('message', () => ours.message(id, said))}
       />
@@ -149,7 +149,7 @@ export function SetAsideScreen({
     <div className="waiting">
       <h1 className="page-title">{intake.project?.name ?? conversation.title}</h1>
       {notice}
-      <Card tone="plain">
+      <Card tone="plain" className="waiting__card">
         <StateChip state="notyet" label={w.conversations.setAside} />
         <p className="body-lead">{w.setAside}</p>
       </Card>

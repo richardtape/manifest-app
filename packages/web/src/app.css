@@ -831,3 +831,57 @@
     gap: var(--space-5);
   }
 }
+
+/* Moment 8 (F4 Task 9): a conversation waiting its turn, or a change set aside. */
+.waiting,
+.conversations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 760px;
+}
+.waiting__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.app-main .waiting__card p {
+  margin: 0;
+}
+.waiting__asked .subheading {
+  margin: 0 0 var(--space-2);
+}
+.waiting__asked ul {
+  margin: 0;
+}
+
+/* Every piece of work on an app: a row each, its title, its chip, and when. */
+.app-main .conversations > .body-lead {
+  margin: 0;
+}
+.conversations__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-default);
+}
+.conversations__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-default);
+}
+.conversations__title {
+  flex: 1 1 16rem;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.conversations__when {
+  color: var(--ink-secondary);
+  font-size: 14px;
+  white-space: nowrap;
+}

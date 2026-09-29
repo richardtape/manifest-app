@@ -523,6 +523,8 @@ export const words = {
     /** Ours: what they asked, and the box that adds to it while it waits. */
     asked: 'What you asked for',
     addLabel: 'Anything to add?',
+    /** Ours: true while it waits, where F3's "the next step" is not. */
+    addHint: 'We add it to what you asked for.',
     send: 'Send',
     /** The change's plan (walk-through; Rich's with the plan). */
     planTitle: "Here's what we'd change",
