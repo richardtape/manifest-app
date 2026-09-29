@@ -931,6 +931,7 @@ describe('the conversation, on the left', () => {
         at: '2026-09-28T16:05:00.000Z',
       },
       { kind: 'fallback', round: 1, at: '2026-09-28T16:06:00.000Z' },
+      { kind: 'campus', round: 1, at: '2026-09-28T16:07:00.000Z' },
       {
         kind: 'built',
         round: 1,
@@ -968,6 +969,7 @@ describe('the conversation, on the left', () => {
       ),
     ).toBeTruthy()
     expect(within(talk).getByText(words.building.fallback)).toBeTruthy()
+    expect(within(talk).getByText(words.building.campus)).toBeTruthy()
     // 16:12 UTC is 9:12am in Vancouver.
     expect(
       within(talk).getByText(words.building.thread.built('28 Sep, 9:12am')),

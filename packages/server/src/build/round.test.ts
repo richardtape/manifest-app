@@ -190,6 +190,8 @@ interface Options {
   sessionIds?: string
   /** The round's waits, shortened: a test cannot wait 30 s for a poll. */
   waits?: { pollMs: number; buildMs: number; draftMs: number }
+  /** What each session lists: a confidential project's lists only the on-campus model. */
+  models?: string[]
 }
 
 function harness(options: Options, file?: string, store0?: Store) {
@@ -230,7 +232,7 @@ function harness(options: Options, file?: string, store0?: Store) {
         sessionId: `${options.sessionIds ?? 'session'}-${sessionsStarted}`,
         key: `sk-test-key-${sessionsStarted}`,
         baseUrl: GATEWAY,
-        models: ['default-chat', 'default-chat-large', 'default-embed'],
+        models: options.models ?? ['default-chat', 'default-chat-large', 'default-embed'],
         expiresAt: '2026-09-28T23:00:00.000Z',
         capUsd: 2,
       }
@@ -1315,6 +1317,39 @@ describe('the stream (Decision 15; Review Focus 5)', () => {
     await untilStatus(h, id, 'needs-you')
     expect(viewOf(h, id)?.needs).toEqual({ kind: 'unreachable', what: 'platform' })
     expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+  })
+})
+
+describe('a confidential project: only the on-campus model (Rich, 2026-09-28: carry on, and say so)', () => {
+  it('carries on with it, and says so once in the conversation, never as the fallback, whatever the legs', async () => {
+    const deploy = held<Instance>()
+    const { h, id } = await startedRound({
+      script: { lead: [read('server.js'), commit(), done(), done()] },
+      autoBuild: true,
+      deploy: () => deploy.promise,
+      models: ['default-chat-onprem', 'default-chat-onprem-reasoning', 'default-embed'],
+    })
+    await until(
+      () => h.deployed.length === 0 && h.releasesMade.length === 1,
+      () => h.did,
+    )
+    expect(h.models.map((m) => m.model)).toEqual(['default-chat-onprem'])
+    // A second leg, on a second session: Stop, then Carry on.
+    h.rounds.stop(h.store.getConversation(id, ALICE.id)!)
+    await untilStatus(h, id, 'stopped')
+    deploy.resolve({ id: 'instance-1', releaseId: 'release-1', state: 'healthy' })
+    // The stopped leg's deploy returns, and is discarded; then its leg is over.
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN)
+    await untilStatus(h, id, 'done')
+    expect(h.models.map((m) => m.model)).toEqual([
+      'default-chat-onprem',
+      'default-chat-onprem',
+    ])
+    expect(said(h, id).filter((m) => m.kind === 'campus')).toEqual([
+      { from: 'we', kind: 'campus', round: 1 },
+    ])
+    expect(said(h, id).filter((m) => m.kind === 'fallback')).toEqual([])
   })
 })
 

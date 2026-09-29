@@ -464,6 +464,15 @@ export function createRounds(deps: RoundDeps): Rounds {
         )
       }
       live.run.model = name
+      // RICH, 2026-09-28: a confidential app's sessions list only the on-campus model (the
+      // platform's classification floor). We carry on with it, and say so once in the conversation.
+      if (
+        name === 'default-chat-onprem' &&
+        !store
+          .listMessages(live.conversation.id)
+          .some((m) => (m.body as { kind?: string }).kind === 'campus')
+      )
+        say(live, 'we', { kind: 'campus', round: live.run.round })
       const model = deps.modelFor(
         { key: started.key, baseUrl: started.baseUrl, model: name },
         (answer) => heard(live, answer),

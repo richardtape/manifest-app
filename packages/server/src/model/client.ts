@@ -128,7 +128,9 @@ function answeredOf(payload: unknown, headers: Headers): Answered {
 
 /** Decision 4: the most capable model a session lists, or none. */
 export function modelFor(listed: string[]): string | undefined {
-  return ['default-chat-large', 'default-chat'].find((name) => listed.includes(name))
+  return ['default-chat-large', 'default-chat', 'default-chat-onprem'].find((name) =>
+    listed.includes(name),
+  )
 }
 
 /**

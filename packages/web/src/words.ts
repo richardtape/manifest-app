@@ -280,6 +280,9 @@ export const words = {
     /** Decision 4 (Rich: carry on, and say so), once a round. */
     fallback:
       "Our usual model can't be reached just now, so we're carrying on with a smaller one. It may take a few more tries.",
+    /** Rich (2026-09-28): a confidential app is built with the on-campus model; said once. */
+    campus:
+      "This app keeps personal information, so we're building it with a smaller model that runs at UBC. It may take a few more tries.",
     whatChanged: 'What changed',
     exactChanges: 'The exact changes, for whoever you ask for help',
     exactWords: 'The exact words, for whoever you ask for help',

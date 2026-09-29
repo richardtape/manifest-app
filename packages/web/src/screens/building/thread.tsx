@@ -47,6 +47,12 @@ function SaidItem({ said, timeZone }: { said: Said; timeZone: string | undefined
           <p className="said__text">{words.building.fallback}</p>
         </li>
       )
+    case 'campus':
+      return (
+        <li className="said said--ours">
+          <p className="said__text">{words.building.campus}</p>
+        </li>
+      )
     case 'built':
       return (
         <li className="said said--ours said--folded">

@@ -364,6 +364,15 @@ describe('modelFor: the most capable model the session lists (Decision 4)', () =
     expect(modelFor(['default-embed'])).toBeUndefined()
     expect(modelFor([])).toBeUndefined()
   })
+
+  it('a confidential project is listed only the on-campus model: that one, last (Rich, 2026-09-28: carry on, and say so)', () => {
+    expect(
+      modelFor(['default-chat-onprem', 'default-chat-onprem-reasoning', 'default-embed']),
+    ).toBe('default-chat-onprem')
+    expect(modelFor(['default-chat-onprem', 'default-chat-large'])).toBe(
+      'default-chat-large',
+    )
+  })
 })
 
 describe('scripted: the same rules, from fixed answers (tests, and mock mode)', () => {

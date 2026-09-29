@@ -100,6 +100,7 @@ describe('the state frame carries what the rounds said', () => {
         },
       ],
       ['we', { kind: 'fallback', round: 1 }],
+      ['we', { kind: 'campus', round: 1 }],
       [
         'we',
         {
@@ -143,6 +144,7 @@ describe('the state frame carries what the rounds said', () => {
         at,
       },
       { kind: 'fallback', round: 1, at },
+      { kind: 'campus', round: 1, at },
       {
         kind: 'built',
         round: 1,
