@@ -55,7 +55,7 @@ version they like on the trying-out address. Walk-through moments 7, 8 and 9.
 | 3 | 5 | The app's own pages: the routes, the rail's project section, the Preview's three tabs, *Try it as*, the two facts | **done 2026-09-28**, in session `manifest-app-07` after sitting 2, at Rich's word, no platform: `1ac8647`; 974 tests; FE-38 filed (the dated entry below) |
 | 4 | 6, 7 | Conversations on an app, and the line; the change's plan, agreed and committed | **done 2026-09-29**, in session `manifest-app-f8`, no platform: `d662d29`, `7f7616c`; 1110 tests (the dated entry below) |
 | 5 | 8, 9 | The lead on an app that exists; moment 8's screens | **done 2026-09-29**, in session `manifest-app-f8` after sitting 4, at Rich's word, no platform: `8d94539`, `eb44728`, `18b1fe4`; 1162 tests; Rich's *"Stop and ask first"* for `models_withdrawn` (the dated entry below) |
-| 6 | 10 | Trying-out: the button, the question, the deploy from the session, the four stations, the two failures | not started |
+| 6 | 10 | Trying-out: the button, the question, the deploy from the session, the four stations, the two failures | **done 2026-09-29**, in session `manifest-app-56`, no platform: `c18b968`; 1222 tests; walked, five defects found and fixed (the dated entry below) |
 | 7 | 11 | **The acceptance:** `scripts/check-seeing.sh` against the mock; headless Chrome on the real platform; Rich's click. **Alone, and last** | not started |
 
 **Every sitting ends as F3's did:**
@@ -138,6 +138,7 @@ the design; the rest were ours, and he approved them with the plan (2026-09-28).
 | A secret with no value there | walk-through's *"It needs <its plain name> before it can start there."* · **[Set it]**; when we never asked for it by name: *"It needs a setting we asked you for on your draft, before it can start there."* |
 | A fix conversation's title | *"It didn't start on the trying-out address"* |
 | A session the platform ended as `models_withdrawn` (FE-36) ✓ | **Rich, 2026-09-29: stop and ask first.** *"Your app now keeps confidential data, so the model we were using can't work on it. Carry on continues with the on-campus model."* · **[Carry on]** · **[Stop here]** (the option he chose, in its words) |
+| Moment 9, ours (sitting 6) | the question's second sentence only when something is on trying-out; a version whose date cannot be read, *"this version"*; while it runs, the prototype's chip *"Working, under 90 seconds"*, the Timeline README's *"Each step is the app actually reaching that point."*, and ours: *"You can leave: it keeps going, and the Preview shows where it got to."* (M3); arrival under the Preview's *"Waiting on UBC's identity team"*, with the address; on failure the chip *"Needs you"*, and trying-out's two facts titled *"Your trying-out address"* (the prototype's), because on the Preview they sit under the draft's own; **a secret**: the lead's `ask` is a question, never a plain name, so the walk-through's *"It needs <its plain name>…"* cannot be filled truthfully: the plan's *"It needs a setting we asked you for on your draft, before it can start there."* (*"…settings…"* for several), each field labelled by the question we asked, and *"It needs a setting we never asked you for, before it can start there."* over a field labelled by the name the app reads it by; **step-up** (never expected): moment 14's *"Sign in once more"* and its reassurance, without its sentence about students, and **[Sign in again]**; a press that did not go through: *"We couldn't do that just now. Nothing is lost."*, with a reference |
 | Moment 8, ours (sitting 5) | the waiting chip *"Waiting its turn"*; its place *"Next in line."* / *"Third in line."*; no holder *"It starts in a moment."*; the box while it waits *"Anything to add?"*, *"We add it to what you asked for."*; set aside *"What should change instead?"*; built *"What should change next?"*, *"We'll show you what we'd change before we change anything."*, **[Ask for it]**; Yes's body *"We add it to the plan we agreed, then change it on your draft address, and you watch. You can leave; it keeps going."*; the conversations' chips *Working on it · Needs you · Built · Set aside · Stopped · "Waiting: second in line"*; **[What went wrong]** |
 
 ## Decisions this plan makes, and why
@@ -882,7 +883,7 @@ export function newestAttempt(instances: Schemas['Instance'][], servingAtPress: 
 - **A secret with no value there** (`RELEASE_SECRET_NOT_SET`): **needs you**, *"It needs <its plain name> before it can
   start there."*, a password field (F3's `secret`), **[Set it]** → `setAppSecret` on staging, then the question again.
 
-- [ ] **Step 1: Tests, failing first** (a recording `Platform`, fake timers):
+- [x] **Step 1: Tests, failing first** (a recording `Platform`, fake timers):
   - **Review Focus 2:** the question names the sandbox's serving release's date; a round finishing before *[Put it
     there]* (the serving release changes) → `deploy` still sends **the release the question named**; a draft serving
     nothing offers no button; a failed newest sandbox instance does not change what is offered;
@@ -904,15 +905,24 @@ export function newestAttempt(instances: Schemas['Instance'][], servingAtPress: 
   - Rich's arrival words exactly; **no date, no *"We asked"***; `machineryIn` empty; never *"It works"*;
   - **our server:** `/secrets` answers names and questions and **never an answer**; F3's test that our server deploys
     only to the sandbox stands, run again.
-- [ ] **Step 2: Red. Step 3: Implement.**
-- [ ] **Step 4: Green; controls:** the release read at *[Put it there]*; `deploy` on 15 s; the serving instance taken as
+- [x] **Step 2: Red. Step 3: Implement.**
+- [x] **Step 4: Green; controls:** the release read at *[Put it there]*; `deploy` on 15 s; the serving instance taken as
   the new one; the secret's value posted to us. Each red, restored.
-- [ ] **Step 5: Walk it in headless Chrome against the mock, at 1440 and 375**, the mock also under `MANIFEST_MOCK_FAIL=1`
+- [x] **Step 5: Walk it in headless Chrome against the mock, at 1440 and 375**, the mock also under `MANIFEST_MOCK_FAIL=1`
   for the never-answered path.
-- [ ] **Step 6: Commit** `feat(web): moment 9 — put the draft's version on trying-out, from your own session, and watch it
+- [x] **Step 6: Commit** `feat(web): moment 9 — put the draft's version on trying-out, from your own session, and watch it
   answer`.
 
 ## Task 11: The acceptance (sitting 7, alone)
+
+**(S6) What sitting 6 leaves for this task:** moment 9 is built and walked against the mock only, where trying-out
+always serves the draft's version (M2): the walk (`walk-trying-out.mjs`, session `manifest-app-56`'s scratchpad) rewrote
+trying-out's answers in the browser (DevTools `Fetch`) and answered the deploy itself, the failing ending from a
+throwaway `MANIFEST_MOCK_FAIL=1` mock. **Step 2's put on trying-out is the first against the real platform**: no
+rewriting, its stations on the real instance, and the laptop's staging secret path if the app declares one. The
+platform's sitting 12 committed a contract change during sitting 6, `16c3357` (declared error lists only, `409
+PROJECT_ARCHIVED` on `deploy`, `setAppSecret`, `mintToken` and others; 1.4.0, 66, 128): sitting 6's close ran against it.
+Step 0 re-reads `openapi.json` for anything after it.
 
 - [ ] **Step 0: M6, if sitting 1 could not run it** (S1: it could not; FE-35 is Spec action 10, the platform's sitting
   11a). Re-read the contract for 11a's codes (the incident refusal, the session's end reason) and correct Tasks 8 and
@@ -1359,3 +1369,85 @@ full web runs were clean.
 **Gates:** `pnpm test` **1162/1162, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server is in mock mode**, on a new dev
 database. The whole-branch review stays where the plan puts it: sitting 7, over all of F4.
+
+### 2026-09-29 — Sitting 6 (Task 10): trying-out (moment 9)
+
+*In session `manifest-app-56`, at Rich's word (*"read ORIENTATION and proceed with the next sitting"*), one agent
+natively, no platform: our mock on 7102 and our server in mock mode on 7105 throughout, and a throwaway
+`MANIFEST_MOCK_FAIL=1` mock on 7195 for the walk (the platform session's word: the 7190s are free, never 7188 or 7189).
+We introduced ourselves to the platform's sitting 12 (`manifest-8b`), which was part-way through the resets Rich
+approved (7100 down) and said it would commit a contract change within the hour: declared error lists only
+(`PROJECT_ARCHIVED` declared where it is already answered), 1.4.0, 66 operations, 128 codes. **It landed as `16c3357`
+before our close**: the gates below ran against it. The ledger has every run and ruling.*
+
+**Task 10** (`c18b968`): moment 9, all in the person's own session, in the browser.
+- **[Put this version on trying-out]** on the building screen's end (under F3's *"It started and answered."*: *"Ready
+  on your draft address."*, **[Try it]** to the Preview's draft, then the button) and beside the Preview's draft facts.
+  *"This version is already on the trying-out address."* and no button when trying-out serves the draft's version (the
+  platform would make another of the same, M3); nothing when the draft serves nothing.
+- **The question** names the version the draft serves, read at the press (*"Put the version from today, 3:12pm on the
+  trying-out address? …"*), and **[Put it there]** deploys exactly that release to trying-out, with an
+  `Idempotency-Key` and a **120 s** deadline, whatever finishes in between (Review Focus 2).
+- **The four stations** tick on the new instance, the one whose id was not listed at the press, read every second;
+  **the end is `deploy`'s own answer** (M2): Rich's words on arrival, under the Preview's *"Waiting on UBC's identity
+  team"*; or **It never answered**, trying-out's two facts titled *"Your trying-out address"*, and **[What went
+  wrong]**, which mints a token and starts a fix conversation carrying the incident. The Preview's *Trying out* tab
+  offers it too, on a failed last attempt.
+- **A secret with no value there**: the names declared and not set (`listAppSecrets`), never the refusal's message;
+  each field labelled by the question we asked for it on the draft (**`GET /api/apps/:projectId/secrets`**: names and
+  questions, never a value); the value goes to `setAppSecret` alone, then the same question again.
+- **Step-up** (never expected on trying-out, M3): moment 14's card, `/auth/step-up`, and back to the same question
+  (its version kept in the tab's storage while the page is away).
+- **The Preview reads again quietly** after a deploy answers, and every 2 s while any attempt is under way, so a page
+  closed mid-deploy and reopened reads *"under way"*, then the result.
+
+**Rulings** (the ledger has each with its cost):
+1. `newestAttempt` takes the ids listed at the press (S1: M3); the plan's `servingAtPress` predates M3.
+2. **The plan's "F2's step-up pattern" does not exist** (F2 had no step-up): moment 14's card, without its sentence
+   about students, and the question remembered for the return.
+3. **A secret has no plain name**: the lead's `ask` is a question. The plan's sentence for one we asked for, ours for
+   one we never did, each group said of its own (a mix got one sentence untrue of some, found before the walk).
+4. The question's second sentence only when something is on trying-out.
+5. *"today"* when made the same day in their time zone; an unreadable date is *"this version"*.
+6. The building end keeps *"It started and answered."*, then the walk-through's end.
+7. The button reads the addresses once (the Preview hands over its own: its test caught a duplicated read) and again
+   at each press; a failed read draws nothing.
+8. The press's listing of trying-out's instances is required before deploying (else the serving one could be taken
+   for the new one).
+9. Any other refusal: *"We couldn't do that just now. Nothing is lost."*, a reference, and the button again.
+10. It never answered reads the incident for the answered instance, else trying-out's newest; none, no [What went
+    wrong].
+11. Each [What went wrong] press starts a fix conversation (the line orders them).
+12. `attemptFact` carries the failed attempt's incident.
+13. The Preview's quiet re-read: after a deploy, and while under way.
+14. Arrival has no [Open it]: nobody can sign in there yet.
+15. The station at work is said in a visually hidden status line; `Timeline`'s markup untouched.
+16. One [Set it] for every missing name, each with its own key, the fields emptied on send.
+17. The fix's title is in two places (the token's name, our server's `FIX_WORDS`), both the plan's words.
+18. `secretsAskedOn`: the person's own conversations, the latest question per name.
+19. **The walk rewrites only trying-out's answers in the browser** (DevTools `Fetch`), since the mock's trying-out always
+    serves the draft's version (M2), and answers the deploy itself: M3's happy ending, the failing mock's own answer,
+    and the platform's envelopes for the secret and step-up refusals.
+
+**Negative controls**, each red, then restored: the release read at [Put it there]; `deploy` on 15 s; the serving
+instance taken as the new one; the secret's value posted to us; no polling; the end read from the list; polling not
+stopped at the answer; every secret listed; *"already there"* removed; the Preview not read again while under way; no
+[What went wrong] on trying-out; the promise with nothing there; the Preview's addresses not handed over; the end drawn
+while working (**two guards: one removed stayed green, both removed went red**); another person's secrets; questions in
+words; the rows answered with their answer (**a first try changed only the `select`, which the map drops: green, proved
+nothing, redone**).
+
+**Walked in headless Chrome, mock mode, at 1440 and 375** (`walk-trying-out.mjs`): the mock as it is, the button, the
+question and *Not now*, the stations ticking, arrival, *Trying out* after, It never answered from the failing mock's own
+answer, [What went wrong] to a fix conversation, the secret (asked and never asked; under 6 said; set; the question
+again; no value on the page or to our API), step-up, a page reopened mid-deploy, and the building end with its stations.
+**It found five defects no unit test could**: the section unlaid-out against the facts above; the secret card's chip as
+wide as its card (sitting 5's defect again); a second pair of facts under the draft's with nothing saying whose (now
+titled, a test red first); at 375 the button reading *"trying- / out"*; and at 375 the stations' neighbouring labels 2 to
+3 px apart. Fixed; the walk's own label check was wrong at first (it measured each label against its own station, and
+stayed green without the fix), redone as the space between neighbours, red without the fix and green with it. The last
+walk: 29 checks, no overflow, the only failed requests the expected ones.
+
+**Gates:** `pnpm test` **1222/1222, twice**; `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass; `check-slice.sh`
+8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, mock mode. **Our server stays in mock mode.** The
+whole-branch review stays where the plan puts it: sitting 7, over all of F4, dispatched at its start.
