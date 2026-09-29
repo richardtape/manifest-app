@@ -7,8 +7,8 @@
 **Status: approved by Rich, 2026-09-28:** *"The plan is approved. I think we'll work on this with one agent not
 sub-agent."* It is executed by one agent, natively (superpowers:executing-plans), one sitting per session, with the
 whole-branch review by one fresh reviewer at the end (Task 12). **Sittings 1–4 are done (2026-09-28, in one session at
-Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 5 is done (2026-09-28, a new session), and so is sitting 6 (2026-09-28, another). Sitting 7, the acceptance,
-is next.**
+Rich's word), and Tasks 2–12 are corrected to what sitting 1 measured. Sitting 5 is done (2026-09-28, a new session), and so is sitting 6 (2026-09-28, another). **Sitting 7, the acceptance,
+is done (2026-09-28): F3 IS EXECUTED.** Rich clicked moments 3–6 on the real platform.**
 
 **Goal:** Once the person says *Yes, build that*, the lead agent builds their app from the agreed plan, on their own
 agent session with the capable model. It commits the code, builds it, puts it on the draft address and checks that
@@ -59,7 +59,7 @@ moment 6, which hands over to F4's *Seeing it*.
 | 4 | 6, 7 | The guards, then the three agents (the lead, the CWL specialist, the explaining agent) and the lead's moves | **done 2026-09-28**, in the same session at Rich's word (the dated entry below) |
 | 5 | 8, 9 | The round of work, our API's building routes, the building frames, and the new tables | **done 2026-09-28**, in a new session (`manifest-app-6a`), beside the platform's sitting 10 (the dated entry below) |
 | 6 | 10, 11 | The design system's additions, and the building screen, layout C | **done 2026-09-28**, in a new session (`manifest-app-c4`), beside the platform's sitting 10's close and its sitting 11 (the dated entry below) |
-| 7 | 12 | **The acceptance:** against the mock with a scripted model; on the real platform with the capable model; Rich's click. **Alone, and last** | not started |
+| 7 | 12 | **The acceptance:** against the mock with a scripted model; on the real platform with the capable model; Rich's click. **Alone, and last** | **done 2026-09-28**, in a new session (`manifest-app-2b`), the platform session stopped by Rich: **F3 is executed** (the dated entry below) |
 
 **Every sitting ends as F2's did:**
 1. the four gates, `pnpm test` twice;
@@ -1177,7 +1177,7 @@ export function Disclosure(props: { summary: string; count?: number; children: R
   and a *Stop* the person chose halts the step red (the round folds it `halted`), under a card that says nothing is
   lost. Rich's eye decides both at his click.
 
-- [ ] **Step 1: Against the mock.** `scripts/check-building.sh`, beside `check-describing.sh`, drives our API as the
+- [x] **Step 1: Against the mock.** `scripts/check-building.sh`, beside `check-describing.sh`, drives our API as the
   browser does, with the scripted model. It asserts **what our server sent**, read from the trace, whose platform
   entries say what each call named (Task 2). *(M2: the mock's `main` never moves, so every commit's base is
   `c2ac2119…`; its build is `4444…` of its own commit; its `deploy` and `getInstanceOutput` answer staging's instance;
@@ -1214,7 +1214,7 @@ export function Disclosure(props: { summary: string; count?: number; children: R
 
   **Negative controls, each red:** the sandbox check removed; the dry run skipped; *Stop* ignored; the no-credential
   scan pointed at a leaked row.
-- [ ] **Step 2: On the real platform** (after 9b's CLOSED; the control plane per manifest's RUNBOOK, asking Rich
+- [x] **Step 2: On the real platform** (after 9b's CLOSED; the control plane per manifest's RUNBOOK, asking Rich
   first; our server in edge mode). Headless Chrome through `https://app.manifest.internal`, signed in as `instructor`
   (Rich's word), at 1440 and at 375:
   - describe the walk-through's app → name → *Make it* → the plan → *Yes, build that*;
@@ -1232,8 +1232,8 @@ export function Disclosure(props: { summary: string; count?: number; children: R
     commit;
   - press *Stop* in a second round; the draft address keeps the first round's version;
   - **record the lead's words verbatim**, as F2 recorded the plan's: its lines, its accounts, its questions.
-- [ ] **Step 3: Rich's click:** `https://app.manifest.internal/new`, signed in as `instructor`, moments 3–6.
-- [ ] **Close:** the whole-branch review (a fresh reviewer, read-only), its findings fixed test-first; the gates twice;
+- [x] **Step 3: Rich's click:** `https://app.manifest.internal/new`, signed in as `instructor`, moments 3–6.
+- [x] **Close:** the whole-branch review (a fresh reviewer, read-only), its findings fixed test-first; the gates twice;
   the dated entry; this table; ORIENTATION; the roadmap. **F3 is executed only when Step 3 is done.**
 
 ---
@@ -1876,3 +1876,137 @@ at 1440 and 375, twice, from describe to built:
 - `pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass;
 - `scripts/check-slice.sh` 8/8;
 - `scripts/check-describing.sh` 18/18, its round 1 running to `done` as in sitting 5.
+
+### 2026-09-28 — Sitting 7 (Task 12): the acceptance — F3 is executed
+
+*In a new session (`manifest-app-2b`), one agent natively as Rich chose. Rich stopped the platform session
+(`manifest-7c`) before it began: *"you have full control"*. So nothing was messaged to it, and 7100 was used as found
+(its control plane running from Rich's `.env`). The ledger has every run and ruling with its cost.*
+
+**Commits (ours):**
+- `5ab41f5`: `scripts/check-building.sh`;
+- `48def92`: the whole-branch review's three Important findings;
+- `de07556`, `f788664`, `ee27865`, `c83f33a`: four defects only the real platform showed;
+- `afc2a0d`: our check that a draft's sign-in starts (FE-37).
+- **And one in manifest, at Rich's word, once:** `c4e10cc` (FE-37), with a note in manifest's ORIENTATION.
+
+**Step 1, against the mock: `scripts/check-building.sh`, 12/12 in 82 s.** It drives our API as the browser does and
+asserts what our server sent, from the round's trace, `runs.detail` and the mock's own answers read live:
+- the round starts when the plan's commit lands;
+- each commit follows its own dry run on the same base;
+- `startBuild` names the last commit, and `createRelease` the build it answered;
+- `deploy` was answered the sandbox's own instance, and `getInstanceOutput` names it;
+- the session ends;
+- a `/stop` during the build ends the session, and nothing is released or deployed in the 25 s after;
+- a student app's post to each building route is `403 ORIGIN_REFUSED`;
+- no `mft_` and no `sk-` in any table or any frame sent.
+
+*Negative controls, red:* a deploy elsewhere, the dry run skipped, *Stop* ignored, the scan pointed at a copy holding a
+leaked row. *Stayed green, a finding about the control:* the sandbox lookup by position, since the mock lists the
+sandbox first. `adapters.test`'s own control holds that one.
+
+**The whole-branch review** (a fresh reviewer, read-only, over `47f8911..b0da4bd`, dispatched at the sitting's start so
+its fixes landed before the real platform and Rich's click): no Critical, three Important, ten Minor, *"With fixes"*.
+The three Importants, fixed test-first (`48def92`):
+- **I1:** the commit's `line` was guarded and thrown away, so nothing stood under *Writing the pages*. It is now the
+  line under the step at work.
+- **I2:** once built, a question we went on with still offered a field that our server refused, with a reference. It is
+  now *"We went with: …"*.
+- **I3:** the build and the draft waited on the stream alone, so a half-open socket meant *Working* for ever. They are
+  now read every 30 s, with a ceiling: 15 minutes for a build, 5 for an instance, then *needs you*, waiting on Manifest.
+
+The minors are deferred (the ledger, and Rich's final message).
+
+**Step 2, on the real platform** (our server in edge mode; OpenAI's `default-chat-large`; headless Chrome signed in at
+the IdP as `instructor`, at 1440 and 375). Eleven runs:
+- **A straight round:** built about 3 minutes after *Yes*, in 12 moves: a read, the CWL specialist, three commits, a
+  question with a default, *done*. The build took 18 s and the deploy 8 s.
+- **The deliberate break** (a throw at the top of `ai/llm.js`, committed from the page 2 s after *Yes*): built in
+  9.3 minutes.
+  - The lead's first commit met `SOURCE_CONFLICT`, and the tree was read again.
+  - The build took 19 s. The deploy answered `failed` after about 94 s, with an incident.
+  - The explaining agent said *"We couldn't put your draft online because it stopped as it was starting."* (note:
+    *"It stopped before reaching your draft"*), with the throw's stack behind the disclosure.
+  - The lead fixed `ai/llm.js`. *"Putting it on your draft address (second try)"* was healthy in 6 s.
+  - 51 calls, all `default-chat-large`, no fallback, $0.08.
+  - The break's first home, `auth/session.js`, was read and repaired by the lead on its own, so the plan's placement
+    did not hold.
+- **A message during the build:** *"Got it, after this step."*, then read after the answers step.
+- ***Stop* during the message's build** (F3 has no second round, so a message's pass stands in for one):
+  - the run stopped at once, and the draft address still answered (`/healthz` 200);
+  - in the 20 s after, the only platform call was `endAgentSession`;
+  - *Carry on* re-read the build it had started (`getBuild`), never building that commit twice, and built.
+- **The 40-move stop**, twice: *"This is taking longer than it should. Nothing is lost."*, with a reference, *Carry on*
+  and *Stop here*.
+- **At every width:** no console error and no overflow, only the known `favicon.ico` 404.
+
+**Six defects only the real platform showed, each fixed test-first, each control red:**
+1. **The lead lost the CWL specialist's proposal whenever it read a file**, since its view holds only its last move.
+   It asked again, fifteen times (`de07556`). The proposal now has a section of its own until committed.
+2. **A confidential app lost the capable model.** The lead rightly marked an app keeping students' names
+   `confidential`, and the platform then lists its new sessions only the on-campus model. The round said *"waiting on
+   a Manifest administrator"*, a dead end. **Rich decided: carry on, and say so** (`f788664`). The round takes
+   `default-chat-onprem` and says once, *"This app keeps personal information, so we're building it with a smaller
+   model that runs at UBC. It may take a few more tries."* On it, the 4B lead read and asked, and committed nothing:
+   FE-35, and Rich's note that a developer would run `qwen3.6:35b-a3b` or `qwen3.8:27b`.
+3. **Repeats** (`ee27865`): a proposal already in place was committed again (`SOURCE_NOTHING_TO_COMMIT`); the
+   specialist was asked again after its proposal was committed; the same question was asked three times in other
+   words. The lead's view now lists this round's questions with what we went on with, and says when the proposal is
+   settled.
+4. ***What changed* read *"…their answers.. The instructor…"*** and repeated accounts (`ee27865`).
+5. **Lines cut mid-word** (*"…the full-in-"*): strict mode holds a schema's `maxLength` as it writes (`c83f33a`). The
+   prompt asks for under 100 characters, and the ceiling is 200.
+6. (The review's I1 above, seen on the platform too: the line under *Writing the pages* is now the lead's own.)
+
+**Step 3, Rich's click:** *"the process went very smoothly"*. Then, signing in to his app at its draft address: the
+IdP's `500`, *"no signature found on message"*.
+- **FE-37:** every app's IdP row requires a signed AuthnRequest, but the platform gave a sandbox app no key, so no
+  draft could ever sign in (measured on three apps). It has been so since 2026-09-09. The lead and the specialist
+  never touch `auth/`.
+- **Rich:** fix it in manifest, once, and tell its ORIENTATION. `c4e10cc`: the key and its file in every environment,
+  the tests following, the knowledge pack's row, and a note for the platform session.
+  - The platform's Vitest was **not** run: its global setup truncates the shared database. A direct `renderInjection`
+    check went red then green; `tsc` and Prettier passed.
+  - The control plane was restarted at Rich's OK, and his app's release deployed again. **A browser signed in to it all
+    the way.**
+- **Rich:** add our own check now (`afc2a0d`):
+  - *Checking it answers* follows the draft's `/login` to the IdP. A refusal is *needs you*, *"Waiting on Manifest"*:
+    *"It started and answered, but signing in to it is refused on Manifest's side. That's Manifest's to put right, not
+    yours. Nothing is lost."*
+  - Unknown never holds a round, and is said in the trace.
+  - Our dev script trusts the system's CAs (the laptop's platform CA).
+  - A last real round built in 3.1 minutes with the check *ok*, and a browser signed in to it.
+
+**Rulings** (the ledger has each with its cost):
+1. The review was dispatched first.
+2. Nothing was messaged to the stopped platform session.
+3. `check-building`'s three readings: the last commit asked of the mock live; the sandbox by the instance answered; the
+   prompts held by `round.test`.
+4. *Stop* happens in a message's pass.
+5. The walk skips the intake's questions.
+6. The break moved to `ai/llm.js`.
+7. The proposal is kept in memory.
+8. *"Once in the conversation"* for the on-campus line.
+9. The view carries the round's own questions.
+10. `LINE` is 200.
+11. The ceilings are 15 and 5 minutes.
+12. The sign-in check judges only the IdP's first answer.
+
+**For Rich:**
+- **Findings:** FE-35, FE-36 and FE-37 (FE-37 fixed in manifest; the platform session owes `pnpm test`,
+  `pnpm test:docker`, and §8's spec row).
+- **Laptop leftovers:**
+  - the platform's truncations leave repositories behind (`reading-responses`, `student-readings` and others), and
+    *Make it* on such a name is `409 SOURCE_CONFLICT`;
+  - the sandboxes built this sitting before `c4e10cc` sign in only once their release is deployed again;
+  - a *Your apps* warning of a refused read (`UNPARSEABLE`, 404) appeared while no walk was on that page: unexplained.
+- **For his eye:**
+  - the line under *Building it* is the lead's done line;
+  - *Stop* halts the step red;
+  - *What changed* is long after many commits;
+  - *"(second try)"* on the pages after someone else's commit;
+  - the offered names read like slugs.
+
+**Gates:** `pnpm test` **873/873, twice** (853 + 20); `pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass;
+`check-building.sh` 12/12, `check-describing.sh` 18/18, `check-slice.sh` 8/8. **Our server is left in mock mode**, as
+Rich asked for the next agent, with the mock on 7102.

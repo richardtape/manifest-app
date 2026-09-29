@@ -29,6 +29,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Carried 2026-09-28**, at Rich's word | **FE-26**, **FE-27**, **FE-28**, **FE-29**, **FE-30**, **FE-31**, **FE-32** | The mock's session check and its examples; the session cookie's `__Host-` prefix; a refusal's facts as fields (whose limit, when it resets, which session); a request id that reaches the platform's log; a test fixture offered by `listBlueprints`; a way for an agent to get a `package-lock.json` | **Decided by Rich (2026-09-28), each its option (a)**: FE-28, FE-31 and FE-30 before faculty use it for real; FE-29 when the envelope is next touched; FE-32 before a change after launch meets it; FE-27 before our F6, and FE-26 with FE-18. Our half of FE-28 is done. FE-28 matters most; FE-29 and FE-30 serve Rich's support references and plain limits; FE-31 was met on the real platform (2026-09-28). None blocks the platform's sitting 8 |
 | **Landed, the platform's sitting 10** (close-out `5a952f5`, relayed by the platform session, 2026-09-28) | **FE-24**, **FE-17**, **FE-18**, **FE-26**, **FE-27** | — | FE-24's code (`bb32fa6`: a staging instance's output is `403 INSTANCE_OUTPUT_STAGING`, so `InstanceOutput.environmentKind` only ever reads `sandbox`); FE-17 (`c944a71`: a browser refused at `/auth/*` gets a short page, any other caller the envelope); FE-18 (`46399c5`: `dist/`'s types stand alone, `erasableSyntaxOnly`); the mock (`18f3214`, and `c33d4df` under `MANIFEST_MOCK_AGENT_BUDGET=unavailable` only: it refuses a session it did not issue, answers `404` for an id it does not hold, and its sandbox runs); its console calls all 66 operations. FE-26 and FE-27 confirmed by Rich there. **The contract is still 1.4.0, 66 operations, 127 codes.** Our tests follow the mock (`9278ff8`); our typecheck and 853 tests pass against it (F3 sitting 6) |
 | **Under way, the platform's sitting 11** (the guides, `manifest-7c`) | — | — | Docs and examples, and published text: `8ef685d` (the slug is called a slug in `checkSlug`'s answers and remedies, and `CSRF_ORIGIN_REFUSED`'s words; the mock's `SLUG_TAKEN` now reads *"a project already has this slug"*, which F2's *Name it* shows verbatim), `08df532` (one description; a gate refusing an internal finding id in public text), `e90de38` (*Building a front-end*). No operation, field, code or event moved. Our one test pinning the mock's slug reason follows it (`a8ffc87`) |
+| **Written 2026-09-28, F3's sitting 7** (the real platform, and Rich's click) | **FE-35**, **FE-36**, **FE-37** | A confidential app's later sessions get only the on-campus 4B model, which could not write the app; a session keeps its models after its project turns confidential; no draft could sign in (the IdP demands a signed request the sandbox had no key for) | **FE-37 fixed in manifest at Rich's word, once** (`c4e10cc`, noted in its ORIENTATION; the platform session owes `pnpm test`, `pnpm test:docker` and §8's spec row). FE-35 and FE-36 not carried; on FE-35 Rich noted a developer would run `qwen3.6:35b-a3b` or `qwen3.8:27b` |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -884,6 +885,79 @@ word decides that.*
   - (b) At least the agents guide says so: read `x-litellm-attempted-fallbacks`, not only `model`, and a refused
     schema falls back silently.
 - **When:** before a client other than ours meets it. F3 is not blocked.
+
+### FE-35 — A confidential app's agent sessions get only the on-campus 4B model, which could not write the app
+
+*Found 2026-09-28 in F3's sitting 7 (Task 12's real-platform walk), against manifest `e90de38` (contract 1.4.0).
+Measured. Not carried: Rich's word decides that.*
+
+- **Screen and moment:** moment 6, from the round's second agent session on: after *Carry on* at the $2 checkpoint,
+  after *Stop* and *Carry on*, or after our server restarts.
+- **What happened** (conversation `e46de81c`, project `fa907e61`, the test user):
+  - the lead marked the app confidential, rightly: it keeps students' names and CWL IDs. Its commit wrote
+    `data.classification: confidential` into `manifest.yaml`;
+  - the next agent session listed only `default-chat-onprem` and `default-chat-onprem-reasoning`: a session's models
+    are those whose `max_classification` reaches the project's newest valid manifest's classification ✓
+    (`control-plane/src/ai/models.ts`, `classificationFloor` and `agentModelsFor`; `infra/litellm/config.yaml`);
+  - **at Rich's word** (2026-09-28: *carry on, and say so*), our round carries on with `default-chat-onprem` and tells
+    the person once. On it, the lead answered 11 times (4,000–8,600 tokens in, **24–85 out**), read files and asked
+    questions, and **committed nothing in 10 moves**. Before that decision, the round had stopped as *"waiting on a
+    Manifest administrator"*, which no administrator could change.
+- **Why it matters:** most apps an instructor builds keep students' names, so most are confidential. Each can be
+  written in its first session, on the capable model, and then carried on only on a model that does not write it.
+  The person reads *"It may take a few more tries"*, then *"This is taking longer than it should."*
+- **Options:**
+  - **(a) Recommended:** a model capable of writing an app, approved for confidential data (UBC's call: an on-premise
+    model large enough, or a provider under a UBC agreement), listed at `max_classification: confidential`.
+  - (b) `startAgentSession` says why the capable model is absent (the classification that set the floor), so a
+    client can tell the person what is true.
+  - (c) At least the agents guide says that a confidential project's sessions are the on-premise models.
+- **When:** before faculty build an app that keeps students' data, which is before real use. F3 is not blocked: it
+  carries on and says so.
+
+### FE-36 — An agent session keeps its models after a commit raises the project's classification
+
+*Found 2026-09-28 in F3's sitting 7, against manifest `e90de38`. Measured. Not carried: Rich's word decides that.*
+
+- **Screen and moment:** moment 6, the round's first session.
+- **What happened** (the same conversation): the session started at 02:31 UTC while the project was `internal`, and
+  listed `default-chat-large`. The lead's commit made the project `confidential` at about 02:43. The session went on
+  being answered by `default-chat-large` until the round stopped (the trace's last answer, 02:43:47). The floor is
+  read once, when a session starts ✓ (`control-plane/src/ai/sessions.ts`, `startAgentSession`).
+- **Why it matters:** routing by classification (D17) is the platform's control over where a project's data may go.
+  Our lead's prompts carry code and the plan, not students' data. But the lead is given a failed draft's incident,
+  whose `logTail` is the app's own output, and another agent may be given more.
+- **Options:**
+  - **(a) Recommended:** a commit whose validated spec raises the classification ends, or re-routes, the project's
+    live agent sessions, and says so on the stream (`agent_session.ended` with a reason).
+  - (b) The gateway checks the project's current classification on each request.
+- **When:** before faculty use it with real data. F3 is not blocked.
+
+### FE-37 — No app on a draft address can sign in: the IdP demands a signed request the platform gives it no key to sign
+
+*Found 2026-09-28 by Rich's click in F3's sitting 7, against manifest `e90de38`. Measured, and read in the platform's
+code. Not carried: Rich's word decides that.*
+
+- **Screen and moment:** the draft address itself, after moment 6's *"It started and answered."* A faculty member
+  opens their app and presses *Sign in*. Moment 7 (*Seeing it*, F4) is built on this working.
+- **What happened:** the app's `/login` redirects to the Manifest IdP with an unsigned `AuthnRequest`, and the IdP
+  answers `500`, *"Validation of received messages enabled, but no signature found on message."* Measured on three
+  sandbox apps (`student-q-and-a`, Rich's; `class-responses` and `weekly-readings`, the walks'). Why, read ✓:
+  - every app's IdP row is rendered with `'validate.authnrequest': true` and its certificate, whatever the
+    environment (`control-plane/src/sso/metadata-store.ts`, `renderSpMetadata`);
+  - the app is given its private key only outside the sandbox: `if (ctx.environmentKind !== 'sandbox')
+    env.SAML_PRIVATE_KEY_PATH = …`, *"Optional in sandbox, where an unsigned request is accepted"*
+    (`control-plane/src/spec/injection.ts`; §8's table says `staging+production`);
+  - the blueprint's `auth/ubcshib.js` signs only when that key is present, so a sandbox app never signs.
+  - Both rules date from 2026-09-09 (`fdf63e8`, `bf19547`). The lead and the CWL specialist never touch `auth/`.
+- **Why it matters:** no draft address can be signed in to, so nobody can try the app they asked for. Every app
+  Manifest builds is behind CWL.
+- **Options:**
+  - **(a) Recommended:** the sandbox gets `SAML_PRIVATE_KEY_PATH` too, since the keypair is minted anyway and the IdP
+    already holds its certificate. §8's row becomes `all`, and a platform test holds that a sandbox app's sign-in
+    reaches the IdP's login form. An app already deployed is fixed by deploying its release again.
+  - (b) A sandbox app's IdP row has `validate.authnrequest: false`, as the injection's comment assumes.
+- **When:** now. It blocks every draft address's sign-in, and F4 builds on it.
 
 ---
 
