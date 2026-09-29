@@ -17,6 +17,7 @@ import { whoIs } from './identity.js'
 import {
   notAvailable,
   openAiCompatible,
+  ROUND_MODEL_TIMEOUT_MS,
   type Answered,
   type Model,
 } from './model/client.js'
@@ -260,6 +261,7 @@ export function roundModelFor(config: Config): RoundDeps['modelFor'] {
       baseUrl: config.modelGateway,
       key: session.key,
       model: session.model,
+      timeoutMs: ROUND_MODEL_TIMEOUT_MS,
       onAnswer,
     })
   }

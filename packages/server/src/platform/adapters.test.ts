@@ -1,15 +1,15 @@
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v4'
 import { understand } from '../agents/understanding.js'
 import { suggestNames } from '../agents/naming.js'
 import { chooseBlueprint } from '../agents/blueprint.js'
 import { writeChange } from '../agents/change.js'
 import { planMarkdown, writePlan } from '../agents/plan.js'
-import { buildServer } from '../app.js'
+import { buildServer, roundModelFor } from '../app.js'
 import type { Config } from '../config.js'
-import { ModelError, type Model } from '../model/client.js'
+import { ModelError, ROUND_MODEL_TIMEOUT_MS, type Model } from '../model/client.js'
 import { scripted } from '../model/scripted.js'
 import { walkthroughModel } from '../model/walkthrough.js'
 import { openStore } from '../store/db.js'
@@ -862,5 +862,49 @@ describe('the walk-through model (mock mode: Decision 7)', () => {
       blueprint: 'node-ts-mongo@1',
       starter: null,
     })
+  })
+})
+
+describe("a round's model: how long it waits (F4 Step 3, Rich's click)", () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it("waits for a long answer: the lead writing the app's files took 68.9 s on the capable model, and the intake's 60 s cut it off and called it unreachable", async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    let aborted = false
+    vi.stubGlobal(
+      'fetch',
+      (_url: string, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => {
+            aborted = true
+            reject(new Error('aborted'))
+          })
+        }),
+    )
+    const config: Config = {
+      mode: 'edge',
+      port: 7105,
+      origin: 'https://app.manifest.internal',
+      platformOrigin: 'http://127.0.0.1:7100',
+      modelGateway: 'http://127.0.0.1:7106/v1',
+      planModel: 'default-chat',
+    }
+    const model = roundModelFor(config)(
+      { key: 'sk-test-round', baseUrl: config.modelGateway, model: 'default-chat-large' },
+      () => undefined,
+    )
+    const answer = model
+      .complete('lead', z.object({ said: z.string() }), [
+        { role: 'user', content: 'write it' },
+      ])
+      .catch((error: unknown) => error)
+    await vi.advanceTimersByTimeAsync(69_000)
+    expect(aborted).toBe(false)
+    await vi.advanceTimersByTimeAsync(ROUND_MODEL_TIMEOUT_MS - 69_000)
+    expect(aborted).toBe(true)
+    expect(((await answer) as ModelError).code).toBe('MODEL_UNREACHABLE')
   })
 })

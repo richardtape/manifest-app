@@ -138,6 +138,13 @@ export function modelFor(listed: string[]): string | undefined {
  * key. It sends no reasoning setting of its own: the gateway's `think: false` on
  * `default-chat` is load-bearing, and only a request's own `think: true` beats it (F2 M3).
  */
+/**
+ * A ROUND'S MODEL WAITS LONGER THAN THE INTAKE'S 60 s: the lead writes whole files, and on the real
+ * platform one commit took 68.9 s (9,564 tokens written; F4 Step 3, Rich's click), cut off and said
+ * as unreachable. Nobody waits on the page for a round, and a call that answers is paid for.
+ */
+export const ROUND_MODEL_TIMEOUT_MS = 5 * 60_000
+
 export function openAiCompatible(options: {
   baseUrl: string
   key: string
@@ -172,6 +179,9 @@ export function openAiCompatible(options: {
           let status: number
           let text: string
           let headers: Headers
+          // The deadline covers the whole answer, its body included.
+          const deadline = new AbortController()
+          const timer = setTimeout(() => deadline.abort(), timeoutMs)
           try {
             const response = await send(url, {
               method: 'POST',
@@ -180,7 +190,7 @@ export function openAiCompatible(options: {
                 'content-type': 'application/json',
               },
               body,
-              signal: AbortSignal.timeout(timeoutMs),
+              signal: deadline.signal,
             })
             status = response.status
             headers = response.headers
@@ -189,6 +199,8 @@ export function openAiCompatible(options: {
             // Refused, or no answer by the deadline. Never the error itself: its cause
             // could carry the request, and the request carries the key.
             throw new ModelError('MODEL_UNREACHABLE')
+          } finally {
+            clearTimeout(timer)
           }
           let payload: unknown
           try {
