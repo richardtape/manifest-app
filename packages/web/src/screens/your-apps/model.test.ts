@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { machineryIn } from '../machinery.js'
 import {
   appCard,
+  asServed,
   audienceWords,
   beforeLaunch,
   mine,
@@ -185,4 +186,43 @@ describe('before your students can use it (Decision 3)', () => {
   ] as const)('%s: no line', (_, project, readiness) =>
     expect(appCard(project, new Map(), V, readiness).beforeStudents).toBe(false),
   )
+})
+
+describe('the live address before a first launch (Spec action 8 (c), the platform’s 5b)', () => {
+  const PROJECT = fixtures.PROJECT_EXPANDED
+  const LAUNCHED = '2026-10-03T17:00:00.000Z'
+  const withProduction = (
+    instance: Schemas['Instance'] | null,
+    launchedAt: string | null = null,
+  ): Schemas['Project'] => ({
+    ...PROJECT,
+    launchedAt,
+    environments: PROJECT.environments!.map((e) =>
+      e.kind === 'production' ? { ...e, instance } : e,
+    ),
+  })
+  const env = (kind: Schemas['Environment']['kind'], state: string) => ({
+    ...PROJECT.environments!.find((e) => e.kind === kind)!,
+    instance: inst(state),
+  })
+
+  it('a dry run taken down again leaves its instance gone: not live yet, never switched off', () =>
+    expect(appCard(withProduction(inst('gone')), new Map(), V).students).toEqual({
+      state: 'notyet',
+      words: 'Not live yet',
+    }))
+
+  it('after a launch, gone is what switching it off leaves, and is said so', () =>
+    expect(
+      appCard(withProduction(inst('gone'), LAUNCHED), new Map(), V).students.words,
+    ).toBe('Switched off'))
+
+  it('asServed: only the live address, only before a launch, only gone, reads as nothing there', () => {
+    expect(asServed(env('production', 'gone'), false).instance).toBeNull()
+    expect(asServed(env('production', 'gone'), true).instance?.state).toBe('gone')
+    expect(asServed(env('production', 'healthy'), false).instance?.state).toBe('healthy')
+    expect(asServed(env('production', 'failed'), false).instance?.state).toBe('failed')
+    expect(asServed(env('staging', 'gone'), false).instance?.state).toBe('gone')
+    expect(asServed(env('sandbox', 'gone'), false).instance?.state).toBe('gone')
+  })
 })

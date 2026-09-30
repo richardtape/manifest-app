@@ -146,6 +146,12 @@ type World = {
   fix: string | null
   /** Reads that fail (500) while named here: a page read again while the platform struggles. */
   failing: string[]
+  /**
+   * The instance the live address names (`Environment.instance`). With no route the platform
+   * falls back to the newest (its `servingInstanceOf`): a dry run taken down again, `gone` (the
+   * platform's 5b), or an attempt that never answered.
+   */
+  named: Schemas['Instance'] | null
 }
 
 const refused = (status: number, code: string) =>
@@ -172,6 +178,7 @@ function stage(start: Partial<World> = {}) {
     secrets: [],
     fix: null,
     failing: [],
+    named: null,
     ...start,
   }
   const calls: [string, ...unknown[]][] = []
@@ -197,7 +204,11 @@ function stage(start: Partial<World> = {}) {
     getProject: never,
     getRelease: record('getRelease', (id: string) => RELEASES.find((r) => r.id === id)!),
     listEnvironments: record('listEnvironments', () =>
-      (Object.keys(ID) as Kind[]).map(environment),
+      (Object.keys(ID) as Kind[]).map((kind) =>
+        kind === 'production'
+          ? { ...environment(kind), instance: world.named }
+          : environment(kind),
+      ),
     ),
     listInstances: record('listInstances', (environmentId: string) => ({
       environmentId,
@@ -457,6 +468,49 @@ describe('the press sends exactly the candidate it reads (Review Focus 1)', () =
     await press(await letIn())
     await waitFor(() => expect(s.called('deploy')).toHaveLength(2))
     expect(s.called('deploy')[1]?.[1]).toBe(NEWER.id)
+  })
+
+  it('asked about a new one: the page reads again, so its own line and its sign-off speak of the version the card names (the whole-branch review’s I2)', async () => {
+    const s = await open(stage())
+    await letIn()
+    expect(screen.getByText(g.version('18 September, 3:12pm'))).toBeTruthy()
+    s.world.readiness = { ...READY, candidateReleaseId: NEWER.id }
+    await press(await letIn())
+    await screen.findByText(l.changed)
+    expect(await screen.findByText(g.version('today, 10:40am'))).toBeTruthy()
+    expect(screen.queryByText(g.version('18 September, 3:12pm'))).toBeNull()
+    expect(s.called('getApproval').map(([id]) => id)).toContain(NEWER.id)
+    expect(s.called('deploy')).toEqual([])
+  })
+
+  it('launched since the page read it (another window, a collaborator): the press sends nothing, and the page says it is live (the whole-branch review’s I1)', async () => {
+    const s = await open(stage())
+    await letIn()
+    s.world.readiness = { ...READY, launched: true }
+    await press(await letIn())
+    expect(await screen.findByText(g.live)).toBeTruthy()
+    expect(s.called('deploy')).toEqual([])
+    expect(screen.queryByRole('button', { name: l.button })).toBeNull()
+  })
+
+  it('launched since, with a newer version on trying-out: never asked about, never sent to the live app (I1)', async () => {
+    const s = await open(stage())
+    await letIn()
+    s.world.readiness = { ...READY, candidateReleaseId: NEWER.id, launched: true }
+    await press(await letIn())
+    expect(await screen.findByText(g.live)).toBeTruthy()
+    expect(screen.queryByText(l.changed)).toBeNull()
+    expect(s.called('deploy')).toEqual([])
+  })
+
+  it('RELEASE_NOT_STAGED, and launched meanwhile: no question, nothing sent again, and it is live (I1)', async () => {
+    const s = await open(stage())
+    await pressed(s)
+    s.world.readiness = { ...READY, candidateReleaseId: NEWER.id, launched: true }
+    await s.refuse(refused(409, 'RELEASE_NOT_STAGED'))
+    expect(await screen.findByText(g.live)).toBeTruthy()
+    expect(screen.queryByText(l.changed)).toBeNull()
+    expect(s.called('deploy')).toHaveLength(1)
   })
 
   it('a checklist no longer ready at the press sends nothing', async () => {
@@ -742,6 +796,22 @@ describe('it never answered: the facts, and this attempt’s [What went wrong] (
     ).toBeTruthy()
     expect(stations()[3]).toBe('It never answered:halted')
     expect(machineryIn(wordsOn())).toEqual([])
+  })
+
+  it('the live address still naming a dry run taken down again (gone, the platform’s 5b): nothing reached their students, never "switched off"', async () => {
+    const s = stage({
+      incidents: [INCIDENT],
+      named: bare(summary('i-dry', CANDIDATE.id, 'gone')),
+    })
+    await neverAnswered(s)
+    expect(await screen.findByText(l.nothingReached)).toBeTruthy()
+    expect(card().textContent).not.toContain('Switched off')
+  })
+
+  it('the live address naming this attempt itself (no route: the platform’s fallback): nothing reached their students, and nothing said to serve', async () => {
+    const s = stage({ incidents: [INCIDENT], named: bare(fresh('failed')) })
+    await neverAnswered(s)
+    expect(await screen.findByText(l.nothingReached)).toBeTruthy()
   })
 
   it('an older incident listed first is never taken: this attempt’s feeds a fix for the live address', async () => {

@@ -240,8 +240,9 @@ export function GoingLive({
     if (hold) setGate(null)
   }, [])
   const onLanded = useCallback(() => setHeard(true), [])
-  // The dry run's answer moved the checklist: read it again, quietly.
-  const onRan = useCallback(() => setAttempt((n) => n + 1), [])
+  // Something a press heard moved the checklist (the dry run's answer; trying-out's version changed
+  // under *[Let your students in]*): read it again, quietly.
+  const readAgain = useCallback(() => setAttempt((n) => n + 1), [])
 
   const slug = encodeURIComponent(project.slug)
   const tryingOut = `/apps/${slug}/preview?tab=trying-out`
@@ -300,6 +301,7 @@ export function GoingLive({
           onHold={onHold}
           onGate={onGate}
           onLanded={onLanded}
+          onChanged={readAgain}
         />
       ) : null}
       {!launched && seen !== undefined ? (
@@ -317,7 +319,7 @@ export function GoingLive({
                 production={seen.production}
                 back={backToDryRun}
                 expire={expire}
-                onRan={onRan}
+                onRan={readAgain}
               />
             ) : row.id === 'admin-approval' ? (
               <SignOff

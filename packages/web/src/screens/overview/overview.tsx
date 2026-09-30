@@ -10,7 +10,7 @@ import { clocksUnmet } from '../going-live/checklist.js'
 import { releasesToRead, servingFact, type Said } from '../preview/facts.js'
 import { KIND } from '../preview/preview.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
-import { audienceWords, beforeLaunch } from '../your-apps/model.js'
+import { asServed, audienceWords, beforeLaunch } from '../your-apps/model.js'
 import { Band } from './band.js'
 import { ForYourStudents, handOver, type Handed } from './students.js'
 
@@ -85,8 +85,10 @@ async function read(
     env.instance === null ? undefined : byId.get(env.instance.releaseId)
   return {
     rows: TABS.flatMap((tab) => {
-      const env = of(tab)
-      if (env === undefined) return []
+      const found = of(tab)
+      if (found === undefined) return []
+      // Before a launch, a dry run's instance taken down again is nothing there (the platform's 5b).
+      const env = asServed(found, launched)
       return [{ tab, serving: servingFact(env, serving(env), timeZone) }]
     }),
     band: !launched && readiness !== undefined && clocksUnmet(readiness),

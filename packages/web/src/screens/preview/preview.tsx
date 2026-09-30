@@ -7,6 +7,7 @@ import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, remember, TABS, type Tab } from '../../router.js'
 import { words } from '../../words.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
+import { asServed } from '../your-apps/model.js'
 import { Hostname } from '../your-apps/your-apps.js'
 import {
   attemptFact,
@@ -45,12 +46,15 @@ type Loaded =
 async function read(
   platform: Platform,
   projectId: string,
+  launched: boolean,
   now: Date,
   timeZone: string | undefined,
 ): Promise<Partial<Record<Tab, Address>>> {
   const environments = await platform.listEnvironments(projectId)
   const addresses = await Promise.all(
-    environments.map(async (env): Promise<[Tab, Address] | undefined> => {
+    environments.map(async (found): Promise<[Tab, Address] | undefined> => {
+      // Before a launch, a dry run's instance taken down again is nothing there (the platform's 5b).
+      const env = asServed(found, launched)
       const tab = TABS.find((t) => KIND[t] === env.kind)
       if (tab === undefined) return undefined
       const { instances } = await platform.listInstances(env.id)
@@ -113,10 +117,11 @@ export function Preview({
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
   const panels = useId()
+  const launched = (project.launchedAt ?? null) !== null
 
   useEffect(() => {
     let live = true
-    read(platform, project.id, now(), timeZone).then(
+    read(platform, project.id, launched, now(), timeZone).then(
       (addresses) => live && setLoaded({ state: 'ready', addresses }),
       (error: unknown) => {
         if (!live) return
@@ -129,7 +134,7 @@ export function Preview({
       live = false
     }
     // `now` is a clock, read once per attempt: never a reason to read again.
-  }, [platform, project.id, timeZone, expire, attempt])
+  }, [platform, project.id, launched, timeZone, expire, attempt])
 
   // [WHAT WENT WRONG] (F4 Task 9): the draft's failed attempt, when one of our rounds put it
   // there, opens that conversation. None of ours did: no button.

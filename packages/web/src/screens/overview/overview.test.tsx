@@ -46,6 +46,8 @@ type World = {
   built: boolean
   launchedAt: string | null
   readiness: Schemas['LaunchReadiness']
+  /** The live address's instance, when not the fixture's (none). */
+  production?: Schemas['Instance']
 }
 const BEFORE_LAUNCH: World = {
   built: true,
@@ -58,7 +60,7 @@ function stage(
   world: Partial<World> = {},
   refuse: Partial<Record<string, () => unknown>> = {},
 ) {
-  const { built, launchedAt, readiness } = { ...BEFORE_LAUNCH, ...world }
+  const { built, launchedAt, readiness, production } = { ...BEFORE_LAUNCH, ...world }
   const calls: [string, ...unknown[]][] = []
   const answer =
     <T,>(name: string, value: (...args: never[]) => T) =>
@@ -72,7 +74,12 @@ function stage(
   const environments = fixtures.ENVIRONMENTS.map((e) => ({
     ...e,
     hostname: e.hostname.replace('mock-app', SLUG),
-    instance: e.kind === 'sandbox' && !built ? null : e.instance,
+    instance:
+      e.kind === 'sandbox' && !built
+        ? null
+        : e.kind === 'production' && production !== undefined
+          ? production
+          : e.instance,
   }))
   const platform: Platform = {
     getMe: () => Promise.resolve(fixtures.ME),
@@ -168,6 +175,18 @@ describe('the Overview: the app’s landing page (Decision 1)', () => {
     expect(rows[0]!.textContent).toMatch(/The version from \d+ September, \d+:\d\d[ap]m/)
     expect(rows[1]!.textContent).toMatch(/The version from \d+ September, \d+:\d\d[ap]m/)
     expect(rows[2]!.textContent).toContain(words.preview.facts.nothing)
+  })
+
+  it('a dry run taken down again (the platform’s 5b) leaves the live address with nothing there before a launch, never switched off', async () => {
+    const gone: Schemas['Instance'] = {
+      ...fixtures.INSTANCE,
+      environmentId: fixtures.PRODUCTION_ID,
+      state: 'gone',
+    }
+    await open(`/apps/${SLUG}`, stage({ production: gone }))
+    const rows = within(await ready()).getAllByRole('listitem')
+    expect(rows[2]!.textContent).toContain(words.preview.facts.nothing)
+    expect(rows[2]!.textContent).not.toContain('Switched off')
   })
 
   it('a row opens the Preview on its tab', async () => {

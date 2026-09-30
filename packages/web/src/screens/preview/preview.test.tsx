@@ -104,6 +104,11 @@ const INCIDENT: Schemas['Incident'] = {
 type World = {
   instances: Record<Kind, Schemas['InstanceSummary'][]>
   incidents: Record<Kind, Schemas['Incident'][]>
+  /**
+   * The instance an address names when none serves: the platform falls back to the newest (its
+   * `servingInstanceOf`), as a dry run taken down again leaves the live address (the platform's 5b).
+   */
+  named?: Partial<Record<Kind, Schemas['InstanceSummary']>>
 }
 const A_FAILED_ATTEMPT: World = {
   instances: { sandbox: [FAILED, SERVING], staging: [], production: [] },
@@ -137,7 +142,7 @@ function stage(
     getRelease: answer('getRelease', (id: string) => RELEASES.find((r) => r.id === id)!),
     listEnvironments: answer('listEnvironments', () =>
       (['sandbox', 'staging', 'production'] as const).map((kind) =>
-        environment(kind, serving(kind)),
+        environment(kind, serving(kind) ?? world.named?.[kind]),
       ),
     ),
     listInstances: answer('listInstances', (environmentId: string) => {
@@ -552,6 +557,24 @@ describe('For your students', () => {
     await ready()
     expect(within(panel()).getByText(w.students)).toBeTruthy()
     expect(w.students).toBe('Not live yet. This is the address your students will use.')
+  })
+
+  it('before a launch, a dry run taken down again (the platform’s 5b) is nothing there: not live yet, never switched off, never the last to go there, nothing to open', async () => {
+    const dryRun = summary('i-dry', 'production', NEW.id, 'gone')
+    await open(
+      `/apps/${SLUG}/preview?tab=students`,
+      stage({
+        instances: { sandbox: [SERVING], staging: [], production: [dryRun] },
+        incidents: { sandbox: [], staging: [], production: [] },
+        named: { production: dryRun },
+      }),
+    )
+    await ready()
+    expect(await within(panel()).findByText(w.students)).toBeTruthy()
+    expect(panel().textContent).not.toContain('Switched off')
+    expect(panel().textContent).not.toContain(w.facts.same)
+    // Nothing is there to open: nobody was ever given the address.
+    expect(within(panel()).queryByRole('link', { name: w.open })).toBeNull()
   })
 })
 

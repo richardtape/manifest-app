@@ -22,6 +22,7 @@ import {
   type Missing,
 } from '../trying-out/parts.js'
 import { newestAttempt, versionAsked } from '../trying-out/stations.js'
+import { asServed } from '../your-apps/model.js'
 import { Hostname } from '../your-apps/your-apps.js'
 
 const l = words.goingLive.letIn
@@ -111,6 +112,7 @@ export function LetStudentsIn({
   onHold,
   onGate,
   onLanded,
+  onChanged,
 }: {
   platform: Platform
   ours: Ours
@@ -135,8 +137,16 @@ export function LetStudentsIn({
   onHold: (hold: boolean) => void
   /** The gate refused it: the page reads the checklist again, and shows what changed. */
   onGate: () => void
-  /** It is live: the page says so, and keeps this moment. */
+  /**
+   * It is live: the page says so, and keeps this moment. Also told when a press reads that it was
+   * launched since the page read it (another window, a collaborator): nothing is sent.
+   */
   onLanded: () => void
+  /**
+   * Trying-out's version changed under the button: the page reads again, so its own line and the
+   * sign-off speak of the version the card now names (the whole-branch review's I2).
+   */
+  onChanged: () => void
 }) {
   const [phase, setPhase] = useState<Phase>({ at: 'offer' })
   const [notice, setNotice] = useState<string>()
@@ -198,6 +208,23 @@ export function LetStudentsIn({
     }
   }
 
+  /**
+   * LAUNCHED SINCE THE PAGE READ IT (the whole-branch review's I1): nothing is sent, not even the
+   * same version again, and never a newer one through a first launch's press. The page says so.
+   */
+  const launchedMeanwhile = () => {
+    if (!live.current) return
+    setPhase({ at: 'offer' })
+    onLanded()
+  }
+
+  /** Name the new version, ask, and have the page read again so all of it names that one. */
+  const changed = (sent: Sent) => {
+    if (!live.current) return
+    setPhase({ at: 'changed', sent })
+    onChanged()
+  }
+
   /** The gate said no: back to the offer, and the page reads what changed. */
   const gate = () => {
     if (!live.current) return
@@ -217,16 +244,14 @@ export function LetStudentsIn({
     let listed: Set<string>
     try {
       const readiness = await platform.getLaunchReadiness(project.id)
+      if (readiness.launched) return launchedMeanwhile()
       if (!readiness.ready || readiness.candidateReleaseId === null) return gate()
       sent = {
         releaseId: readiness.candidateReleaseId,
         when: await dayOf(readiness.candidateReleaseId),
       }
       // Trying-out changed while they were here (moment 14): name the new one, and ask.
-      if (sent.releaseId !== named) {
-        if (live.current) setPhase({ at: 'changed', sent })
-        return
-      }
+      if (sent.releaseId !== named) return changed(sent)
       listed = new Set(
         (await platform.listInstances(production.id)).instances.map((i) => i.id),
       )
@@ -284,11 +309,11 @@ export function LetStudentsIn({
   const notStaged = async (sent: Sent) => {
     try {
       const readiness = await platform.getLaunchReadiness(project.id)
+      if (readiness.launched) return launchedMeanwhile()
       const releaseId = readiness.candidateReleaseId
       if (!readiness.ready || releaseId === null || releaseId === sent.releaseId)
         return gate()
-      const when = await dayOf(releaseId)
-      if (live.current) setPhase({ at: 'changed', sent: { releaseId, when } })
+      changed({ releaseId, when: await dayOf(releaseId) })
     } catch (error) {
       didNotGo(error, 'getLaunchReadiness')
     }
@@ -395,8 +420,14 @@ export function LetStudentsIn({
         platform.listEnvironments(project.id),
         incidentOf(platform, production.id, attemptId),
       ])
-      const there = environments.find((e) => e.kind === 'production')
-      if (there !== undefined) {
+      const named = environments.find((e) => e.kind === 'production')
+      if (named !== undefined) {
+        // Before a first launch nothing is served there: a dry run's instance taken down again
+        // (the platform's 5b), or this attempt itself, which the platform names when no route
+        // serves one (its fallback), is nothing reaching their students.
+        const served = asServed(named, false)
+        const there =
+          served.instance?.id === attemptId ? { ...served, instance: null } : served
         const release =
           there.instance === null
             ? undefined

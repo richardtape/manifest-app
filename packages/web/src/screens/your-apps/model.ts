@@ -46,6 +46,22 @@ export function studentsFact(
   return FACTS[instance.state] ?? { state: 'notyet', words: f.cantTell }
 }
 
+/**
+ * THE LIVE ADDRESS BEFORE A FIRST LAUNCH (Spec action 8 (c), the platform's 5b): a dry run takes
+ * itself down once its sign-in is recorded, and the platform still names its instance, `gone`, as
+ * the environment's. Before a launch that is nothing there, never "Switched off"; nobody was ever
+ * given the address. After a launch, `gone` is what switching an app off leaves, and is said so.
+ * Every reader of an address's instance takes the environment through this first.
+ */
+export function asServed(
+  env: Schemas['Environment'],
+  launched: boolean,
+): Schemas['Environment'] {
+  return env.kind === 'production' && !launched && env.instance?.state === 'gone'
+    ? { ...env, instance: null }
+    : env
+}
+
 /** "the version from 18 September, 9:00am": a date, never a digest (10-language.md). */
 export function versionWords(createdAt: string, timeZone?: string): string {
   const date = new Date(createdAt)
@@ -121,8 +137,10 @@ export function appCard(
   timeZone?: string,
   readiness?: Schemas['LaunchReadiness'],
 ): AppCard {
+  const launched = (project.launchedAt ?? null) !== null
   const address = (kind: Schemas['Environment']['kind']): Address => {
-    const environment = project.environments?.find((e) => e.kind === kind)
+    const found = project.environments?.find((e) => e.kind === kind)
+    const environment = found === undefined ? undefined : asServed(found, launched)
     const instance = environment?.instance
     const release =
       instance === null || instance === undefined
