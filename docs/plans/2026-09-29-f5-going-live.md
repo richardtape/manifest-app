@@ -102,8 +102,10 @@ against) and **Step 0: the platform's landings** (*Adopting what lands*, below).
 - **FE-40, filed and carried** (2026-09-29, *"File it, and carry it now"*): the mock cannot play a launch. Carried to
   `manifest-13` the same day, which recorded it in its launch-path plan at Task 13, **PROPOSED until Rich confirms it to a
   platform session** (its house rule for a relayed decision). F5 never waits on it. **Confirmed by Rich to the
-  platform session `manifest-c3`** (its launch-path sitting 3, 2026-09-29, as that session reported to us); Task 13
-  (the platform's sitting 10) carries it.
+  platform session `manifest-c3`** (its launch-path sitting 3, 2026-09-29), and to us in his own words (*"I approve the
+  FE-40 were my words"*); Task 13 (the platform's sitting 10) carries it.
+- **Sitting 1 starts when the platform session messages us at its sitting 3's close** (2026-09-29, *"when it messages
+  you, please feel free to begin sitting 1"*): his word for 7100 for this sitting.
 - **The plan approved as written, executed natively, Decision 7 accepted** (2026-09-29, `manifest-app-a0`'s first
   question: *"Approved as written"*, *"Native"*, *"Accept Decision 7"*).
 - **Task 3 first, then wait** (2026-09-29, *"Banner first, then wait"*): the platform's launch-path sitting 3 holds 7100

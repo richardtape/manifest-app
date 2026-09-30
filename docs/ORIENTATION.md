@@ -37,8 +37,9 @@ platform)*:
   walk-through **D7**, **FE-39**). When the platform's contract answers `Me.mayBuild` (its launch-path sitting 5a; the
   platform session messages us at that commit), **stop and ask Rich** whether to switch to F4a, and to confirm its method
   (native recommended).
-- **Open for Rich:** his word for 7100 when sitting 1 can start. **FE-40 is confirmed** (Rich to `manifest-c3`, as that
-  session reported). **F4's other deferred minors** (M3, M5–M9, M11), and F3's and F2's, are in F4's sitting 7 entry and
+- **Rich's word for 7100 is given** (2026-09-29: *"when it messages you, please feel free to begin sitting 1"*): sitting 1
+  starts when `manifest-c3` messages us at its sitting 3's close. He still types every password. **FE-40 is confirmed**,
+  to `manifest-c3` and to us in his words (*"I approve the FE-40 were my words"*). **F4's other deferred minors** (M3, M5–M9, M11), and F3's and F2's, are in F4's sitting 7 entry and
   the ledgers.
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md));
