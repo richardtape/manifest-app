@@ -52,6 +52,12 @@ export function whenOf(createdAt: string, now: Date, timeZone?: string): string 
 /** The candidate a press sent, and its day, for the sentence that names it. */
 type Sent = { releaseId: string; when: string | null }
 
+/**
+ * The phases the page must keep this card for, whatever it reads meanwhile: a press under way, or
+ * its end. Everywhere else the card is the page's offer, drawn only while ready and not launched.
+ */
+const HOLD = new Set(['reading', 'putting', 'unsure', 'landed', 'failed'])
+
 type Phase =
   | { at: 'offer' }
   /** RELEASE_NOT_STAGED: trying-out's version changed; the new one named, asked again. */
@@ -95,13 +101,14 @@ export function LetStudentsIn({
   ours,
   project,
   ready,
+  launched,
   candidate,
   production,
   back,
   expire,
   now,
   timeZone,
-  onPress,
+  onHold,
   onGate,
   onLanded,
 }: {
@@ -110,6 +117,8 @@ export function LetStudentsIn({
   project: Schemas['Project']
   /** Whether the page's last reading of the checklist had every blocking item met. */
   ready: boolean
+  /** Whether the page has heard the app is launched (the project, or the checklist). */
+  launched: boolean
   /** Its candidate, as the page last read it, and its day. */
   candidate: Sent | null
   /** The live address, as the page read it. */
@@ -119,8 +128,11 @@ export function LetStudentsIn({
   expire: () => void
   now: () => Date
   timeZone: string | undefined
-  /** Told at each press, so the page keeps this card whatever it reads meanwhile. */
-  onPress: () => void
+  /**
+   * Told whether the page must keep this card whatever it reads (a press under way, or its end),
+   * or may draw it only as its offer (the final review's I1 and I2).
+   */
+  onHold: (hold: boolean) => void
   /** The gate refused it: the page reads the checklist again, and shows what changed. */
   onGate: () => void
   /** It is live: the page says so, and keeps this moment. */
@@ -139,6 +151,17 @@ export function LetStudentsIn({
       clearInterval(poll.current)
     }
   }, [])
+
+  useEffect(() => onHold(HOLD.has(phase.at)), [phase.at, onHold])
+
+  // HEARD LAUNCHED WHILE UNSURE, OR AFTER A START THAT NEVER ANSWERED (the final review's M3): it
+  // is live, and the card says so, never "we couldn't see how it ended" beside it.
+  useEffect(() => {
+    if (!launched) return
+    setPhase((p) =>
+      p.at === 'unsure' || p.at === 'failed' ? { at: 'landed', sent: p.sent } : p,
+    )
+  }, [launched])
 
   // M4: AFTER A START THAT NEVER ANSWERED (or one we stopped watching), THE OFFER COMES BACK when
   // the page's next reading (shown again: Decision 16) has another version ready to go. Each
@@ -182,9 +205,11 @@ export function LetStudentsIn({
     onGate()
   }
 
-  /** THE PRESS: the checklist read now, and exactly its candidate sent to the live address. */
-  const press = async () => {
-    onPress()
+  /**
+   * THE PRESS: the checklist read now, and exactly the candidate the button named sent to the live
+   * address (the Global Constraint). Another one there now is named and asked about, never sent.
+   */
+  const press = async (named: string | null) => {
     setPressedOnce(true)
     setNotice(undefined)
     setPhase({ at: 'reading' })
@@ -196,6 +221,11 @@ export function LetStudentsIn({
       sent = {
         releaseId: readiness.candidateReleaseId,
         when: await dayOf(readiness.candidateReleaseId),
+      }
+      // Trying-out changed while they were here (moment 14): name the new one, and ask.
+      if (sent.releaseId !== named) {
+        if (live.current) setPhase({ at: 'changed', sent })
+        return
       }
       listed = new Set(
         (await platform.listInstances(production.id)).instances.map((i) => i.id),
@@ -427,13 +457,24 @@ export function LetStudentsIn({
           {phase.at === 'offer' && back && !pressedOnce ? (
             <p className="body-lead">{l.again}</p>
           ) : null}
-          {phase.at === 'changed' ? <p className="body-lead">{l.changed}</p> : null}
+          {phase.at === 'changed' ? (
+            // Said to a screen reader too: the button they pressed was replaced (M8).
+            <p className="body-lead" role="status">
+              {l.changed}
+            </p>
+          ) : null}
           {goes(phase.at === 'changed' ? phase.sent.when : (candidate?.when ?? null))}
           <div className="describe__actions">
             <Button
               kind="primary"
               disabled={phase.at === 'reading'}
-              onClick={() => void press()}
+              onClick={() =>
+                void press(
+                  phase.at === 'changed'
+                    ? phase.sent.releaseId
+                    : (candidate?.releaseId ?? null),
+                )
+              }
             >
               {l.button}
             </Button>

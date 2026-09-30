@@ -22,12 +22,21 @@ function sources(dir: string): string[] {
   })
 }
 
-/** Each `/v1/…` or `/auth/…` path a source file names, with the file that names it. */
+/** A path with its parameters, `{projectId}` or `${projectId}`, each as `{}`. */
+const shape = (path: string) => path.replace(/\$?\{[^}]*\}/g, '{}')
+
+/**
+ * Each `/v1/…` or `/auth/…` path a source file names, with the file that names it: anywhere in its
+ * text, a template's too (`${origin}/v1/projects/${id}/events`), up to a quote, a space or a
+ * bracket. A comment naming a path counts as well: the scan errs toward refusing.
+ */
 function named(): { file: string; path: string }[] {
   return sources(SRC).flatMap((file) =>
-    [...readFileSync(file, 'utf8').matchAll(/['"`](\/(?:v1|auth)\/[^'"`]*)['"`]/g)].map(
-      (match) => ({ file: relative(SRC, file), path: match[1]! }),
-    ),
+    [
+      ...readFileSync(file, 'utf8').matchAll(
+        /\/(?:v1|auth)\/(?:\$\{[^}]*\}|[^'"`\s()])*/g,
+      ),
+    ].map((match) => ({ file: relative(SRC, file), path: shape(match[0]) })),
   )
 }
 
@@ -42,15 +51,18 @@ const THEIRS = [
 ]
 
 describe('our server calls no launch action (F5 Task 10)', () => {
-  it('reads real paths: the scan finds the ones we do call', () => {
+  it('reads real paths: the scan finds the ones we do call, a path built from a template too', () => {
     const paths = named().map((n) => n.path)
-    expect(paths).toContain('/v1/projects/{projectId}/commits')
-    expect(paths).toContain('/v1/environments/{environmentId}/deploy')
+    expect(paths).toContain('/v1/projects/{}/commits')
+    expect(paths).toContain('/v1/environments/{}/deploy')
+    // platform/stream.ts builds its address: `${origin}/v1/projects/${projectId}/events`.
+    expect(paths).toContain('/v1/projects/{}/events')
   })
 
   it('names no dry run, approval, refusal or launch record, and never the step-up', () => {
+    const theirs = THEIRS.map(shape)
     const found = named().filter(
-      (n) => THEIRS.includes(n.path) || n.path.startsWith('/auth/step-up'),
+      (n) => theirs.includes(n.path) || n.path.startsWith('/auth/step-up'),
     )
     expect(found).toEqual([])
   })
@@ -58,7 +70,7 @@ describe('our server calls no launch action (F5 Task 10)', () => {
   it('names `deploy` and a secret’s write only where they are aimed at the sandbox', () => {
     const where = (path: string) =>
       named()
-        .filter((n) => n.path === path)
+        .filter((n) => n.path === shape(path))
         .map((n) => n.file)
     expect(where('/v1/environments/{environmentId}/deploy')).toEqual([
       join('platform', 'releases.ts'),

@@ -297,6 +297,9 @@ export function PutOnTryingOut({
    */
   const readOn = (held: Held, listed: Set<string>) => {
     if (!live.current) return
+    // The Preview reads again, and follows the attempt under way itself: what the give-up
+    // points at shows what is there (the final review's M4).
+    onPut?.()
     setPhase((p) => ({
       at: 'unsure',
       held,
@@ -413,20 +416,22 @@ export function PutOnTryingOut({
   }
 
   // M4: AFTER AN ENDING, THE OFFER COMES BACK WHEN THERE IS SOMETHING NEW, read when the page is
-  // shown again: the draft serving another version than the one put there, or tried there.
+  // shown again: the draft serving another version than the one put there, or tried there. A
+  // wait we stopped watching is an ending too (the final review's M4).
+  const ended = (p: Phase) =>
+    p.at === 'arrived' || p.at === 'failed' || (p.at === 'unsure' && p.gaveUp)
   useEffect(() => {
     const shown = () => {
       const p = shownPhase.current
       if (document.visibilityState !== 'visible') return
-      if (p.at !== 'arrived' && p.at !== 'failed') return
+      if (!ended(p)) return
       platform.listEnvironments(project.id).then(
         (environments) => {
           const sandbox = byKind(environments, 'sandbox')
           const offered = offerOf(sandbox, byKind(environments, 'staging'))
           if (!live.current || offered.at !== 'offer') return
           setPhase((q) =>
-            (q.at === 'arrived' || q.at === 'failed') &&
-            sandbox?.instance?.releaseId !== q.held.releaseId
+            ended(q) && 'held' in q && sandbox?.instance?.releaseId !== q.held.releaseId
               ? offered
               : q,
           )

@@ -144,6 +144,8 @@ type World = {
   incidents: Schemas['Incident'][]
   secrets: Schemas['AppSecretStatus'][]
   fix: string | null
+  /** Reads that fail (500) while named here: a page read again while the platform struggles. */
+  failing: string[]
 }
 
 const refused = (status: number, code: string) =>
@@ -169,6 +171,7 @@ function stage(start: Partial<World> = {}) {
     incidents: [],
     secrets: [],
     fix: null,
+    failing: [],
     ...start,
   }
   const calls: [string, ...unknown[]][] = []
@@ -182,7 +185,9 @@ function stage(start: Partial<World> = {}) {
     <T,>(name: string, value: (...args: never[]) => T) =>
     (...args: never[]) => {
       calls.push([name, ...args])
-      return Promise.resolve(value(...args))
+      return world.failing.includes(name)
+        ? Promise.reject(refused(500, 'INTERNAL'))
+        : Promise.resolve(value(...args))
     }
   const platform: Platform = {
     getMe: () => Promise.resolve(fixtures.ME),
@@ -406,14 +411,34 @@ describe('the press sends exactly the candidate it reads (Review Focus 1)', () =
     expect(key).toMatch(/^[0-9a-f-]{36}$/)
   })
 
-  it('a candidate changed since the page read it is the one sent, and the one named', async () => {
+  it('a candidate changed since the page read it is never sent unnamed: asked, naming the new one; the next press sends it (the Global Constraint)', async () => {
     const s = await open(stage())
     await letIn()
     s.world.readiness = { ...READY, candidateReleaseId: NEWER.id }
-    await pressed(s)
-    expect(s.called('deploy')[0]?.[1]).toBe(NEWER.id)
+    await press(await letIn())
+    expect(await screen.findByText(l.changed)).toBeTruthy()
+    expect(s.called('deploy')).toEqual([])
     expect(card().textContent).toContain('The version from today, 10:40am goes to ')
     expect(card().textContent).not.toContain('18 September')
+    await pressed(s)
+    expect(s.called('deploy')[0]?.[1]).toBe(NEWER.id)
+  })
+
+  it('asked about a new one, and trying-out changes again before the press: asked again, never sent', async () => {
+    const s = await open(stage())
+    await letIn()
+    s.world.readiness = { ...READY, candidateReleaseId: NEWER.id }
+    await press(await letIn())
+    await screen.findByText(l.changed)
+    s.world.readiness = READY
+    await press(await letIn())
+    await waitFor(() =>
+      expect(card().textContent).toContain(
+        'The version from 18 September, 3:12pm goes to ',
+      ),
+    )
+    expect(screen.getByText(l.changed)).toBeTruthy()
+    expect(s.called('deploy')).toEqual([])
   })
 
   it('RELEASE_NOT_STAGED: the walk-through’s question, naming the new one; pressed, the new one is sent', async () => {
@@ -422,6 +447,10 @@ describe('the press sends exactly the candidate it reads (Review Focus 1)', () =
     s.world.readiness = { ...READY, candidateReleaseId: NEWER.id }
     await s.refuse(refused(409, 'RELEASE_NOT_STAGED'))
     expect(await screen.findByText(l.changed)).toBeTruthy()
+    // Said to a screen reader too: the button pressed was replaced (M8).
+    expect(
+      screen.getAllByRole('status').some((e) => e.textContent?.includes(l.changed)),
+    ).toBe(true)
     expect(card().textContent).toContain('The version from today, 10:40am goes to ')
     await press(await letIn())
     await waitFor(() => expect(s.called('deploy')).toHaveLength(2))
@@ -440,6 +469,83 @@ describe('the press sends exactly the candidate it reads (Review Focus 1)', () =
   })
 })
 
+describe('the card never outlives what the page reads (the final review’s I1 and I2)', () => {
+  it('a press that did not go through, then a reading not ready: no button (I1)', async () => {
+    const s = await open(stage())
+    await pressed(s)
+    await s.refuse(refused(500, 'INTERNAL'))
+    await screen.findByRole('alert')
+    s.world.readiness = REFUSED
+    await shown()
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: l.button })).toBeNull(),
+    )
+  })
+
+  it('the connection dropped mid-press, then a reading that hears it launched: "It’s live.", and no button to send it twice (I1)', async () => {
+    const s = await open(stage())
+    await pressed(s)
+    await s.refuse(new TypeError('fetch failed'))
+    await screen.findByRole('alert')
+    s.world.readiness = { ...READY, launched: true }
+    await shown()
+    expect(await screen.findByText(g.live)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: l.button })).toBeNull()
+    expect(s.called('deploy')).toHaveLength(1)
+  })
+
+  it('a reading that fails mid-deploy never takes the card away: healthy still lands (I2, Review Focus 3)', async () => {
+    const s = await open(stage())
+    await pressed(s)
+    s.world.failing = ['getLaunchReadiness']
+    await shown()
+    await screen.findByRole('button', { name: words.refused.button })
+    s.world.production = [fresh('healthy'), OLD]
+    await s.answer(bare(fresh('healthy')))
+    expect(await screen.findByText('Reading responses is live.')).toBeTruthy()
+  })
+
+  it('unsure, and a reading whose addresses fail: the watch stays, and its end still lands (I2)', async () => {
+    const s = await open(stage())
+    await pressed(s)
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    s.world.failing = ['listEnvironments']
+    await shown()
+    await waitFor(() => expect(s.called('getLaunchReadiness').length).toBeGreaterThan(2))
+    await act(async () => undefined)
+    expect(screen.getByText(t.unsure)).toBeTruthy()
+    s.world.production = [fresh('healthy'), OLD]
+    await tick()
+    expect(await screen.findByText('Reading responses is live.')).toBeTruthy()
+  })
+
+  it('we stopped watching, and a reading hears it launched: the moment, never "couldn’t see how it ended" beside it (M3)', async () => {
+    const s = await open(stage())
+    await pressed(s)
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    await tick(5 * 60_000)
+    await screen.findByText(l.unsureLong)
+    s.world.readiness = { ...READY, launched: true }
+    await shown()
+    expect(await screen.findByText('Reading responses is live.')).toBeTruthy()
+    expect(screen.queryByText(l.unsureLong)).toBeNull()
+  })
+
+  it('the gate’s line goes once a reading is ready again (M1): never "can’t go live yet" beside the button', async () => {
+    const s = await open(stage())
+    await pressed(s)
+    s.world.readiness = REFUSED
+    await s.refuse(refused(409, 'RELEASE_PRODUCTION_GATE_UNAVAILABLE'))
+    await screen.findByText(l.gate)
+    s.world.readiness = READY
+    await shown()
+    expect(await letIn()).toBeTruthy()
+    expect(screen.queryByText(l.gate)).toBeNull()
+  })
+})
+
 describe('the step-up: signing in once more, in place (Decision 10)', () => {
   it('STEP_UP_REQUIRED: the card in place, its rule, and [Sign in again] back to this page with then=live; nothing stored', async () => {
     const s = await open(stage())
@@ -448,6 +554,8 @@ describe('the step-up: signing in once more, in place (Decision 10)', () => {
     expect(await screen.findByText(t.stepUp.title)).toBeTruthy()
     expect(screen.getByText(t.stepUp.body)).toBeTruthy()
     expect(screen.getByText(l.stepUpRule)).toBeTruthy()
+    // Said to a screen reader too: the button pressed is gone (M8).
+    expect(within(screen.getByRole('alert')).getByText(t.stepUp.title)).toBeTruthy()
     expect(screen.getByRole('link', { name: t.stepUp.again }).getAttribute('href')).toBe(
       `/auth/step-up?returnTo=${encodeURIComponent(`/apps/${SLUG}/going-live?then=live`)}`,
     )
@@ -730,11 +838,14 @@ describe('M4: after an ending, the offer comes back when there is something new,
     expect(screen.queryByText(l.nothingReached)).toBeNull()
   })
 
-  it('never answered, having sent a newer version than the page had read: that one is not offered again by itself', async () => {
+  it('never answered, having sent a newer version than the page had read (asked, then pressed): that one is not offered again by itself', async () => {
     const s = await open(stage({ incidents: [{ ...INCIDENT, releaseId: NEWER.id }] }))
     await letIn()
     s.world.readiness = { ...READY, candidateReleaseId: NEWER.id }
+    await press(await letIn())
+    await screen.findByText(l.changed)
     await pressed(s)
+    expect(s.called('deploy')[0]?.[1]).toBe(NEWER.id)
     s.world.production = [OLD, fresh('failed', NEWER.id)]
     await s.answer(bare(fresh('failed', NEWER.id)))
     await screen.findByText(l.nothingReached)

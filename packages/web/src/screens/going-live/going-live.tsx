@@ -186,6 +186,8 @@ export function GoingLive({
       (seen) => {
         if (!live) return
         if (seen.launched) setHeard(true)
+        // Ready again: the gate's line and its lit rows are history (the final review's M1).
+        if (seen.ready) setGate(null)
         setLoaded({ state: 'ready', seen })
       },
       (error: unknown) => {
@@ -228,9 +230,9 @@ export function GoingLive({
     )
     setAttempt((n) => n + 1)
   }, [])
-  const onPress = useCallback(() => {
-    setPressed(true)
-    setGate(null)
+  const onHold = useCallback((hold: boolean) => {
+    setPressed(hold)
+    if (hold) setGate(null)
   }, [])
   const onLanded = useCallback(() => setHeard(true), [])
 
@@ -242,12 +244,20 @@ export function GoingLive({
         ? loaded.seen
         : { ...loaded.seen, rows: lightUp(loaded.seen.rows, gate) }
       : undefined
-  const production = seen?.production
-  // The card: once pressed it stays to its end; otherwise only on a first launch that is ready.
+  // THE LAST GOOD READING, AND THE LIVE ADDRESS: a card the page holds (a press under way, or its
+  // end) is drawn from them when a reading since fails (the final review's I2, Review Focus 3).
+  const lastSeen = useRef<Seen | undefined>(undefined)
+  if (seen !== undefined) lastSeen.current = seen
+  const lastProduction = useRef<Schemas['Environment'] | undefined>(undefined)
+  if (seen?.production !== undefined) lastProduction.current = seen.production
+  const basis = seen ?? lastSeen.current
+  const production = lastProduction.current
+  // The card: held to its end once a press is under way; otherwise only as the offer, on a first
+  // launch this reading says is ready (never beside "It's live.", never when not ready: I1).
   const offer =
     production !== undefined &&
-    seen !== undefined &&
-    (pressed || (!launched && seen.ready))
+    basis !== undefined &&
+    (pressed || (seen !== undefined && !launched && seen.ready))
   return (
     <div className="going-live">
       <h1 className="page-title">{g.title}</h1>
@@ -272,14 +282,15 @@ export function GoingLive({
           platform={platform}
           ours={ours}
           project={project}
-          ready={seen.ready}
-          candidate={seen.candidate}
+          ready={basis.ready}
+          launched={launched}
+          candidate={basis.candidate}
           production={production}
           back={back}
           expire={expire}
           now={now}
           timeZone={timeZone}
-          onPress={onPress}
+          onHold={onHold}
           onGate={onGate}
           onLanded={onLanded}
         />

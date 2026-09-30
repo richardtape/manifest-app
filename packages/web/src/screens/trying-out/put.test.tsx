@@ -905,7 +905,8 @@ describe('M1: our deadline is not the platform’s answer (Review Focus 3)', () 
   it('five minutes more with no end: we stop reading, and say we could not see how it ended', async () => {
     const s = await open(stage())
     await putOn(s)
-    s.world.staging = [THERE, fresh('starting')]
+    // No new instance listed: nothing under way for the Preview to follow, so every read counted
+    // here is ours.
     await s.refuse(ourDeadline())
     await screen.findByText(t.unsure)
     await tick(5 * 60_000)
@@ -915,6 +916,42 @@ describe('M1: our deadline is not the platform’s answer (Review Focus 3)', () 
     await tick(5000)
     expect(polls()).toBe(stopped)
     expect(screen.queryByText(t.couldnt)).toBeNull()
+  })
+
+  it('cut: the Preview’s Trying out reads again, so what the give-up points at shows the attempt under way (the final review’s M4)', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    s.world.staging = [THERE, fresh('starting')]
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    // The Preview's Trying out panel, hidden while the draft's tab is chosen: read by its label.
+    const trying = () =>
+      document.querySelector<HTMLElement>(
+        `section[role="tabpanel"][aria-label="${words.preview.tabs['trying-out']}"]`,
+      )
+    await waitFor(() =>
+      expect(trying()?.textContent).toContain(words.preview.facts.underWay),
+    )
+  })
+
+  it('we stopped watching, then a newer version on the draft: shown again, the offer is back (the final review’s M4)', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    s.world.staging = [THERE, fresh('starting')]
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    await tick(5 * 60_000)
+    await screen.findByText(t.unsureLong)
+    s.world.sandbox = [summary('i-newer', 'sandbox', NEWER.id, 'healthy', true)]
+    await act(async () => {
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        configurable: true,
+      })
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(await put()).toBeTruthy()
+    delete (document as { visibilityState?: unknown }).visibilityState
   })
 
   it('nothing answering at all (a connection refused: nothing was sent) is still a press that did not go through', async () => {

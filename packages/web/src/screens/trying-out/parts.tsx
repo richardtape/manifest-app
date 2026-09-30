@@ -191,20 +191,23 @@ export function StepUpCard({
   aboutStudents?: boolean
 }) {
   return (
-    <Card tone="attention">
-      <p className="body-lead">
-        <strong>{t.stepUp.title}</strong>
-      </p>
-      <p className="body-lead">{t.stepUp.body}</p>
-      {aboutStudents ? (
-        <p className="body-lead">{words.goingLive.letIn.stepUpRule}</p>
-      ) : null}
-      <div className="describe__actions">
-        <Button kind="primary" href={stepUpHref(returnTo)}>
-          {t.stepUp.again}
-        </Button>
-      </div>
-    </Card>
+    // Said to a screen reader too: the button they pressed is gone (the final review's M8).
+    <div role="alert">
+      <Card tone="attention">
+        <p className="body-lead">
+          <strong>{t.stepUp.title}</strong>
+        </p>
+        <p className="body-lead">{t.stepUp.body}</p>
+        {aboutStudents ? (
+          <p className="body-lead">{words.goingLive.letIn.stepUpRule}</p>
+        ) : null}
+        <div className="describe__actions">
+          <Button kind="primary" href={stepUpHref(returnTo)}>
+            {t.stepUp.again}
+          </Button>
+        </div>
+      </Card>
+    </div>
   )
 }
 
