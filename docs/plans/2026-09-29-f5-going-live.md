@@ -53,8 +53,8 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 0 | 3 | **The mock-mode banner**, moved ahead of the measurements at Rich's word (2026-09-29, *"Banner first, then wait"*): it needs no measurement and no 7100, which the platform's launch-path sitting 3 holds | ← **in progress** (`manifest-app-a0`) |
-| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | after the platform's launch-path sitting 3 closes (contract 1.5.0), at Rich's word |
+| 0 | 3 | **The mock-mode banner**, moved ahead of the measurements at Rich's word (2026-09-29, *"Banner first, then wait"*): it needs no measurement and no 7100, which the platform's launch-path sitting 3 holds | **done 2026-09-29** (`manifest-app-a0`): the banner on every page in mock mode, none in edge; **and Step 0 for contract 1.5.0** (FE-38 adopted). 1248 tests (the dated entry below) |
+| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | ← **next**, once the platform's launch-path sitting 3 has closed (its Task 5, FE-33's `4401`, still to land at our close) and Rich gives his word for 7100 |
 | 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | |
 | 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | |
 | 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | |
@@ -279,7 +279,7 @@ change at his click.*
 
 | The platform's sitting | What we adopt |
 |---|---|
-| **3** (Tasks 4, 5) | **FE-38**: `Instance.createdAt` replaces `facts.ts`'s comparison by the versions' dates, for the last attempt. **FE-33**: a platform stream closed `4401` means its credential is gone: our server's subscription is not reopened, and the round's needs is `token` |
+| **3** (Tasks 4, 5) | **FE-38** (**adopted 2026-09-29**, `33e9251`, against `d894b8e`): `Instance.createdAt` replaces `facts.ts`'s comparison by the versions' dates, for the last attempt. **FE-33** (Task 5, **not landed at sitting 0's close**): a platform stream closed `4401` means its credential is gone: our server's subscription is not reopened, and the round's needs is `token` |
 | **4** (Task 6) | **FE-34**: a malformed request answers its own `400`, which the client already maps; the trace's fallback line becomes rarer |
 | **5** (Tasks 7, 8) | `agent_session.narrowed` (the key trimmed in place) parsed and traced, the round carrying on; `member_removed` as an end reason (`needs: token`); F4's renewal after `models_withdrawn` stays as the net |
 | **5a** (Task 8a) | `Me.mayBuild`: **that is F4a**. The platform session messages us; **stop and ask Rich** whether to switch to F4a (native recommended) |
@@ -792,3 +792,56 @@ approved; it builds nothing"*): superpowers:brainstorming, then writing-plans, a
   mode (node 10795, one `tsx watch`, 10789); 7106 LiteLLM (Docker); 7104 not listening. **Two Vitest processes are the
   platform's own `pnpm test`** (parent `pnpm test`, cwd manifest), left alone, as its `test:docker` was at our start.
   Manifest at `46f3988`; the contract 1.4.0, 66 operations, unchanged.
+
+### 2026-09-29 — Sitting 0: the plan approved, Task 3 (the banner), and Step 0 for 1.5.0 (session `manifest-app-a0`)
+
+*Rich's first answers: **"Approved as written"**, **"Native"**, **"Accept Decision 7"**, and **"Banner first, then
+wait"**: the platform's launch-path sitting 3 (`manifest-c3`) holds 7100 for several hours and truncates it from its
+first test run, so Task 3, which needs neither 7100 nor a measurement, ran first. 7100 was not used.*
+
+- **The platform session, `manifest-c3`** (its launch-path sitting 3, Tasks 4–5): told at our start that nothing of ours
+  is on 7100 and that we hold 7102 and 7105. It answered that 7100 is its own until its close (several hours: its
+  Docker tier and two full runs come last), that **every platform sitting's first test run and its Docker tier truncate
+  7100**, so a project there survives only from one sitting's close to the next one's first test: **sitting 1's project
+  cannot be kept for the acceptance** (Task 1 now says so; the acceptance remakes one by script). **It reported that
+  Rich confirmed FE-40 to it**, which its Task 13 carries. It announced 1.5.0 before and after it landed.
+- **Task 3: mock mode says so** (`ae148d4`). `vite.config.ts` defines `__MANIFEST_APP_MODE__` from our server's
+  `MANIFEST_APP_MODE`; `mode.ts` reads it (`'edge'` when absent, as in Vitest, or anything but `'mock'`); `App` draws
+  Rich's sentence first on every page in mock mode, as a `note` in words, the sign-in page and *Manifest out of reach*
+  included, and nothing in edge mode (edge's DOM is unchanged). `/api/__doctor` still answers `{"name":"manifest-app"}`
+  (F12's test, run again; and `curl` after the restart).
+  - **Rulings** (the ledger): the page and banner share a `.mock-frame` column in mock mode only, so the pages that are
+    `min-height: 100vh` do not scroll by the banner's height; `App` takes `mode` for a test, as it takes `now`.
+  - **Found by the walk: in our dev server Vite does not write a `define` in place.** It sets it as a global in
+    `/@vite/env`, which `/@vite/client` loads before the page, so `mode.ts` reads it with `typeof`, and the stubbed
+    global in `mode.test.ts` is the dev path. **And a change to `vite.config.ts` needs our server restarted** (`tsx
+    watch` excludes `../web/**`, and Vite in middleware mode did not reload its config): the first `curl` after the edit
+    served the old config. Both are traps in ORIENTATION §7.
+  - **The walk** (headless Chrome, 1440 and 375, `pnpm dev:mock`): the sign-in page, *Your apps*, *Start something new*
+    and a conversation. On all eight, one note, first on the page, at the top; no sideways scroll; no page that fitted
+    scrolls (`scrollHeight` = `innerHeight`, the conversation at 375 excepted, by its own length); the skip link still
+    the keyboard's first stop once signed in. At 375 the sentence takes two lines, breaking at *manifest-mock*'s hyphen.
+  - **Negative controls:** the banner drawn in edge mode (6 of the screen test's 11 red); the banner after the page
+    (4 red: every page that draws something); `mode.ts` taking any defined value (1 red). Each restored.
+- **Step 0: contract 1.5.0 landed mid-sitting** (manifest `d894b8e`, the platform's launch-path Task 4, FE-38 option
+  (a)): `Instance.createdAt`, required, when the deploy made it; the list's order unchanged. **Our typecheck went red on
+  seven test fakes** (the Preview's, trying-out's and the stations'), none of Task 3's, so Task 3 was committed on its
+  own green suite and the adoption made its own commit (**`33e9251`**, *Adopting what lands*): **the last attempt is
+  the newest failure made after the one serving, whatever its version** (FE-38's rollback now reads right; the same
+  version failing after the one serving is no longer taken for an earlier try; of several failures the newest made is
+  the last even before its incident is written), and the Preview reads only the serving version, a failure no longer
+  needing its version dated. Three new tests, each red before; the control (the old same-version rule back) turned
+  three red. **Our mock on 7102 was restarted** (it runs from source and had read the old fixtures), and answers
+  `createdAt`; the Preview's two facts drawn against it. FE-38's landing is in `api-findings.md`.
+- **Not landed at our close:** Task 5, FE-33's close code `4401` (a revoked or expired credential), on the same 1.5.0.
+  `manifest-c3` will message before it lands; **the next sitting's Step 0 adopts it** (our server's subscription not
+  reopened, the round's needs `token`).
+- **Gates:** `pnpm test` twice, **1248 passed** (60 files; 1229 at F4's close, +16 Task 3, +3 FE-38); `pnpm typecheck`,
+  `pnpm lint`, `pnpm format:check` clean; `check-slice.sh` 8/8 in mock mode. `check-describing.sh`, `check-building.sh`
+  and `check-seeing.sh` were not run: neither commit touched our server's code, only the page and its Vite config.
+- **The machine at the close** (queried 19:46 PDT, not remembered): 7100 the control plane (node 49186, `manifest-c3`'s,
+  mid-sitting); 7102 our mock (node 20899, restarted for 1.5.0); 7105 our server in **mock mode** (node 2681, one `tsx
+  watch`, 2675), **restarted for Task 3's Vite config: it now shows the banner**; 7106 LiteLLM (Docker); 7104 not
+  listening. No Vitest process, no walk's Chrome left. Manifest at `2a26547`; the contract 1.5.0, 66 operations.
+- **Next:** sitting 1, the measurements, once `manifest-c3`'s sitting 3 has closed (it messages us), at Rich's word for
+  7100; its Step 0 adopts FE-33's `4401` if it has landed.
