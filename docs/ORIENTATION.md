@@ -4,64 +4,64 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-30, 06:35Z: F5's sittings 0–3 done; sitting 4 is next and needs no platform)*:
+**Where things stand** *(2026-09-30, 07:50Z: F5's sittings 0–4 done; sitting 5 is next and needs no platform)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F5 — Going live, sitting 4** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)):
-  **Tasks 7, 8 and 9**: the dry run's row in its own component (Task 7 as S1 rewrote it: an administrator's, no button),
-  the sign-off from the approval with *[Talk it through]* (Task 8: **it must land in sitting 4**, since until then a
-  rejected version's row reads as undecided), and the hand-over (Task 9). **No platform is needed.** Approved by Rich as
-  written, executed natively (superpowers:executing-plans; the ledger is
-  `.superpowers/sdd/2026-09-29-f5-going-live/progress.md`). Read the sittings table's row 4 first: it carries sitting 3's
-  notes (the stale `launchedAt`, Important once Task 10 launches in the page; ask Rich first if the platform's 4a has
-  landed).
-  - **Sittings 0–2 done** (2026-09-29/30): the mock-mode banner; FE-38 and FE-33 adopted; the measurements on 7100
-    (**FE-41** and **FE-42** written; Rich: *"Both: row now, ask platform"*, so the dry run is an administrator's row);
-    **every model call streams** (three deadlines per use; a stall its own card; M10).
-  - **Sitting 3 done** (2026-09-30, `manifest-app-58`, no platform): `ClockItem` and `ProgressBar` ported with parity,
-    with a `state` of ours (`6505ea7`); **the Overview is the app's landing page**, with moment 10's band, the rail's four
-    pages, the Preview at `/apps/:slug/preview` (F4's `?tab=` address still opens it), *Your apps*' line (`f113e5b`);
-    ***Going live*** (`b8a533e`): the version, two clock cards from the records, the short jobs in our words, nothing
-    pressable. **Its final review changed Decision 5 at Rich's word (S3, `518c05e`):** a clock card reads its checklist
-    item too and never says *"Done"* while the item is unmet (*"With the Manifest team"*), and a change on file is with
-    UBC (*"With UBC's identity team"*, counting days). Seven Minors deferred (the plan's dated entry).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F5 — Going live, sitting 5** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)):
+  **Task 10**, putting it live (moment 14): *[Let your students in]*, the step-up, the production deploy, the stations,
+  every failure; M1, M2 and M4, on *Trying out* too. **No platform is needed.** Approved by Rich as written, executed
+  natively (superpowers:executing-plans; the ledger is `.superpowers/sdd/2026-09-29-f5-going-live/progress.md`). Read the
+  sittings table's row 5 first: **if the platform's 4a (FE-42 (a)) has landed, stop and ask Rich** whether Task 7's press
+  goes in too; and it carries sitting 4's notes (after an in-page launch the App's lookup stays stale, and both pages now
+  hear the launch from the checklist; the hand-over's rows are asked by the production release's date).
+  - **Sittings 0–3 done** (2026-09-29/30): the mock-mode banner; FE-38 and FE-33 adopted; the measurements on 7100
+    (**FE-41**, **FE-42**; Rich: *"Both: row now, ask platform"*); **every model call streams**; `ClockItem`, **the Overview**
+    as the app's landing page, ***Going live*** (Decision 5 (S3) at Rich's word).
+  - **Sitting 4 done** (2026-09-30, `manifest-app-6d`, **overnight, Rich asleep, decisions delegated**): **the dry run's row**
+    in `dry-run.tsx`, an administrator's, nothing pressable (`11377c8`); **the sign-off** from `getApproval`, a refusal
+    needing you with ***[Talk it through]*** (`2bd6d94`); **the hand-over**, *For your students* leading the Overview once
+    launched, from our new `GET /api/apps/:projectId/plan` (`2788bde`); the stale `launchedAt` closed on both pages
+    (`154a227`). **Its final review changed Decisions 9 and 12, marked (S4), decided overnight for Rich's review**
+    (`7f28d1d`): one change per refusal (a small server change), the hand-over speaking for the version live, the honest line
+    said once, *"It's live."* kept once heard. Eight Minors deferred (the dated entry).
   - **Every sitting starts** with `pgrep -fl vitest` and **Step 0** (the plan's *Adopting what lands*).
-  - **What F5 is:** moments 10–15 as far as the contract serves them: the Overview (done), *Going live* in the rail
-    (done), two clock cards that say what the record and the checklist say (done), the short jobs in our words (done),
-    the dry run **as an administrator's row**, the sign-off as it stands, **[Let your students in]** with its step-up, and
-    the address handed over. Plus streaming, the banner and M10 (done), and M1, M2 and M4 (sitting 5). Seven sittings
-    (0–6).
+  - **What F5 is:** moments 10–15 as far as the contract serves them: the Overview, *Going live*, two clock cards, the short
+    jobs, the dry run as an administrator's row, the sign-off, the hand-over (all done); **[Let your students in]** with its
+    step-up (sitting 5); M1, M2 and M4 (sitting 5); the acceptance and Rich's click (sitting 6).
   - **F5b** is written when the platform's launch-path sittings 6–10 land (the clocks' own actions, *waiting since*, the
     staging clock and [Open it], asking an administrator).
 - **F4a, *Only faculty build*, is written, approved by Rich, and waits on the platform** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md),
   walk-through **D7**, **FE-39**). When the platform's contract answers `Me.mayBuild` (its launch-path sitting 5a; the
   platform session messages us at that commit), **stop and ask Rich** whether to switch to F4a, and to confirm its method
   (native recommended).
-- **Open for Rich:** removing the GitHub repository `Manifest-local-dev/f5-reading` (sitting 1's, launched on 7100, all of
-  it disposable at the platform's truncation), with `lp-real-a`. **F4's other deferred minors** (M3, M5–M9,
-  M11), and F3's and F2's, are in F4's sitting 7 entry and the ledgers; **F5 sitting 2's nine and sitting 3's seven** are
-  in their dated entries. **Words of ours for his click** (sitting 3): the rows' names and owners, the clocks' *"Done"*,
-  *"The newest version needs it changed."*, *"Nothing more needed."*, and the launched page's *"It's live."*.
+- **Open for Rich:**
+  - **Sitting 4's ten overnight decisions** (the plan's sitting 4 entry, *"Decided overnight under Rich's delegation"*): above
+    all Decisions 9 and 12 (S4), and the honest line said once.
+  - Removing the GitHub repository `Manifest-local-dev/f5-reading` (sitting 1's, disposable at the platform's truncation),
+    with `lp-real-a`.
+  - **Deferred minors:** F4's (M3, M5–M9, M11), F3's and F2's in F4's sitting 7 entry and the ledgers; **F5 sitting 2's nine,
+    sitting 3's seven, sitting 4's eight** in their dated entries.
+  - **Words of ours for his click**: sitting 3's (the rows' names and owners, the clocks' *"Done"*, *"The newest version
+    needs it changed."*, *"Nothing more needed."*, *"It's live."*) and sitting 4's (the plan's *Words proposed for Rich*,
+    rows marked S4).
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md));
-    moments 7, 10, 11, 13 and 15 changed with F5's plan, **moment 12 with FE-42**, and **moment 10's cards with sitting
-    3's review** (2026-09-30).
+    moments 7, 10, 11, 13 and 15 changed with F5's plan, moment 12 with FE-42, moment 10's cards with sitting 3's review,
+    **and moments 13 and 15 with sitting 4's, for Rich's review** (2026-09-30).
   - **F1** (2026-09-27): sign-in, the shell, *Your apps*, a profile. **F2** (2026-09-28): moments 3–5. **F3**
     (2026-09-28): moment 6. **F4** (2026-09-29): moments 7–9. Rich clicked each on the real platform.
-  - **F5's sittings 0–3** (2026-09-29/30): the banner; FE-38 and FE-33 adopted; the measurements; streaming; the
-    Overview and *Going live*.
+  - **F5's sittings 0–4** (2026-09-29/30): the banner; FE-38 and FE-33 adopted; the measurements; streaming; the Overview and
+    *Going live*; the dry run's row, the sign-off, the hand-over.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
   - **Its launch-path plan** (`docs/superpowers/plans/2026-09-29-launch-path.md`, read-only), one sitting per session.
     **Its sitting 4 is RUNNING** (`manifest-a1`, 2026-09-30; told to truncate freely, and that we are in mock mode):
-    **FE-41 fixed** across `0f2275a..ebfc571` (the cause was GitHub refusing a repository it made seconds earlier, for
-    2–4 s, with or without a starter; driver 2 retries its seed push and first fetch within 30 s), then **FE-34**
-    (`8ef6d46`, after Spec action 6 applied, `0ebe514`: the fallback answers a provider that failed, never a request it
-    refused); it **restarts `manifest-litellm` (7106)** during its Task 6 (we said we run no real-gateway check). Nothing in
-    `packages/contract` or `packages/mock` so far. **Then 4a: Task 6b, FE-42 (a)** (`manifest-73`, waiting for 4 to
-    close; the owner may run the rehearsal: Task 7's press returns; ask Rich when; it has FE-42's pointers, and will tell
-    us whether a delegated token may run it too). Then 5 the key trim and member removal; **5a `mayBuild` (F4a)**;
-    **6–9 FE-6 and FE-25 (F5b)**; 10 the console and the mock (FE-40); 11 the guides; 12 its acceptance. **When one
-    lands, do F5's *Adopting what lands*.** It messages us before any commit to `packages/contract` or `packages/mock`,
-    and at each close.
+    **FE-41 fixed** across `0f2275a..ebfc571`, **FE-34** committed (`8ef6d46`, then `c16b23d`: the guard judges each
+    request by its own failure); it restarts `manifest-litellm` (7106) as it needs. Nothing in `packages/contract` or
+    `packages/mock` so far. **Then 4a: Task 6b, FE-42 (a)** (`manifest-73`, waiting for 4 to close): **Rich answered its
+    question: persons only** (the owner, collaborators and administrators, from a session; a token refused as today), so its
+    one contract change is `runRehearsal`'s description, 1.5.0 staying; Task 7's press returns (ask Rich when). Then 5 the
+    key trim and member removal; **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10 the console and the mock
+    (FE-40); 11 the guides; 12 its acceptance. **When one lands, do F5's *Adopting what lands*.** It messages us before any
+    commit to `packages/contract` or `packages/mock`, and at each close.
   - **The contract is 1.5.0, 66 operations** (`84d485a`): `Instance.createdAt`; close code `4401`.
   - **7100 runs on real GitHub** (driver 2, `Manifest-local-dev`): **anything created through 7100 makes a real private
     repository on github.com that nothing deletes.** A real-platform walk is Rich's word, every time. **Never restart the
@@ -69,18 +69,18 @@ says which plan is current. This file states where things stand and the rules. I
   - **Findings:** FE-26 to FE-32 carried; FE-35 and FE-36 decided and built, FE-36 changing (sitting 5); FE-11 decided
     (sitting 5); **FE-38 and FE-33 landed and adopted**; **FE-41 fixed** and **FE-34 committed** (sitting 4, not yet
     closed); FE-37 fixed; FE-39 decided (sitting 5a); **FE-40 confirmed** (sitting 10); **FE-42 (a) confirmed by Rich**
-    (sitting 4a). Rich carries what he decides.
+    (sitting 4a, persons only). Rich carries what he decides.
   - **The laptop's on-premise names are `qwen3.8:27b`**; the capable model is `default-chat-large`
     (`openai/gpt-6-luna`), read from `session.models`, never assumed. A fallback says so in
     `x-litellm-attempted-fallbacks: 1`, **on a stream too** (F5 sitting 1).
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
-- **The machine** *(2026-09-30, 06:33Z, queried)*:
-  - **Our server on 7105 is in mock mode** (one watcher, pid 82690's tree; `nohup pnpm dev:mock`, restarted by sitting 2,
-    untouched by sitting 3), against **our mock on 7102** (pid 35047). **Every page says *"Mock mode: …"* at its top.**
-    Switch to edge mode before anyone clicks the real platform, and say so. **Its dev database is fresh from sitting 2's
-    acceptance runs**; the one before is kept as `packages/server/.data/app-before-f5s2.sqlite`.
-  - **The control plane on 7100 is the platform session's** (node 4399, on `8ef6d46` or later). Query it (`lsof -nP
+- **The machine** *(2026-09-30, 07:49Z, queried)*:
+  - **Our server on 7105 is in mock mode** (one watcher, `nohup pnpm dev:mock` pid 64157's tree, restarted by sitting 4),
+    against **our mock on 7102** (pid 35047). **Every page says *"Mock mode: …"* at its top.** Switch to edge mode before
+    anyone clicks the real platform, and say so. **Its dev database is fresh from sitting 4's second acceptance runs**; the
+    ones before are kept as `packages/server/.data/app-before-f5s4.sqlite` and `app-f5s4-first-checks.sqlite`.
+  - **The control plane on 7100 is the platform session's** (node 4399, on `c16b23d` or later). Query it (`lsof -nP
     -iTCP:7100 -sTCP:LISTEN`), ask Rich, and tell the platform session before using it. **LiteLLM is on 7106** (Docker),
     restarted at will by the platform's running sitting. 7104 (the reference console) was not listening.
   - **Our dev script trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA lives.
@@ -95,34 +95,36 @@ says which plan is current. This file states where things stand and the rules. I
     wraps, a styles test).
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
     `mode.ts` says which platform our server answers from (Vite's `define`), and `App` draws the mock-mode banner from it.
-    **An app's pages:** `/apps/:slug` is the Overview (`screens/overview/`: its rows, moment 10's band, and the slot Task 9
-    fills), `/apps/:slug/preview?tab=…` the Preview (`screens/preview/`, moment 7: its facts pure, in `facts.ts`),
-    `/apps/:slug/going-live` *Going live* (`screens/going-live/`: `checklist.ts`'s `rowsOf` and `CLOCK_IDS`, and
-    `clocks.ts`'s `clockOf`, both pure), `/apps/:slug/conversations` and `/change` moment 8 (`screens/change/`). The
-    router's `canonical` rewrites F4's `/apps/:slug?tab=…` in `useRoute`'s read, and `remember` keeps an address without a
-    navigation. `screens/building/` is moment 6, `screens/trying-out/` moment 9 (`put.tsx`; its stations and the
-    question's version pure, in `stations.ts`), and `ours/pretend-people.ts` the pretend people (FE-3). **Only
-    `src/auth.ts` names an `/auth/` path** (sign in, sign out, step-up).
+    **An app's pages:** `/apps/:slug` is the Overview (`screens/overview/`: its rows, moment 10's band, and **moment 15's
+    hand-over in `students.tsx`**, read once launched), `/apps/:slug/preview?tab=…` the Preview (`screens/preview/`,
+    moment 7: its facts pure, in `facts.ts`), `/apps/:slug/going-live` *Going live* (`screens/going-live/`: `checklist.ts`'s
+    `rowsOf` and `CLOCK_IDS`, `clocks.ts`'s `clockOf`, **`dry-run.tsx`'s `dryRunRow`** (where Task 7's press returns) and
+    **`sign-off.tsx`'s `signOffRow`, `talkWords` and *[Talk it through]***, all pure but the components; `row.tsx` draws a
+    row), `/apps/:slug/conversations` and `/change` moment 8 (`screens/change/`). The router's `canonical` rewrites F4's
+    `/apps/:slug?tab=…` in `useRoute`'s read, and `remember` keeps an address without a navigation. `screens/building/` is
+    moment 6, `screens/trying-out/` moment 9 (`put.tsx`; its stations and the question's version pure, in `stations.ts`),
+    and `ours/pretend-people.ts` the pretend people (FE-3). **Only `src/auth.ts` names an `/auth/` path** (sign in, sign
+    out, step-up).
   - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2).
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
       the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`, its
       claims kept in the hub (`events.ts`), which the line reads. The folds: `intake-state.ts`, `round-state.ts`,
       `piece-state.ts` and `line-state.ts`. `api/build.ts` is the building routes, `api/apps.ts` an app's
-      conversations, the secrets we asked for, and **the fix under way for an incident**, and `api/plan.ts` a plan.
+      conversations, the secrets we asked for, the fix under way for an incident, **the change under way for a refusal
+      (`/refusals/:approvalId/conversation`), and the hand-over's two rows (`/plan?before=`)**, and `api/plan.ts` a plan.
     - `model/` asks a model for structured output only, and says which model answered. **Every call streams** (F5
       sitting 2): `model/stream.ts` reads the events, and `client.ts` holds three deadlines per use (`ROUND_DEADLINES`,
       `ASKING_DEADLINES`: a first word, words or reasoning arriving, a ceiling); an answer is counted (`received`), never
-      kept. `agents/` are the agents, each a schema
-      and a prompt: the three intake agents, the plan, the change planner, the lead, the CWL specialist and the
-      explaining agent.
+      kept. `agents/` are the agents, each a schema and a prompt: the three intake agents, the plan, the change planner,
+      the lead, the CWL specialist and the explaining agent.
     - **`runtime/` is our own agent framework**: it knows no platform. `build/` holds the lead's guards and moves,
       `round.ts`, the round of work (it renews a session the platform withdrew, once a leg), and `line.ts`, the line.
     - `platform/` is every call our server makes, **always with the conversation's token or a model key**, never
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1414 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
+    - `pnpm test` (1505 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
       (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**: each in mock mode, `pnpm mock` and `pnpm dev:mock` running.
       Run `check-seeing.sh` first, while the mock's app is free.
@@ -491,6 +493,17 @@ bash scripts/check-seeing.sh                                    # F4's acceptanc
   sitting 3 did for `getLaunchReadiness`.
 - **The mock's checklist and records must agree in a rewritten walk**: since sitting 3's review a clock card reads both,
   so an approved record beside an unmet item draws *"With the Manifest team"*, correctly.
+- **jsdom names a button without the leading space of its visually hidden part** (*"Copythe address"*); Chrome names it
+  *"Copy the address"*. A unit test matches the name with `\s*`; a walk reads Chrome's accessibility tree
+  (`Accessibility.getFullAXTree`) (F5 sitting 4).
+- **A walk's spill check measures boxes, and overflowing text does not grow its `<p>`**; and Chrome breaks a long address
+  at its hyphens. To prove a sentence wraps, check each sentence's `scrollWidth` against its `clientWidth`, with a word that
+  cannot break (F5 sitting 4: the check stayed green twice before it could go red).
+- **In a wrapped `<textarea>`, `End` moves to the end of the visual line**, not of the value: a walk that types at the end
+  sets `setSelectionRange(length, length)` first (F5 sitting 4).
+- **The hand-over's rows are asked `?before=` production's release date** (S4): the mock's release is from 18 September,
+  older than every agreement in the dev database, so in mock mode the message has no second part unless a walk rewrites
+  the release's `createdAt`.
 - **Our mock runs from source and reads the platform's fixtures once, at its start.** When the contract lands (1.5.0's
   `createdAt`), restart `pnpm mock` (7102), or it answers the old fixtures while our typecheck reads the new contract.
 

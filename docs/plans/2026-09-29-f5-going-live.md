@@ -14,7 +14,10 @@ Task 7 is now the administrator's row (FE-42, Rich). **Sitting 2 is done** (2026
 call streams (Task 2, with M10), and the final review's one Important (a model reasoning before its first word) is fixed,
 marked **(S2)** in Decision 14. **Sitting 3 is done** (2026-09-30, `manifest-app-58`): `ClockItem`, the app's Overview and
 rail, *Going live* (Tasks 4–6); its final review changed Decision 5 at Rich's word, marked **(S3)**: a clock card reads
-its checklist item as well as its record, and a change on file is with UBC. **The next is the sittings table's
+its checklist item as well as its record, and a change on file is with UBC. **Sitting 4 is done** (2026-09-30,
+`manifest-app-6d`, overnight, Rich asleep and decisions delegated): the dry run's row in its own component (Task 7, S1's),
+the sign-off from the approval with *[Talk it through]* (Task 8), the hand-over (Task 9); its final review changed
+Decisions 9 and 12, marked **(S4)**, **decided overnight for Rich's review**. **The next is the sittings table's
 `← next`.**
 
 **Goal:** A faculty member sees what stands between their app and their students from the day the draft is built, runs
@@ -63,8 +66,8 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 | 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | **done 2026-09-30** (`manifest-app-a0`, 04:19–04:40Z on 7100): M1–M7 measured; Tasks 2, 6, 7, 10 and 11 corrected (S1); **FE-41 and FE-42 written, carried at Rich's word**; FE-33's `4401` adopted (Step 0). 1249 tests (the dated entry below) |
 | 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | **done 2026-09-30** (`manifest-app-e2`, no platform): `2009fba` (the stream, three deadlines, `stalled`, M10), `f6b09af` (the final review's I1: reasoning is working, not a stall). 1284 tests; the four acceptance scripts pass in mock mode (the dated entry below) |
 | 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | **done 2026-09-30** (`manifest-app-58`, no platform): `6505ea7` (the two components, `state` ours), `f113e5b` (the Overview, the rail, the Preview at `/preview`, *Your apps*' line), `b8a533e` (*Going live*), `518c05e` (the final review's fixes; **Decision 5 (S3)**, Rich). 1414 tests (the dated entry below) |
-| 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | ← **next** (no platform needed). **Task 8 must land here**: until it reads the approval, a rejected version's sign-off row reads as undecided (S3). Task 7 moves the dry-run row `rowsOf` already draws (S1's words, no button) into `dry-run.tsx`. **Carry to Task 9:** the App's lookup is read once per slug, so the Overview's `launchedAt` goes stale (S3's deferred minor, Important once Task 10 launches in the page). If the platform's sitting 4a (FE-42 (a)) has landed, ask Rich first whether Task 7's press goes in here |
-| 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | |
+| 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | **done 2026-09-30** (`manifest-app-6d`, overnight, no platform): `11377c8` (the dry run's row in `dry-run.tsx`, an administrator's, nothing pressable), `2bd6d94` (the sign-off from `getApproval`, *[Talk it through]*), `2788bde` (the hand-over; our `/api/apps/:projectId/plan`), `154a227` (*Going live* hears a launch from the checklist), `7f28d1d` (the final review: *[Talk it through]* opens the change under way, the hand-over speaks for the version live: **Decisions 9 and 12 (S4)**, decided overnight for Rich's review). 1505 tests; the four acceptance scripts pass in mock mode (the dated entry below) |
+| 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | ← **next** (no platform needed). **If the platform's sitting 4a (FE-42 (a)) has landed, stop and ask Rich first** whether Task 7's press goes in here (it returns in `dry-run.tsx`; Rich answered 4a's question: persons only, a token refused as today). **Carry (S4):** the App's lookup stays stale after an in-page launch: *Going live* and the Overview now hear the launch from the checklist's `launched` (latched), so after the press, re-read or navigate (*[See what to tell your students]* opens the Overview, which reads the hand-over); the hand-over's rows are asked `?before=` the production release's `createdAt`, so in mock mode the mock's release (18 September) predates every agreement and a walk rewrites its date. Sitting 4's eight deferred Minors are in its dated entry |
 | 6 | 11 | **The acceptance:** `scripts/check-going-live.sh` against the mock; the whole-branch review; a first launch walked end to end on 7100 at Rich's word; **Rich's click**. **Alone, and last** | |
 
 **Every sitting starts** with `pgrep -fl vitest` (a stray worker loads the machine the platform times its tiers
@@ -171,7 +174,9 @@ change at his click.*
 | Putting it live ✓ | the walk-through's **[Let your students in]**, its sentence, the step-up card, *"You're signed in again."*, F4's stations, *"Reading responses is live."*, and ours: **[See what to tell your students]** |
 | Putting it live, when it goes wrong ✓ | *"The version on your trying-out address changed a moment ago. Go live with the new one?"* · *"Nothing reached your students. The address shows nothing yet, not a broken app."* · **[What went wrong]** · our deadline: *"We stopped waiting, but it may still be going. This shows it when it answers."* |
 | A fix conversation's title, for production | *"It didn't start on the live address"*; for a dry run, *"The dry run didn't sign anyone in"* **(S1: M4)** (not built until FE-42 (a): nothing gives the page a failed run's evidence) |
-| The hand-over ✓ | *"For your students"*; the address, **[Copy]**; *"Students sign in with their CWL."*; the message *"<Name> is here: <address>. Sign in with your CWL."* followed by the plan's *What students see*; the honest line *"Anyone with a CWL can sign in, not only your class."* followed by the plan's *Who gets in*; the two facts |
+| The hand-over ✓ | *"For your students"*; the address, **[Copy]**; *"Students sign in with their CWL."*; the message *"<Name> is here: <address>. Sign in with your CWL."* followed by the plan's *What students see*; the honest line *"Anyone with a CWL can sign in, not only your class."* followed by the plan's *Who gets in* (**S4:** the plan's row alone when it opens *"Anyone with a CWL can sign in"*); the two facts |
+| The hand-over, ours (S4) | the field's label *"A message to send them"*; its hint *"For Canvas or an email. Change it as you like: nothing here is saved."*; the Copy buttons' hidden names *"the address"*, *"the message"* |
+| The sign-off, ours (S4) | a refusal's owner *"you"*; signed off, then rebuilt: *"It has changed since it was signed off, so a Manifest administrator looks at it afresh. Manifest doesn't tell them yet that it's waiting."*; unreadable: *"We can't tell right now whether it's been signed off."*; the press *"Opening a conversation"*, and *"We couldn't open that conversation just now. Nothing is lost."*; with no reason kept, *"Not signed off."* and *"A Manifest administrator didn't sign it off."* |
 | A stall, in a round ✓ | *"Our model stopped answering before it finished. Nothing is lost."* · *"Our model's answer went on far longer than any should, so we stopped it. Nothing is lost."* · **[Carry on]** · **[Stop here]** |
 | A stall, on the intake or the plan | the same first sentence, with their **[Try again]** |
 
@@ -254,6 +259,12 @@ change at his click.*
    `null`). A rejection's **[Talk it through]** mints a token and starts **a change** (F4's, agreed first) whose words are
    ours plus their reason: a rejection is final for its version, so what follows is a change, a new version, trying-out,
    and a new sign-off. No server change.
+   - **(S4, the final review's I1, decided overnight under Rich's delegation, for his review) One change per refusal, as
+     F4's I2 is one fix per incident:** the change carries the decision it answers (`refusal: { approvalId }` beside their
+     words), our server finds it again (`GET /api/apps/:projectId/refusals/:approvalId/conversation`, never one set aside),
+     and the press opens it. A second press had started a second change (a token, a planner run, two alike titles). So
+     this is a small server change after all. The row is keyed on the checklist item first: signed off then rebuilt is
+     looked at afresh, never *"Signed off"*.
 10. **Putting it live is F4's trying-out, on production, with the step-up.**
     - The button only when `ready`; the press re-reads `candidateReleaseId` and deploys **exactly that release**, with an
       `Idempotency-Key` and F4's 120-s deadline; the stations poll production's `listInstances` every second (F4 M3's
@@ -286,7 +297,14 @@ change at his click.*
     `url`) large in mono with **[Copy]**; the message and the honest line (Rich's words above), whose second parts are the
     **agreed plan's `studentsSee` and `whoGetsIn` rows, as written, from our store** (a new read, `GET
     /api/apps/:projectId/plan`, answering those two rows of the latest plan agreed on the app, or `404`). **No model.** The
-    message is an editable field and is not saved. *Rejected:* a model writing it (a session and a spend for one
+    message is an editable field and is not saved.
+    - **(S4, the final review's I2, decided overnight under Rich's delegation, for his review) The plan agreed for the
+      version live, not the latest:** the page names when production's release was made (`?before=`), and our server
+      answers the plan agreed at or before then, so a change agreed and built on the draft since never reaches the message
+      to students as if it were live; nothing dates the version live, nothing is asked. **And the honest line is said
+      once:** a plan's *Who gets in* that opens *"Anyone with a CWL can sign in"* (the plan's prompt makes it so) is the
+      honest line itself, said alone; any other row follows ours. Launched is `launchedAt` **or the checklist's
+      `launched`**, kept once heard (the App reads the project once per slug). *Rejected:* a model writing it (a session and a spend for one
     sentence); a new field in the plan (moment 5's five rows are Rich's); reading `docs/plan.md` from the tree, which needs
     a token our server may not hold.
 13. **A fix for a production start** generalises F4's: `{ fix: { incidentId, environment: 'staging' | 'production' } }`
@@ -1143,3 +1161,88 @@ the platform's sitting 4a (FE-42 (a)) and was sent FE-42's pointers. The ledger 
   7106 `manifest-a1`'s.
 - **Next: sitting 4** (Tasks 7, 8, 9: the dry run's row in its own component, the sign-off from the approval, the
   hand-over), no platform needed.
+
+### 2026-09-30 — Sitting 4: the dry run's row, the sign-off, the hand-over (session `manifest-app-6d`, overnight)
+
+*No platform: 7100 was `manifest-a1`'s throughout (the launch path's sitting 4), and our server stayed in mock mode. The
+baton came from `manifest-app-58`. Rich had gone to bed and, relayed by it, "allow[s] them to make decisions as long as they
+explain them afterwards": every such decision is in the list below, and in the ledger as a `Ruling:`.*
+
+- **Step 0.** manifest at `c16b23d` (FE-34's guard fix after `8ef6d46`); nothing in `packages/contract` or `packages/mock`
+  since `ebfc571`; contract **1.5.0, 66 operations**: nothing to adopt. **4a (FE-42 (a)) has not landed.** `manifest-73`
+  relayed **Rich's answer to its 4a question: persons only** (the owner, collaborators and administrators may run the
+  rehearsal from a session; a delegated token stays refused as today), so 4a's one contract change is `runRehearsal`'s
+  description. `pgrep -fl vitest`: only the platform's own run at the start.
+- **Task 7, `11377c8`:** the dry run's row, **as S1 rewrote the task**: `dryRunRow` and `DryRun` in `dry-run.tsx`, read
+  from the checklist item alone: not yet with nothing on trying-out; waiting on *a Manifest administrator*, who is not told,
+  with a version there; done once it passed; a failed run reads as one not yet run, with no *[Fix it]* (never measured).
+  **Nothing pressable in any state.** `rowsOf` stays one list in the checklist's order; `RowView` moved to `row.tsx`. The
+  press, `runRehearsal`, its deadline and its fix return in `dry-run.tsx` with FE-42 (a).
+- **Task 8, `2bd6d94`:** **the sign-off from `getApproval`** (404, nobody has decided, is `null`), each reading naming its
+  own candidate. Keyed on the checklist item first: undecided waits on an administrator with no date (FE-25); signed off
+  says by whom and the day, in their time zone; signed off then rebuilt is looked at afresh, never *"Signed off"*;
+  unreadable says we cannot tell. **Not signed off needs you**: their reason in their words, *"A new version is needed,
+  and it's looked at afresh."*, and ***[Talk it through]***, which mints a token in their session and starts a change of
+  our words and their reason, cut at a word to the change's 4000, then opens it. **A rejected version no longer reads as
+  undecided** (sitting 3's interim).
+- **Task 9, `2788bde`, and `154a227`:** **the hand-over**: once launched, the Overview leads with *For your students*: the
+  address large in mono with *[Copy]*, *"Students sign in with their CWL."*, a message to paste in a field that is theirs
+  and never saved, the honest line, production's two facts. Our server's `GET /api/apps/:projectId/plan` answers the two
+  rows of the plan the person agreed (the version their *Yes* named), never another row, never another person's.
+  **Sitting 3's carried minor is closed on both pages**: launched is `launchedAt` or the checklist's own `launched`.
+- **Negative controls** (each red, each restored, `cmp` confirmed; the ledger lists them): Task 7's three and a walk's;
+  Task 8's six and a walk's; Task 9's eight (three on the server) and a walk's; the fix pass's four. **Three walk checks
+  were weak and were fixed:** a button beside the dry run's row escaped a check scoped to the row; a long reason's overflow
+  escaped the spill check (it measures boxes, and text does not grow its `<p>`), then escaped again because Chrome breaks
+  an address at its hyphens; each check now proven red.
+- **The walks** (headless Chrome against the mock-mode server, 1440 and 375, the mock's answers rewritten in DevTools for
+  FE-40's gaps; our change and the problem report intercepted, so the dev database gains nothing): walk7 25 checks, walk8
+  21, walk9 29, all PASS after the fix pass. **One defect found and fixed at source:** an administrator's unbreakable
+  address ran past its sentence at 375 (`overflow-wrap`).
+- **The final review** (a fresh reviewer, the whole range, three passes): no Critical, **two Importants, and two Minors
+  regraded Important, all fixed test-first (`7f28d1d`)**:
+  1. **I1:** *[Talk it through]* pressed again started a second change: now one change per refusal (Decision 9, **(S4)**);
+  2. **I2 (the plan's):** the hand-over's rows came from the latest agreed plan, which could describe to students a change
+     only on the draft: now the plan agreed by the time the version live was made (Decision 12, **(S4)**);
+  3. the honest line could vanish behind a *Who gets in* that denies it: the plan's row stands alone only when it opens
+     *"Anyone with a CWL can sign in"*;
+  4. *"It's live."* could turn back after a failed read, and the first launch's lead flashed: now kept once heard, and no
+     lead until the first reading.
+
+  **Eight Minors deferred** (the ledger): two millisecond races in the sign-off row; a failed approval read with no support
+  reference; the reason quoted inline rather than in the Card's left rule (for Rich's click); a vacuous `fetch` check in
+  `students.test`; a test title that overstates a 404; the press's failed-mint path untested (F4's shared `pressFailed`);
+  focus after a failed press (as F4's); the Overview missing a launch when the lookup is stale and nothing is on the draft.
+- **Gates:** `pnpm test` **1505** twice (1414 at the start), `pnpm lint`, `pnpm typecheck`, `pnpm format:check` clean;
+  **`check-seeing.sh` 8, `check-slice.sh` 8, `check-describing.sh` 18, `check-building.sh` 12**, in mock mode, twice (after
+  Task 9 and after the fix pass), each time from a fresh dev database (the ones before are kept as
+  `app-before-f5s4.sqlite` and `app-f5s4-first-checks.sqlite`).
+- **The machine at the close:** our server on 7105 in mock mode (restarted by this sitting, `nohup pnpm dev:mock`), our
+  mock on 7102 (untouched); 7100 and 7106 `manifest-a1`'s.
+
+**Decided overnight under Rich's delegation, for his review** (each with what changing it back costs):
+1. **Decision 9 (S4): one change per refusal**, a small server change the plan had ruled out (*"No server change"*): the
+   change carries `refusal: { approvalId }`, our server finds it again, the press opens it. *Back:* drop the field, the route
+   and the lookup; a second press then starts a second change.
+2. **Decision 12 (S4): the hand-over speaks for the version live** (the plan agreed by production's release date, `?before=`),
+   not the latest agreed. *Back:* one query parameter.
+3. **The honest line said once:** when the plan's *Who gets in* opens *"Anyone with a CWL can sign in"* (as the plan's prompt
+   makes it, and every plan in the dev database does), it is said alone; your approved concatenation said it twice. *Back:*
+   one condition.
+4. **The sign-off's rows keyed on the checklist first**: signed off, then rebuilt: *"It has changed since it was signed off,
+   so a Manifest administrator looks at it afresh."* (ours), never *"Signed off"*; unreadable: *"We can't tell right now
+   whether it's been signed off."* (ours).
+5. **A refusal's owner is *"you"*** (ours, beside the walk-through's owners), and the administrator's reason is shown whole,
+   in their words, even if it holds a platform word (as an unknown item's title is).
+6. **The address handed over is the `url`** (`https://…`), not the bare hostname: a student pasting from Canvas needs a
+   link.
+7. **The message's label and hint** (*"A message to send them"*; *"For Canvas or an email. Change it as you like: nothing
+   here is saved."*), ours.
+8. **Sitting 3's stale `launchedAt` closed here, not in sitting 5**, on both pages, by the checklist's own `launched`.
+9. **Task 7's press was not put in**: 4a has not landed, and `manifest-app-58` recommended leaving it for you to schedule.
+10. **Our server's plan route reads by the person** (a student app's page is given no CORS permission), as its sibling reads
+    do; the plan's *"a student app's `Origin` refused as every route"* is met as the guard meets every read (`Origin` guards
+    changes, F2 Decision 3).
+
+- **Next: sitting 5** (Task 10, putting it live, with M1, M2 and M4), no platform needed, **unless 4a has landed: then ask
+  Rich first whether Task 7's press goes in too**.

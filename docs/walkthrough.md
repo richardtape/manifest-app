@@ -776,7 +776,8 @@ caller goes.
 - Meanwhile the row says so, with no stopgap (Rich, 2026-09-29): *"Manifest doesn't tell them yet that it's
   waiting."* No email, and no date. Asking is F5b's, when the platform's sign-off request lands (FE-25).
 - A rejection's **[Talk it through]** starts a change (moment 8, agreed first) seeded with their reason. A rejection is
-  final for its version, so the row also says *"A new version is needed, and it's looked at afresh."*
+  final for its version, so the row also says *"A new version is needed, and it's looked at afresh."* *As F5 builds it
+  (sitting 4, for Rich's review):* pressed again, it opens the change already under way for that refusal, never a second.
 
 **They wait:** days, **waiting on someone**, still.
 
@@ -831,10 +832,12 @@ caller goes.
 - A message they can paste into Canvas or an email, pre-written and editable: *"This week's reading responses
   go here: <address>. Sign in with your CWL. You'll see everyone else's once you've posted your own."* The last
   sentence comes from the agreed plan (D6). *As F5 builds it (2026-09-29):* *"<Name> is here: <address>. Sign in with
-  your CWL."*, then the plan's *What students see* as written, with no model.
+  your CWL."*, then the plan's *What students see* as written, with no model; *(sitting 4, for Rich's review)* from the
+  plan agreed for the version live, never a change agreed since and only on the draft.
 - **The honest line about who can get in**: *"Anyone with a CWL can sign in, not only your class. It only shows
   each student their own work until they post."* No course-restricted sign-in exists (FE-20). *As F5 builds it:* the
-  first sentence, then the plan's *Who gets in* as written (the second sentence above was this app's own).
+  first sentence, then the plan's *Who gets in* as written (the second sentence above was this app's own); *(sitting 4,
+  for Rich's review)* the plan's row alone when it already opens *"Anyone with a CWL can sign in"*, so it is said once.
 - **The two facts, now for students**: *"Serving right now: the version from 18 September"* and *"Last attempt:
   the same"*, **steady**.
 
