@@ -11,10 +11,9 @@ says which plan is current. This file states where things stand and the rules. I
   5b (Spec action 8's (b)+(c)) messages us at its close and hands 7100 over; its §7e records the window (no platform Vitest,
   no control-plane restart, `admin-grant.sh grant opr000001` once `operator` has signed in). Read the sittings table's row 6,
   the plan's sitting 6 entry, and the ledger's `Sitting 6` lines first. Then, in order:
-  1. **Step 0 for the platform's 5 and 5b** (the plan's *Adopting what lands*): `agent_session.narrowed` (**committed,
-     `d061ad7`**: the key trimmed in place; **today a withdrawn model's gateway `403` reads as `MODEL_NOT_AVAILABLE`, *"waiting
-     on an administrator"*, which is untrue**: the round should re-pick the most capable model still listed and carry on, as
-     F4's renewal does; the ledger's last Step 0 line) and `member_removed`; 5b's
+  1. **Step 0 for the platform's 5 and 5b** (the plan's *Adopting what lands*): `agent_session.narrowed` is **adopted
+     already** (`54cd767`, against `d061ad7`: a model narrowed away is FE-36's withdrawal, renewed once; re-check at 5's
+     close); `member_removed` (its Task 8: an end reason, `needs: token`); 5b's
      `runRehearsal` (its `STEP_UP_REQUIRED`, its take-down refusal's final code, which we match as `REHEARSAL_TEARDOWN_FAILED`,
      and whether `getEnvironment(production).instance` reads `gone` or `null` after a dry run). `pnpm typecheck`, `pnpm test`.
   2. **Walk the dry run's press against the mock** (headless Chrome, 1440 and 375): the mock's checklist has the dry run met
@@ -42,10 +41,22 @@ says which plan is current. This file states where things stand and the rules. I
   walk-through **D7**, **FE-39**). When the platform's contract answers `Me.mayBuild` (its launch-path **5a**, after 5b; the
   platform session messages us at that commit), **stop and ask Rich** whether to switch to F4a, and to confirm its method
   (native recommended).
+- **Relayed from Rich by `manifest-00` (a planning session in manifest, 2026-09-30), to confirm in his own words at the
+  window** (§8: a relay is a teammate's words): **sitting 4's ten and sitting 5's twelve overnight decisions accepted as
+  made**; **the live address wraps only after `://` and before a dot, never at the slug's hyphen** (display only; *Copy*
+  unchanged; not built: ask him, then build it test-first); **yes to one real private repository** in `Manifest-local-dev`
+  for F5's walk after 5b; **F6 is written after F4a**, while the platform runs its sittings 6–10; a mail sink (Mailpit, SMTP
+  and an inbox, proposed 7111/7112) enters the platform's infra after 5b, and our server sends real SMTP to it; **FE-29,
+  FE-31, FE-32 confirmed (a)**, the platform's next plan after the launch path being *"before faculty use it for real"*
+  (FE-28, FE-30 with FE-29, FE-31, F8's fix, …; FE-32 the plan after: until then F6's moment 17 says *"we can't add that
+  yet"*); **UBC's order is sequential** (Spec action 9: PIA → staging IAM → tested → production IAM → live, the platform
+  gating *"I've sent it"* in that order: F5b's); the platform's sittings 10 and 11 merged (FE-40 lands with the guides); the
+  external track deferred.
 - **Open for Rich:**
   - **Sitting 6's rulings** (the plan's sitting 6 entry): above all the dry run's row as **needs you**, the words of ours
     (row *S6* of *Words proposed for Rich*), and FE-34's refusal said as *"didn't come out"*.
-  - **Sitting 5's twelve overnight decisions** (above all **Decision 10 (S5)**) **and sitting 4's ten** (Decisions 9 and 12 (S4)).
+  - **Sitting 5's twelve overnight decisions** (above all **Decision 10 (S5)**) **and sitting 4's ten** (Decisions 9 and 12 (S4)):
+    **accepted, as relayed** (above); his own word at the window closes them.
   - **The platform's F8** (a provider's `422` answered `200` with `null`): (a) accept, (b) a guard hook, (c) a newer LiteLLM.
     We read today's shape; (b) would change nothing for us. **And its Spec actions 1–5** (1 and 2 before its sitting 5's
     tasks, 3–5 before F5b's sittings).
@@ -142,7 +153,7 @@ says which plan is current. This file states where things stand and the rules. I
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1624 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (1627 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
       (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**, **`scripts/check-going-live.sh` (F5's, 8)**: each in mock mode, `pnpm

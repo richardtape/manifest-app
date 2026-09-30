@@ -1465,6 +1465,16 @@ the ledger's `Sitting 6` lines are the record of each ruling.*
 5. **Two review Minors re-graded Important and fixed** (I1, I2 above): each changes what a person sees at the moment they
    decide what reaches their students.
 
+- **Late in the half: the platform's sitting 5 committed `agent_session.narrowed` (`d061ad7`)**, announced first. Our typecheck
+  passed against it, and **it is adopted** (`54cd767`): a live key is now narrowed in place, so the model a round was using
+  answers the gateway's `403`, which read as *"waiting on an administrator"*; the sessions list now carries each key's
+  `models`, and a `403` for a model gone from the round's live session is FE-36's withdrawal, renewed once (carry on if a new
+  session lists it; else stop and ask, Rich's rule). Controls red, restored; 1627 tests; `check-going-live.sh` 8/8 and
+  `check-building.sh` 12/12 again. `member_removed` (its Task 8) was not yet committed.
+- **Relayed from Rich by `manifest-00`** (a planning session in manifest; to confirm in his own words at the window):
+  sittings 4's and 5's overnight decisions **accepted as made**; **the live address wraps only after `://` and before a dot,
+  never at the slug's hyphen** (display only; not built); **yes to one real repository** for the walk after 5b; F6 after
+  F4a; UBC's order sequential (Spec action 9: F5b's). ORIENTATION has the whole list.
 - **Next: sitting 6's second half, in the 7100 window** (after the platform's 5 → 5b, before 5a): Step 0 for 5 and 5b; the
   dry run walked against the mock; Step 2 on 7100 at Rich's word, the dry run pressed as the owner; **Rich's click**. F5 is
   executed only then.
