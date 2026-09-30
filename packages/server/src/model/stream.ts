@@ -1,5 +1,8 @@
 import { ModelError } from './client.js'
 
+/** The status LiteLLM's `null` stands for: the provider's `422` (FE-34). */
+const REFUSED_AS_NULL = 422
+
 /**
  * ONE STREAMED CHUNK OF AN ANSWER (F5 Decision 14): its words, the model it names, and the usage
  * LiteLLM puts in the last chunk before `[DONE]` (S1: M2). A chunk's `model` is only the alias
@@ -31,8 +34,11 @@ function chunkOf(data: string): Chunk {
     }[]
     usage?: { prompt_tokens?: unknown; completion_tokens?: unknown } | null
   } | null
+  // FE-34: LiteLLM answers a provider's `422` as `200` with `null`: the request refused, never
+  // a gateway out of reach (the platform's sitting 4). Its F8 (b) would send the 422 itself.
+  if (body === null) throw new ModelError('MODEL_ANSWER_INVALID', REFUSED_AS_NULL)
   // The gateway's own error mid-answer. Never its words: they can carry anything.
-  if (body === null || typeof body !== 'object' || body.error !== undefined)
+  if (typeof body !== 'object' || body.error !== undefined)
     throw new ModelError('MODEL_UNREACHABLE')
   const delta = body.choices?.[0]?.delta
   const content = delta?.content
@@ -54,13 +60,15 @@ function chunkOf(data: string): Chunk {
  * THE RESPONSE BODY'S SERVER-SENT EVENTS IN, CHUNKS OUT. Pure: it knows no deadline (the client
  * holds those). An event ends at a blank line and may be cut by any read; `data:` lines are its
  * payload, and comments and other fields are not. `[DONE]` is the end: a body that ends before
- * it, or a payload that is not JSON, or an `error` chunk, is `MODEL_UNREACHABLE`.
+ * it, or a payload that is not JSON, or an `error` chunk, is `MODEL_UNREACHABLE`. A body, or an
+ * event, that is only `null` is a provider's refusal of the request (FE-34): `MODEL_ANSWER_INVALID`.
  */
 export async function* chunksOf(body: ReadableStream<Uint8Array>): AsyncIterable<Chunk> {
   const decoder = new TextDecoder()
   const reader = body.getReader()
   let buffered = ''
   let data: string[] = []
+  let events = 0
   try {
     for (;;) {
       const read = await reader.read()
@@ -76,13 +84,17 @@ export async function* chunksOf(body: ReadableStream<Uint8Array>): AsyncIterable
           const payload = data.join('\n')
           data = []
           if (payload === '[DONE]') return
+          events += 1
           yield chunkOf(payload)
         } else if (line.startsWith('data:')) {
           data.push(line.slice(line.startsWith('data: ') ? 6 : 5))
         }
         // A comment (`:`), or a field we do not read (`event`, `id`, `retry`).
       }
-      if (read.done) throw new ModelError('MODEL_UNREACHABLE')
+      if (read.done)
+        throw events === 0 && buffered.trim() === 'null'
+          ? new ModelError('MODEL_ANSWER_INVALID', REFUSED_AS_NULL)
+          : new ModelError('MODEL_UNREACHABLE')
     }
   } finally {
     // Nothing more is read: whatever the gateway still sends is let go.

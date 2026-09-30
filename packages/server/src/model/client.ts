@@ -107,6 +107,8 @@ function refusal(status: number, body: unknown): ModelError {
       status,
     )
   if (status === 401) return new ModelError('MODEL_KEY_REFUSED', status)
+  // FE-34: the provider refused the request itself; it answered, and nobody is waited on.
+  if (status === 422) return new ModelError('MODEL_ANSWER_INVALID', status)
   if (status >= 500) return new ModelError('MODEL_UNREACHABLE', status)
   return new ModelError('MODEL_NOT_AVAILABLE', status)
 }

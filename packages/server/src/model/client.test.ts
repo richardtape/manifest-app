@@ -276,6 +276,32 @@ describe('openAiCompatible: when the gateway refuses (LiteLLM 1.98.0, as the pla
     expect(seen).toHaveLength(1)
   })
 
+  it.each([
+    [
+      'the whole body null (LiteLLM’s answer to a provider’s 422: FE-34, the platform’s sitting 4)',
+      { status: 200, body: null } as const,
+    ],
+    [
+      'a streamed event whose data is null',
+      { status: 200, stream: 'data: null\n\n' } as const,
+    ],
+    ['a 422 itself (should LiteLLM pass it on: F8’s (b))', refused(422, 'unprocessable')],
+  ])(
+    'a request the provider refused, as %s: MODEL_ANSWER_INVALID (422), not retried, never MODEL_UNREACHABLE',
+    async (_, answer) => {
+      const { baseUrl, seen } = await gateway([answer])
+      const error = await codeOf(
+        openAiCompatible({ baseUrl, key: KEY, model: 'm' }).complete(
+          'a',
+          Guess,
+          MESSAGES,
+        ),
+      )
+      expect([error.code, error.status]).toEqual(['MODEL_ANSWER_INVALID', 422])
+      expect(seen).toHaveLength(1)
+    },
+  )
+
   it('a refused connection is MODEL_UNREACHABLE', async () => {
     const error = await codeOf(
       openAiCompatible({
