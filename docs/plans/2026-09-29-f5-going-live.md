@@ -51,7 +51,7 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub, kept for the acceptance.** Rich types, as the administrator. **Alone, and first** | ← **next**, after Rich's approval |
+| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub, kept for the acceptance.** Rich types, as the administrator. **Alone, and first** | ← **next**, once Rich has approved the plan and chosen its method (written 2026-09-29, `manifest-app-ce`: the dated entry below) |
 | 2 | 2, 3 | Every model call streams, and a stall has its own card (M10 with it); the mock-mode banner | |
 | 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | |
 | 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | |
@@ -746,3 +746,36 @@ incident(token: string, projectId: string, environment: 'staging' | 'production'
 ## What executing this plan found
 
 *Each sitting adds a dated entry here: its measurements, its rulings, its negative controls, and its gates.*
+
+### 2026-09-29 — The plan written, with Rich (session `manifest-app-ce`, documents only)
+
+*At Rich's word (*"start the next sitting: writing F5 — Going live, with me … This sitting writes and gets the plan
+approved; it builds nothing"*): superpowers:brainstorming, then writing-plans, as F4 was written. Nothing was built,
+7100 was not used, and no test was run: the gates are owed by code, and none changed.*
+
+- **Read first:** the walk-through's moments 10–15; `api-findings.md`; F4's sitting 7 entry and its *Open for Rich*; the
+  ledgers' deferred minors; **the platform's launch-path plan** (read-only), which builds FE-6 (its sittings 6–8), FE-25
+  (sitting 9), FE-33 and FE-38 (sitting 3), FE-34 (sitting 4), the key trim and member removal (sitting 5), FE-39's
+  `mayBuild` (sitting 5a), and the mock's half (sitting 10). Its spec actions 3–5, which F5b's sittings wait on, are
+  undecided.
+- **The platform session, `manifest-13`** (its launch-path sitting 2): told at our start that we write documents only
+  and would not use 7100. **It reported Rich's demo of that afternoon** (`0565-503F`): our server was in mock mode
+  behind `app.manifest.internal`, so his real session met a mock-mode server and was refused, and so was the problem
+  report. Rich chose a banner (Task 3). It will message us when `Me.mayBuild` lands (sitting 5a, F4a), and before any
+  commit to `packages/contract` or `packages/mock`. **LiteLLM is on 7106** (its word), which Task 1 records.
+- **Rich decided, in order** (each is in *Decided by Rich*): build now, no stopgap; [Open it] hidden until registered;
+  streaming (*"When the timeout happens have we still captured what the LLM has sent…?"*), then every call; M1, M2, M4
+  and M10; the banner; two plans, F5 and F5b; *"may take several days"*; FE-40 filed and carried. **The design's six
+  sections, each approved.**
+- **FE-40 written and carried** (`28f136c`) to `manifest-13`, which recorded it in its launch-path plan at Task 13,
+  **PROPOSED until Rich confirms it to a platform session**.
+- **One correction made while writing, for Rich at review**: Decision 7 (`scans` unmet waits on the Manifest team, no
+  *[Fix it]*, because of FE-32), against Section 2 as approved.
+- **The walk-through changed with the plan** (`2959e40`): moments 7, 10, 11, 13 and 15.
+- **Open for Rich:** the plan's review and its execution method (native recommended); Decision 7; confirming FE-40 to a
+  platform session when its §7e asks; sitting 1's use of 7100 (one real repository) when it starts.
+- **The machine at the close** (queried 18:48 PDT, not remembered): 7100 the control plane (node 58453, on real GitHub;
+  `manifest-13` restarts it at its close, which signs everyone out); 7102 our mock (node 93237); 7105 our server in mock
+  mode (node 10795, one `tsx watch`, 10789); 7106 LiteLLM (Docker); 7104 not listening. **Two Vitest processes are the
+  platform's own `pnpm test`** (parent `pnpm test`, cwd manifest), left alone, as its `test:docker` was at our start.
+  Manifest at `46f3988`; the contract 1.4.0, 66 operations, unchanged.
