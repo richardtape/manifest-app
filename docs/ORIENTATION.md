@@ -12,7 +12,7 @@ says which plan is current. This file states where things stand and the rules. I
   click**. Approved by Rich as written, executed natively (superpowers:executing-plans; the ledger is
   `.superpowers/sdd/2026-09-29-f5-going-live/progress.md`). Read the sittings table's row 6 first. **Step 0:** the platform's
   **4a landed at sitting 5's close** (`fa02bbc`: FE-42 (a), the owner may run the dry run; our typecheck and tests pass
-  against it): **ask Rich whether Task 7's press goes in before the acceptance**; and FE-34's `null` `200` (our client reads it as unreachable). **Start from a
+  against it): **Task 7's press waits on Rich's answer to the platform's Spec action 8** (4a's review found a rehearsal leaves the unapproved candidate on production's public address; the platform re-asks him, (c) recommended), then on his word for when; and FE-34's `null` `200` (our client reads it as unreachable). **Start from a
   fresh dev database** (sitting 5 could not stop our server), and **update the roadmap**, which sitting 5 could not read.
   - **Sittings 0–4 done** (2026-09-29/30): the mock-mode banner; FE-38 and FE-33 adopted; the measurements on 7100
     (**FE-41**, **FE-42**; Rich: *"Both: row now, ask platform"*); **every model call streams**; `ClockItem`, **the Overview**,
@@ -38,7 +38,10 @@ says which plan is current. This file states where things stand and the rules. I
   - **Sitting 5's twelve overnight decisions** (the plan's sitting 5 entry, *"Decided overnight under Rich's delegation"*):
     above all **Decision 10 (S5)** (the press asks when the version changed), the card held only while a press is under
     way, and the changed row lit. **And sitting 4's ten** (Decisions 9 and 12 (S4), the honest line said once).
-  - **Whether Task 7's press goes in**, now that the platform's 4a has landed (`fa02bbc`, FE-42 (a): persons only).
+  - **Spec action 8, the platform's re-ask** (4a closed at `09e3d7b`): a rehearsal leaves the unapproved candidate serving
+    production's public address until launch; (a) accept, (b) a step-up first, (c) take it down after the sign-in
+    (recommended), (d) administrators only again. **Task 7's press (the owner's dry run) waits on it**, then on his word
+    for which sitting.
   - **A fresh-database run of the four acceptance scripts**: sitting 5's ran on sitting 4's database, since stopping our
     server was refused by that session's permission classifier.
   - Removing the GitHub repository `Manifest-local-dev/f5-reading` (sitting 1's), with `lp-real-a`.
@@ -58,8 +61,8 @@ says which plan is current. This file states where things stand and the rules. I
   - **Its launch-path plan** (`docs/superpowers/plans/2026-09-29-launch-path.md`, read-only), one sitting per session.
     **Its sitting 4 CLOSED** (`manifest-a1`, `0510c63`): **FE-41 fixed** (`0f2275a..ebfc571`, `7fc25f9`; a create on real
     GitHub may take ~40 s: our create waits 90 s) and **FE-34 built** (a provider's refusal reaches the caller; a `422`
-    arrives as `200` with `null`, LiteLLM's). **Its 4a, FE-42 (a), LANDED** (`manifest-73`, `fa02bbc`, at sitting 5's
-    close), the contract staying 1.5.0 and `packages/mock` unchanged: `runRehearsal` open to the owner, a collaborator or an administrator, each from their own
+    arrives as `200` with `null`, LiteLLM's). **Its 4a, FE-42 (a), CLOSED** (`manifest-73`, `fa02bbc`, closed at
+    `09e3d7b`; **Spec action 8 re-asked of Rich**, above), the contract staying 1.5.0 and `packages/mock` unchanged: `runRehearsal` open to the owner, a collaborator or an administrator, each from their own
     session; its `FORBIDDEN` gone; the token capability `launch:rehearse` added, person-only. Then 5 the key trim and member
     removal; **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10 the console and the mock (FE-40); 11 the guides; 12
     its acceptance. **When one lands, do F5's *Adopting what lands*.** It messages us before any commit to
