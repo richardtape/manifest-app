@@ -33,6 +33,15 @@ const NOTHING_RECORDED: Schemas['LaunchRecords'] = {
   iamRegistration: null,
   privacyAssessment: null,
 }
+/** The checklist that goes with nothing recorded: both clocks unmet. */
+const CLOCKS_UNMET: Schemas['LaunchReadiness'] = {
+  ...fixtures.LAUNCH_READINESS,
+  items: fixtures.LAUNCH_READINESS.items.map((i) =>
+    i.id === 'iam-registration' || i.id === 'privacy-assessment'
+      ? { ...i, state: 'unmet' as const }
+      : i,
+  ),
+}
 
 const refused = (status: number, code: string) =>
   new ManifestApiError(status, { error: { code, message: 'x' } } as never, 'test')
@@ -192,8 +201,25 @@ describe('the page: letting your students in (moment 11)', () => {
     expect(assessment!.textContent).toContain('waiting 11 days')
   })
 
+  it('a registration the checklist counts unmet never says done: it is with the Manifest team (Rich, 2026-09-30)', async () => {
+    await open(
+      stage({
+        readiness: {
+          ...fixtures.LAUNCH_READINESS,
+          items: fixtures.LAUNCH_READINESS.items.map((i) =>
+            i.id === 'iam-registration' ? { ...i, state: 'unmet' as const } : i,
+          ),
+        },
+      }),
+    )
+    await jobs()
+    const [registration] = clocks()
+    expect(registration!.querySelector('.mf-chip')?.textContent).toBe(g.clocks.withTeam)
+    expect(registration!.textContent).toContain(g.clocks.needsChange)
+  })
+
   it('nothing recorded: both not started, still, with the honest admission', async () => {
-    await open(stage({ records: NOTHING_RECORDED }))
+    await open(stage({ records: NOTHING_RECORDED, readiness: CLOCKS_UNMET }))
     await jobs()
     for (const c of clocks()) {
       expect(c.querySelector('.mf-chip')?.textContent).toBe(g.clocks.notStarted)
@@ -205,7 +231,7 @@ describe('the page: letting your students in (moment 11)', () => {
   })
 
   it('no stopgap: no mailto anywhere, and nothing to press on a clock', async () => {
-    await open(stage({ records: NOTHING_RECORDED }))
+    await open(stage({ records: NOTHING_RECORDED, readiness: CLOCKS_UNMET }))
     await jobs()
     expect(document.querySelector('a[href^="mailto:"]')).toBeNull()
     for (const c of clocks()) expect(c.querySelector('a, button')).toBeNull()
@@ -245,7 +271,7 @@ describe('the page: letting your students in (moment 11)', () => {
   })
 
   it('says several days, never weeks, and none of the platform’s words (C3)', async () => {
-    await open(stage({ records: NOTHING_RECORDED }))
+    await open(stage({ records: NOTHING_RECORDED, readiness: CLOCKS_UNMET }))
     await jobs()
     // No word boundary: textContent runs one element's words into the next ("weeksManifest").
     expect(document.body.textContent).not.toMatch(/week/i)
@@ -320,6 +346,9 @@ describe('an app already launched (Decision 2, Review Focus 5)', () => {
   it('says it is live, links to the Overview, and draws no clocks and no rows', async () => {
     await open(stage({ launchedAt: '2026-10-03T17:00:00.000Z' }))
     expect(await screen.findByText(g.live)).toBeTruthy()
+    // Live is a fact; that it works is not ours to say without reading it (never "It works").
+    expect(g.live).toBe('It’s live.')
+    expect(document.body.textContent).not.toMatch(/can use it|works/i)
     expect(screen.getByRole('link', { name: g.toOverview }).getAttribute('href')).toBe(
       `/apps/${SLUG}`,
     )

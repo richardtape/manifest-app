@@ -594,11 +594,24 @@ export const words = {
             ? 'waiting 1 day'
             : `waiting ${days} days`,
       withTeam: 'With the Manifest team',
-      changeAsked: { said: 'UBC asked for a change.', who: 'The Manifest team has it.' },
+      /**
+       * Rich, 2026-09-30 (the final review): `change_requested` is our change request, with UBC's
+       * identity team (the contract), counted as `submitted` is. It replaced "UBC asked for a
+       * change. The Manifest team has it.", which said the opposite.
+       */
+      changeAsked: (day: string | null) =>
+        day === null ? 'A change' : `A change, recorded ${day}`,
       runOut: {
         said: 'Its registration has run out.',
         who: 'The Manifest team renews it.',
       },
+      /**
+       * Rich, 2026-09-30: done on the record, unmet on the checklist (a sign-in attribute added
+       * since, or its addresses changed): with the Manifest team, never "Done" (ours).
+       */
+      needsChange: 'The newest version needs it changed.',
+      /** Ours: nothing recorded, and the checklist counts it met. */
+      nothingNeeded: 'Nothing more needed.',
       /** Ours: a clock answered. */
       done: 'Done',
       /** A record in a state we do not know (Review Focus 5). */
@@ -678,8 +691,11 @@ export const words = {
         unmet: 'Not done yet.',
       },
     },
-    /** Decision 2: after launch the page stays, says so, and points at the Overview (ours). */
-    live: 'It’s live. Your students can use it now.',
+    /**
+     * Decision 2: after launch the page stays, says so, and points at the Overview (ours). That it
+     * is live is a fact; that it works is not ours to say without reading it (never "It works").
+     */
+    live: 'It’s live.',
     toOverview: 'Go to the Overview',
   },
   /**

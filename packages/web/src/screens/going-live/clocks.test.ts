@@ -95,15 +95,31 @@ describe('clockOf: what the record says (Decision 5)', () => {
     ).toBe(meta),
   )
 
-  it('a change UBC asked for is with the Manifest team, still', () =>
-    expect(clockOf('registration', IAM({ state: 'change_requested' }), NOW, V)).toEqual({
+  it('a record whose day cannot be read is still with UBC, undated, and never takes the page down (the final review)', () =>
+    expect(
+      clockOf('registration', IAM({ state: 'submitted', updatedAt: 'garbage' }), NOW, V),
+    ).toEqual({
       which: 'registration',
       state: 'waiting',
-      chip: 'With the Manifest team',
-      label: 'UBC asked for a change.',
-      meta: 'The Manifest team has it.',
+      chip: 'With UBC’s identity team',
+      label: '',
+      meta: '',
       admission: true,
     }))
+
+  it('a change on file is with UBC’s identity team, still, counting the days since it was recorded (Rich, 2026-09-30: the contract’s `change_requested` is our change, with UBC)', () => {
+    const updatedAt = '2026-09-27T19:00:00.000Z'
+    expect(
+      clockOf('registration', IAM({ state: 'change_requested', updatedAt }), NOW, V),
+    ).toEqual({
+      which: 'registration',
+      state: 'waiting',
+      chip: 'With UBC’s identity team',
+      label: 'A change, recorded 27 September',
+      meta: 'waiting 3 days',
+      admission: true,
+    })
+  })
 
   it('a registration that ran out is with the Manifest team, still', () =>
     expect(clockOf('registration', IAM({ state: 'expired' }), NOW, V)).toEqual({
@@ -150,6 +166,74 @@ describe('clockOf: what the record says (Decision 5)', () => {
       state: 'steady',
       chip: 'Done',
       label: 'Approved 3 October',
+      meta: '',
+      admission: false,
+    }))
+
+  /**
+   * THE RECORD AND THE CHECKLIST DISAGREE (the final review, Rich 2026-09-30: "With the Manifest
+   * team"). An `active` registration that does not cover the version on trying-out is unmet on
+   * the platform (a sign-in attribute added since, or its addresses changed): never "Done" while
+   * the checklist, the band and the launch say otherwise.
+   */
+  const ITEM = (id: string, state: Schemas['LaunchReadinessItem']['state']) => ({
+    ...fixtures.LAUNCH_READINESS.items.find((i) => i.id === id)!,
+    state,
+  })
+
+  it('an active registration the checklist counts unmet is with the Manifest team, never done', () =>
+    expect(
+      clockOf(
+        'registration',
+        IAM({ state: 'active', registeredAt: '2026-09-15T00:00:00.000Z' }),
+        NOW,
+        V,
+        ITEM('iam-registration', 'unmet'),
+      ),
+    ).toEqual({
+      which: 'registration',
+      state: 'waiting',
+      chip: 'With the Manifest team',
+      label: 'Registered 14 September',
+      meta: 'The newest version needs it changed.',
+      admission: true,
+    }))
+
+  it('an approved assessment the checklist counts unmet is with the Manifest team too', () => {
+    const c = clockOf(
+      'assessment',
+      PIA({ state: 'approved', approvedAt: '2026-10-03T17:00:00.000Z' }),
+      NOW,
+      V,
+      ITEM('privacy-assessment', 'unmet'),
+    )
+    expect([c.state, c.chip, c.label, c.meta]).toEqual([
+      'waiting',
+      'With the Manifest team',
+      'Approved 3 October',
+      'The newest version needs it changed.',
+    ])
+  })
+
+  it('done, and the checklist agrees: done', () =>
+    expect(
+      clockOf(
+        'registration',
+        IAM({ state: 'active', registeredAt: '2026-10-03T17:00:00.000Z' }),
+        NOW,
+        V,
+        ITEM('iam-registration', 'met'),
+      ).chip,
+    ).toBe('Done'))
+
+  it('nothing recorded, and the checklist counts it met: done, nothing more needed', () =>
+    expect(
+      clockOf('registration', null, NOW, V, ITEM('iam-registration', 'met')),
+    ).toEqual({
+      which: 'registration',
+      state: 'steady',
+      chip: 'Done',
+      label: 'Nothing more needed.',
       meta: '',
       admission: false,
     }))

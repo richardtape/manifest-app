@@ -3,9 +3,12 @@ import { words } from '../../words.js'
 
 /**
  * THE TWO CLOCKS (F5 Task 6, Decisions 4 and 5), derived here and nowhere else, and pure. A card
- * says only what the record an administrator keeps says: not started, with someone (still, and
+ * says what the record an administrator keeps says: not started, with someone (still, and
  * counting the days since it was recorded), or done. Never working: a person holds a clock, and
- * nothing measured in days moves (20-states.md).
+ * nothing measured in days moves (20-states.md). **And never "Done" while the checklist says the
+ * item is unmet** (Rich, 2026-09-30, the final review): an `active` registration that does not
+ * cover the version on trying-out is unmet on the platform, and the card says the Manifest team
+ * has it.
  */
 export interface Clock {
   which: 'registration' | 'assessment'
@@ -53,6 +56,8 @@ export function clockOf(
   record: Schemas['IamRegistration'] | Schemas['PrivacyAssessment'] | null,
   now: Date,
   timeZone?: string,
+  /** The clock's checklist item, when the checklist lists it: the platform's verdict. */
+  item?: Schemas['LaunchReadinessItem'],
 ): Clock {
   const own = c[which]
   const notStarted: Clock = {
@@ -63,8 +68,25 @@ export function clockOf(
     meta: c.duration,
     admission: true,
   }
-  if (record === null || record.state === 'draft') return notStarted
+  if (record === null || record.state === 'draft')
+    return item?.state === 'met'
+      ? {
+          which,
+          state: 'steady',
+          chip: c.done,
+          label: c.nothingNeeded,
+          meta: '',
+          admission: false,
+        }
+      : notStarted
   const recorded = dayWords(record.updatedAt, timeZone)
+  /** "waiting 12 days" since the record was written; none when its day cannot be read. */
+  const since = () =>
+    recorded === null
+      ? ''
+      : c.waiting(
+          dayNumber(now, timeZone) - dayNumber(new Date(record.updatedAt), timeZone),
+        )
   const waiting = (chip: string, label: string, meta: string): Clock => ({
     which,
     state: 'waiting',
@@ -74,27 +96,24 @@ export function clockOf(
     admission: true,
   })
   switch (record.state) {
-    case 'submitted': {
-      const days =
-        dayNumber(now, timeZone) - dayNumber(new Date(record.updatedAt), timeZone)
-      return waiting(
-        own.with,
-        recorded === null ? '' : c.recorded(recorded),
-        c.waiting(days),
-      )
-    }
+    case 'submitted':
+      // A day that cannot be read goes uncounted, never thrown (the final review).
+      return waiting(own.with, recorded === null ? '' : c.recorded(recorded), since())
     case 'change_requested':
-      return waiting(c.withTeam, c.changeAsked.said, c.changeAsked.who)
+      return waiting(c.registration.with, c.changeAsked(recorded), since())
     case 'expired':
       return waiting(c.withTeam, c.runOut.said, c.runOut.who)
     case 'active':
     case 'approved': {
       const at = 'registeredAt' in record ? record.registeredAt : record.approvedAt
+      const done = own.done(at === null ? null : dayWords(at, timeZone))
+      // Done on the record, unmet on the checklist: the Manifest team has it, never "Done".
+      if (item?.state === 'unmet') return waiting(c.withTeam, done, c.needsChange)
       return {
         which,
         state: 'steady',
         chip: c.done,
-        label: own.done(at === null ? null : dayWords(at, timeZone)),
+        label: done,
         meta: '',
         admission: false,
       }

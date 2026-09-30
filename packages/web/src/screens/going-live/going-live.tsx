@@ -63,11 +63,25 @@ async function read(
     version = asked.startsWith(from) ? asked.slice(from.length) : null
   }
   const production = settle(environments!)?.find((e) => e.kind === 'production')
+  const item = (id: string) => readiness.items.find((i) => i.id === id)
   return {
     version,
+    // Each card reads its record and its checklist item: never "Done" while the item is unmet.
     clocks: [
-      clockOf('registration', records.iamRegistration, now, timeZone),
-      clockOf('assessment', records.privacyAssessment, now, timeZone),
+      clockOf(
+        'registration',
+        records.iamRegistration,
+        now,
+        timeZone,
+        item('iam-registration'),
+      ),
+      clockOf(
+        'assessment',
+        records.privacyAssessment,
+        now,
+        timeZone,
+        item('privacy-assessment'),
+      ),
     ],
     rows: rowsOf(readiness, { hostname: production?.hostname ?? null }),
   }
