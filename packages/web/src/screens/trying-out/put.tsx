@@ -9,13 +9,29 @@ import { pressFailed } from '../change/press.js'
 import { agoWords, servingFact, type Said } from '../preview/facts.js'
 import { SupportReference } from '../reference.js'
 import { Hostname } from '../your-apps/your-apps.js'
-import { Secrets, Stations, StepUpCard, WhatWentWrong, type Missing } from './parts.js'
+import {
+  cutByOurDeadline,
+  incidentLater,
+  incidentOf,
+  Secrets,
+  Stations,
+  StepUpCard,
+  UNSURE_READS,
+  WhatWentWrong,
+  type Missing,
+} from './parts.js'
 import { newestAttempt, versionAsked } from './stations.js'
 
 const t = words.tryingOut
 
 /** The new instance is read every second while the deploy runs: a deploy is 5–9 s (F4 M3). */
 export const POLL_MS = 1000
+/** A new instance in these states never answered, and is not going to (M1). */
+const ENDED_BADLY = new Set<Schemas['Instance']['state']>([
+  'failed',
+  'destroying',
+  'gone',
+])
 
 /** The version the question named, and where it goes: fixed when they are asked (Decision 11). */
 type Held = {
@@ -39,6 +55,16 @@ type Phase =
   | { at: 'asking' }
   | { at: 'question'; held: Held }
   | { at: 'putting'; held: Held; instance: Schemas['InstanceSummary'] | null }
+  /**
+   * M1: our deadline cut the wait, not the platform's answer: the new instance is read on, up to
+   * five minutes more; `gaveUp` once we stop reading without an end.
+   */
+  | {
+      at: 'unsure'
+      held: Held
+      instance: Schemas['InstanceSummary'] | null
+      gaveUp: boolean
+    }
   | { at: 'arrived'; held: Held; hostname: string | null }
   | {
       at: 'failed'
@@ -123,6 +149,9 @@ export function PutOnTryingOut({
   const [notice, setNotice] = useState<string>()
   const poll = useRef<ReturnType<typeof setInterval>>(undefined)
   const live = useRef(true)
+  // What the page shows, for a listener that outlives a render (M4).
+  const shownPhase = useRef(phase)
+  shownPhase.current = phase
 
   useEffect(() => {
     live.current = true
@@ -245,12 +274,18 @@ export function PutOnTryingOut({
       )
     } catch (error) {
       clearInterval(poll.current)
+      if (cutByOurDeadline(error)) return readOn(held, listed)
       return refusedDeploy(error, held)
     }
     clearInterval(poll.current)
     onPut?.()
     if (!live.current) return
-    if (answered.state === 'failed') return neverAnswered(held, answered)
+    if (answered.state === 'failed') return neverAnswered(held, answered.id)
+    return arrive(held)
+  }
+
+  /** IT ARRIVED: Rich's words, and trying-out's address. */
+  const arrive = async (held: Held) => {
     const environments = await platform.listEnvironments(project.id).catch(() => [])
     if (live.current)
       setPhase({
@@ -258,6 +293,48 @@ export function PutOnTryingOut({
         held,
         hostname: byKind(environments, 'staging')?.hostname ?? null,
       })
+  }
+
+  /**
+   * M1 (Review Focus 3): OUR DEADLINE CUT THE WAIT, NOT THE DEPLOY. Said as that, never as a
+   * refusal, and the new instance (the one not listed at the press) is read every second, up to
+   * five minutes more, until it serves or has failed: that is its end.
+   */
+  const readOn = (held: Held, listed: Set<string>) => {
+    if (!live.current) return
+    setPhase((p) => ({
+      at: 'unsure',
+      held,
+      instance: p.at === 'putting' ? p.instance : null,
+      gaveUp: false,
+    }))
+    let reads = 0
+    let ended = false
+    const end = (then: () => Promise<void>) => {
+      ended = true
+      clearInterval(poll.current)
+      onPut?.()
+      void then()
+    }
+    clearInterval(poll.current)
+    poll.current = setInterval(() => {
+      reads += 1
+      const last = reads >= UNSURE_READS
+      if (last) clearInterval(poll.current)
+      const gaveUp = () =>
+        live.current &&
+        !ended &&
+        last &&
+        setPhase((p) => (p.at === 'unsure' ? { ...p, gaveUp: true } : p))
+      platform.listInstances(held.stagingId).then((list) => {
+        if (!live.current || ended) return
+        const instance = newestAttempt(list.instances, listed)
+        if (instance?.state === 'healthy') return end(() => arrive(held))
+        if (instance !== null && ENDED_BADLY.has(instance.state))
+          return end(() => neverAnswered(held, instance.id))
+        setPhase((p) => (p.at === 'unsure' ? { ...p, instance, gaveUp: last } : p))
+      }, gaveUp)
+    }, POLL_MS)
   }
 
   const refusedDeploy = async (error: unknown, held: Held) => {
@@ -298,14 +375,18 @@ export function PutOnTryingOut({
     }
   }
 
-  /** IT NEVER ANSWERED: what serves there still, and the attempt that did not start. */
-  const neverAnswered = async (held: Held, answered: Schemas['Instance']) => {
+  /**
+   * IT NEVER ANSWERED: what serves there still, and the attempt that did not start. M2 (Review
+   * Focus 4): *[What went wrong]* is fed by THIS attempt's incident, never the newest listed; none
+   * yet, the facts stand without it, and it is read once more after 2 s.
+   */
+  const neverAnswered = async (held: Held, attemptId: string) => {
     let serving: Said = { words: words.facts.cantTell, tone: 'neutral' }
     let incident: Schemas['Incident'] | undefined
     try {
-      const [environments, incidents] = await Promise.all([
+      const [environments, found] = await Promise.all([
         platform.listEnvironments(project.id),
-        platform.listIncidents(held.stagingId),
+        incidentOf(platform, held.stagingId, attemptId),
       ])
       const staging = byKind(environments, 'staging')
       if (staging !== undefined) {
@@ -315,25 +396,52 @@ export function PutOnTryingOut({
             : await platform.getRelease(staging.instance.releaseId).catch(() => undefined)
         serving = servingFact(staging, release, timeZone)
       }
-      incident =
-        incidents.incidents.find((i) => i.instanceId === answered.id) ??
-        incidents.incidents[0]
+      incident = found
     } catch (error) {
       if (refusalOf(error).kind === 'signed-out') return expire()
     }
     if (!live.current) return
-    setPhase({
+    const failed = (found: Schemas['Incident'] | undefined): Phase => ({
       at: 'failed',
       held,
       serving,
       attempt: words.preview.facts.failed(
-        incident === undefined
-          ? null
-          : agoWords(new Date(incident.createdAt), now(), timeZone),
+        found === undefined ? null : agoWords(new Date(found.createdAt), now(), timeZone),
       ),
-      incidentId: incident?.id ?? null,
+      incidentId: found?.id ?? null,
     })
+    setPhase(failed(incident))
+    if (incident !== undefined) return
+    const later = await incidentLater(platform, held.stagingId, attemptId)
+    if (later === undefined || !live.current) return
+    setPhase((p) => (p.at === 'failed' && p.held === held ? failed(later) : p))
   }
+
+  // M4: AFTER AN ENDING, THE OFFER COMES BACK WHEN THERE IS SOMETHING NEW, read when the page is
+  // shown again: the draft serving another version than the one put there, or tried there.
+  useEffect(() => {
+    const shown = () => {
+      const p = shownPhase.current
+      if (document.visibilityState !== 'visible') return
+      if (p.at !== 'arrived' && p.at !== 'failed') return
+      platform.listEnvironments(project.id).then(
+        (environments) => {
+          const sandbox = byKind(environments, 'sandbox')
+          const offered = offerOf(sandbox, byKind(environments, 'staging'))
+          if (!live.current || offered.at !== 'offer') return
+          setPhase((q) =>
+            (q.at === 'arrived' || q.at === 'failed') &&
+            sandbox?.instance?.releaseId !== q.held.releaseId
+              ? offered
+              : q,
+          )
+        },
+        () => undefined,
+      )
+    }
+    document.addEventListener('visibilitychange', shown)
+    return () => document.removeEventListener('visibilitychange', shown)
+  }, [platform, project.id])
 
   if (phase.at === 'reading' || phase.at === 'none') return null
   const noticeCard =
@@ -381,6 +489,15 @@ export function PutOnTryingOut({
           <Stations instance={phase.instance} />
           <p className="body-lead">{t.real}</p>
           <p className="building__leave">{t.leave}</p>
+        </>
+      ) : null}
+      {phase.at === 'unsure' ? (
+        <>
+          {/* Stations only while we still read them: motion means a machine is moving. */}
+          {phase.gaveUp ? null : <Stations instance={phase.instance} />}
+          <p className="body-lead" role="status">
+            {phase.gaveUp ? t.unsureLong : t.unsure}
+          </p>
         </>
       ) : null}
       {phase.at === 'arrived' ? (

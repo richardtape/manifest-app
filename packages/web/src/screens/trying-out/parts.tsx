@@ -25,6 +25,47 @@ const SECRET_LEAST = 6
 /** A secret the release declares and the address has no value for, named by our question. */
 export type Missing = { name: string; ask: string | null }
 
+/**
+ * M1 (F5 Decision 11): OUR DEADLINE CUT THE WAIT, NOT THE PLATFORM'S ANSWER. `AbortSignal.timeout`
+ * rejects `fetch` with a `TimeoutError` (platform/api.ts): the request went, and the deploy may
+ * still finish. A connection refused (a `TypeError`) sent nothing, and is a press that did not go.
+ */
+export function cutByOurDeadline(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'TimeoutError'
+}
+
+/** After our deadline, the new instance is read every second for up to five minutes more (M1). */
+export const UNSURE_READS = 300
+/** M2: an attempt's incident not yet written is read once more, this long after. */
+export const INCIDENT_AGAIN_MS = 2000
+
+/**
+ * M2 (F5 Decision 11, Review Focus 4): THIS ATTEMPT'S INCIDENT, by its instance, never the newest
+ * listed, which may be an older attempt's. Undefined when none of its own is listed.
+ */
+export async function incidentOf(
+  platform: Platform,
+  environmentId: string,
+  instanceId: string,
+): Promise<Schemas['Incident'] | undefined> {
+  return (await platform.listIncidents(environmentId)).incidents.find(
+    (i) => i.instanceId === instanceId,
+  )
+}
+
+/**
+ * M2: none of its own yet (the platform may write it a moment after the attempt ends): read once
+ * more, 2 s later, and never again. Still none, undefined: the facts stand without the button.
+ */
+export async function incidentLater(
+  platform: Platform,
+  environmentId: string,
+  instanceId: string,
+): Promise<Schemas['Incident'] | undefined> {
+  await new Promise((resolve) => setTimeout(resolve, INCIDENT_AGAIN_MS))
+  return incidentOf(platform, environmentId, instanceId).catch(() => undefined)
+}
+
 /** The four stations, as `Timeline` draws them, with the one at work said to a screen reader. */
 export function Stations({
   instance,

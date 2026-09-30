@@ -900,6 +900,15 @@ export const words = {
     },
     /** Ours: a press that did not go through. */
     couldnt: "We couldn't do that just now. Nothing is lost.",
+    /**
+     * M1 (F5 Decision 11): our deadline cut the wait, not the platform's answer. The words
+     * approved for putting it live (Words proposed for Rich ✓), on trying-out too.
+     */
+    unsure:
+      'We stopped waiting, but it may still be going. This shows it when it answers.',
+    /** Ours (M1): five minutes more with no end read, we stop reading, and say so. */
+    unsureLong:
+      "We stopped waiting, and couldn't see how it ended. The Preview's Trying out shows what's there now.",
   },
   /** DECISION 11 (Rich): every problem shown carries a reference the person can quote. */
   /** How much we read at once, near and past a limit (F2's deferred Minor, Rich: say it). */

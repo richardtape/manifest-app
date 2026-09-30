@@ -774,3 +774,235 @@ describe('our server is never asked to deploy (Global Constraints)', () => {
     )
   })
 })
+
+/** Our own deadline, as `AbortSignal.timeout` rejects `fetch` with it (platform/api.ts). */
+const ourDeadline = () => new DOMException('The operation timed out.', 'TimeoutError')
+/** An older attempt's incident, listed first (the platform lists incidents newest first). */
+const OLDER_INCIDENT: Schemas['Incident'] = {
+  ...INCIDENT,
+  id: 'incident-older',
+  instanceId: 'i-older-failure',
+  createdAt: '2026-09-29T04:30:00.000Z',
+}
+/** The fixes asked of our server: each startChange's body. */
+const fixesAsked = (s: Stage) =>
+  s.oursCalls.filter((c) => c[0] === 'startChange').map((c) => c[2])
+const incidentReads = (s: Stage) =>
+  s.called('listIncidents').filter(([e]) => e === ID.staging).length
+/** `setTimeout` faked too, for M2's one re-read (the clock still runs, so Testing Library waits). */
+function withTimeouts() {
+  vi.useRealTimers()
+  vi.useFakeTimers({
+    toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'],
+    shouldAdvanceTime: true,
+  })
+}
+/** Trying-out's own region: the Preview's hidden tab says the same facts. */
+const region = () => screen.getByRole('region', { name: t.put })
+
+describe('M2: [What went wrong] is fed by THIS attempt’s incident, never the newest listed (Review Focus 4)', () => {
+  it('an older incident listed first is never taken for this attempt: its own feeds the button', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    s.world.incidents = [INCIDENT, OLDER_INCIDENT]
+    s.world.staging = [THERE, fresh('failed')]
+    await s.answer(bare(fresh('failed')))
+    await press(await screen.findByRole('button', { name: t.whatWentWrong }))
+    await waitFor(() =>
+      expect(fixesAsked(s)).toEqual([
+        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+      ]),
+    )
+  })
+
+  it('none of its own yet: read once more after 2 s, and its own, once written, feeds the button', async () => {
+    withTimeouts()
+    const s = await open(stage())
+    await putOn(s)
+    s.world.incidents = [OLDER_INCIDENT]
+    s.world.staging = [THERE, fresh('failed')]
+    await s.answer(bare(fresh('failed')))
+    const before = incidentReads(s)
+    s.world.incidents = [INCIDENT, OLDER_INCIDENT]
+    await tick(2000)
+    await press(await screen.findByRole('button', { name: t.whatWentWrong }))
+    await waitFor(() =>
+      expect(fixesAsked(s)).toEqual([
+        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+      ]),
+    )
+    expect(incidentReads(s)).toBe(before + 1)
+  })
+
+  it('still none of its own after 2 s: the two facts, undated, and no button; never an older one', async () => {
+    withTimeouts()
+    const s = await open(stage())
+    await putOn(s)
+    s.world.incidents = [OLDER_INCIDENT]
+    s.world.staging = [THERE, fresh('failed')]
+    await s.answer(bare(fresh('failed')))
+    await tick(2000)
+    expect(
+      await within(region()).findByText("Didn't start. Nobody lost anything."),
+    ).toBeTruthy()
+    expect(screen.queryByRole('button', { name: t.whatWentWrong })).toBeNull()
+    const reads = incidentReads(s)
+    await tick(5000)
+    expect(incidentReads(s)).toBe(reads)
+  })
+})
+
+describe('M1: our deadline is not the platform’s answer (Review Focus 3)', () => {
+  it('a deploy our deadline cut is unsure, never "couldn’t": said so, nothing reported, and the new instance still read every second to its end', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    s.world.staging = [THERE, fresh('starting')]
+    await tick()
+    await s.refuse(ourDeadline())
+    expect(await screen.findByText(t.unsure)).toBeTruthy()
+    expect(screen.queryByText(t.couldnt)).toBeNull()
+    expect(fetched.filter((f) => f.url === '/api/problems')).toEqual([])
+    const polls = () => s.called('listInstances').filter(([e]) => e === ID.staging).length
+    const at = polls()
+    await tick()
+    expect(polls()).toBe(at + 1)
+    expect(stations()).toEqual([
+      'Waiting its turn:done',
+      'Making room:done',
+      'Starting up:now',
+      'Answering:next',
+    ])
+    s.world.staging = [fresh('healthy', true), { ...THERE, serving: false }]
+    await tick()
+    expect(await screen.findByText(t.arrived)).toBeTruthy()
+    expect(screen.queryByText(t.unsure)).toBeNull()
+    const ended = polls()
+    await tick(5000)
+    expect(polls()).toBe(ended)
+  })
+
+  it('cut, then the new instance fails: the two facts, and this attempt’s [What went wrong]', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    s.world.incidents = [INCIDENT, OLDER_INCIDENT]
+    s.world.staging = [THERE, fresh('failed')]
+    await tick()
+    expect(
+      await within(region()).findByText(
+        "Didn't start, a moment ago. Nobody lost anything.",
+      ),
+    ).toBeTruthy()
+    await press(await screen.findByRole('button', { name: t.whatWentWrong }))
+    await waitFor(() =>
+      expect(fixesAsked(s)).toEqual([
+        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+      ]),
+    )
+  })
+
+  it('five minutes more with no end: we stop reading, and say we could not see how it ended', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    s.world.staging = [THERE, fresh('starting')]
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    await tick(5 * 60_000)
+    expect(await screen.findByText(t.unsureLong)).toBeTruthy()
+    const polls = () => s.called('listInstances').filter(([e]) => e === ID.staging).length
+    const stopped = polls()
+    await tick(5000)
+    expect(polls()).toBe(stopped)
+    expect(screen.queryByText(t.couldnt)).toBeNull()
+  })
+
+  it('nothing answering at all (a connection refused: nothing was sent) is still a press that did not go through', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    await s.refuse(new TypeError('fetch failed'))
+    const alert = await screen.findByRole('alert')
+    expect(within(alert).getByText(t.couldnt)).toBeTruthy()
+    expect(screen.queryByText(t.unsure)).toBeNull()
+  })
+})
+
+describe('M4: after an ending, the offer comes back when there is something new, read when shown again', () => {
+  const shown = () =>
+    act(async () => {
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        configurable: true,
+      })
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+  afterEach(() => {
+    delete (document as { visibilityState?: unknown }).visibilityState
+  })
+  const NEWER_DRAFT = summary('i-newer', 'sandbox', NEWER.id, 'healthy', true)
+  async function arrived(s: Stage) {
+    await open(s)
+    await putOn(s)
+    s.world.staging = [fresh('healthy', true), { ...THERE, serving: false }]
+    await s.answer(bare(fresh('healthy', true)))
+    await screen.findByText(t.arrived)
+  }
+  async function failed(s: Stage) {
+    await open(s)
+    await putOn(s)
+    s.world.incidents = [INCIDENT]
+    s.world.staging = [THERE, fresh('failed')]
+    await s.answer(bare(fresh('failed')))
+    await screen.findByRole('button', { name: t.whatWentWrong })
+  }
+
+  it('arrived, and a newer version is on the draft since: the button is back', async () => {
+    const s = stage()
+    await arrived(s)
+    s.world.sandbox = [NEWER_DRAFT]
+    await shown()
+    expect(await put()).toBeTruthy()
+  })
+
+  it('arrived, and nothing new: the arrival stays, and no button', async () => {
+    const s = stage()
+    await arrived(s)
+    const reads = s.called('listEnvironments').length
+    await shown()
+    await waitFor(() => expect(s.called('listEnvironments').length).toBe(reads + 1))
+    expect(screen.getByText(t.arrived)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: t.put })).toBeNull()
+  })
+
+  it('never answered, and a newer version is on the draft since: the button is back', async () => {
+    const s = stage()
+    await failed(s)
+    s.world.sandbox = [NEWER_DRAFT]
+    await shown()
+    expect(await put()).toBeTruthy()
+  })
+
+  it('never answered, and the same version still on the draft: no offer by itself', async () => {
+    const s = stage()
+    await failed(s)
+    const reads = s.called('listEnvironments').length
+    await shown()
+    await waitFor(() => expect(s.called('listEnvironments').length).toBe(reads + 1))
+    expect(screen.getByRole('button', { name: t.whatWentWrong })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: t.put })).toBeNull()
+  })
+
+  it('hidden is never a reading', async () => {
+    const s = stage()
+    await arrived(s)
+    const reads = s.called('listEnvironments').length
+    await act(async () => {
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'hidden',
+        configurable: true,
+      })
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(s.called('listEnvironments').length).toBe(reads)
+  })
+})
