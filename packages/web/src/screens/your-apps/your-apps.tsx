@@ -8,6 +8,7 @@ import { TroubleNotice, type Trouble } from '../trouble.js'
 import { words } from '../../words.js'
 import {
   appCard,
+  beforeLaunch,
   mine,
   releasesToRead,
   unreadableCard,
@@ -22,24 +23,32 @@ type Loaded =
 
 /**
  * THE READS BEHIND *YOUR APPS*. `listProjects`, then one `getProject?expand=environments`
- * per app, then one `getRelease` per release an answering address reaches. That is FE-10's
- * N+1, accepted at pilot scale. No `listInstances`: the address's own `instance` is what
- * reaches students (FE-27).
+ * per app, then one `getRelease` per release an answering address reaches, and one
+ * `getLaunchReadiness` per app built and not launched (F5 Decision 3). That is FE-10's N+1,
+ * accepted at pilot scale. No `listInstances`: the address's own `instance` is what reaches
+ * students (FE-27).
  */
 async function read(platform: Platform, me: Schemas['Me']): Promise<AppCard[]> {
   const projects = mine(await platform.listProjects(), me)
   const read = await Promise.allSettled(projects.map((p) => platform.getProject(p.id)))
-  const releaseIds = releasesToRead(
-    read.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : [])),
+  const expanded = read.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
+  const releaseIds = releasesToRead(expanded)
+  const asking = expanded.filter((p) =>
+    beforeLaunch(
+      p,
+      p.environments?.find((e) => e.kind === 'sandbox'),
+    ),
   )
-  const releases = await Promise.allSettled(
-    releaseIds.map((id) => platform.getRelease(id)),
-  )
+  const [releases, readiness] = await Promise.all([
+    Promise.allSettled(releaseIds.map((id) => platform.getRelease(id))),
+    Promise.allSettled(asking.map((p) => platform.getLaunchReadiness(p.id))),
+  ])
 
   // ONE APP THAT CANNOT BE READ DOES NOT HIDE THE OTHERS: its card says it cannot tell, and a
   // release that cannot be read is Answering without its date. But a 401 anywhere is the
   // session ending, and when nothing at all could be read, it is the page's own notice.
-  const failures = [...read, ...releases].flatMap((r) =>
+  // A checklist that cannot be read loses its card's line, and nothing else.
+  const failures = [...read, ...releases, ...readiness].flatMap((r) =>
     r.status === 'rejected' ? [r.reason as unknown] : [],
   )
   const ended = failures.find((reason) => refusalOf(reason).kind === 'signed-out')
@@ -56,10 +65,16 @@ async function read(platform: Platform, me: Schemas['Me']): Promise<AppCard[]> {
       r.status === 'fulfilled' ? [[r.value.id, r.value] as const] : [],
     ),
   )
+  const checklists = new Map(
+    asking.flatMap((p, i) => {
+      const r = readiness[i]
+      return r?.status === 'fulfilled' ? [[p.id, r.value] as const] : []
+    }),
+  )
   return projects.map((project, i) => {
     const r = read[i]
     return r?.status === 'fulfilled'
-      ? appCard(r.value, releaseById)
+      ? appCard(r.value, releaseById, undefined, checklists.get(r.value.id))
       : unreadableCard(project)
   })
 }
@@ -169,6 +184,18 @@ function AppCardView({ card }: { card: AppCard }) {
         <AddressView label={w.draft} address={card.draft} />
         <AddressView label={w.tryingOut} address={card.tryingOut} />
       </dl>
+      {card.beforeStudents ? (
+        <div className="app-card__before">
+          <p className="body-small">{w.beforeStudents}</p>
+          <Button
+            kind="secondary"
+            size="sm"
+            {...linkTo(`/apps/${encodeURIComponent(card.slug)}/going-live`)}
+          >
+            {w.goingLive}
+          </Button>
+        </div>
+      ) : null}
     </Card>
   )
 }

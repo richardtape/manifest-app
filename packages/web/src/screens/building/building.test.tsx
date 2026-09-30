@@ -142,6 +142,9 @@ function stage(refusals: Refusals = {}) {
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    getLaunchReadiness: never,
+    getLaunchRecords: never,
+    getEnvironment: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const record =
@@ -1205,7 +1208,7 @@ describe('built (Decision 16)', () => {
     expect(within(work).getByText(words.building.startedAndAnswered)).toBeTruthy()
     expect(within(work).getByText(words.tryingOut.ready)).toBeTruthy()
     const tryIt = within(work).getByRole('link', { name: words.tryingOut.tryIt })
-    expect(tryIt.getAttribute('href')).toBe(`/apps/${PROJECT.slug}?tab=draft`)
+    expect(tryIt.getAttribute('href')).toBe(`/apps/${PROJECT.slug}/preview`)
     expect(
       await within(work).findByRole('button', { name: words.tryingOut.put }),
     ).toBeTruthy()
@@ -1486,28 +1489,28 @@ describe("Rich's F3 decisions", () => {
 
 /**
  * THE RAIL'S PROJECT SECTION ON A CONVERSATION (F4 Task 5, Decision 1): once the conversation's
- * project exists, the rail names it and offers its Preview and Conversations.
+ * project exists, the rail names it and offers its four pages (F5 Task 5, Decision 2).
  */
 describe("the rail's project section, on a conversation", () => {
   const nav = () => screen.getByRole('navigation', { name: 'Manifest' })
 
-  it('shows once its project exists: the name, Preview and Conversations; Start something new stays current', async () => {
+  it('shows once its project exists: the name and its four pages; Start something new stays current', async () => {
     const s = stage()
     await open(s)
     s.state(round())
     await waitFor(() =>
       expect(nav().querySelector('.mf-rail__over')?.textContent).toBe(PROJECT.name),
     )
-    expect(
-      within(nav())
-        .getByRole('link', { name: words.preview.rail.preview })
-        .getAttribute('href'),
-    ).toBe(`/apps/${PROJECT.slug}`)
-    expect(
-      within(nav())
-        .getByRole('link', { name: words.preview.rail.conversations })
-        .getAttribute('href'),
-    ).toBe(`/apps/${PROJECT.slug}/conversations`)
+    const r = words.preview.rail
+    for (const [name, path] of [
+      [r.overview, ''],
+      [r.preview, '/preview'],
+      [r.conversations, '/conversations'],
+      [r.goingLive, '/going-live'],
+    ] as const)
+      expect(within(nav()).getByRole('link', { name }).getAttribute('href')).toBe(
+        `/apps/${PROJECT.slug}${path}`,
+      )
     expect(nav().querySelector('[aria-current="page"]')?.textContent).toBe(
       words.shell.startNew,
     )

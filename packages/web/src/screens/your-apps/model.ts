@@ -1,6 +1,7 @@
 import type { Schemas } from '@manifest/contract'
 import type { State } from '@manifest-app/ui'
 import { words } from '../../words.js'
+import { clocksUnmet } from '../going-live/checklist.js'
 
 /**
  * EVERY VALUE A CARD ON *YOUR APPS* SHOWS, derived here and nowhere else, and pure.
@@ -93,17 +94,32 @@ export type AppCard = {
   students: Fact
   draft: Address
   tryingOut: Address
+  /** Built, not launched, and a production clock unmet: the line and [Going live] (Decision 3). */
+  beforeStudents: boolean
+}
+
+/**
+ * A DRAFT BUILT, AND NOT LAUNCHED (F5 Decision 3): the only apps the band and *Your apps*' line
+ * can be for, and so the only ones whose checklist is read. Built is the sandbox reaching an
+ * instance; launched is `launchedAt`, which is never cleared.
+ */
+export function beforeLaunch(
+  project: Pick<Schemas['Project'], 'launchedAt'>,
+  sandbox: Schemas['Environment'] | undefined,
+): boolean {
+  return (project.launchedAt ?? null) === null && (sandbox?.instance ?? null) !== null
 }
 
 /**
  * Moment 16's card, without its needs-you band and history (F6). `project` is as
  * `getProject?expand=environments` answers it; `releases` holds the release each answering
- * address reaches.
+ * address reaches; `readiness` is its checklist, read only before launch (`beforeLaunch`).
  */
 export function appCard(
   project: Schemas['Project'],
   releases: ReadonlyMap<string, Schemas['Release']>,
   timeZone?: string,
+  readiness?: Schemas['LaunchReadiness'],
 ): AppCard {
   const address = (kind: Schemas['Environment']['kind']): Address => {
     const environment = project.environments?.find((e) => e.kind === kind)
@@ -126,6 +142,13 @@ export function appCard(
     students: address('production').fact,
     draft: address('sandbox'),
     tryingOut: address('staging'),
+    beforeStudents:
+      readiness !== undefined &&
+      beforeLaunch(
+        project,
+        project.environments?.find((e) => e.kind === 'sandbox'),
+      ) &&
+      clocksUnmet(readiness),
   }
 }
 
@@ -144,6 +167,7 @@ export function unreadableCard(project: Schemas['Project']): AppCard {
     students: cantTell,
     draft: { hostname: undefined, fact: cantTell },
     tryingOut: { hostname: undefined, fact: cantTell },
+    beforeStudents: false,
   }
 }
 

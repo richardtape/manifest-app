@@ -157,6 +157,9 @@ function stage(
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    getLaunchReadiness: never,
+    getLaunchRecords: never,
+    getEnvironment: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const called = (name: string) =>
@@ -221,12 +224,12 @@ const key = (element: HTMLElement, name: string) =>
 
 describe("an app's own pages", () => {
   it("the rail's project section: the app's name, Preview current, and Conversations", async () => {
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     expect(rail().querySelector('.mf-rail__over')?.textContent).toBe(PROJECT.name)
     const current = rail().querySelector('[aria-current="page"]')
     expect(current?.textContent).toBe(w.rail.preview)
-    expect(current?.getAttribute('href')).toBe(`/apps/${SLUG}`)
+    expect(current?.getAttribute('href')).toBe(`/apps/${SLUG}/preview`)
     expect(
       within(rail())
         .getByRole('link', { name: w.rail.conversations })
@@ -247,7 +250,7 @@ describe("an app's own pages", () => {
   })
 
   it('Ask for a change goes to the app’s change page (F4 Task 9)', async () => {
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     expect(screen.getByText(w.notRight)).toBeTruthy()
     const ask = screen.getByRole('link', { name: w.askForChange })
@@ -267,7 +270,7 @@ describe("an app's own pages", () => {
 
   it('a session that ends while it reads is the shell’s to say', async () => {
     await open(
-      `/apps/${SLUG}`,
+      `/apps/${SLUG}/preview`,
       stage(A_FAILED_ATTEMPT, { listProjects: () => refused(401, 'UNAUTHENTICATED') }),
     )
     expect(await screen.findByText(words.expired.body)).toBeTruthy()
@@ -277,7 +280,7 @@ describe("an app's own pages", () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     let refusing = true
     const s = await open(
-      `/apps/${SLUG}`,
+      `/apps/${SLUG}/preview`,
       stage(A_FAILED_ATTEMPT, {
         listEnvironments: () => (refusing ? refused(500, 'INTERNAL') : undefined),
       }),
@@ -299,7 +302,7 @@ describe("an app's own pages", () => {
 
 describe('the switcher: Your draft · Trying out · For your students', () => {
   it('is a tablist of three, named, each tab controlling its panel', async () => {
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     const list = screen.getByRole('tablist')
     expect(list.getAttribute('aria-label')).toBe(w.switcherLabel)
@@ -315,7 +318,7 @@ describe('the switcher: Your draft · Trying out · For your students', () => {
   })
 
   it('arrow keys move to the next address, its panel shows, the address is kept, and focus stays on the tab', async () => {
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     const draft = tab(w.tabs.draft)
     act(() => draft.focus())
@@ -324,17 +327,19 @@ describe('the switcher: Your draft · Trying out · For your students', () => {
     expect(trying.getAttribute('aria-selected')).toBe('true')
     expect(document.activeElement).toBe(trying)
     expect(panel().id).toBe(trying.getAttribute('aria-controls'))
-    expect(window.location.search).toBe('?tab=trying-out')
+    expect(window.location.pathname + window.location.search).toBe(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+    )
   })
 
   it('opens on the tab its address names', async () => {
-    await open(`/apps/${SLUG}?tab=students`)
+    await open(`/apps/${SLUG}/preview?tab=students`)
     await ready()
     expect(tab(w.tabs.students).getAttribute('aria-selected')).toBe('true')
     expect(within(panel()).getByText(w.students)).toBeTruthy()
   })
 
-  it('each shows its address in mono; one with something on it opens in a new tab, never a frame', async () => {
+  it('each shows its address in mono; the draft, with something on it, opens in a new tab, never a frame', async () => {
     const world: World = {
       instances: {
         sandbox: [SERVING],
@@ -343,7 +348,7 @@ describe('the switcher: Your draft · Trying out · For your students', () => {
       },
       incidents: { sandbox: [], staging: [], production: [] },
     }
-    await open(`/apps/${SLUG}`, stage(world))
+    await open(`/apps/${SLUG}/preview`, stage(world))
     await ready()
     for (const kind of ['draft', 'trying-out', 'students'] as const) {
       await press(tab(w.tabs[kind]))
@@ -356,7 +361,9 @@ describe('the switcher: Your draft · Trying out · For your students', () => {
           .closest('.mono'),
       ).not.toBeNull()
       const link = within(panel()).queryByRole('link', { name: w.open })
-      if (kind === 'students') expect(link).toBeNull()
+      // Trying out's is hidden until its registration is active (Rich: "Hide until
+      // registered"), and nothing records one yet (F5b shows it).
+      if (kind !== 'draft') expect(link).toBeNull()
       else {
         expect(link?.getAttribute('href')).toBe(
           `https://${SLUG}.${host}.manifest.internal`,
@@ -371,7 +378,7 @@ describe('the switcher: Your draft · Trying out · For your students', () => {
 
 describe('the two facts', () => {
   it("serving right now is the address's own, with its version's date, though a newer failure is listed first", async () => {
-    const s = await open(`/apps/${SLUG}`)
+    const s = await open(`/apps/${SLUG}/preview`)
     await ready()
     const facts = within(panel())
     expect(await facts.findByText('The version from 28 September, 3:12pm')).toBeTruthy()
@@ -400,7 +407,7 @@ describe('the two facts', () => {
 
   it('[What went wrong] on the failed draft attempt opens the conversation whose round deployed it (F4 Task 9)', async () => {
     answering('c-7')
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     const link = await within(panel()).findByRole('link', { name: 'What went wrong' })
     expect(link.getAttribute('href')).toBe(`/apps/${SLUG}/conversations/c-7`)
@@ -408,7 +415,7 @@ describe('the two facts', () => {
 
   it('when none of ours deployed it, there is no [What went wrong]', async () => {
     const fetched = answering(null)
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     await waitFor(() =>
       expect(fetched.mock.calls.map((c) => c[0])).toContain(
@@ -424,7 +431,7 @@ describe('the two facts', () => {
       instances: { sandbox: [SERVING], staging: [], production: [] },
       incidents: { sandbox: [], staging: [], production: [] },
     }
-    const s = await open(`/apps/${SLUG}`, stage(world))
+    const s = await open(`/apps/${SLUG}/preview`, stage(world))
     await ready()
     expect(await within(panel()).findByText(w.facts.same)).toBeTruthy()
     // Nothing failed: no incident is read.
@@ -436,7 +443,7 @@ describe('the two facts', () => {
       instances: { sandbox: [], staging: [], production: [] },
       incidents: { sandbox: [], staging: [], production: [] },
     }
-    await open(`/apps/${SLUG}`, stage(world))
+    await open(`/apps/${SLUG}/preview`, stage(world))
     await ready()
     expect(await within(panel()).findByText(w.facts.nothingDraft)).toBeTruthy()
     expect(within(panel()).queryByText(w.tryItAs)).toBeNull()
@@ -446,7 +453,7 @@ describe('the two facts', () => {
 
 describe('Your draft: the pretend people (FE-3, ours)', () => {
   it('says what the draft is, and one row per pretend person, each value in mono with a copy button', async () => {
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     const draft = within(panel())
     expect(draft.getByText(w.draftIs)).toBeTruthy()
@@ -464,7 +471,7 @@ describe('Your draft: the pretend people (FE-3, ours)', () => {
   })
 
   it('says, on the laptop, how to try it as someone else (Rich approved it, sitting 2)', async () => {
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     expect(within(panel()).getByText(w.laptop)).toBeTruthy()
     expect(w.laptop).toBe(
@@ -473,7 +480,7 @@ describe('Your draft: the pretend people (FE-3, ours)', () => {
   })
 
   it('never on Trying out or For your students (Rich)', async () => {
-    await open(`/apps/${SLUG}`)
+    await open(`/apps/${SLUG}/preview`)
     await ready()
     for (const kind of ['trying-out', 'students'] as const) {
       await press(tab(w.tabs[kind]))
@@ -492,7 +499,7 @@ describe('Your draft: the pretend people (FE-3, ours)', () => {
 
 describe("Trying out: UBC's words, everywhere (Rich)", () => {
   it("his sentence, exactly; waiting on UBC's identity team, still, with no number", async () => {
-    await open(`/apps/${SLUG}?tab=trying-out`)
+    await open(`/apps/${SLUG}/preview?tab=trying-out`)
     await ready()
     const here = within(panel())
     expect(here.getByText(w.tryingOut)).toBeTruthy()
@@ -505,8 +512,25 @@ describe("Trying out: UBC's words, everywhere (Rich)", () => {
     expect(chip.textContent).not.toMatch(/\d/)
   })
 
+  it('has no Open it in a new tab, even with something on it, until its registration is active (Rich: "Hide until registered")', async () => {
+    const world: World = {
+      instances: {
+        sandbox: [SERVING],
+        staging: [summary('i-s', 'staging', OLD.id, 'healthy', true)],
+        production: [],
+      },
+      incidents: { sandbox: [], staging: [], production: [] },
+    }
+    await open(`/apps/${SLUG}/preview?tab=trying-out`, stage(world))
+    await ready()
+    await within(panel()).findByText(w.facts.serving)
+    expect(within(panel()).queryByRole('link', { name: w.open })).toBeNull()
+    expect(panel().querySelector('a[target="_blank"]')).toBeNull()
+    expect(within(panel()).getByText(w.tryingOut)).toBeTruthy()
+  })
+
   it('never "We asked", never "weeks", and the wait carries no date', async () => {
-    await open(`/apps/${SLUG}?tab=trying-out`)
+    await open(`/apps/${SLUG}/preview?tab=trying-out`)
     await ready()
     const here = panel()
     expect(here.textContent).not.toMatch(/we asked/i)
@@ -521,7 +545,7 @@ describe("Trying out: UBC's words, everywhere (Rich)", () => {
 
 describe('For your students', () => {
   it('not live yet, and the address they will use', async () => {
-    await open(`/apps/${SLUG}?tab=students`)
+    await open(`/apps/${SLUG}/preview?tab=students`)
     await ready()
     expect(within(panel()).getByText(w.students)).toBeTruthy()
     expect(w.students).toBe('Not live yet. This is the address your students will use.')
@@ -530,7 +554,7 @@ describe('For your students', () => {
 
 describe('no machinery, and never "It works" (C3)', () => {
   it.each(['draft', 'trying-out', 'students'] as const)('on %s', async (kind) => {
-    await open(`/apps/${SLUG}?tab=${kind}`)
+    await open(`/apps/${SLUG}/preview?tab=${kind}`)
     await ready()
     await within(panel())
       .findByText(w.facts.serving)

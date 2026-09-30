@@ -1,8 +1,11 @@
 import type { Schemas } from '@manifest/contract'
+import { fixtures } from '@manifest/mock'
 import { describe, expect, it } from 'vitest'
 import { machineryIn } from '../machinery.js'
 import {
+  appCard,
   audienceWords,
+  beforeLaunch,
   mine,
   studentsFact,
   unreadableCard,
@@ -134,6 +137,52 @@ describe('a card whose project could not be read (review, deferred minor)', () =
       students: cantTell,
       draft: { hostname: undefined, fact: cantTell },
       tryingOut: { hostname: undefined, fact: cantTell },
+      beforeStudents: false,
     })
   })
+})
+
+/**
+ * BEFORE YOUR STUDENTS CAN USE IT (F5 Task 5, Decision 3): a built app, not launched, with a
+ * production clock unmet. Only a built, unlaunched app's checklist is read at all.
+ */
+describe('before your students can use it (Decision 3)', () => {
+  const PROJECT = fixtures.PROJECT_EXPANDED
+  const sandbox = (p: Schemas['Project']) =>
+    p.environments?.find((e) => e.kind === 'sandbox')
+  const unbuilt: Schemas['Project'] = {
+    ...PROJECT,
+    environments: PROJECT.environments!.map((e) =>
+      e.kind === 'sandbox' ? { ...e, instance: null } : e,
+    ),
+  }
+  const launched: Schemas['Project'] = {
+    ...PROJECT,
+    launchedAt: '2026-10-03T17:00:00.000Z',
+  }
+  const BOTH_MET: Schemas['LaunchReadiness'] = {
+    ...fixtures.LAUNCH_READINESS,
+    items: fixtures.LAUNCH_READINESS.items.map((i) => ({ ...i, state: 'met' as const })),
+  }
+
+  it('a built app that has not launched is one whose checklist we read', () => {
+    expect(beforeLaunch(PROJECT, sandbox(PROJECT))).toBe(true)
+    expect(beforeLaunch(unbuilt, sandbox(unbuilt))).toBe(false)
+    expect(beforeLaunch(launched, sandbox(launched))).toBe(false)
+    expect(beforeLaunch(PROJECT, undefined)).toBe(false)
+  })
+
+  it('its card carries the line while a production clock is unmet', () =>
+    expect(appCard(PROJECT, new Map(), V, fixtures.LAUNCH_READINESS).beforeStudents).toBe(
+      true,
+    ))
+
+  it.each([
+    ['not built', unbuilt, fixtures.LAUNCH_READINESS],
+    ['launched', launched, fixtures.LAUNCH_READINESS],
+    ['both clocks met', PROJECT, BOTH_MET],
+    ['its checklist not read', PROJECT, undefined],
+  ] as const)('%s: no line', (_, project, readiness) =>
+    expect(appCard(project, new Map(), V, readiness).beforeStudents).toBe(false),
+  )
 })

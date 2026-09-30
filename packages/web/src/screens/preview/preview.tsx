@@ -23,7 +23,7 @@ const w = words.preview
 /** While an attempt is under way, the addresses are read again this often (a page reopened mid-deploy). */
 export const UNDER_WAY_MS = 2000
 /** The three worlds (walk-through moment 7), each an address of the app's. */
-const KIND: Record<Tab, Schemas['Environment']['kind']> = {
+export const KIND: Record<Tab, Schemas['Environment']['kind']> = {
   draft: 'sandbox',
   'trying-out': 'staging',
   students: 'production',
@@ -171,7 +171,7 @@ export function Preview({
   const choose = (value: string) => {
     const chosen = TABS.find((t) => t === value) ?? 'draft'
     setTab(chosen)
-    remember(`/apps/${encodeURIComponent(project.slug)}?tab=${chosen}`)
+    remember(`/apps/${encodeURIComponent(project.slug)}/preview?tab=${chosen}`)
   }
 
   return (
@@ -284,8 +284,10 @@ function Panel({
           <span className="mono">
             <Hostname name={env.hostname} />
           </span>
-          {/* Only where something is there to open; a tab of its own, never a frame. */}
-          {reaches ? (
+          {/* Only where something is there to open; a tab of its own, never a frame. Never on
+              trying out until its registration is active (Rich: "Hide until registered"), and
+              nothing records one yet: F5b shows it. */}
+          {reaches && tab !== 'trying-out' ? (
             <a
               className="mf-btn mf-btn--secondary mf-btn--sm"
               href={env.url}

@@ -18,8 +18,18 @@ export type Route =
    * `/apps/:slug/conversations/:id` (F4). The same screen draws both.
    */
   | { name: 'conversation'; id: string; slug?: string }
-  /** An app's own page, the Preview (F4, moment 7): `/apps/:slug?tab=…`, the draft by default. */
+  /** An app's landing page, its Overview (F5 Decision 1, moments 10 and 15): `/apps/:slug`. */
+  | { name: 'app-overview'; slug: string }
+  /**
+   * An app's Preview (F4, moment 7): `/apps/:slug/preview?tab=…`, the draft by default. F4's
+   * `/apps/:slug?tab=…` still opens it (`canonical`).
+   */
   | { name: 'app-preview'; slug: string; tab: Tab }
+  /**
+   * Going live (F5, moments 10–14): `/apps/:slug/going-live`, and `?then=live` when the step-up
+   * sends them back to finish letting their students in (Decision 10).
+   */
+  | { name: 'app-going-live'; slug: string; then: 'live' | null }
   /** Every piece of work on an app (F4 Task 9). */
   | { name: 'app-conversations'; slug: string }
   /** Ask for a change (F4 Task 9). */
@@ -41,9 +51,10 @@ export function parse(pathname: string, search = ''): Route {
   if (pathname === '/signed-out') return { name: 'signed-out' }
   if (pathname === '/new') return { name: 'new' }
   if (pathname === '/profile') return { name: 'profile' }
-  const app = /^\/apps\/([^/]+)(?:\/(conversations|change))?(?:\/([^/]+))?$/.exec(
-    pathname,
-  )
+  const app =
+    /^\/apps\/([^/]+)(?:\/(conversations|change|preview|going-live))?(?:\/([^/]+))?$/.exec(
+      pathname,
+    )
   if (app !== null) {
     const slug = decoded(app[1]!)
     const [, , page, id] = app
@@ -56,9 +67,19 @@ export function parse(pathname: string, search = ''): Route {
     }
     if (page === 'conversations') return { name: 'app-conversations', slug }
     if (page === 'change') return { name: 'app-change', slug }
-    const asked = new URLSearchParams(search).get('tab')
-    const tab = TABS.find((t) => t === asked) ?? 'draft'
-    return { name: 'app-preview', slug, tab }
+    const query = new URLSearchParams(search)
+    if (page === 'going-live')
+      return {
+        name: 'app-going-live',
+        slug,
+        then: query.get('then') === 'live' ? 'live' : null,
+      }
+    // The Preview, and F4's address for it: a `tab` on the bare path (Decision 1).
+    if (page === 'preview' || query.has('tab')) {
+      const asked = query.get('tab')
+      return { name: 'app-preview', slug, tab: TABS.find((t) => t === asked) ?? 'draft' }
+    }
+    return { name: 'app-overview', slug }
   }
   const conversation = /^\/new\/([^/]+)$/.exec(pathname)
   if (conversation?.[1] !== undefined) {
@@ -66,6 +87,19 @@ export function parse(pathname: string, search = ''): Route {
     return id === undefined ? { name: 'unknown' } : { name: 'conversation', id }
   }
   return { name: 'unknown' }
+}
+
+/**
+ * F4'S ADDRESSES, KEPT WORKING (F5 Decision 1, Review Focus 5): `/apps/:slug?tab=…` opened the
+ * Preview, which now lives at `/apps/:slug/preview`. This is the address it has now, or null when
+ * the address is already where it belongs. No link or bookmark breaks.
+ */
+export function canonical(pathname: string, search = ''): string | null {
+  if (!/^\/apps\/[^/]+$/.test(pathname)) return null
+  const route = parse(pathname, search)
+  return route.name === 'app-preview'
+    ? `${pathname}/preview?tab=${encodeURIComponent(route.tab)}`
+    : null
 }
 
 export function navigate(path: string): void {
@@ -83,9 +117,17 @@ export function remember(path: string): void {
   window.history.replaceState({}, '', path)
 }
 
-/** The route, and the path and query it came from (what `returnTo` names). */
+/**
+ * The route, and the path and query it came from (what `returnTo` names). An old address is
+ * rewritten where it is read, by `remember` (no navigation, and so no move of the focus), so
+ * `here` is always the address the bar shows.
+ */
 export function useRoute(): { route: Route; here: string } {
-  const read = () => window.location.pathname + window.location.search
+  const read = () => {
+    const moved = canonical(window.location.pathname, window.location.search)
+    if (moved !== null) remember(moved)
+    return window.location.pathname + window.location.search
+  }
   const [here, setHere] = useState(read)
   useEffect(() => {
     const onPop = () => setHere(read())

@@ -208,6 +208,9 @@ function stage(
     deploy: () => new Promise(() => undefined),
     listAppSecrets: () => new Promise(() => undefined),
     setAppSecret: () => new Promise(() => undefined),
+    getLaunchReadiness: () => new Promise(() => undefined),
+    getLaunchRecords: () => new Promise(() => undefined),
+    getEnvironment: () => new Promise(() => undefined),
     watchProject: (projectId, onEvent) => {
       calls.push(['watchProject', projectId])
       let ready!: () => void

@@ -197,10 +197,7 @@ export function BuildingScreen({
       <div className="building__end">
         <p className="body-lead">{words.tryingOut.ready}</p>
         <div className="describe__actions">
-          <Button
-            kind="primary"
-            {...linkTo(`/apps/${encodeURIComponent(slug)}?tab=draft`)}
-          >
+          <Button kind="primary" {...linkTo(`/apps/${encodeURIComponent(slug)}/preview`)}>
             {words.tryingOut.tryIt}
           </Button>
         </div>

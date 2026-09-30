@@ -114,6 +114,38 @@ describe('the Preview’s reads (F4 Task 5), against manifest-mock', () => {
   })
 })
 
+describe('going live’s reads (F5 Tasks 5 and 6), in the person’s session, against manifest-mock', () => {
+  it('getLaunchReadiness answers the checklist: every item, its state, and the candidate', async () => {
+    await withMock(async (origin) => {
+      const readiness = await platform(origin).getLaunchReadiness(fixtures.PROJECT_ID)
+      expect(readiness.projectId).toBe(fixtures.PROJECT_ID)
+      expect(readiness.ready).toBe(false)
+      expect(readiness.candidateReleaseId).toBe(fixtures.RELEASE_ID)
+      expect(readiness.items.map((i) => [i.id, i.state])).toContainEqual([
+        'privacy-assessment',
+        'unmet',
+      ])
+    })
+  })
+
+  it('getLaunchRecords answers the two records an administrator keeps', async () => {
+    await withMock(async (origin) => {
+      const records = await platform(origin).getLaunchRecords(fixtures.PROJECT_ID)
+      expect(records.iamRegistration?.state).toBe('active')
+      expect(records.privacyAssessment?.state).toBe('submitted')
+    })
+  })
+
+  it('getEnvironment answers one address, and the instance it reaches', async () => {
+    await withMock(async (origin) => {
+      const env = await platform(origin).getEnvironment(fixtures.STAGING_ID)
+      expect(env.id).toBe(fixtures.STAGING_ID)
+      expect(env.kind).toBe('staging')
+      expect(env.instance?.state).toBe('healthy')
+    })
+  })
+})
+
 describe('moments 3 and 4 (F2 Task 7), against manifest-mock', () => {
   it('startIntakeSession answers a session, its one model, and its key; endIntakeSession ends it', async () => {
     await withMock(async (origin) => {

@@ -204,6 +204,9 @@ function stage(start: Partial<World> = {}) {
       secrets: world.secrets,
     })),
     setAppSecret: record('setAppSecret', () => undefined),
+    getLaunchReadiness: never,
+    getLaunchRecords: never,
+    getEnvironment: never,
   }
   const theirs: Ours = {
     startConversation: never,
@@ -277,7 +280,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function open(s: Stage, path = `/apps/${SLUG}`) {
+async function open(s: Stage, path = `/apps/${SLUG}/preview`) {
   window.history.pushState({}, '', path)
   render(<App platform={s.platform} ours={s.ours} timeZone={TZ} now={() => NOW} />)
   await screen.findByRole('tablist')
@@ -578,7 +581,7 @@ describe('It never answered: the two facts, and [What went wrong]', () => {
   it("on the Preview's Trying out tab, a failed last attempt offers [What went wrong] too", async () => {
     const failed = summary('i-new', 'staging', NEWER.id, 'failed')
     const s = stage({ staging: [failed, THERE], incidents: [INCIDENT] })
-    await open(s, `/apps/${SLUG}?tab=trying-out`)
+    await open(s, `/apps/${SLUG}/preview?tab=trying-out`)
     const trying = screen.getByRole('tabpanel', {
       name: words.preview.tabs['trying-out'],
     })
@@ -700,7 +703,7 @@ describe('step-up (never expected: staging asks none, M3)', () => {
     expect(await screen.findByText(t.stepUp.title)).toBeTruthy()
     const again = screen.getByRole('link', { name: t.stepUp.again })
     expect(again.getAttribute('href')).toBe(
-      `/auth/step-up?returnTo=${encodeURIComponent(`/apps/${SLUG}`)}`,
+      `/auth/step-up?returnTo=${encodeURIComponent(`/apps/${SLUG}/preview`)}`,
     )
     // Back from signing in: a new page, and the draft has moved on meanwhile.
     cleanup()
@@ -720,7 +723,7 @@ describe('step-up (never expected: staging asks none, M3)', () => {
 describe('a page closed and reopened mid-deploy (Review Focus 5)', () => {
   it("the Preview's Trying out reads under way from listInstances, then the result", async () => {
     const s = stage({ staging: [THERE, fresh('starting')] })
-    await open(s, `/apps/${SLUG}?tab=trying-out`)
+    await open(s, `/apps/${SLUG}/preview?tab=trying-out`)
     const trying = () =>
       screen.getByRole('tabpanel', { name: words.preview.tabs['trying-out'] })
     expect(await within(trying()).findByText(words.preview.facts.underWay)).toBeTruthy()

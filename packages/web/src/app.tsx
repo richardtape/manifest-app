@@ -8,6 +8,7 @@ import { linkTo, navigate, useRoute } from './router.js'
 import { AskForChange } from './screens/change/ask.js'
 import { AppConversations } from './screens/change/conversations.js'
 import { Describing } from './screens/describe/describe.js'
+import { Overview } from './screens/overview/overview.js'
 import { Preview } from './screens/preview/preview.js'
 import { useApp } from './screens/preview/use-app.js'
 import { Profile } from './screens/profile.js'
@@ -19,6 +20,7 @@ import { words } from './words.js'
 
 /** Our own API, once: its stream opener must keep its identity across renders. */
 const OURS = createOurs()
+const rail = words.preview.rail
 
 /**
  * THE SHELL: session, then route, then screen. Nothing is drawn while `getMe` is asked
@@ -46,7 +48,9 @@ export function App({
 
   // AN APP'S OWN PAGES (F4 Task 5): the app their address names, once someone is signed in.
   const slug =
+    route.name === 'app-overview' ||
     route.name === 'app-preview' ||
+    route.name === 'app-going-live' ||
     route.name === 'app-conversations' ||
     route.name === 'app-change' ||
     route.name === 'conversation'
@@ -165,7 +169,9 @@ export function App({
   else if (route.name === 'profile')
     page = <Profile me={session.me} onSignOut={() => void leave()} />
   else if (
+    route.name === 'app-overview' ||
     route.name === 'app-preview' ||
+    route.name === 'app-going-live' ||
     route.name === 'app-conversations' ||
     route.name === 'app-change'
   )
@@ -176,7 +182,15 @@ export function App({
         <p className="body-lead">
           {words.notFound.body} <a {...linkTo('/')}>{words.notFound.link}</a>
         </p>
-      ) : lookup.state !== 'found' ? null : route.name === 'app-preview' ? (
+      ) : lookup.state !== 'found' ? null : route.name === 'app-overview' ? (
+        <Overview
+          key={lookup.project.id}
+          platform={platform}
+          project={lookup.project}
+          expire={expire}
+          timeZone={timeZone}
+        />
+      ) : route.name === 'app-going-live' ? null : route.name === 'app-preview' ? (
         <Preview
           key={lookup.project.id}
           platform={platform}
@@ -254,31 +268,34 @@ export function App({
           userHref="/profile"
           {...(route.name === 'your-apps'
             ? { active: words.shell.yourApps }
-            : route.name === 'app-preview'
-              ? { active: words.preview.rail.preview }
-              : route.name === 'app-conversations' ||
-                  route.name === 'app-change' ||
-                  (route.name === 'conversation' && route.slug !== undefined)
-                ? { active: words.preview.rail.conversations }
-                : route.name === 'new' || route.name === 'conversation'
-                  ? { active: words.shell.startNew }
-                  : {})}
+            : route.name === 'app-overview'
+              ? { active: rail.overview }
+              : route.name === 'app-preview'
+                ? { active: rail.preview }
+                : route.name === 'app-going-live'
+                  ? { active: rail.goingLive }
+                  : route.name === 'app-conversations' ||
+                      route.name === 'app-change' ||
+                      (route.name === 'conversation' && route.slug !== undefined)
+                    ? { active: rail.conversations }
+                    : route.name === 'new' || route.name === 'conversation'
+                      ? { active: words.shell.startNew }
+                      : {})}
           {...(app === null
             ? {}
             : {
                 projectName: app.name,
+                // F5 Decision 2: the app's four pages. People and Agents come with their plans.
                 items: [
-                  {
-                    label: words.preview.rail.preview,
-                    icon: 'preview',
-                    href: `/apps/${encodeURIComponent(app.slug)}`,
-                  },
-                  {
-                    label: words.preview.rail.conversations,
-                    icon: 'talk',
-                    href: `/apps/${encodeURIComponent(app.slug)}/conversations`,
-                  },
-                ],
+                  { label: rail.overview, icon: 'overview', path: '' },
+                  { label: rail.preview, icon: 'preview', path: '/preview' },
+                  { label: rail.conversations, icon: 'talk', path: '/conversations' },
+                  { label: rail.goingLive, icon: 'live', path: '/going-live' },
+                ].map(({ label, icon, path }) => ({
+                  label,
+                  icon,
+                  href: `/apps/${encodeURIComponent(app.slug)}${path}`,
+                })),
               })}
           homeHref="/"
           newLabel={words.shell.startNew}

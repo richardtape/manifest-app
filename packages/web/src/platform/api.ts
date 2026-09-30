@@ -91,6 +91,20 @@ export interface Platform {
     releaseId: string,
     idempotencyKey: string,
   ): Promise<Schemas['Instance']>
+  /**
+   * GOING LIVE (F5 Tasks 5 and 6), in the person's session: §13's checklist, computed from what
+   * exists, from the day the project is made. Every item, met or not, and the candidate: the
+   * release serving staging, null when nothing does.
+   */
+  getLaunchReadiness(projectId: string): Promise<Schemas['LaunchReadiness']>
+  /**
+   * The two records a first launch waits on, as an administrator keeps them: UBC's identity
+   * team's registration and the Privacy Office's assessment. Either may be null, which is a
+   * state, not an error (Decision 5).
+   */
+  getLaunchRecords(projectId: string): Promise<Schemas['LaunchRecords']>
+  /** One address, and the instance its hostname reaches (production's, for going live). */
+  getEnvironment(environmentId: string): Promise<Schemas['Environment']>
   /** Each secret's name, `declared` and `set`, as fields: never a value (F4 S1: M1). */
   listAppSecrets(environmentId: string): Promise<Schemas['AppSecretList']>
   /**
@@ -232,6 +246,30 @@ export function createPlatform(options: {
           body: { releaseId },
         }),
         'deploy',
+      )
+    },
+    async getLaunchReadiness(projectId) {
+      return unwrap(
+        await client.GET('/v1/projects/{projectId}/launch-readiness', {
+          params: { path: { projectId } },
+        }),
+        'getLaunchReadiness',
+      )
+    },
+    async getLaunchRecords(projectId) {
+      return unwrap(
+        await client.GET('/v1/projects/{projectId}/launch-records', {
+          params: { path: { projectId } },
+        }),
+        'getLaunchRecords',
+      )
+    },
+    async getEnvironment(environmentId) {
+      return unwrap(
+        await client.GET('/v1/environments/{environmentId}', {
+          params: { path: { environmentId } },
+        }),
+        'getEnvironment',
       )
     },
     async listAppSecrets(environmentId) {

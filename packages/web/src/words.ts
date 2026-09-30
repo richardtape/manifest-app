@@ -104,6 +104,13 @@ export const words = {
     forStudents: 'For your students',
     draft: 'Your draft',
     tryingOut: 'For trying out',
+    /**
+     * F5 Task 5 (Decision 3): a built app not yet live, with a production clock unmet. Rich's
+     * words ("each may take several days", 2026-09-29), approved with the design.
+     */
+    beforeStudents:
+      'Before your students can use it: three things other people answer, and each may take several days.',
+    goingLive: 'Going live',
   },
   /**
    * WHAT AN ADDRESS IS DOING, in the product's five states and never the platform's words
@@ -449,8 +456,16 @@ export const words = {
    * any (the plan's *Words proposed for Rich*, approved with it), marked "ours".
    */
   preview: {
-    /** The rail's project section (Decision 1): two items until later plans build the rest. */
-    rail: { preview: 'Preview', conversations: 'Conversations' },
+    /**
+     * The rail's project section (F5 Decision 2): four items; People and Agents come with their
+     * plans.
+     */
+    rail: {
+      overview: 'Overview',
+      preview: 'Preview',
+      conversations: 'Conversations',
+      goingLive: 'Going live',
+    },
     /** Ours: the switcher's name for a screen reader (SegmentedControl's preview says so). */
     switcherLabel: 'Which address you are looking at',
     tabs: {
@@ -512,6 +527,20 @@ export const words = {
       hour: 'an hour ago',
       hours: (n: number) => `${n} hours ago`,
       on: (when: string) => `on ${when}`,
+    },
+  },
+  /**
+   * THE APP'S OVERVIEW, ITS LANDING PAGE (F5 Task 5, Decisions 1 and 3). The band's words are
+   * the walk-through's moment 10, with Rich's "may take several days"; the rows are the
+   * Preview's tab names and F4's serving facts.
+   */
+  overview: {
+    /** Ours: the address rows' name, for a screen reader. */
+    addresses: 'Its three addresses',
+    band: {
+      title: 'Before your students can use it.',
+      body: 'Three things other people answer, and each may take several days. Going live shows where each one is.',
+      button: 'Going live',
     },
   },
   /**

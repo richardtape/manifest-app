@@ -56,6 +56,10 @@ function platform(
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    getLaunchReadiness: (answers.getLaunchReadiness ??
+      never) as Platform['getLaunchReadiness'],
+    getLaunchRecords: (answers.getLaunchRecords ?? never) as Platform['getLaunchRecords'],
+    getEnvironment: (answers.getEnvironment ?? never) as Platform['getEnvironment'],
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
 }
@@ -256,6 +260,7 @@ function mockPlatform(overrides: Partial<Schemas['Project']> = {}, me = fixtures
     listInstances: (id: string) => Promise.resolve(fixtures.INSTANCE_LISTS[id]!),
     listIncidents: (id: string) =>
       Promise.resolve({ environmentId: id, incidents: [] as Schemas['Incident'][] }),
+    getLaunchReadiness: () => Promise.resolve(fixtures.LAUNCH_READINESS),
   })
 }
 
@@ -349,6 +354,7 @@ describe('Your apps, with an app (moment 16’s card)', () => {
           listProjects: () => Promise.resolve([theirs, someoneElses]),
           getProject: (() => Promise.resolve(fixtures.PROJECT_EXPANDED)) as never,
           getRelease: () => Promise.resolve(fixtures.RELEASE),
+          getLaunchReadiness: () => Promise.resolve(fixtures.LAUNCH_READINESS),
         })}
       />,
     )
@@ -418,6 +424,119 @@ describe('Your apps cannot be read (Review Focus 2)', () => {
   })
 })
 
+/**
+ * BEFORE YOUR STUDENTS CAN USE IT (F5 Task 5, Decision 3): a built app, not launched, with a
+ * production clock unmet, carries one line and Going live. One checklist read per such app, and
+ * none for any other (FE-10's cost).
+ */
+describe('Your apps: before your students can use it (Decision 3, moment 10)', () => {
+  const launched = {
+    ...fixtures.PROJECT,
+    id: '22222222-2222-4222-8222-000000000003',
+    slug: 'launched-app',
+    name: 'Launched app',
+    launchedAt: '2026-10-03T17:00:00.000Z',
+  }
+  const unbuilt = {
+    ...fixtures.PROJECT,
+    id: '22222222-2222-4222-8222-000000000004',
+    slug: 'unbuilt-app',
+    name: 'Unbuilt app',
+  }
+  const expanded = (p: Schemas['Project']): Schemas['Project'] => ({
+    ...fixtures.PROJECT_EXPANDED,
+    ...p,
+    environments: fixtures.PROJECT_EXPANDED.environments!.map((e) =>
+      p.id === unbuilt.id && e.kind === 'sandbox' ? { ...e, instance: null } : e,
+    ),
+  })
+
+  it('a built app, not launched, with a clock unmet: the line, and Going live', async () => {
+    const asked: string[] = []
+    render(
+      <App
+        platform={{
+          ...mockPlatform(),
+          getLaunchReadiness: (id: string) => (
+            asked.push(id),
+            Promise.resolve(fixtures.LAUNCH_READINESS)
+          ),
+        }}
+      />,
+    )
+    const card = (
+      await screen.findByRole('heading', { name: 'Mock course app' })
+    ).closest('.mf-card') as HTMLElement
+    expect(await within(card).findByText(words.yourApps.beforeStudents)).toBeTruthy()
+    expect(words.yourApps.beforeStudents).toMatch(/may take several days/)
+    expect(card.textContent).not.toMatch(/weeks/i)
+    const going = within(card).getByRole('link', { name: words.yourApps.goingLive })
+    expect(going.getAttribute('href')).toBe('/apps/mock-app/going-live')
+    expect(asked).toEqual([fixtures.PROJECT_ID])
+    expect(machineryIn(wordsOnScreen())).toEqual([])
+  })
+
+  it('launched, or not built: no line, and no checklist read', async () => {
+    const asked: string[] = []
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(ME),
+          listProjects: () => Promise.resolve([launched, unbuilt]),
+          getProject: (id: string) =>
+            Promise.resolve(expanded(id === launched.id ? launched : unbuilt)),
+          getRelease: () => Promise.resolve(fixtures.RELEASE),
+          getLaunchReadiness: (id: string) => (
+            asked.push(id),
+            Promise.resolve(fixtures.LAUNCH_READINESS)
+          ),
+        })}
+      />,
+    )
+    await screen.findByRole('heading', { name: 'Launched app' })
+    await screen.findByRole('heading', { name: 'Unbuilt app' })
+    expect(screen.queryByText(words.yourApps.beforeStudents)).toBeNull()
+    expect(asked).toEqual([])
+  })
+
+  it('both clocks met: no line', async () => {
+    render(
+      <App
+        platform={{
+          ...mockPlatform(),
+          getLaunchReadiness: () =>
+            Promise.resolve({
+              ...fixtures.LAUNCH_READINESS,
+              items: fixtures.LAUNCH_READINESS.items.map((i) => ({
+                ...i,
+                state: 'met' as const,
+              })),
+            }),
+        }}
+      />,
+    )
+    await screen.findByRole('heading', { name: 'Mock course app' })
+    expect(screen.queryByText(words.yourApps.beforeStudents)).toBeNull()
+  })
+
+  it('a checklist that cannot be read: the card as it is, without the line', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    render(
+      <App
+        platform={{
+          ...mockPlatform(),
+          getLaunchReadiness: () => Promise.reject(refused(500, 'INTERNAL')),
+        }}
+      />,
+    )
+    await screen.findByRole('heading', { name: 'Mock course app' })
+    await waitFor(() => expect(warn).toHaveBeenCalled())
+    expect(screen.queryByText(words.yourApps.beforeStudents)).toBeNull()
+    expect(screen.queryByText(words.refused.body)).toBeNull()
+    vi.restoreAllMocks()
+  })
+})
+
 describe('no machinery on any screen (C3, Decision 9)', () => {
   it('Your apps, fed by the mock’s own fixtures, shows none of the platform’s words', async () => {
     render(<App platform={mockPlatform()} />)
@@ -449,14 +568,16 @@ describe('the keyboard reaches the page, not only the rail (Rich’s click-throu
     expect(main?.getAttribute('tabindex')).toBe('-1')
   })
 
-  it('an app’s name is a link, to its own page (F4 Task 5: the Preview)', async () => {
+  it('an app’s name is a link, to its own page (F5 Task 5: the Overview, its landing page)', async () => {
     render(<App platform={mockPlatform()} />)
     const name = await screen.findByRole('link', { name: 'Mock course app' })
     expect(name.getAttribute('href')).toBe('/apps/mock-app')
     await act(async () => {
       fireEvent.click(name)
     })
-    expect(await screen.findByRole('tablist')).toBeTruthy()
+    expect(
+      await screen.findByRole('list', { name: words.overview.addresses }),
+    ).toBeTruthy()
     expect(window.location.pathname).toBe('/apps/mock-app')
   })
 })
@@ -488,7 +609,7 @@ describe('focus follows an in-app navigation to the page (review, accessibility)
     await act(async () => {
       fireEvent.click(name)
     })
-    await screen.findByRole('tablist')
+    await screen.findByRole('list', { name: words.overview.addresses })
     expect(document.activeElement).toBe(document.getElementById('main'))
   })
 })
@@ -506,6 +627,7 @@ describe('one app that cannot be read does not hide the others (review, deferred
       listProjects: () => Promise.resolve([fixtures.PROJECT, second]),
       getProject,
       getRelease: getRelease ?? (() => Promise.resolve(fixtures.RELEASE)),
+      getLaunchReadiness: () => Promise.resolve(fixtures.LAUNCH_READINESS),
     })
 
   it('the one that failed says it cannot tell; the other is drawn in full', async () => {
@@ -616,8 +738,20 @@ describe('no machinery on EVERY screen and state (Decision 9; the final review)'
     ['Describe it (moment 3)', '/new', signedIn, words.describe.title],
     ['an app that is not theirs', '/apps/mock-app', signedIn, words.notFound.body],
     [
-      'an app’s own page: the Preview (F4 Task 5)',
+      'an app’s own page: the Overview, with its band (F5 Task 5)',
       '/apps/mock-app',
+      {
+        getMe: () => Promise.resolve(ME),
+        listProjects: () => Promise.resolve([fixtures.PROJECT]),
+        listEnvironments: () => Promise.resolve(fixtures.ENVIRONMENTS),
+        getRelease: () => Promise.resolve(fixtures.RELEASE),
+        getLaunchReadiness: () => Promise.resolve(fixtures.LAUNCH_READINESS),
+      },
+      words.overview.band.title,
+    ],
+    [
+      'an app’s own page: the Preview (F4 Task 5)',
+      '/apps/mock-app/preview',
       {
         getMe: () => Promise.resolve(ME),
         listProjects: () => Promise.resolve([fixtures.PROJECT]),

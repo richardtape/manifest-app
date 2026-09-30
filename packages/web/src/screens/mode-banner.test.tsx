@@ -43,6 +43,9 @@ function platform(getMe: Platform['getMe']): Platform {
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    getLaunchReadiness: never,
+    getLaunchRecords: never,
+    getEnvironment: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
 }
