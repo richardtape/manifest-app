@@ -146,9 +146,9 @@ function wordsOn(element: HTMLElement = document.body): string {
 }
 
 describe('the page: letting your students in (moment 11)', () => {
-  it('its heading and lead, in Rich’s words', async () => {
+  it('its heading and lead, in Rich’s words, once it has read what stands (it may turn out launched)', async () => {
     await open()
-    expect(screen.getByText(g.lead)).toBeTruthy()
+    expect(await screen.findByText(g.lead)).toBeTruthy()
     expect(g.lead).toBe(
       'Going live isn’t a button. Most of it takes minutes, but three things are answered by other people, and each may take several days. That’s why this page exists from day one.',
     )
@@ -371,6 +371,47 @@ describe('an app already launched (Decision 2, Review Focus 5)', () => {
     expect(screen.getByRole('link', { name: g.toOverview })).toBeTruthy()
     expect(clocks()).toHaveLength(0)
     expect(screen.queryByRole('region', { name: g.shortJobs.title })).toBeNull()
+    expect(screen.queryByText(g.lead)).toBeNull()
+  })
+
+  it('launched since: once the checklist has said so, it stays said: a later read that fails never turns it back', async () => {
+    let failing = false
+    const s = await open(
+      stage(
+        { launchedAt: null, readiness: { ...fixtures.LAUNCH_READINESS, launched: true } },
+        { getLaunchReadiness: () => (failing ? refused(500, 'INTERNAL') : undefined) },
+      ),
+    )
+    expect(await screen.findByText(g.live)).toBeTruthy()
+    failing = true
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'visible',
+    })
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    await act(async () => undefined)
+    expect(screen.getByText(g.live)).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByText(g.lead)).toBeNull()
+    expect(s.called('getLaunchReadiness')).toHaveLength(1)
+  })
+
+  it('launched since: the first launch’s lead is never shown while the checklist is read', async () => {
+    const s = stage({
+      launchedAt: null,
+      readiness: { ...fixtures.LAUNCH_READINESS, launched: true },
+    })
+    let answer: (value: Schemas['LaunchReadiness']) => void = () => undefined
+    s.platform.getLaunchReadiness = () =>
+      new Promise((resolve) => {
+        answer = resolve
+      })
+    await open(s)
+    expect(screen.queryByText(g.lead)).toBeNull()
+    await act(async () => answer({ ...fixtures.LAUNCH_READINESS, launched: true }))
+    expect(await screen.findByText(g.live)).toBeTruthy()
     expect(screen.queryByText(g.lead)).toBeNull()
   })
 })

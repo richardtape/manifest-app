@@ -259,16 +259,62 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
   })
 })
 
+describe('Talk it through (F5 Task 8, the final review’s I1)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const APPROVAL = '55555555-5555-4555-8555-555555555555'
+  it('startChange sends the refusal a change answers, beside the words and the token', async () => {
+    const fetch = vi.fn(
+      async () => new Response(JSON.stringify({ id: 'c-1' }), { status: 201 }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    await createOurs().startChange(PROJECT, {
+      words: 'Ours, and their reason.',
+      token: 'mft_x',
+      refusal: { approvalId: APPROVAL },
+    })
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect([url, JSON.parse(String(init.body))]).toEqual([
+      `/api/apps/${PROJECT}/conversations`,
+      {
+        words: 'Ours, and their reason.',
+        token: 'mft_x',
+        refusal: { approvalId: APPROVAL },
+      },
+    ])
+  })
+
+  it('changeForRefusal answers the change already under way for it, or null (404)', async () => {
+    const fetch = vi.fn(
+      async () => new Response(JSON.stringify({ id: 'c-7' }), { status: 200 }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    expect(await createOurs().changeForRefusal(PROJECT, APPROVAL)).toEqual({ id: 'c-7' })
+    expect((fetch.mock.calls[0] as unknown as [string])[0]).toBe(
+      `/api/apps/${PROJECT}/refusals/${APPROVAL}/conversation`,
+    )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: { code: 'NOT_FOUND' } }), { status: 404 }),
+      ),
+    )
+    expect(await createOurs().changeForRefusal(PROJECT, APPROVAL)).toBeNull()
+  })
+})
+
 describe('agreedRows: the hand-over’s two rows (F5 Task 9)', () => {
   const PROJECT = '22222222-2222-4222-8222-222222222222'
-  it('asks our server for the plan agreed on the app, and answers its two rows', async () => {
+  it('asks our server for the plan agreed by the moment the version live was made, and answers its two rows', async () => {
     const rows = { studentsSee: 'Your own first.', whoGetsIn: 'Only theirs.' }
     const fetch = vi.fn(async () => new Response(JSON.stringify(rows), { status: 200 }))
     vi.stubGlobal('fetch', fetch)
-    expect(await createOurs().agreedRows(PROJECT)).toEqual(rows)
+    expect(await createOurs().agreedRows(PROJECT, '2026-09-18T22:12:00.000Z')).toEqual(
+      rows,
+    )
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
     expect([url, init.method, init.credentials]).toEqual([
-      `/api/apps/${PROJECT}/plan`,
+      `/api/apps/${PROJECT}/plan?before=2026-09-18T22%3A12%3A00.000Z`,
       'GET',
       'same-origin',
     ])
@@ -282,7 +328,7 @@ describe('agreedRows: the hand-over’s two rows (F5 Task 9)', () => {
           new Response(JSON.stringify({ error: { code: 'NOT_FOUND' } }), { status: 404 }),
       ),
     )
-    expect(await createOurs().agreedRows(PROJECT)).toBeNull()
+    expect(await createOurs().agreedRows(PROJECT, '2026-09-18T22:12:00.000Z')).toBeNull()
   })
 
   it('an answer without its two rows is refused as unexpected, never drawn', async () => {
@@ -293,14 +339,18 @@ describe('agreedRows: the hand-over’s two rows (F5 Task 9)', () => {
           new Response(JSON.stringify({ studentsSee: 'Only one.' }), { status: 200 }),
       ),
     )
-    await expect(createOurs().agreedRows(PROJECT)).rejects.toMatchObject({
+    await expect(
+      createOurs().agreedRows(PROJECT, '2026-09-18T22:12:00.000Z'),
+    ).rejects.toMatchObject({
       code: 'UNEXPECTED',
     })
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(null, { status: 204 })),
     )
-    await expect(createOurs().agreedRows(PROJECT)).rejects.toMatchObject({
+    await expect(
+      createOurs().agreedRows(PROJECT, '2026-09-18T22:12:00.000Z'),
+    ).rejects.toMatchObject({
       code: 'UNEXPECTED',
     })
   })
@@ -315,7 +365,9 @@ describe('agreedRows: the hand-over’s two rows (F5 Task 9)', () => {
           }),
       ),
     )
-    await expect(createOurs().agreedRows(PROJECT)).rejects.toMatchObject({
+    await expect(
+      createOurs().agreedRows(PROJECT, '2026-09-18T22:12:00.000Z'),
+    ).rejects.toMatchObject({
       code: 'PLATFORM_UNAVAILABLE',
       status: 502,
     })

@@ -24,6 +24,8 @@ const refuse = (reply: FastifyReply, status: number, code: string) =>
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const TOKEN = /^\S{1,512}$/
+/** A moment in UTC, as the platform and `toISOString` write one (the plan's `before`). */
+const MOMENT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/
 /** The change planner's own title is at most this long (Task 7); theirs is cut to fit. */
 const TITLE = 60
 /** A fix conversation's title and words (Words proposed for Rich). */
@@ -32,18 +34,35 @@ export const FIX_WORDS = "It didn't start on the trying-out address"
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/** `{ words, token }` or `{ fix: { incidentId }, token }`, and nothing else. */
+/**
+ * `{ words, token }`, `{ words, token, refusal: { approvalId } }` (*[Talk it through]*: F5 Task 8)
+ * or `{ fix: { incidentId }, token }`, and nothing else.
+ */
 function changeOf(
   body: unknown,
-): { words: string; token: string } | { incidentId: string; token: string } | undefined {
-  if (!isObject(body) || Object.keys(body).length !== 2) return undefined
+):
+  | { words: string; token: string; refusal: { approvalId: string } | null }
+  | { incidentId: string; token: string }
+  | undefined {
+  if (!isObject(body)) return undefined
+  const keys = Object.keys(body).length
   const { token } = body
   if (typeof token !== 'string' || !TOKEN.test(token)) return undefined
   if ('words' in body) {
+    if (keys !== ('refusal' in body ? 3 : 2)) return undefined
     const { words } = body
     if (typeof words !== 'string' || words.length > LIMITS.description) return undefined
-    return words.trim() === '' ? undefined : { words: words.trim(), token }
+    let refusal: { approvalId: string } | null = null
+    if ('refusal' in body) {
+      const asked = body['refusal']
+      if (!isObject(asked) || Object.keys(asked).length !== 1) return undefined
+      const { approvalId } = asked
+      if (typeof approvalId !== 'string' || !ID.test(approvalId)) return undefined
+      refusal = { approvalId }
+    }
+    return words.trim() === '' ? undefined : { words: words.trim(), token, refusal }
   }
+  if (keys !== 2) return undefined
   const { fix } = body
   if (!isObject(fix) || Object.keys(fix).length !== 1) return undefined
   const { incidentId } = fix
@@ -143,6 +162,7 @@ export function registerApps(
         change: 1,
         words,
         fix: 'words' in asked ? null : { incidentId: asked.incidentId },
+        ...('words' in asked && asked.refusal !== null ? { refusal: asked.refusal } : {}),
       } satisfies Asked)
       tokens.put(change.id, asked.token)
       line.join(change)
@@ -200,20 +220,47 @@ export function registerApps(
 
   // THE HAND-OVER (F5 Task 9, Decision 12): two rows of the plan the person last agreed on the app,
   // *What students see* and *Who gets in*, as written, for the message and the honest line. Never
-  // another row; nobody else's (their conversations are theirs); no model.
-  app.get<{ Params: { projectId: string } }>(
+  // another row; nobody else's (their conversations are theirs); no model. **`?before=<moment>`**
+  // (the final review's I2): the page names when the version live was made, so a change agreed
+  // since, on the draft and not live, never reaches the message to students.
+  app.get<{ Params: { projectId: string }; Querystring: { before?: unknown } }>(
     '/api/apps/:projectId/plan',
     async (request, reply) => {
       const who = await check(request, reply)
       if (who === undefined) return reply
       const { projectId } = request.params
       if (!ID.test(projectId)) return refuse(reply, 404, 'NOT_FOUND')
-      const agreed = store.agreedPlanOn(projectId, who.person.id) as
+      const { before } = request.query
+      let by: string | undefined
+      if (before !== undefined) {
+        if (typeof before !== 'string' || !MOMENT.test(before))
+          return refuse(reply, 400, 'PLAN_QUERY_INVALID')
+        const at = new Date(before)
+        if (Number.isNaN(at.getTime())) return refuse(reply, 400, 'PLAN_QUERY_INVALID')
+        // As the store writes a moment, so the two compare as text.
+        by = at.toISOString()
+      }
+      const agreed = store.agreedPlanOn(projectId, who.person.id, by) as
         Partial<Record<'studentsSee' | 'whoGetsIn', unknown>> | undefined
       const { studentsSee, whoGetsIn } = agreed ?? {}
       if (typeof studentsSee !== 'string' || typeof whoGetsIn !== 'string')
         return refuse(reply, 404, 'NOT_FOUND')
       return { studentsSee, whoGetsIn }
+    },
+  )
+
+  // [TALK IT THROUGH] AGAIN (F5 Task 8, the final review's I1): the change we are already making
+  // for this refusal, so the press opens it rather than starting a second. One set aside is not
+  // under way, and pressing again then starts a new one.
+  app.get<{ Params: { projectId: string; approvalId: string } }>(
+    '/api/apps/:projectId/refusals/:approvalId/conversation',
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      const { projectId, approvalId } = request.params
+      const id = store.changeForRefusal(projectId, approvalId, who.person.id)
+      if (id === undefined) return refuse(reply, 404, 'NOT_FOUND')
+      return { id }
     },
   )
 

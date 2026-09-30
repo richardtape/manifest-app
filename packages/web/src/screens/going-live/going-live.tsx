@@ -136,14 +136,21 @@ export function GoingLive({
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
-  const known = (project.launchedAt ?? null) !== null
-  const launched = known || (loaded.state === 'ready' && loaded.seen.launched)
+  // LAUNCHED, BY THE PROJECT OR BY THE CHECKLIST, AND KEPT: the App reads the project once per
+  // slug, so a launch since is heard here first; once heard it stays said (a launch is not undone
+  // in F5), and nothing more is read, so a later read that fails can never turn it back.
+  const [heard, setHeard] = useState(false)
+  const launched = (project.launchedAt ?? null) !== null || heard
 
   useEffect(() => {
-    if (known) return
+    if (launched) return
     let live = true
     read(platform, project, now(), timeZone).then(
-      (seen) => live && setLoaded({ state: 'ready', seen }),
+      (seen) => {
+        if (!live) return
+        if (seen.launched) setHeard(true)
+        setLoaded({ state: 'ready', seen })
+      },
       (error: unknown) => {
         if (!live) return
         const refusal = refusalOf(error)
@@ -155,7 +162,7 @@ export function GoingLive({
       live = false
     }
     // `now` is a clock, read once per attempt: never a reason to read again.
-  }, [platform, project, timeZone, expire, attempt, known])
+  }, [platform, project, timeZone, expire, attempt, launched])
 
   const retry = useCallback(() => {
     setLoaded({ state: 'loading' })
@@ -181,7 +188,7 @@ export function GoingLive({
         <p className="body-lead">
           {g.live} <a {...linkTo(`/apps/${slug}`)}>{g.toOverview}</a>
         </p>
-      ) : (
+      ) : loaded.state === 'loading' ? null : ( // Nothing said until it is read: it may turn out launched (no first launch's lead).
         <p className="body-lead">{g.lead}</p>
       )}
       {loaded.state === 'trouble' ? (

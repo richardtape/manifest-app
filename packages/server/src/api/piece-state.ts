@@ -14,6 +14,11 @@ export interface Asked {
   words: string
   /** A fix of ours (F4 Decision 6): the incident it answers. Null for their change. */
   fix: { incidentId: string } | null
+  /**
+   * F5 Task 8: a change started by *[Talk it through]* answers an administrator's refusal, so
+   * pressed again it opens this one (the final review's I1). Absent on every other change.
+   */
+  refusal?: { approvalId: string }
 }
 
 export interface Piece {

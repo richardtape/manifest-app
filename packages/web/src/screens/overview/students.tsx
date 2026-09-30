@@ -43,8 +43,10 @@ function settled<T>(result: PromiseSettledResult<T>): T | null {
 /**
  * THE HAND-OVER'S READS (Decision 12), once the app has launched: production's instances (and its
  * incidents, only when a failure is the last attempt) for F4's two facts, and the agreed plan's two
- * rows from our server. Each can fail alone: the address and the first sentences stand without
- * them. No model.
+ * rows from our server, **as agreed by the time the version live was made** (the final review's
+ * I2): a change agreed since is on the draft, and its words must not reach students as if it were
+ * live. Nothing dates the version live: the rows are not asked for. Each can fail alone: the
+ * address and the first sentences stand without them. No model.
  */
 export async function handOver(
   platform: Platform,
@@ -59,7 +61,9 @@ export async function handOver(
     production === undefined
       ? Promise.resolve(null)
       : platform.listInstances(production.id).then((list) => list.instances),
-    ours.agreedRows(project.id),
+    release === undefined
+      ? Promise.resolve(null)
+      : ours.agreedRows(project.id, release.createdAt),
   ])
   const listed = settled(instances)
   let incidents: Schemas['Incident'][] = []
@@ -94,12 +98,13 @@ export function messageOf(name: string, address: string, rows: Handed['rows']): 
 
 /**
  * THE HONEST LINE (FE-20): ours, then the plan's *Who gets in* as written. **A plan's row that
- * already says anyone with a CWL can sign in is the honest line itself**, and is said alone: the
- * plan's prompt tells it to say so, and ours before it would say it twice.
+ * opens by saying anyone with a CWL can sign in is the honest line itself**, and is said alone:
+ * the plan's prompt tells it to say so (HONEST_WHO_GETS_IN opens so), and ours before it would say
+ * it twice. A row that mentions it any other way, to deny it included, keeps ours first.
  */
 export function honestLine(rows: Handed['rows']): string {
   if (rows === null) return s.honest
-  return /\banyone with a CWL\b/i.test(rows.whoGetsIn)
+  return /^anyone with a CWL can sign in\b/i.test(rows.whoGetsIn.trim())
     ? rows.whoGetsIn
     : `${s.honest} ${rows.whoGetsIn}`
 }

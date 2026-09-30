@@ -242,6 +242,7 @@ function stage(start: Partial<World> = {}) {
       return Promise.resolve(world.fix === null ? null : { id: world.fix })
     },
     agreedRows: () => Promise.resolve(null),
+    changeForRefusal: () => Promise.resolve(null),
     events: () => new FakeSource(),
   }
   const called = (name: string) =>

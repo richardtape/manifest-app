@@ -168,7 +168,10 @@ export interface Ours {
   startChange(
     projectId: string,
     body:
-      { words: string; token: string } | { fix: { incidentId: string }; token: string },
+      | { words: string; token: string }
+      /** F5 Task 8: *[Talk it through]*, answering an administrator's refusal. */
+      | { words: string; token: string; refusal: { approvalId: string } }
+      | { fix: { incidentId: string }; token: string },
   ): Promise<Conversation>
   /** The person's conversations on the app, newest first, each where it left off. */
   conversationsOn(projectId: string): Promise<AppConversation[]>
@@ -185,12 +188,19 @@ export interface Ours {
    */
   fixFor(projectId: string, incidentId: string): Promise<{ id: string } | null>
   /**
+   * The change we are already making for this administrator's refusal, unless it was set aside;
+   * none, null. So *[Talk it through]* pressed again opens it (F5 Task 8, the final review's I1).
+   */
+  changeForRefusal(projectId: string, approvalId: string): Promise<{ id: string } | null>
+  /**
    * F5 TASK 9, THE HAND-OVER: *What students see* and *Who gets in* from the plan the person last
-   * agreed on the app, as written, for the message and the honest line. None agreed (an app made
-   * elsewhere), null.
+   * agreed on the app **by `before`, when the version live was made** (the final review's I2: a
+   * change agreed since is on the draft, not live), as written, for the message and the honest
+   * line. None agreed by then (an app made elsewhere), null.
    */
   agreedRows(
     projectId: string,
+    before: string,
   ): Promise<{ studentsSee: string; whoGetsIn: string } | null>
   events(id: string): StreamSource
 }
@@ -283,11 +293,23 @@ export function createOurs(): Ours {
         throw error
       }
     },
-    agreedRows: async (projectId) => {
+    changeForRefusal: async (projectId, approvalId) => {
+      try {
+        const found = (await call(
+          'GET',
+          `/api/apps/${encodeURIComponent(projectId)}/refusals/${encodeURIComponent(approvalId)}/conversation`,
+        )) as { id?: unknown } | undefined
+        return typeof found?.id === 'string' ? { id: found.id } : null
+      } catch (error) {
+        if (error instanceof OurRefusal && error.status === 404) return null
+        throw error
+      }
+    },
+    agreedRows: async (projectId, before) => {
       try {
         const rows = (await call(
           'GET',
-          `/api/apps/${encodeURIComponent(projectId)}/plan`,
+          `/api/apps/${encodeURIComponent(projectId)}/plan?before=${encodeURIComponent(before)}`,
         )) as { studentsSee?: unknown; whoGetsIn?: unknown } | undefined
         const { studentsSee, whoGetsIn } = rows ?? {}
         // A success without the two rows is not a plan: never drawn as one.

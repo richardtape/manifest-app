@@ -92,9 +92,10 @@ export function talkWords(reason: string | null): string {
 
 /**
  * THE SIGN-OFF, DRAWN: its row, and when it was not signed off, **[Talk it through]**. The press
- * mints a token in their session, named for the change, and sends our words, their reason and
- * the token to our server in one request (F4's *Ask for a change*); then the conversation, which
- * plans the change, agreed first. No server change: a change's words are words (Decision 9).
+ * opens the change already under way for this refusal, if there is one (the final review's I1,
+ * F4's I2 again); else it mints a token in their session, named for the change, and sends our
+ * words, their reason, the decision it answers and the token to our server in one request (F4's
+ * *Ask for a change*); then the conversation, which plans the change, agreed first.
  */
 export function SignOff({
   row,
@@ -115,13 +116,21 @@ export function SignOff({
   const [reference, setReference] = useState<string>()
 
   const talk = async () => {
-    const said = talkWords(
-      decided !== null && decided !== 'unread' ? decided.reason : null,
-    )
+    // Only a refusal read from its approval draws the button (signOffRow).
+    if (decided === null || decided === 'unread') return
+    const said = talkWords(decided.reason)
+    const opened = (id: string) =>
+      navigate(
+        `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(id)}`,
+      )
     setReference(undefined)
     setTalking(true)
-    let step = 'mintToken'
+    let step = 'changeForRefusal'
     try {
+      // Pressed again (the final review's I1): the change already under way for this refusal.
+      const under = await ours.changeForRefusal(project.id, decided.id)
+      if (under !== null) return opened(under.id)
+      step = 'mintToken'
       const minted = await platform.mintToken(
         project.id,
         mintRequest(said, 'changing'),
@@ -131,10 +140,9 @@ export function SignOff({
       const made = await ours.startChange(project.id, {
         words: said,
         token: minted.secret,
+        refusal: { approvalId: decided.id },
       })
-      navigate(
-        `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(made.id)}`,
-      )
+      opened(made.id)
     } catch (error) {
       setTalking(false)
       const failed = pressFailed(error, step)

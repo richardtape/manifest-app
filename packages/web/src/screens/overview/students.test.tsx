@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { Schemas } from '@manifest/contract'
+import { ManifestApiError, type Schemas } from '@manifest/contract'
 import { fixtures } from '@manifest/mock'
 import {
   act,
@@ -58,6 +58,8 @@ type World = {
   /** The checklist's own word on it (the carry note: the App's lookup is read once per slug). */
   launched: boolean
   rows: typeof ROWS | null | 'refused'
+  /** The versions cannot be read: nothing dates the one live. */
+  releaseRefused: boolean
 }
 
 function stage(world: Partial<World> = {}) {
@@ -65,6 +67,7 @@ function stage(world: Partial<World> = {}) {
     launchedAt: PROJECT.launchedAt ?? null,
     launched: true,
     rows: ROWS,
+    releaseRefused: false,
     ...world,
   }
   const calls: [string, ...unknown[]][] = []
@@ -86,7 +89,18 @@ function stage(world: Partial<World> = {}) {
       { ...PROJECT, launchedAt: w.launchedAt },
     ]),
     getProject: never,
-    getRelease: answer('getRelease', () => RELEASE),
+    getRelease: (...args: never[]) => {
+      calls.push(['getRelease', ...args])
+      return w.releaseRefused
+        ? Promise.reject(
+            new ManifestApiError(
+              500,
+              { error: { code: 'INTERNAL', message: 'x' } } as never,
+              'test',
+            ),
+          )
+        : Promise.resolve(RELEASE)
+    },
     listEnvironments: answer('listEnvironments', () => environments),
     listInstances: answer('listInstances', (environmentId: string) => ({
       environmentId,
@@ -132,8 +146,8 @@ function stage(world: Partial<World> = {}) {
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const theirs = {
-    agreedRows: (projectId: string) => {
-      calls.push(['agreedRows', projectId])
+    agreedRows: (projectId: string, before: string) => {
+      calls.push(['agreedRows', projectId, before])
       return w.rows === 'refused'
         ? Promise.reject(new OurRefusal('PLATFORM_UNAVAILABLE', 502))
         : Promise.resolve(w.rows)
@@ -259,6 +273,14 @@ describe('for your students: the address handed over (moment 15)', () => {
     expect(said.match(/anyone with a CWL/gi)).toHaveLength(1)
   })
 
+  it('a plan whose Who gets in only mentions anyone with a CWL in passing, or to deny it, keeps ours first (FE-20)', async () => {
+    const denying = 'Not anyone with a CWL: only you and your TAs can see the responses.'
+    await open(stage({ rows: { ...ROWS, whoGetsIn: denying } }))
+    expect(wordsOf(await handOver())).toContain(
+      `Anyone with a CWL can sign in, not only your class. ${denying}`,
+    )
+  })
+
   it('production’s two facts: serving the version from its day, and the last attempt the same', async () => {
     await open()
     const region = await handOver()
@@ -269,10 +291,19 @@ describe('for your students: the address handed over (moment 15)', () => {
     expect(said).toContain(words.preview.facts.same)
   })
 
-  it('asks our server for this app’s agreed plan, once, and no model', async () => {
+  it('asks our server, once, for the plan agreed by the time the version live was made, and no model (the final review’s I2)', async () => {
     const s = await open()
     await handOver()
-    expect(s.called('agreedRows')).toEqual([[PROJECT.id]])
+    expect(s.called('agreedRows')).toEqual([[PROJECT.id, RELEASE.createdAt]])
+  })
+
+  it('the version live cannot be dated: our server is not asked, and the message is ours alone', async () => {
+    const s = await open(stage({ releaseRefused: true }))
+    const region = await handOver()
+    expect(s.called('agreedRows')).toEqual([])
+    expect(message(region).value).toBe(
+      `Reading responses is here: ${URL_}. Sign in with your CWL.`,
+    )
   })
 
   it('no plan agreed (an app made elsewhere): the message and the line without their second parts', async () => {

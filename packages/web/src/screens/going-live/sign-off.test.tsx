@@ -206,6 +206,8 @@ const B = '66666666-6666-4666-8666-666666666666'
 type World = {
   readiness: Schemas['LaunchReadiness']
   approval: Schemas['Approval'] | null
+  /** The change already under way for the refusal, if any (the final review's I1). */
+  talking: string | null
 }
 const withSignOff = (
   state: Schemas['LaunchReadinessItem']['state'],
@@ -225,6 +227,7 @@ function stage(
   const w: World = {
     readiness: withSignOff('unmet'),
     approval: approval('rejected'),
+    talking: null,
     ...world,
   }
   const calls: [string, ...unknown[]][] = []
@@ -265,6 +268,9 @@ function stage(
   }
   const theirs = {
     startChange: answer('startChange', () => ({ id: 'conv-talk' })),
+    changeForRefusal: answer('changeForRefusal', () =>
+      w.talking === null ? null : { id: w.talking },
+    ),
   } as Record<string, unknown>
   // Every other call of ours stays quiet: the conversation page opened after the press reads.
   const ours = new Proxy(theirs, {
@@ -356,9 +362,46 @@ describe('the sign-off on Going live (moment 13)', () => {
       expiresInDays: 7,
     })
     expect(key).toMatch(/^[0-9a-f-]{36}$/)
+    expect(s.called('changeForRefusal')).toEqual([[PROJECT.id, fixtures.APPROVAL.id]])
     expect(s.called('startChange')).toEqual([
-      [PROJECT.id, { words: talkWords(REASON), token: TOKEN }],
+      [
+        PROJECT.id,
+        {
+          words: talkWords(REASON),
+          token: TOKEN,
+          refusal: { approvalId: fixtures.APPROVAL.id },
+        },
+      ],
     ])
+  })
+
+  it('pressed again, it opens the change already under way for that refusal: nothing minted, nothing started (the final review’s I1)', async () => {
+    const s = await open(stage({ talking: 'conv-earlier' }))
+    fireEvent.click(
+      within(await signOff()).getByRole('button', { name: 'Talk it through' }),
+    )
+    await waitFor(() =>
+      expect(window.location.pathname).toBe(`/apps/${SLUG}/conversations/conv-earlier`),
+    )
+    expect(s.called('mintToken')).toEqual([])
+    expect(s.called('startChange')).toEqual([])
+  })
+
+  it('our server not saying whether one is under way: says so, with a reference, and starts nothing', async () => {
+    const s = await open(
+      stage({}, { changeForRefusal: () => new OurRefusal('UNREACHABLE', null) }),
+    )
+    fireEvent.click(
+      within(await signOff()).getByRole('button', { name: 'Talk it through' }),
+    )
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain(a.couldntTalk)
+    expect(reports[0]).toMatchObject({
+      code: 'UNREACHABLE',
+      operation: 'changeForRefusal',
+    })
+    expect(s.called('mintToken')).toEqual([])
+    expect(s.called('startChange')).toEqual([])
   })
 
   it('a press our server refuses says so with a reference, reported once, and the button is back', async () => {

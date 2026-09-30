@@ -757,6 +757,42 @@ describe('the plan agreed on an app (F5 Task 9, the hand-over)', () => {
     expect(store.agreedPlanOn(PROJECT, ALICE.id)).toEqual(plan('changed, corrected'))
   })
 
+  it('the latest by when it was agreed, whichever conversation: a first build agreed again after a change', async () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const built = onApp(store, ALICE.id)
+    store.savePlan(built.id, plan('first'))
+    agree(store, built.id, 1)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const change = store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    store.savePlan(change.id, plan('changed'))
+    agree(store, change.id, 1)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    store.savePlan(built.id, plan('first, again'))
+    agree(store, built.id, 2)
+    expect(store.agreedPlanOn(PROJECT, ALICE.id)).toEqual(plan('first, again'))
+  })
+
+  it('agreed by a moment: the agreement made at or before it, for the version live (the final review’s I2)', async () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const built = onApp(store, ALICE.id)
+    store.savePlan(built.id, plan('launched'))
+    agree(store, built.id, 1)
+    const first = store.listMessages(built.id).at(-1)!.at
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const change = store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    store.savePlan(change.id, plan('on the draft only'))
+    agree(store, change.id, 1)
+    const second = store.listMessages(change.id).at(-1)!.at
+    expect(store.agreedPlanOn(PROJECT, ALICE.id, first)).toEqual(plan('launched'))
+    expect(store.agreedPlanOn(PROJECT, ALICE.id, second)).toEqual(
+      plan('on the draft only'),
+    )
+    const before = new Date(Date.parse(first) - 1).toISOString()
+    expect(store.agreedPlanOn(PROJECT, ALICE.id, before)).toBeUndefined()
+  })
+
   it('nothing agreed, another person’s, another app’s: none', () => {
     const { store } = fresh()
     store.rememberPerson(ALICE)
@@ -773,5 +809,48 @@ describe('the plan agreed on an app (F5 Task 9, the hand-over)', () => {
     agree(store, elsewhere.id, 1)
     expect(store.agreedPlanOn(PROJECT, ALICE.id)).toBeUndefined()
     expect(store.agreedPlanOn(OTHER, ALICE.id)).toEqual(plan('elsewhere'))
+  })
+})
+
+describe('a change that answers a refusal (F5 Task 8, the final review’s I1)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const OTHER = '99999999-9999-4999-8999-999999999999'
+  const talked = (
+    store: Store,
+    personId: string,
+    approvalId: string,
+    projectId = PROJECT,
+  ) => {
+    const made = store.createChange(
+      personId,
+      projectId,
+      'A Manifest administrator…',
+      WORDS,
+    )
+    store.addMessage(made.id, 'person', {
+      kind: 'asked',
+      change: 1,
+      words: WORDS,
+      fix: null,
+      refusal: { approvalId },
+    })
+    return made
+  }
+
+  it('is found by the decision it answers: the newest, never one set aside, another person’s or another app’s', async () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    store.rememberPerson(BOB)
+    const older = talked(store, ALICE.id, 'approval-a')
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const newer = talked(store, ALICE.id, 'approval-a')
+    expect(store.changeForRefusal(PROJECT, 'approval-a', ALICE.id)).toBe(newer.id)
+    store.setState(newer.id, 'set-aside')
+    expect(store.changeForRefusal(PROJECT, 'approval-a', ALICE.id)).toBe(older.id)
+    talked(store, BOB.id, 'approval-b')
+    talked(store, ALICE.id, 'approval-c', OTHER)
+    expect(store.changeForRefusal(PROJECT, 'approval-b', ALICE.id)).toBeUndefined()
+    expect(store.changeForRefusal(PROJECT, 'approval-c', ALICE.id)).toBeUndefined()
+    expect(store.changeForRefusal(PROJECT, 'approval-z', ALICE.id)).toBeUndefined()
   })
 })

@@ -70,6 +70,15 @@ export interface Store {
    * [What went wrong] pressed again opens it (the whole-branch review's I2).
    */
   fixFor(projectId: string, incidentId: string, personId: string): string | undefined
+  /**
+   * The person's change answering this administrator's refusal, the latest, unless it was set
+   * aside: so *[Talk it through]* pressed again opens it (F5 Task 8, the final review's I1).
+   */
+  changeForRefusal(
+    projectId: string,
+    approvalId: string,
+    personId: string,
+  ): string | undefined
   /** `body` is our structured JSON. */
   addMessage(conversationId: string, from: Sender, body: unknown): void
   listMessages(conversationId: string): { from: Sender; body: unknown; at: string }[]
@@ -78,9 +87,10 @@ export interface Store {
   latestPlan(conversationId: string): { version: number; plan: unknown } | undefined
   /**
    * THE PLAN AGREED ON AN APP (F5 Task 9): the version the person's latest *Yes* named, on any of
-   * their conversations on it (a first build's, or a change's since). Theirs alone.
+   * their conversations on it (a first build's, or a change's since). Theirs alone. `before` (an
+   * ISO moment, as `toISOString` writes one) keeps to the agreements made at or before it.
    */
-  agreedPlanOn(projectId: string, personId: string): unknown | undefined
+  agreedPlanOn(projectId: string, personId: string, before?: string): unknown | undefined
   /** False, and nothing written, when the reference is already recorded. */
   recordProblem(problem: Problem): boolean
   /** F3 Decision 10: a round's run, saved after every move. A second save replaces the first. */

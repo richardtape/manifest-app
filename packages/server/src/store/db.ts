@@ -196,6 +196,20 @@ export function openStore(file: string): Store {
       return row?.id
     },
 
+    changeForRefusal(projectId, approvalId, personId) {
+      const row = db
+        .prepare(
+          `select conversations.id from messages join conversations on conversations.id = messages.conversation_id
+           where conversations.project_id = ? and conversations.person_id = ?
+             and conversations.state != 'set-aside'
+             and json_extract(messages.body, '$.kind') = 'asked'
+             and json_extract(messages.body, '$.refusal.approvalId') = ?
+           order by conversations.created_at desc, conversations.rowid desc limit 1`,
+        )
+        .get(projectId, personId, approvalId) as { id: string } | undefined
+      return row?.id
+    },
+
     addMessage(conversationId, from, body) {
       db.prepare(
         `insert into messages (conversation_id, seq, sender, body, at)
@@ -240,7 +254,7 @@ export function openStore(file: string): Store {
         : { version: row.version, plan: JSON.parse(row.body) }
     },
 
-    agreedPlanOn(projectId, personId) {
+    agreedPlanOn(projectId, personId, before) {
       const row = db
         .prepare(
           `select plans.body from messages
@@ -249,11 +263,13 @@ export function openStore(file: string): Store {
              and plans.version = json_extract(messages.body, '$.version')
            where conversations.project_id = ? and conversations.person_id = ?
              and json_extract(messages.body, '$.kind') = 'agreed'
+             and (? is null or messages.at <= ?)
            order by messages.at desc, conversations.created_at desc, conversations.rowid desc,
              messages.seq desc
            limit 1`,
         )
-        .get(projectId, personId) as { body: string } | undefined
+        .get(projectId, personId, before ?? null, before ?? null) as
+        { body: string } | undefined
       return row === undefined ? undefined : JSON.parse(row.body)
     },
 

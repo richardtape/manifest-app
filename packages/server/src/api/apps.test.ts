@@ -687,6 +687,47 @@ describe('GET /api/apps/:projectId/plan: the hand-over’s two rows (F5 Task 9, 
     })
   })
 
+  it('for the version live: the plan agreed at or before the moment it was made, never one agreed since (the final review’s I2)', async () => {
+    const s = setUp()
+    const built = first(s, 'built', 'done')
+    s.store.savePlan(built.id, plan('launched'))
+    agree(s, built.id, 1)
+    const at = s.store.listMessages(built.id).at(-1)!.at
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const change = s.store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    s.store.savePlan(change.id, plan('draft only'))
+    agree(s, change.id, 1)
+    const release = new Date(Date.parse(at) + 2).toISOString()
+    const answer = await s.get(
+      `/api/apps/${PROJECT}/plan?before=${encodeURIComponent(release)}`,
+    )
+    expect(answer.json()).toEqual({
+      studentsSee: plan('launched').studentsSee,
+      whoGetsIn: plan('launched').whoGetsIn,
+    })
+    // The platform's own form of a moment (no milliseconds) is read as a moment too.
+    const plain = `${new Date(Date.parse(at) + 60_000).toISOString().slice(0, 19)}Z`
+    expect(
+      (
+        await s.get(`/api/apps/${PROJECT}/plan?before=${encodeURIComponent(plain)}`)
+      ).json(),
+    ).toMatchObject({ studentsSee: plan('draft only').studentsSee })
+    const early = new Date(Date.parse(at) - 60_000).toISOString()
+    expect((await s.get(`/api/apps/${PROJECT}/plan?before=${early}`)).statusCode).toBe(
+      404,
+    )
+  })
+
+  it.each(['yesterday', '2026-13-01T00:00:00Z', ''])(
+    'a moment that is not one (%s): 400',
+    async (before) => {
+      const s = setUp()
+      const answer = await s.get(`/api/apps/${PROJECT}/plan?before=${before}`)
+      expect(answer.statusCode).toBe(400)
+      expect(answer.json()).toEqual({ error: { code: 'PLAN_QUERY_INVALID' } })
+    },
+  )
+
   it('a plan written and never agreed: 404', async () => {
     const s = setUp()
     const built = first(s, 'plan-ready')
@@ -746,5 +787,68 @@ describe('GET /api/apps/:projectId/plan: the hand-over’s two rows (F5 Task 9, 
       })
     expect((await post(STUDENT_APP)).statusCode).toBe(404)
     expect((await post(ORIGIN)).statusCode).toBe(404)
+  })
+})
+
+describe('Talk it through: a change that answers a refusal, and finding it again (F5 Task 8, the final review’s I1)', () => {
+  const APPROVAL = '55555555-5555-4555-8555-555555555555'
+  const SAID = 'A Manifest administrator didn’t sign it off, and said: ‘It keeps emails.’'
+
+  it('carries the decision it answers, beside their words, and is otherwise a change like any other', async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answer = await s.ask({
+      words: SAID,
+      token: GOOD,
+      refusal: { approvalId: APPROVAL },
+    })
+    expect(answer.statusCode).toBe(201)
+    const made = answer.json() as Conversation
+    const asked = s.store
+      .listMessages(made.id)
+      .map((m) => m.body as { kind?: string })
+      .find((b) => b.kind === 'asked')
+    expect(asked).toEqual({
+      kind: 'asked',
+      change: 1,
+      words: SAID,
+      fix: null,
+      refusal: { approvalId: APPROVAL },
+    })
+    expect(pieceOf(s.store, made.id)).toMatchObject({ kind: 'change', asked: [SAID] })
+  })
+
+  it.each([
+    [{ words: SAID, token: GOOD, refusal: { approvalId: 'not-an-id' } }],
+    [{ words: SAID, token: GOOD, refusal: { approvalId: APPROVAL, more: 1 } }],
+    [{ words: SAID, token: GOOD, refusal: APPROVAL }],
+    [{ words: SAID, token: GOOD, other: { approvalId: APPROVAL } }],
+    [{ fix: { incidentId: INCIDENT }, token: GOOD, refusal: { approvalId: APPROVAL } }],
+  ])('anything else beside the words is refused: %o', async (body) => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answer = await s.ask(body)
+    expect(answer.statusCode).toBe(400)
+    expect(answer.json()).toEqual({ error: { code: 'CHANGE_INVALID' } })
+  })
+
+  it('answers the change under way for that refusal, so the press opens it again; set aside, another person’s, or none, is 404', async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const mine = (
+      await s.ask({ words: SAID, token: GOOD, refusal: { approvalId: APPROVAL } })
+    ).json() as Conversation
+    const url = (approval: string) =>
+      `/api/apps/${PROJECT}/refusals/${approval}/conversation`
+    const found = await s.get(url(APPROVAL))
+    expect(found.statusCode).toBe(200)
+    expect(found.json()).toEqual({ id: mine.id })
+    expect((await s.get(url(APPROVAL), AS_BOB)).statusCode).toBe(404)
+    expect((await s.get(url(ANOTHER))).statusCode).toBe(404)
+    expect((await s.get(url(APPROVAL), '')).statusCode).toBe(401)
+    s.store.setState(mine.id, 'set-aside')
+    const aside = await s.get(url(APPROVAL))
+    expect(aside.statusCode).toBe(404)
+    expect(aside.json()).toEqual({ error: { code: 'NOT_FOUND' } })
   })
 })
