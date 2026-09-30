@@ -39,6 +39,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Decided by Rich, 2026-09-29** (relayed by `manifest-8b`; the platform's next plan builds each, with a spec action) | **FE-11**, **FE-36** | Removing a member; a session whose project went confidential | **FE-11: removing a member revokes that member's tokens on the project and ends their agent sessions** (not built yet; with FE-33 their streams close too). **FE-36 changes: a session holding a model its project no longer allows has its key TRIMMED in place** (the withdrawn models removed) and stays active, ended only when nothing it may use is left (measured first: does LiteLLM's `/key/update` narrow a live key at once). Until it ships, `models_withdrawn` as today. Meanwhile (F4 sitting 7, at Rich's click, **Rich's decision**): our round starts a new session itself after `models_withdrawn`, carries on when it still lists the model we were using, and asks first only when that model is gone (`5a1aa1f`) |
 | **The platform's next sitting** (`manifest-63`, opened 2026-09-29, 13:00) | — | Real GitHub | Rich set `MANIFEST_SOURCE_DRIVER=github` in manifest's `.env`. The next plan's Task 1 restarts 7100 onto driver 2 against **real GitHub**: every driver-1 project then answers `409 SOURCE_PROVIDER_MISMATCH` on source operations (a restart back onto driver 1 restores them), and **anything created through 7100 makes a real private repository on github.com that nothing deletes**. Told by F4's sitting 7 that 7100 is free for it; whether the two acceptance projects are kept usable is Rich's word |
 | **Decided by Rich, 2026-09-29, to carry** (after F4's close; the platform's launch-path plan was being written) | **FE-39** | Only faculty build, for now; and administrators | **Written and decided the same day** (walk-through D7): the platform decides who may build (faculty by CWL's `eduPersonAffiliation`, administrators by a prescribed list **by PUID** in its settings; someone who stops being faculty keeps their apps and starts nothing new), refuses `createProject`, `startIntakeSession` and `addMember` to anyone else with a code of its own, and `getMe` answers the decision (`mayBuild`). Rich: *"the platform, because this would then also work for agentic use"*. **Carried at Rich's word, 2026-09-29**, to `manifest-63`, for the launch-path plan while it is open |
+| **Decided by Rich, 2026-09-29, to carry** (while F5 was written, `manifest-app-ce`; the platform's launch-path sitting 2 was running) | **FE-40** | The mock cannot play a launch: its checklist is never ready for a first launch, it never asks for step-up, and its approval and dry run each answer one fixture | **File it, and carry it now** (Rich, 2026-09-29): opt-in switches in the mock, for the launch path's Task 13, which already changes the mock. F5 never waits on it |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -1085,6 +1086,45 @@ word the same day** to the platform session (`manifest-63`), for its launch-path
   keeps their memberships and tokens, and starts nothing new** (a course app mid-term keeps its owner). Our part
   follows: the *not available* screen for someone with no apps, *Your apps* without *Start something new* for someone
   who keeps apps, and our server refusing only a new start.
+
+### FE-40 — The mock cannot play a launch: never ready, never a step-up, one approval and one dry run
+
+*Found 2026-09-29 while F5 (moments 10–15) was written with Rich (`manifest-app-ce`), against manifest's working tree
+at `20838d4` (contract 1.4.0, 66 operations). **Decided by Rich the same day:** file it, and carry it now.*
+
+- **Screen and moment:** *Going live* (moments 11–14): the checklist, the dry run, the sign-off, and *Let your students
+  in* with its step-up.
+- **What we would call:** `getLaunchReadiness`, `runRehearsal`, `getApproval` and `deploy` to production, from the
+  person's session in the browser, and `/auth/step-up` when `deploy` answers `403 STEP_UP_REQUIRED`: exactly as on the
+  platform.
+- **What is missing, in the mock** (`packages/mock/src/server.ts` and `fixtures.ts`, read 2026-09-29 ✓):
+  - **A first launch is never ready.** `LAUNCH_READINESS` is `ready: false` (`fixtures.ts:623-629`). The one ready
+    checklist, `SELF_SERVE_READINESS`, is a LAUNCHED app's (`launched: true`, `:695-704`). So *Let your students in*
+    can never be offered in mock mode.
+  - **No step-up, by design** ✓ (`server.ts:45-47`: *"WHAT IT DELIBERATELY DOES NOT ENFORCE: … §20's STEP-UP"*). A
+    production `deploy` is never answered `STEP_UP_REQUIRED`, and the mock has no `/auth/step-up`.
+  - **A production deploy answers staging's fixture** ✓ (`:250-257`: *"Production still answers staging's fixture —
+    the mock scripts no launch"*).
+  - **One approval, always approved** ✓ (`:426-435`: *"A screen that needs a REJECTED approval drives the platform,
+    not this"*): no `404` before a decision, and no rejection with a reason.
+  - **One dry run, always passed** ✓ (`:407-412`, `f.REHEARSAL`, `passed: true`): no failure and its evidence.
+- **Why it matters:** every other moment is walked and checked in mock mode before the real platform, and each of
+  F2–F4's acceptance scripts runs there. Moment 14's step-up is the one place a person proves who they are, and it
+  could only ever be seen on 7100, where each project is now a real repository on GitHub. Meanwhile F5 asserts what
+  it SENT against a recording fake (ORIENTATION §7), and its browser walks rewrite the mock's answers in DevTools, as F4
+  sitting 6 did for trying-out.
+- **Options:**
+  - **(a) Recommended, and decided by Rich:** opt-in switches, like `MANIFEST_MOCK_LAUNCHED`, so the mock's defaults
+    and the console's tests stay as they are (the names are the platform's to choose):
+    - a first launch that is ready (`ready: true`, `launched: false`, every blocking item met), with a production
+      `deploy` that answers a production instance of its own;
+    - a production `deploy` (and a production secret) answered `403 STEP_UP_REQUIRED` until the session has stepped
+      up, and an `/auth/step-up` that steps it up and redirects to `returnTo`;
+    - `getApproval` answered `404` before a decision, and a rejection with a reason;
+    - `runRehearsal` answered `passed: false`, with evidence shaped as the platform's.
+  - (b) Nothing: F5's mock-mode checks stay on recording fakes and rewritten answers.
+- **When:** the platform's launch-path plan, **Task 13** (sitting 10), which already scripts the mock's drafts,
+  submissions, requests and queue. F5 never waits on it; F5b's acceptance would use it.
 
 ## Not a gap: decisions that are Rich's
 
