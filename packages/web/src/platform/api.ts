@@ -131,6 +131,12 @@ export interface Platform {
 export const READ_TIMEOUT_MS = 15_000
 /** A deploy answers once it has proved itself, up to about 90 s (F3 Decision 17's reason). */
 export const DEPLOY_TIMEOUT_MS = 120_000
+/**
+ * A create answers once its repository is seeded: on real GitHub, 8–11 s, and up to ~30 s more
+ * while GitHub refuses a repository it made seconds ago (FE-41's fix retries it). The platform
+ * says never to time one out under ~60 s.
+ */
+export const CREATE_TIMEOUT_MS = 90_000
 
 export function createPlatform(options: {
   origin: string
@@ -150,6 +156,7 @@ export function createPlatform(options: {
     })
   const client = clientWith(timeoutMs)
   const deploys = clientWith(DEPLOY_TIMEOUT_MS)
+  const creates = clientWith(CREATE_TIMEOUT_MS)
   return {
     async getMe() {
       return unwrap(await client.GET('/v1/me'), 'getMe')
@@ -225,7 +232,7 @@ export function createPlatform(options: {
     },
     async createProject(body, idempotencyKey) {
       return unwrap(
-        await client.POST('/v1/projects', {
+        await creates.POST('/v1/projects', {
           params: { header: { 'Idempotency-Key': idempotencyKey } },
           body,
         }),

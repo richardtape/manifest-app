@@ -2,7 +2,12 @@ import { ManifestApiError, type ErrorEnvelope } from '@manifest/contract'
 import { createMockServer, fixtures } from '@manifest/mock'
 import { createServer } from 'node:http'
 import { describe, expect, it, vi } from 'vitest'
-import { createPlatform, DEPLOY_TIMEOUT_MS, READ_TIMEOUT_MS } from './api.js'
+import {
+  CREATE_TIMEOUT_MS,
+  createPlatform,
+  DEPLOY_TIMEOUT_MS,
+  READ_TIMEOUT_MS,
+} from './api.js'
 import { refusalOf } from './refusal.js'
 
 /**
@@ -299,6 +304,26 @@ describe('Make it (F2 Task 8), against manifest-mock', () => {
       watch.close()
       expect(types).toEqual(['project.created', 'repository.seeded', 'spec.validated'])
     })
+  })
+
+  it('a create has a deadline of its own, 90 s: on real GitHub it may take ~40 s, and the platform says never under ~60 s (FE-41, as its sitting 4 landed)', async () => {
+    const deadlines = vi.spyOn(AbortSignal, 'timeout')
+    try {
+      await withMock(async (origin) => {
+        const p = platform(origin)
+        await p.listBlueprints()
+        await p.createProject(REQUEST, 'make-0090')
+        await p.checkSlug('reading-responses')
+      })
+      expect(CREATE_TIMEOUT_MS).toBe(90_000)
+      expect(deadlines.mock.calls.map(([ms]) => ms)).toEqual([
+        READ_TIMEOUT_MS,
+        CREATE_TIMEOUT_MS,
+        READ_TIMEOUT_MS,
+      ])
+    } finally {
+      deadlines.mockRestore()
+    }
   })
 
   it('createProject and mintToken send the body and the Idempotency-Key they are given', async () => {
