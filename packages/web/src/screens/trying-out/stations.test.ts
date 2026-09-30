@@ -18,6 +18,7 @@ const summary = (
   kind: 'web',
   state,
   lastSeenAt: null,
+  createdAt: '2026-09-29T05:00:00.000Z',
   serving,
 })
 const states = (instance: { state: State } | null) =>

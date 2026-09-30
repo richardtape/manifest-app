@@ -54,7 +54,7 @@ async function read(
       if (tab === undefined) return undefined
       const { instances } = await platform.listInstances(env.id)
       const read = await Promise.allSettled(
-        releasesToRead(env, instances).map((id) => platform.getRelease(id)),
+        releasesToRead(env).map((id) => platform.getRelease(id)),
       )
       for (const r of read)
         if (r.status === 'rejected') {
@@ -68,7 +68,7 @@ async function read(
           r.status === 'fulfilled' ? [[r.value.id, r.value] as const] : [],
         ),
       )
-      const incidents = needsIncidents(env, instances, releases)
+      const incidents = needsIncidents(env, instances)
         ? (await platform.listIncidents(env.id)).incidents
         : []
       const release =
@@ -78,7 +78,7 @@ async function read(
         {
           env,
           serving: servingFact(env, release, timeZone),
-          attempt: attemptFact(env, instances, incidents, releases, now, timeZone),
+          attempt: attemptFact(env, instances, incidents, now, timeZone),
         },
       ]
     }),

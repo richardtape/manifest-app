@@ -63,6 +63,8 @@ const summary = (
   kind: 'web',
   state,
   lastSeenAt: state === 'healthy' ? '2026-09-28T23:13:00.000Z' : null,
+  // Made when its version was, the order F4's flows produce (FE-38: contract 1.5.0).
+  createdAt: RELEASES.find((r) => r.id === releaseId)!.createdAt,
   serving,
 })
 const environment = (
@@ -84,6 +86,7 @@ const environment = (
           kind: serving.kind,
           state: serving.state,
           lastSeenAt: serving.lastSeenAt,
+          createdAt: serving.createdAt,
         },
 })
 

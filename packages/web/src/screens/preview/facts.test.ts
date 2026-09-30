@@ -7,9 +7,9 @@ import { agoWords, attemptFact, releasesToRead, servingFact } from './facts.js'
  * THE TWO FACTS, FOR ONE ADDRESS (F4 Task 5, walk-through moment 7). *Serving right now* is the
  * environment's own `instance`, "the instance the hostname reaches", never `listInstances`' first
  * entry. *The last attempt* cannot be read from the list's order: it is "the one seen most
- * recently first" (F4 sitting 1, M3: a new instance was listed SECOND while it started), and an
- * instance carries no time of its own (FE-38). So a failed attempt is the last one when its
- * version is newer than the one serving; the same version failing is an earlier try.
+ * recently first" (F4 sitting 1, M3: a new instance was listed SECOND while it started). Since
+ * contract 1.5.0 an instance carries when the deploy made it (FE-38), so a failed attempt is the
+ * last one when it was made after the one serving, whatever its version.
  */
 const TZ = 'America/Vancouver'
 const f = words.preview.facts
@@ -19,15 +19,16 @@ const release = (id: string, createdAt: string): Schemas['Release'] =>
   ({ id, createdAt }) as Schemas['Release']
 const OLD = release('r-old', '2026-09-28T22:12:00.000Z') // 3:12pm in Vancouver
 const NEW = release('r-new', '2026-09-28T23:00:00.000Z')
-const RELEASES = new Map([
-  [OLD.id, OLD],
-  [NEW.id, NEW],
-])
+
+/** A time on 28 September, UTC. */
+const at = (hhmm: string) => `2026-09-28T${hhmm}:00.000Z`
 
 const instance = (
   id: string,
   releaseId: string,
   state: Schemas['Instance']['state'],
+  /** When the deploy made it (FE-38). */
+  made: string,
   serving = false,
 ): Schemas['InstanceSummary'] => ({
   id,
@@ -36,6 +37,7 @@ const instance = (
   kind: 'web',
   state,
   lastSeenAt: state === 'healthy' ? '2026-09-28T23:10:00.000Z' : null,
+  createdAt: made,
   serving,
 })
 const env = (
@@ -57,6 +59,7 @@ const env = (
           kind: serving.kind,
           state: serving.state,
           lastSeenAt: serving.lastSeenAt,
+          createdAt: serving.createdAt,
         },
 })
 const incident = (instanceId: string, createdAt: string): Schemas['Incident'] => ({
@@ -74,7 +77,7 @@ const NOW = new Date('2026-09-28T23:14:00.000Z')
 
 describe('serving right now', () => {
   it("is the address's own instance, with its version's date", () => {
-    const serving = instance('i-1', OLD.id, 'healthy', true)
+    const serving = instance('i-1', OLD.id, 'healthy', at('22:15'), true)
     expect(servingFact(env('sandbox', serving), OLD, TZ)).toEqual({
       words: 'The version from 28 September, 3:12pm',
       tone: 'steady',
@@ -93,7 +96,7 @@ describe('serving right now', () => {
   })
 
   it('a version whose date cannot be read is still answering, without a date', () => {
-    const serving = instance('i-1', OLD.id, 'healthy', true)
+    const serving = instance('i-1', OLD.id, 'healthy', at('22:15'), true)
     expect(servingFact(env('sandbox', serving), undefined, TZ)).toEqual({
       words: words.facts.answering,
       tone: 'steady',
@@ -101,17 +104,15 @@ describe('serving right now', () => {
   })
 
   it('an address reaching one that is not answering says so in our words', () => {
-    const asleep = instance('i-1', OLD.id, 'hibernated', true)
+    const asleep = instance('i-1', OLD.id, 'hibernated', at('22:15'), true)
     expect(servingFact(env('sandbox', asleep), OLD, TZ).words).toBe(words.facts.asleep)
   })
 })
 
 describe('the last attempt', () => {
   it('is the same version when the one serving was the last to go there', () => {
-    const serving = instance('i-1', OLD.id, 'healthy', true)
-    expect(
-      attemptFact(env('sandbox', serving), [serving], [], RELEASES, NOW, TZ),
-    ).toEqual({
+    const serving = instance('i-1', OLD.id, 'healthy', at('22:15'), true)
+    expect(attemptFact(env('sandbox', serving), [serving], [], NOW, TZ)).toEqual({
       words: f.same,
       tone: 'steady',
       failed: false,
@@ -122,8 +123,8 @@ describe('the last attempt', () => {
   })
 
   it('a newer version that failed: "didn\'t start, 4 minutes ago", from its incident, listed second or first', () => {
-    const serving = instance('i-1', OLD.id, 'healthy', true)
-    const failed = instance('i-2', NEW.id, 'failed')
+    const serving = instance('i-1', OLD.id, 'healthy', at('22:15'), true)
+    const failed = instance('i-2', NEW.id, 'failed', at('23:05'))
     const incidents = [incident('i-2', '2026-09-28T23:10:00.000Z')]
     const expected = {
       words: "Didn't start, 4 minutes ago. Nobody lost anything.",
@@ -138,15 +139,15 @@ describe('the last attempt', () => {
       [serving, failed],
       [failed, serving],
     ])
-      expect(
-        attemptFact(env('sandbox', serving), list, incidents, RELEASES, NOW, TZ),
-      ).toEqual(expected)
+      expect(attemptFact(env('sandbox', serving), list, incidents, NOW, TZ)).toEqual(
+        expected,
+      )
   })
 
-  it('an EARLIER failure is not the last attempt: an older version, or the same one tried again', () => {
-    const serving = instance('i-1', NEW.id, 'healthy', true)
-    const older = instance('i-0', OLD.id, 'failed')
-    const sameAgain = instance('i-9', NEW.id, 'failed')
+  it('a failure made BEFORE the one serving is not the last attempt, whatever its version', () => {
+    const serving = instance('i-1', NEW.id, 'healthy', at('23:08'), true)
+    const older = instance('i-0', OLD.id, 'failed', at('22:25'))
+    const sameAgain = instance('i-9', NEW.id, 'failed', at('23:02'))
     const incidents = [
       incident('i-9', '2026-09-28T23:05:00.000Z'),
       incident('i-0', '2026-09-28T22:30:00.000Z'),
@@ -156,7 +157,6 @@ describe('the last attempt', () => {
         env('sandbox', serving),
         [serving, sameAgain, older],
         incidents,
-        RELEASES,
         NOW,
         TZ,
       ),
@@ -164,59 +164,103 @@ describe('the last attempt', () => {
   })
 
   it('an attempt on its way up is under way, wherever the list puts it', () => {
-    const serving = instance('i-1', OLD.id, 'healthy', true)
+    const serving = instance('i-1', OLD.id, 'healthy', at('22:15'), true)
     for (const state of ['pending', 'building', 'provisioning', 'starting'] as const) {
-      const rising = instance('i-2', NEW.id, state)
+      const rising = instance('i-2', NEW.id, state, at('23:13'))
       for (const list of [
         [serving, rising],
         [rising, serving],
       ])
-        expect(attemptFact(env('sandbox', serving), list, [], RELEASES, NOW, TZ)).toEqual(
-          {
-            words: f.underWay,
-            tone: 'working',
-            failed: false,
-            instanceId: 'i-2',
-            incidentId: null,
-          },
-        )
+        expect(attemptFact(env('sandbox', serving), list, [], NOW, TZ)).toEqual({
+          words: f.underWay,
+          tone: 'working',
+          failed: false,
+          instanceId: 'i-2',
+          incidentId: null,
+        })
     }
     expect(f.underWay).toBe('Under way, started a moment ago.')
   })
 
   it('with nothing serving, a failure is the last attempt; with nothing tried, there is none', () => {
-    const failed = instance('i-2', NEW.id, 'failed')
+    const failed = instance('i-2', NEW.id, 'failed', at('23:05'))
     expect(
       attemptFact(
         env('sandbox', null),
         [failed],
         [incident('i-2', '2026-09-28T23:10:00.000Z')],
-        RELEASES,
         NOW,
         TZ,
       ),
     ).toMatchObject({ failed: true, instanceId: 'i-2' })
-    expect(attemptFact(env('production', null), [], [], RELEASES, NOW, TZ)).toBeNull()
+    expect(attemptFact(env('production', null), [], [], NOW, TZ)).toBeNull()
+  })
+
+  it('a newer version that failed before an older one was put back is not the last attempt (FE-38: a rollback)', () => {
+    const failed = instance('i-2', NEW.id, 'failed', at('23:05'))
+    const putBack = instance('i-3', OLD.id, 'healthy', at('23:10'), true)
+    expect(
+      attemptFact(
+        env('sandbox', putBack),
+        [putBack, failed],
+        [incident('i-2', at('23:06'))],
+        NOW,
+        TZ,
+      ),
+    ).toMatchObject({ words: f.same, failed: false, instanceId: 'i-3' })
+  })
+
+  it('the same version failing AFTER the one serving is the last attempt', () => {
+    const serving = instance('i-1', NEW.id, 'healthy', at('23:01'), true)
+    const again = instance('i-9', NEW.id, 'failed', at('23:10'))
+    expect(
+      attemptFact(
+        env('sandbox', serving),
+        [serving, again],
+        [incident('i-9', at('23:11'))],
+        NOW,
+        TZ,
+      ),
+    ).toMatchObject({ failed: true, instanceId: 'i-9', incidentId: 'incident-i-9' })
+  })
+
+  it('of several failures after the one serving, the last is the newest made, even before its incident is written', () => {
+    const serving = instance('i-1', OLD.id, 'healthy', at('22:15'), true)
+    const first = instance('i-2', NEW.id, 'failed', at('23:05'))
+    const second = instance('i-4', NEW.id, 'failed', at('23:09'))
+    for (const list of [
+      [serving, first, second],
+      [serving, second, first],
+    ])
+      expect(
+        attemptFact(
+          env('sandbox', serving),
+          list,
+          [incident('i-2', at('23:06'))],
+          NOW,
+          TZ,
+        ),
+      ).toMatchObject({
+        words: "Didn't start. Nobody lost anything.",
+        failed: true,
+        instanceId: 'i-4',
+        incidentId: null,
+      })
   })
 
   it('a failure with no incident to date it still says it did not start', () => {
-    const failed = instance('i-2', NEW.id, 'failed')
-    expect(
-      attemptFact(env('sandbox', null), [failed], [], RELEASES, NOW, TZ),
-    ).toMatchObject({
+    const failed = instance('i-2', NEW.id, 'failed', at('23:05'))
+    expect(attemptFact(env('sandbox', null), [failed], [], NOW, TZ)).toMatchObject({
       words: "Didn't start. Nobody lost anything.",
       failed: true,
       incidentId: null,
     })
   })
 
-  it('names the versions it must read: the one serving, and each that failed', () => {
-    const serving = instance('i-1', OLD.id, 'healthy', true)
-    const failed = instance('i-2', NEW.id, 'failed')
-    const again = instance('i-3', NEW.id, 'failed')
-    expect(
-      releasesToRead(env('sandbox', serving), [serving, failed, again]).sort(),
-    ).toEqual(['r-new', 'r-old'])
+  it('names the one version it must read, the one serving: a failure is dated by its own instance (FE-38)', () => {
+    const serving = instance('i-1', OLD.id, 'healthy', at('22:15'), true)
+    expect(releasesToRead(env('sandbox', serving))).toEqual(['r-old'])
+    expect(releasesToRead(env('sandbox', null))).toEqual([])
   })
 })
 

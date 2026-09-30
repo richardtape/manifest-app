@@ -68,6 +68,8 @@ const summary = (
   kind: 'web',
   state,
   lastSeenAt: state === 'healthy' ? '2026-09-29T04:59:00.000Z' : null,
+  // Made when its version was, the order F4's flows produce (FE-38: contract 1.5.0).
+  createdAt: RELEASES.find((r) => r.id === releaseId)!.createdAt,
   serving,
 })
 const bare = (i: Schemas['InstanceSummary']): Schemas['Instance'] => ({
@@ -77,6 +79,7 @@ const bare = (i: Schemas['InstanceSummary']): Schemas['Instance'] => ({
   kind: i.kind,
   state: i.state,
   lastSeenAt: i.lastSeenAt,
+  createdAt: i.createdAt,
 })
 const environment = (
   kind: Kind,

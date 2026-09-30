@@ -57,29 +57,25 @@ export function servingFact(
   }
 }
 
-/** Whether `failed` came after the version serving: by the versions' own dates (FE-38). */
+/**
+ * Whether `failed` came after the one serving: by when each was made (FE-38, contract 1.5.0),
+ * whatever their versions, so a version put back after a newer one failed reads as the last.
+ */
 function after(
   failed: Schemas['InstanceSummary'],
   serving: Schemas['Instance'] | null,
-  releases: ReadonlyMap<string, Schemas['Release']>,
 ): boolean {
   if (serving === null || failed.id === serving.id) return true
-  // The same version failing is an earlier try: a failed instance never serves, so the one
-  // serving went there after it (and trying-out never puts the version already there, Task 10).
-  if (failed.releaseId === serving.releaseId) return false
-  const tried = releases.get(failed.releaseId)?.createdAt
-  const serves = releases.get(serving.releaseId)?.createdAt
-  if (tried === undefined || serves === undefined) return false
-  return Date.parse(tried) > Date.parse(serves)
+  return Date.parse(failed.createdAt) > Date.parse(serving.createdAt)
 }
 
 /**
  * THE LAST ATTEMPT. **Never read from the list's order**: `listInstances` is "the one seen most
- * recently first" (F4 M3: a new instance was listed second while it started), and an instance
- * carries no time of its own (FE-38). So:
+ * recently first" (F4 M3: a new instance was listed second while it started). Each instance
+ * carries when the deploy made it (FE-38, contract 1.5.0). So:
  * - one on its way up is under way;
- * - else a failure is the last attempt when nothing serves, or its version is newer than the
- *   one serving; its time is its incident's;
+ * - else the newest failure made after the one serving (or with nothing serving) is the last
+ *   attempt; its time is its incident's, once written;
  * - else the one serving was the last to go there.
  * Null when nothing was ever tried.
  */
@@ -87,7 +83,6 @@ export function attemptFact(
   env: Schemas['Environment'],
   instances: Schemas['InstanceSummary'][],
   incidents: Schemas['Incident'][],
-  releases: ReadonlyMap<string, Schemas['Release']>,
   now: Date,
   timeZone?: string,
 ): Attempt | null {
@@ -100,14 +95,15 @@ export function attemptFact(
       instanceId: rising.id,
       incidentId: null,
     }
-  const failures = instances.filter(
-    (i) => i.state === 'failed' && after(i, env.instance, releases),
-  )
-  // The latest failure is the one whose incident is newest; incidents are newest first.
-  const latest =
-    incidents
-      .map((incident) => failures.find((i) => i.id === incident.instanceId))
-      .find((i) => i !== undefined) ?? failures[0]
+  const latest = instances
+    .filter((i) => i.state === 'failed' && after(i, env.instance))
+    .reduce<Schemas['InstanceSummary'] | undefined>(
+      (newest, i) =>
+        newest === undefined || Date.parse(i.createdAt) > Date.parse(newest.createdAt)
+          ? i
+          : newest,
+      undefined,
+    )
   if (latest !== undefined) {
     const incident = incidents.find((i) => i.instanceId === latest.id)
     const when =
@@ -132,28 +128,19 @@ export function attemptFact(
   }
 }
 
-/** The versions the facts must date: the one serving, and each that failed. */
-export function releasesToRead(
-  env: Schemas['Environment'],
-  instances: Schemas['InstanceSummary'][],
-): string[] {
-  return [
-    ...new Set([
-      ...(env.instance === null ? [] : [env.instance.releaseId]),
-      ...instances.filter((i) => i.state === 'failed').map((i) => i.releaseId),
-    ]),
-  ]
+/** The version the facts must date: the one serving (a failure is dated by its instance, FE-38). */
+export function releasesToRead(env: Schemas['Environment']): string[] {
+  return env.instance === null ? [] : [env.instance.releaseId]
 }
 
 /** Whether an incident must be read to say when: a failure that is the last attempt. */
 export function needsIncidents(
   env: Schemas['Environment'],
   instances: Schemas['InstanceSummary'][],
-  releases: ReadonlyMap<string, Schemas['Release']>,
 ): boolean {
   return (
     !instances.some((i) => UNDER_WAY.has(i.state)) &&
-    instances.some((i) => i.state === 'failed' && after(i, env.instance, releases))
+    instances.some((i) => i.state === 'failed' && after(i, env.instance))
   )
 }
 
