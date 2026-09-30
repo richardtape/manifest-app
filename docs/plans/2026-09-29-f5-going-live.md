@@ -4,10 +4,12 @@
 > as Rich chooses at approval) to implement this plan task-by-task, one sitting per session. Steps use checkbox (`- [ ]`)
 > syntax for tracking. **Read [`../ORIENTATION.md`](../ORIENTATION.md) first. F4 is executed; this plan starts from it.**
 
-**Status: WRITTEN 2026-09-29, for Rich's review** (session `manifest-app-ce`, with Rich, documents only). The design
-was approved by Rich in conversation, in six sections, and is recorded below in *Decided by Rich* and *Decisions this
-plan makes*. **Nothing is built.** Sitting 1 (the measurements) runs on 7100 at Rich's word, and corrects Tasks 2–11 to
-what it finds; each correction is marked **(S1)**.
+**Status: APPROVED BY RICH AS WRITTEN, 2026-09-29** (*"Approved as written"*, session `manifest-app-a0`), **executed
+natively** (superpowers:executing-plans, as F3 and F4 ran), **Decision 7 accepted**. Written by `manifest-app-ce` with
+Rich; the design was approved by Rich in conversation, in six sections, and is recorded below in *Decided by Rich* and
+*Decisions this plan makes*. **Task 3 (the banner) runs first, as sitting 0, while the platform's launch-path sitting 3
+holds 7100** (Rich: *"Banner first, then wait"*). Sitting 1 (the measurements) runs on 7100 after that sitting closes, at
+Rich's word, and corrects Tasks 2 and 4–11 to what it finds; each correction is marked **(S1)**.
 
 **Goal:** A faculty member sees what stands between their app and their students from the day the draft is built, runs
 the dry run, sees the sign-off when it is given, lets their students in with one press (and a second sign-in), and is
@@ -51,8 +53,9 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub, kept for the acceptance.** Rich types, as the administrator. **Alone, and first** | ← **next**, once Rich has approved the plan and chosen its method (written 2026-09-29, `manifest-app-ce`: the dated entry below) |
-| 2 | 2, 3 | Every model call streams, and a stall has its own card (M10 with it); the mock-mode banner | |
+| 0 | 3 | **The mock-mode banner**, moved ahead of the measurements at Rich's word (2026-09-29, *"Banner first, then wait"*): it needs no measurement and no 7100, which the platform's launch-path sitting 3 holds | ← **in progress** (`manifest-app-a0`) |
+| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | after the platform's launch-path sitting 3 closes (contract 1.5.0), at Rich's word |
+| 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | |
 | 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | |
 | 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | |
 | 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | |
@@ -98,7 +101,15 @@ against) and **Step 0: the platform's landings** (*Adopting what lands*, below).
   or something would allow me to see that."* *Rejected by Rich:* logging each refused request.
 - **FE-40, filed and carried** (2026-09-29, *"File it, and carry it now"*): the mock cannot play a launch. Carried to
   `manifest-13` the same day, which recorded it in its launch-path plan at Task 13, **PROPOSED until Rich confirms it to a
-  platform session** (its house rule for a relayed decision). F5 never waits on it.
+  platform session** (its house rule for a relayed decision). F5 never waits on it. **Confirmed by Rich to the
+  platform session `manifest-c3`** (its launch-path sitting 3, 2026-09-29, as that session reported to us); Task 13
+  (the platform's sitting 10) carries it.
+- **The plan approved as written, executed natively, Decision 7 accepted** (2026-09-29, `manifest-app-a0`'s first
+  question: *"Approved as written"*, *"Native"*, *"Accept Decision 7"*).
+- **Task 3 first, then wait** (2026-09-29, *"Banner first, then wait"*): the platform's launch-path sitting 3 holds 7100
+  for several hours and truncates it on its first test run, so the banner, which needs neither, is built as sitting 0,
+  and the measurements wait for that sitting's close. *Rejected by Rich:* measuring now in a window the platform's
+  sitting would have to hold open.
 - **The design, approved in six sections** (2026-09-29): the app's pages and the banner (*"yep"*, with the duration
   change); *Going live* and two clocks (*"yep"*); the dry run and the sign-off (*"yes"*); putting it live and the hand-over
   (*"yes"*); streaming (*"yes"*); the sittings, F5b and what F5 does not build (*"yes"*).
@@ -175,8 +186,8 @@ change at his click.*
    *waiting on someone* when someone else owns it (the sign-off; `scans`, Decision 7), *not yet* when it cannot be acted
    on yet. An unknown `id` is shown, never hidden (spec D23.8: the enum grows). `code-review` last, set apart. **(S1:
    M3)** every `why` the laptop produces is read, and every combination it can produce has words.
-7. **`scans` unmet is waiting on the Manifest team, with no *[Fix it]*** (**a correction to Section 2, for Rich at
-   review**). Section 2 said *[Fix it]* would start a fix conversation fed by the build's scan. Writing the task found it
+7. **`scans` unmet is waiting on the Manifest team, with no *[Fix it]*** (**a correction to Section 2, accepted by Rich
+   at review**, 2026-09-29). Section 2 said *[Fix it]* would start a fix conversation fed by the build's scan. Writing the task found it
    cannot be true: **an agent cannot change an app's dependencies** (FE-32: nothing regenerates `package-lock.json`, and
    F3's dependency guard refuses it), and a blueprint's dependencies and base image are the platform's. A *[Fix it]* that
    can only fail is the bureaucracy `ClockItem` warns of. *Changing course:* when FE-32 lands, one row gains its button.
@@ -348,8 +359,10 @@ scripts/check-going-live.sh   Task 11, mock mode
 
 Throwaway code in the scratchpad. Only this plan's findings are committed. **Run nothing in manifest**: read it.
 **Before 7100: ask Rich, and tell the platform session** (ORIENTATION §8). **Every project made on 7100 is a real private
-repository on GitHub that nothing deletes**: this sitting makes **one**, named for this plan (for example `f5-reading`),
-and keeps it for the acceptance. **LiteLLM is on 7106** (`manifest-13`, 2026-09-29); an agent session's key comes from
+repository on GitHub that nothing deletes**: this sitting makes **one**, named for this plan (for example `f5-reading`).
+**Its row does not survive**: every platform sitting's first test run and its Docker tier truncate 7100 (`manifest-c3`,
+2026-09-29), so the acceptance (Task 11) remakes a project by script; the repository stays on GitHub, and removing it is
+Rich's (the platform's `scripts/github-real-repos.sh` lists it `NONE`). **LiteLLM is on 7106** (`manifest-13`, 2026-09-29); an agent session's key comes from
 that project on 7100. **Rich types every password**; the administrator's part is his, as `operator`, in the reference
 console (7104) or wherever the platform session says, with its step-up. **`make refresh-vulndb` is due after
 2026-10-06**: past it `scans` blocks every launch, and it is the platform's to run, at Rich's word.
@@ -442,7 +455,7 @@ export type Needs = … | { kind: 'stalled'; why: 'quiet' | 'ceiling' }
 - [ ] **Step 6: Commit** `feat(server): every model call streams — a first word, words arriving, a ceiling; a stall says
   so, and nothing of an answer is kept`.
 
-## Task 3: Mock mode says so (sitting 2)
+## Task 3: Mock mode says so (sitting 0, first, at Rich's word)
 
 **Files:** `web/vite.config.ts`, `web/src/{mode.ts,vite-env.d.ts,app.tsx,app.css}`, `web/src/vite-config.test.ts`, a
 screen test, `web/src/words.ts`.
