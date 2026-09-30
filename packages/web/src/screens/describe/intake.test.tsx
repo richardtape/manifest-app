@@ -210,6 +210,7 @@ function stage(
     setAppSecret: () => new Promise(() => undefined),
     getLaunchReadiness: () => new Promise(() => undefined),
     getLaunchRecords: () => new Promise(() => undefined),
+    getApproval: () => new Promise(() => undefined),
     getEnvironment: () => new Promise(() => undefined),
     watchProject: (projectId, onEvent) => {
       calls.push(['watchProject', projectId])

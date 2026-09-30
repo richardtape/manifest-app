@@ -94,6 +94,7 @@ function stage(
     })),
     getLaunchReadiness: answer('getLaunchReadiness', () => readiness),
     getLaunchRecords: answer('getLaunchRecords', () => fixtures.LAUNCH_RECORDS),
+    getApproval: answer('getApproval', () => null),
     getEnvironment: answer('getEnvironment', (id: string) =>
       environments.find((e) => e.id === id)!,
     ),

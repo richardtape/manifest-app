@@ -778,6 +778,12 @@
 .going-live__row-words .body-small {
   margin: 0;
   color: var(--ink-secondary);
+  /* An administrator's reason is their words, quoted whole: a long one wraps, never spills. */
+  overflow-wrap: break-word;
+}
+/* The one thing a row asks of them (a sign-off refused: Talk it through, Task 8). */
+.going-live__row-action {
+  margin-top: var(--space-2);
 }
 .going-live__row-words .mono {
   overflow-wrap: anywhere;

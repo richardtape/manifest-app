@@ -51,6 +51,8 @@ type World = {
   launchedAt: string | null
   readiness: Schemas['LaunchReadiness']
   records: Schemas['LaunchRecords']
+  /** The candidate's newest decision; null when nobody has decided (Task 8). */
+  approval: Schemas['Approval'] | null
 }
 
 function stage(
@@ -61,6 +63,7 @@ function stage(
     launchedAt: null,
     readiness: fixtures.LAUNCH_READINESS,
     records: fixtures.LAUNCH_RECORDS,
+    approval: fixtures.APPROVAL,
     ...world,
   }
   const calls: [string, ...unknown[]][] = []
@@ -89,6 +92,7 @@ function stage(
     listIncidents: never,
     getLaunchReadiness: answer('getLaunchReadiness', () => w.readiness),
     getLaunchRecords: answer('getLaunchRecords', () => w.records),
+    getApproval: answer('getApproval', () => w.approval),
     getEnvironment: answer('getEnvironment', (id: string) =>
       environments.find((e) => e.id === id)!,
     ),

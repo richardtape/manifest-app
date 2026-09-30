@@ -241,7 +241,15 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
     expect(r.action).toBeNull()
   })
 
-  it('nothing needs you, and nothing is at work, while nothing is theirs to press (FE-42)', () => {
+  it('the sign-off refused, read from its approval, is the one row that needs them (Task 8)', () => {
+    const refused = rowsOf(checklist([item('admin-approval', 'unmet')]), {
+      ...context,
+      approval: { ...fixtures.APPROVAL, decision: 'rejected', reason: 'Not yet, sorry.' },
+    })[0]!
+    expect(refused).toMatchObject({ state: 'attention', action: 'talk-it-through' })
+  })
+
+  it('from the checklist alone, nothing needs you and nothing is at work: the dry run is not theirs (FE-42), and nobody has decided', () => {
     const rows = IDS.flatMap((id) =>
       STATES.flatMap((state) => [row(id, state), row(id, state, null)].filter(Boolean)),
     )

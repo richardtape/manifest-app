@@ -1,5 +1,6 @@
 import {
   createManifestClient,
+  ManifestApiError,
   subscribe,
   unwrap,
   type EventFrame,
@@ -105,6 +106,13 @@ export interface Platform {
   getLaunchRecords(projectId: string): Promise<Schemas['LaunchRecords']>
   /** One address, and the instance its hostname reaches (production's, for going live). */
   getEnvironment(environmentId: string): Promise<Schemas['Environment']>
+  /**
+   * THE SIGN-OFF (F5 Task 8, moment 13), in the person's session: the newest decision an
+   * administrator made on a release, approved or rejected, with who decided and when. **Nobody
+   * has decided yet is `null`** (the platform's `404`), a state and not an error; any other
+   * refusal is thrown.
+   */
+  getApproval(releaseId: string): Promise<Schemas['Approval'] | null>
   /** Each secret's name, `declared` and `set`, as fields: never a value (F4 S1: M1). */
   listAppSecrets(environmentId: string): Promise<Schemas['AppSecretList']>
   /**
@@ -271,6 +279,19 @@ export function createPlatform(options: {
         }),
         'getEnvironment',
       )
+    },
+    async getApproval(releaseId) {
+      try {
+        return unwrap(
+          await client.GET('/v1/releases/{releaseId}/approval', {
+            params: { path: { releaseId } },
+          }),
+          'getApproval',
+        )
+      } catch (error) {
+        if (error instanceof ManifestApiError && error.status === 404) return null
+        throw error
+      }
     },
     async listAppSecrets(environmentId) {
       return unwrap(

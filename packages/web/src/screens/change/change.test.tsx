@@ -135,6 +135,7 @@ function stage(
     setAppSecret: never,
     getLaunchReadiness: never,
     getLaunchRecords: never,
+    getApproval: never,
     getEnvironment: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }

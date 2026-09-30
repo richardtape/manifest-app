@@ -146,6 +146,60 @@ describe('going live’s reads (F5 Tasks 5 and 6), in the person’s session, ag
   })
 })
 
+/** A platform that answers every request with this status and envelope, recording what it was asked. */
+async function answering<T>(
+  status: number,
+  code: string,
+  fn: (origin: string, seen: string[]) => Promise<T>,
+): Promise<T> {
+  const seen: string[] = []
+  const server = createServer((request, response) => {
+    seen.push(`${request.method} ${request.url}`)
+    response.writeHead(status, { 'content-type': 'application/json' })
+    response.end(JSON.stringify({ error: { code, message: 'sha256:… under §13' } }))
+  })
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  try {
+    return await fn(
+      `http://127.0.0.1:${(server.address() as { port: number }).port}`,
+      seen,
+    )
+  } finally {
+    await new Promise((resolve) => server.close(resolve))
+  }
+}
+
+describe('the sign-off (F5 Task 8, moment 13), in the person’s session', () => {
+  it('getApproval answers the newest decision on a release: the mock’s, approved, and who decided', async () => {
+    await withMock(async (origin) => {
+      const approval = await platform(origin).getApproval(fixtures.RELEASE_ID)
+      expect(approval).toMatchObject({
+        releaseId: fixtures.RELEASE_ID,
+        decision: 'approved',
+        decidedByName: 'Instructor One',
+      })
+    })
+  })
+
+  it('nobody has decided yet (404) is null, a state and not an error', async () => {
+    await answering(404, 'NOT_FOUND', async (origin, seen) => {
+      expect(await platform(origin).getApproval(fixtures.RELEASE_ID)).toBeNull()
+      expect(seen).toEqual([`GET /v1/releases/${fixtures.RELEASE_ID}/approval`])
+    })
+  })
+
+  it('any other refusal is thrown, for the page to say', async () => {
+    await answering(403, 'FORBIDDEN', async (origin) => {
+      const error = await thrown(() => platform(origin).getApproval(fixtures.RELEASE_ID))
+      expect(refusalOf(error)).toEqual({
+        kind: 'refused',
+        code: 'FORBIDDEN',
+        status: 403,
+      })
+    })
+  })
+})
+
 describe('moments 3 and 4 (F2 Task 7), against manifest-mock', () => {
   it('startIntakeSession answers a session, its one model, and its key; endIntakeSession ends it', async () => {
     await withMock(async (origin) => {

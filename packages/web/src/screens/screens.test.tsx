@@ -59,6 +59,9 @@ function platform(
     getLaunchReadiness: (answers.getLaunchReadiness ??
       never) as Platform['getLaunchReadiness'],
     getLaunchRecords: (answers.getLaunchRecords ?? never) as Platform['getLaunchRecords'],
+    // Nobody has decided: the shared fake answers it, so no page waits on it (sitting 3's trap).
+    getApproval: (answers.getApproval ??
+      (() => Promise.resolve(null))) as Platform['getApproval'],
     getEnvironment: (answers.getEnvironment ?? never) as Platform['getEnvironment'],
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }

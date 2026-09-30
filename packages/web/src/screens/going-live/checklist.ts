@@ -1,11 +1,13 @@
 import type { Schemas } from '@manifest/contract'
 import { words } from '../../words.js'
 import { dryRunRow } from './dry-run.js'
+import { signOffRow, type Decided } from './sign-off.js'
 
 /**
  * THE CHECKLIST, IN OUR WORDS (F5 Tasks 5 and 6, moments 10 and 11), derived here and nowhere
- * else, and pure. The dry run's row is derived beside its drawing (`dry-run.tsx`, Task 7), and
- * joins this one list in the checklist's order.
+ * else, and pure. The dry run's row and the sign-off's are derived beside their drawing
+ * (`dry-run.tsx`, Task 7; `sign-off.tsx`, Task 8), and join this one list in the checklist's
+ * order.
  */
 
 /**
@@ -35,10 +37,10 @@ export interface Row {
   /** A hostname inside `words`, drawn in mono: hostnames are allowed, and are not words (C3). */
   address: string | null
   /**
-   * What the person could press. Always null until the owner may run the dry run (FE-42 (a)):
-   * Task 7's press returns then.
+   * What the person could press: *[Talk it through]* on a sign-off refused (Task 8). The dry run's
+   * is never drawn until the owner may run it (FE-42 (a)): Task 7's press returns then.
    */
-  action: 'dry-run' | null
+  action: 'dry-run' | 'talk-it-through' | null
   /** Shown last, set apart: `code-review`, which never blocks a launch (D33). */
   apart: boolean
 }
@@ -49,20 +51,25 @@ const o = words.goingLive.owners
 /**
  * EVERY ITEM BUT THE TWO CLOCKS, IN OUR WORDS (Decisions 6 and 7), keyed on `id` × `state` and
  * whether anything is on trying-out, never on `why`. `met` is steady and `not_built` not yet.
- * `unmet` is *waiting on someone* when someone else has it (the sign-off; `scans`, the Manifest
- * team's, Decision 7; the dry run, an administrator's until FE-42 (a)), and *not yet* when
- * nothing can be done about it yet (S1: M3: three items for want of a candidate). Nothing needs
- * the person, because nothing here is theirs to do yet. An `id` we do not know is shown, never
- * hidden (spec D23.8). `code-review` last, set apart.
+ * `unmet` is *waiting on someone* when someone else has it (the sign-off undecided; `scans`, the
+ * Manifest team's, Decision 7; the dry run, an administrator's until FE-42 (a)), and *not yet*
+ * when nothing can be done about it yet (S1: M3: three items for want of a candidate). Only a
+ * sign-off refused needs the person, read from the approval (Task 8): with no approval given,
+ * nobody has decided. An `id` we do not know is shown, never hidden (spec D23.8). `code-review`
+ * last, set apart.
  */
 export function rowsOf(
   readiness: Schemas['LaunchReadiness'],
-  context: { hostname: string | null },
+  context: { hostname: string | null; approval?: Decided; timeZone?: string | undefined },
 ): Row[] {
   const candidate = readiness.candidateReleaseId !== null
   const rows = readiness.items
     .filter((i) => !CLOCK_IDS.includes(i.id))
-    .map((i) => rowOf(i, candidate, context.hostname))
+    .map((i) =>
+      i.id === 'admin-approval'
+        ? signOffRow(i, candidate, context.approval ?? null, context.timeZone)
+        : rowOf(i, candidate, context.hostname),
+    )
   return [...rows.filter((row) => !row.apart), ...rows.filter((row) => row.apart)]
 }
 
@@ -97,13 +104,6 @@ function rowOf(
         : row('notyet', o.forYou, r.scans.name, r.once)
     case 'rehearsal':
       return dryRunRow(item, candidate)
-    case 'admin-approval':
-      if (item.state === 'not_built') return untracked(r.approval.name)
-      if (item.state === 'met')
-        return row('steady', o.admin, r.approval.name, r.approval.met)
-      return candidate
-        ? row('waiting', o.admin, r.approval.name, r.approval.unmet)
-        : row('notyet', o.admin, r.approval.name, r.once)
     case 'load-rehearsal':
       if (item.state === 'not_built') return untracked(r.loadRehearsal.name)
       return row(

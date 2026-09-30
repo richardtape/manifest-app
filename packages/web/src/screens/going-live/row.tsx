@@ -1,12 +1,16 @@
 import { StateChip } from '@manifest-app/ui'
+import type { ReactNode } from 'react'
 import { words } from '../../words.js'
 import { Hostname } from '../your-apps/your-apps.js'
 import type { Row } from './checklist.js'
 
 const g = words.goingLive
 
-/** One short job: its state in a word, what it is, one sentence, and whose it is. */
-export function RowView({ row }: { row: Row }) {
+/**
+ * One short job: its state in a word, what it is, one sentence, and whose it is; and, when it is
+ * theirs, the one thing to press (`children`).
+ */
+export function RowView({ row, children }: { row: Row; children?: ReactNode }) {
   const [before, after] =
     row.address !== null && row.words.includes(row.address)
       ? row.words.split(row.address, 2)
@@ -28,6 +32,7 @@ export function RowView({ row }: { row: Row }) {
           )}
         </p>
         {row.owner === '' ? null : <span className="going-live__owner">{row.owner}</span>}
+        {children}
       </div>
     </li>
   )

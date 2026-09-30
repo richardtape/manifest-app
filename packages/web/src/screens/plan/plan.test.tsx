@@ -121,6 +121,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     setAppSecret: never,
     getLaunchReadiness: never,
     getLaunchRecords: never,
+    getApproval: never,
     getEnvironment: never,
     watchProject: (projectId) => {
       calls.push(['watchProject', projectId])

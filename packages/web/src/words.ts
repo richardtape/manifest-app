@@ -636,6 +636,8 @@ export const words = {
       admin: 'a Manifest administrator',
       nobody: 'nobody yet',
       team: 'the Manifest team',
+      /** Ours: a sign-off refused; what follows is theirs to start (Task 8). */
+      you: 'you',
     },
     /** Each row: a name (ours) and a sentence per state (the walk-through's, and S1's). */
     rows: {
@@ -665,8 +667,40 @@ export const words = {
         name: 'A Manifest administrator’s sign-off',
         unmet:
           'A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off, so nobody’s app reaches students with something it shouldn’t have. Manifest doesn’t tell them yet that it’s waiting.',
-        /** Ours, until Task 8 names who and when from the approval itself. */
+        /** Ours: met, and the approval could not be read to name who and when. */
         met: 'Signed off by a Manifest administrator.',
+        /** ✓ `day` is "23 September"; null when it cannot be read. */
+        signedOff: (name: string, day: string | null) =>
+          day === null ? `Signed off by ${name}.` : `Signed off by ${name}, ${day}.`,
+        /** ✓ Met with nobody's decision: nothing sensitive to sign off. */
+        nothingNeeded: 'Nothing in this version needs a sign-off.',
+        /** ✓ Their reason as the administrator wrote it; none kept, ours. */
+        rejected: (reason: string | null) =>
+          reason === null
+            ? 'Not signed off. A new version is needed, and it’s looked at afresh.'
+            : `Not signed off: ‘${reason}’ A new version is needed, and it’s looked at afresh.`,
+        /**
+         * Ours: signed off, then rebuilt, so the approval no longer covers what would go live and
+         * the checklist counts it unmet (never "Signed off" while it is).
+         */
+        again:
+          'It has changed since it was signed off, so a Manifest administrator looks at it afresh. Manifest doesn’t tell them yet that it’s waiting.',
+        /** Ours: the approval could not be read. */
+        cantTell: 'We can’t tell right now whether it’s been signed off.',
+        /** ✓ Starts a change seeded with their reason (Decision 9). */
+        talk: 'Talk it through',
+        /** Ours: the press, working. */
+        talking: 'Opening a conversation',
+        /** Ours: the token or our server said no; nothing was kept. */
+        couldntTalk: 'We couldn’t open that conversation just now. Nothing is lost.',
+        /**
+         * The change's words (Words proposed for Rich): ours, then their reason, cut at a word to
+         * the change's limit (`talkWords`); none kept, ours alone.
+         */
+        change: (reason: string | null) =>
+          reason === null
+            ? 'A Manifest administrator didn’t sign it off.'
+            : `A Manifest administrator didn’t sign it off, and said: ‘${reason}’`,
       },
       domain: {
         name: 'Its address',

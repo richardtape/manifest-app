@@ -195,6 +195,7 @@ export function App({
         <GoingLive
           key={lookup.project.id}
           platform={platform}
+          ours={ours}
           project={lookup.project}
           expire={expire}
           timeZone={timeZone}

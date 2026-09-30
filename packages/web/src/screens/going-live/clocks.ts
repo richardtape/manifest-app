@@ -24,7 +24,7 @@ export interface Clock {
 const c = words.goingLive.clocks
 
 /** "18 September", in their own time zone: each moment by its own offset, never now's. */
-function dayWords(at: string, timeZone?: string): string | null {
+export function dayWords(at: string, timeZone?: string): string | null {
   const date = new Date(at)
   if (Number.isNaN(date.getTime())) return null
   const parts = new Intl.DateTimeFormat('en-US', {

@@ -1,6 +1,7 @@
 import type { Schemas } from '@manifest/contract'
 import { ClockItem } from '@manifest-app/ui'
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
+import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
@@ -11,6 +12,7 @@ import { rowsOf, type Row } from './checklist.js'
 import { clockOf, type Clock } from './clocks.js'
 import { DryRun } from './dry-run.js'
 import { RowView } from './row.js'
+import { SignOff, type Decided } from './sign-off.js'
 
 const g = words.goingLive
 
@@ -19,6 +21,8 @@ type Seen = {
   version: string | null | undefined
   clocks: [Clock, Clock]
   rows: Row[]
+  /** The candidate's sign-off, for *[Talk it through]*'s words (Task 8). */
+  decided: Decided
 }
 type Loaded =
   | { state: 'loading' }
@@ -37,8 +41,10 @@ function settle<T>(result: PromiseSettledResult<T>): T | undefined {
 
 /**
  * GOING LIVE'S READS, IN THE PERSON'S SESSION (Decision 16): the checklist and the two records,
- * which the page cannot stand without; then the candidate's date and the students' address,
- * which only date a sentence or fill one in. No event stream in F5.
+ * which the page cannot stand without; then the candidate's date, its sign-off (Task 8) and the
+ * students' address, which date a sentence, decide one row, or fill one in. Each read again
+ * names the candidate of that reading, so a version changed on trying-out reads its own sign-off.
+ * No event stream in F5.
  */
 async function read(
   platform: Platform,
@@ -52,10 +58,18 @@ async function read(
     Promise.allSettled([platform.listEnvironments(project.id)]),
   ])
   let version: string | null | undefined
+  // Nothing on trying-out: nothing to sign off, and nobody has decided.
+  let decided: Decided = null
   if (readiness.candidateReleaseId !== null) {
-    const [candidate] = await Promise.allSettled([
+    const [candidate, approval] = await Promise.allSettled([
       platform.getRelease(readiness.candidateReleaseId),
+      platform.getApproval(readiness.candidateReleaseId),
     ])
+    if (approval!.status === 'fulfilled') decided = approval!.value
+    else {
+      settle(approval!)
+      decided = 'unread'
+    }
     const release = settle(candidate!)
     // "the version from 18 September, 3:12pm" → "18 September, 3:12pm"; undated → null.
     const asked =
@@ -84,7 +98,12 @@ async function read(
         item('privacy-assessment'),
       ),
     ],
-    rows: rowsOf(readiness, { hostname: production?.hostname ?? null }),
+    rows: rowsOf(readiness, {
+      hostname: production?.hostname ?? null,
+      approval: decided,
+      timeZone,
+    }),
+    decided,
   }
 }
 
@@ -96,12 +115,14 @@ async function read(
  */
 export function GoingLive({
   platform,
+  ours,
   project,
   expire,
   now = () => new Date(),
   timeZone,
 }: {
   platform: Platform
+  ours: Ours
   project: Schemas['Project']
   expire: () => void
   now?: () => Date
@@ -160,14 +181,45 @@ export function GoingLive({
         <TroubleNotice trouble={loaded.trouble} onRetry={retry} />
       ) : null}
       {!launched && loaded.state === 'ready' ? (
-        <WhatStands seen={loaded.seen} tryingOut={tryingOut} />
+        <WhatStands
+          seen={loaded.seen}
+          tryingOut={tryingOut}
+          job={(row) =>
+            row.id === 'rehearsal' ? (
+              <DryRun key={row.id} row={row} />
+            ) : row.id === 'admin-approval' ? (
+              <SignOff
+                key={row.id}
+                row={row}
+                decided={loaded.seen.decided}
+                platform={platform}
+                ours={ours}
+                project={project}
+                expire={expire}
+              />
+            ) : (
+              <RowView key={row.id} row={row} />
+            )
+          }
+        />
       ) : null}
     </div>
   )
 }
 
-/** What stands between the app and its students: the version, the clocks, the short jobs. */
-function WhatStands({ seen, tryingOut }: { seen: Seen; tryingOut: string }) {
+/**
+ * What stands between the app and its students: the version, the clocks, the short jobs, each
+ * drawn by its own component where it has one (the dry run's, Task 7; the sign-off's, Task 8).
+ */
+function WhatStands({
+  seen,
+  tryingOut,
+  job,
+}: {
+  seen: Seen
+  tryingOut: string
+  job: (row: Row) => ReactNode
+}) {
   const id = useId()
   return (
     <>
@@ -206,25 +258,12 @@ function WhatStands({ seen, tryingOut }: { seen: Seen; tryingOut: string }) {
         </h2>
         <p className="body-small going-live__jobs-lead">{g.shortJobs.lead}</p>
         <ul className="going-live__rows">
-          {seen.rows
-            .filter((row) => !row.apart)
-            .map((row) => (
-              <ShortJob key={row.id} row={row} />
-            ))}
+          {seen.rows.filter((row) => !row.apart).map(job)}
         </ul>
         <ul className="going-live__rows going-live__apart">
-          {seen.rows
-            .filter((row) => row.apart)
-            .map((row) => (
-              <ShortJob key={row.id} row={row} />
-            ))}
+          {seen.rows.filter((row) => row.apart).map(job)}
         </ul>
       </section>
     </>
   )
-}
-
-/** One short job, drawn by its own component where it has one (the dry run's: Task 7). */
-function ShortJob({ row }: { row: Row }) {
-  return row.id === 'rehearsal' ? <DryRun row={row} /> : <RowView row={row} />
 }

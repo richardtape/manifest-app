@@ -206,6 +206,7 @@ function stage(start: Partial<World> = {}) {
     setAppSecret: record('setAppSecret', () => undefined),
     getLaunchReadiness: never,
     getLaunchRecords: never,
+    getApproval: never,
     getEnvironment: never,
   }
   const theirs: Ours = {
