@@ -1,9 +1,11 @@
 import type { Schemas } from '@manifest/contract'
 import { words } from '../../words.js'
+import { dryRunRow } from './dry-run.js'
 
 /**
  * THE CHECKLIST, IN OUR WORDS (F5 Tasks 5 and 6, moments 10 and 11), derived here and nowhere
- * else, and pure.
+ * else, and pure. The dry run's row is derived beside its drawing (`dry-run.tsx`, Task 7), and
+ * joins this one list in the checklist's order.
  */
 
 /**
@@ -94,12 +96,7 @@ function rowOf(
         ? row('waiting', o.team, r.scans.name, r.scans.unmet)
         : row('notyet', o.forYou, r.scans.name, r.once)
     case 'rehearsal':
-      if (item.state === 'not_built') return untracked(r.rehearsal.name)
-      if (item.state === 'met')
-        return row('steady', o.admin, r.rehearsal.name, r.rehearsal.met)
-      return candidate
-        ? row('waiting', o.admin, r.rehearsal.name, r.rehearsal.unmet)
-        : row('notyet', o.admin, r.rehearsal.name, r.once)
+      return dryRunRow(item, candidate)
     case 'admin-approval':
       if (item.state === 'not_built') return untracked(r.approval.name)
       if (item.state === 'met')

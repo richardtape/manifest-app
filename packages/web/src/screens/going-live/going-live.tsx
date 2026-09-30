@@ -1,5 +1,5 @@
 import type { Schemas } from '@manifest/contract'
-import { ClockItem, StateChip } from '@manifest-app/ui'
+import { ClockItem } from '@manifest-app/ui'
 import { useCallback, useEffect, useId, useState } from 'react'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
@@ -7,9 +7,10 @@ import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
 import { versionAsked } from '../trying-out/stations.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
-import { Hostname } from '../your-apps/your-apps.js'
 import { rowsOf, type Row } from './checklist.js'
 import { clockOf, type Clock } from './clocks.js'
+import { DryRun } from './dry-run.js'
+import { RowView } from './row.js'
 
 const g = words.goingLive
 
@@ -208,14 +209,14 @@ function WhatStands({ seen, tryingOut }: { seen: Seen; tryingOut: string }) {
           {seen.rows
             .filter((row) => !row.apart)
             .map((row) => (
-              <RowView key={row.id} row={row} />
+              <ShortJob key={row.id} row={row} />
             ))}
         </ul>
         <ul className="going-live__rows going-live__apart">
           {seen.rows
             .filter((row) => row.apart)
             .map((row) => (
-              <RowView key={row.id} row={row} />
+              <ShortJob key={row.id} row={row} />
             ))}
         </ul>
       </section>
@@ -223,30 +224,7 @@ function WhatStands({ seen, tryingOut }: { seen: Seen; tryingOut: string }) {
   )
 }
 
-/** One short job: its state in a word, what it is, one sentence, and whose it is. */
-function RowView({ row }: { row: Row }) {
-  const [before, after] =
-    row.address !== null && row.words.includes(row.address)
-      ? row.words.split(row.address, 2)
-      : [row.words, undefined]
-  return (
-    <li className="going-live__row">
-      <StateChip state={row.state} label={g.state[row.state]} />
-      <div className="going-live__row-words">
-        <span className="going-live__name">{row.name}</span>
-        <p className="body-small">
-          {before}
-          {after === undefined || row.address === null ? null : (
-            <>
-              <span className="mono">
-                <Hostname name={row.address} />
-              </span>
-              {after}
-            </>
-          )}
-        </p>
-        {row.owner === '' ? null : <span className="going-live__owner">{row.owner}</span>}
-      </div>
-    </li>
-  )
+/** One short job, drawn by its own component where it has one (the dry run's: Task 7). */
+function ShortJob({ row }: { row: Row }) {
+  return row.id === 'rehearsal' ? <DryRun row={row} /> : <RowView row={row} />
 }
