@@ -792,6 +792,35 @@
   font-size: 12.5px;
   color: var(--ink-muted);
 }
+/* A row that changed since the gate refused a press (moment 14): said in words, and marked. */
+.going-live__lit {
+  align-self: flex-start;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--attention);
+}
+.going-live__row--lit {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--attention);
+}
+/* MOMENT 14, PUTTING IT LIVE (F5 Task 10): the one primary action at the page's top; then its
+   stations; and the moment it is live: the name, and the address large in mono. */
+.going-live .going-live__live {
+  margin-top: 0;
+}
+.app-main .going-live__gate {
+  margin: 0;
+}
+.going-live__landed {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.app-main .going-live__address {
+  margin: 0;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
 @media (max-width: 599px) {
   .going-live__row {
     grid-template-columns: minmax(0, 1fr);

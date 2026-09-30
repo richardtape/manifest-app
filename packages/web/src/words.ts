@@ -751,6 +751,52 @@ export const words = {
      */
     live: 'It’s live.',
     toOverview: 'Go to the Overview',
+    /**
+     * MOMENT 14, PUTTING IT LIVE (F5 Task 10, Decision 10): the walk-through's words (✓ in the
+     * plan's *Words proposed for Rich*), and ours where neither has any, marked "ours".
+     */
+    letIn: {
+      button: 'Let your students in',
+      /**
+       * ✓ "The version from 18 September goes to <address>. Your trying-out address stays as it
+       * is.": `when` is "18 September, 3:12pm" or "today, 3:12pm"; null when undated (ours). The
+       * address sits between the two parts, in mono.
+       */
+      goes: (when: string | null): [string, string] => [
+        when === null
+          ? 'The version on your trying-out address goes to '
+          : `The version from ${when} goes to `,
+        '. Your trying-out address stays as it is.',
+      ],
+      /** ✓ Back from the step-up: the same button, in the same place. */
+      again: 'You’re signed in again.',
+      /** ✓ The step-up card's rule, the one sentence the card on trying-out leaves out. */
+      stepUpRule:
+        'We ask this before anything that reaches your students, changes who can work on your app, or switches it off.',
+      /** Ours: the stations, as a list, named for a screen reader. */
+      stationsLabel: 'Letting your students in',
+      /** ✓ "Reading responses is live.": the moment the product is for. */
+      landed: (name: string) => `${name} is live.`,
+      /** ✓ Ours (the plan's words): to the Overview, which leads with For your students. */
+      tellThem: 'See what to tell your students',
+      /** ✓ RELEASE_NOT_STAGED: trying-out's version changed between the reading and the press. */
+      changed:
+        'The version on your trying-out address changed a moment ago. Go live with the new one?',
+      /** ✓ Its start never answered: only when the platform answered so (M1). */
+      nothingReached:
+        'Nothing reached your students. The address shows nothing yet, not a broken app.',
+      /** Ours: the facts' heading, as trying-out's has its own. */
+      address: 'Your students’ address',
+      /** Ours: the gate refused it (a race: the button shows only when ready). */
+      gate: 'It can’t go live yet: something on the list changed a moment ago.',
+      /** Ours: beside a row that changed since the page last read it (never colour alone). */
+      changedRow: 'Changed a moment ago',
+      /** Ours (M1): five minutes more with no end read, we stop reading, and say so. */
+      unsureLong:
+        'We stopped waiting, and couldn’t see how it ended. The Overview shows whether it’s live.',
+      /** Ours: the fix conversation's title (our server's LIVE_FIX_WORDS). */
+      fixTitle: "It didn't start on the live address",
+    },
   },
   /**
    * MOMENT 8, ASKING FOR A CHANGE (F4 Task 9): the walk-through's words, and those Rich approved

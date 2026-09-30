@@ -16,7 +16,11 @@ export function RowView({ row, children }: { row: Row; children?: ReactNode }) {
       ? row.words.split(row.address, 2)
       : [row.words, undefined]
   return (
-    <li className="going-live__row">
+    <li
+      className={
+        row.lit === true ? 'going-live__row going-live__row--lit' : 'going-live__row'
+      }
+    >
       <StateChip state={row.state} label={g.state[row.state]} />
       <div className="going-live__row-words">
         <span className="going-live__name">{row.name}</span>
@@ -32,6 +36,10 @@ export function RowView({ row, children }: { row: Row; children?: ReactNode }) {
           )}
         </p>
         {row.owner === '' ? null : <span className="going-live__owner">{row.owner}</span>}
+        {/* Lit in words, never colour alone. */}
+        {row.lit === true ? (
+          <span className="going-live__lit">{g.letIn.changedRow}</span>
+        ) : null}
         {children}
       </div>
     </li>

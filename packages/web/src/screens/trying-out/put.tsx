@@ -11,6 +11,7 @@ import { SupportReference } from '../reference.js'
 import { Hostname } from '../your-apps/your-apps.js'
 import {
   cutByOurDeadline,
+  ENDED_BADLY,
   incidentLater,
   incidentOf,
   Secrets,
@@ -26,12 +27,6 @@ const t = words.tryingOut
 
 /** The new instance is read every second while the deploy runs: a deploy is 5–9 s (F4 M3). */
 export const POLL_MS = 1000
-/** A new instance in these states never answered, and is not going to (M1). */
-const ENDED_BADLY = new Set<Schemas['Instance']['state']>([
-  'failed',
-  'destroying',
-  'gone',
-])
 
 /** The version the question named, and where it goes: fixed when they are asked (Decision 11). */
 type Held = {

@@ -171,7 +171,8 @@ export interface Ours {
       | { words: string; token: string }
       /** F5 Task 8: *[Talk it through]*, answering an administrator's refusal. */
       | { words: string; token: string; refusal: { approvalId: string } }
-      | { fix: { incidentId: string }; token: string },
+      /** A fix of ours: absent `environment` is trying-out's (F4); the live address's says so. */
+      | { fix: { incidentId: string; environment?: 'production' }; token: string },
   ): Promise<Conversation>
   /** The person's conversations on the app, newest first, each where it left off. */
   conversationsOn(projectId: string): Promise<AppConversation[]>

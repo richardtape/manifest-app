@@ -1,16 +1,16 @@
 import type { Schemas } from '@manifest/contract'
 import { ClockItem } from '@manifest-app/ui'
-import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import { linkTo } from '../../router.js'
+import { linkTo, remember } from '../../router.js'
 import { words } from '../../words.js'
-import { versionAsked } from '../trying-out/stations.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { rowsOf, type Row } from './checklist.js'
 import { clockOf, type Clock } from './clocks.js'
 import { DryRun } from './dry-run.js'
+import { LetStudentsIn, whenOf } from './live.js'
 import { RowView } from './row.js'
 import { SignOff, type Decided } from './sign-off.js'
 
@@ -28,6 +28,12 @@ type Seen = {
    * so a launch since (another tab; Task 10's press) is known here first (sitting 3's minor).
    */
   launched: boolean
+  /** Every blocking item met: *[Let your students in]* (Task 10). */
+  ready: boolean
+  /** What would go live, and its day, as this reading has it. */
+  candidate: { releaseId: string; when: string | null } | null
+  /** The live address, when the addresses could be read. */
+  production: Schemas['Environment'] | undefined
 }
 type Loaded =
   | { state: 'loading' }
@@ -77,10 +83,7 @@ async function read(
     }
     const release = settle(candidate!)
     // "the version from 18 September, 3:12pm" → "18 September, 3:12pm"; undated → null.
-    const asked =
-      release === undefined ? '' : versionAsked(release.createdAt, now, timeZone)
-    const from = `${words.facts.versionFrom} `
-    version = asked.startsWith(from) ? asked.slice(from.length) : null
+    version = release === undefined ? null : whenOf(release.createdAt, now, timeZone)
   }
   const production = settle(environments!)?.find((e) => e.kind === 'production')
   const item = (id: string) => readiness.items.find((i) => i.id === id)
@@ -110,14 +113,34 @@ async function read(
     }),
     decided,
     launched: readiness.launched,
+    ready: readiness.ready,
+    candidate:
+      readiness.candidateReleaseId === null
+        ? null
+        : { releaseId: readiness.candidateReleaseId, when: version ?? null },
+    production,
   }
 }
 
 /**
- * GOING LIVE, MOMENTS 10 AND 11 (F5 Task 6): what stands between the app and its students, from
- * the day the draft exists. The version that would go live; the two clocks; the trying-out
- * address's registration in one line; the short jobs, each in our words. A map: nothing on it is
- * theirs to press yet, and nothing is a stopgap. Read again whenever the page is shown again.
+ * THE CHANGED ROW LIT (moment 14): a row whose state or sentence differs from the reading before
+ * the gate refused a press. A row new to this reading is lit too.
+ */
+function lightUp(rows: Row[], before: Row[]): Row[] {
+  return rows.map((row) => {
+    const was = before.find((b) => b.id === row.id)
+    return was === undefined || was.state !== row.state || was.words !== row.words
+      ? { ...row, lit: true }
+      : row
+  })
+}
+
+/**
+ * GOING LIVE, MOMENTS 10, 11 AND 14 (F5 Tasks 6 and 10): what stands between the app and its
+ * students, from the day the draft exists. The version that would go live; the two clocks; the
+ * trying-out address's registration in one line; the short jobs, each in our words; and, once
+ * every blocking item is met, *[Let your students in]*. Nothing else is a stopgap. Read again
+ * whenever the page is shown again.
  */
 export function GoingLive({
   platform,
@@ -126,6 +149,7 @@ export function GoingLive({
   expire,
   now = () => new Date(),
   timeZone,
+  then = null,
 }: {
   platform: Platform
   ours: Ours
@@ -133,9 +157,22 @@ export function GoingLive({
   expire: () => void
   now?: () => Date
   timeZone?: string | undefined
+  /** `live` when the step-up sent them back to finish letting their students in (Decision 10). */
+  then?: 'live' | null
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
+  // BACK FROM SIGNING IN AGAIN: said once, and `then` taken out of the address without a
+  // navigation (the focus stays put), so a reload is not "back" again.
+  const [back] = useState(then === 'live')
+  useEffect(() => {
+    if (back) remember(`/apps/${encodeURIComponent(project.slug)}/going-live`)
+  }, [back, project.slug])
+  // PRESSED IN THIS PAGE: the card that let them in stays, whatever the page reads meanwhile,
+  // until it ends in its own words (a launch heard mid-press never unmounts it).
+  const [pressed, setPressed] = useState(false)
+  // THE GATE REFUSED A PRESS: the rows as they were, to light the one that changed.
+  const [gate, setGate] = useState<Row[] | null>(null)
   // LAUNCHED, BY THE PROJECT OR BY THE CHECKLIST, AND KEPT: the App reads the project once per
   // slug, so a launch since is heard here first; once heard it stays said (a launch is not undone
   // in F5), and nothing more is read, so a later read that fails can never turn it back.
@@ -178,25 +215,78 @@ export function GoingLive({
     return () => document.removeEventListener('visibilitychange', shown)
   }, [])
 
+  // Seen now, for a handler that outlives a render.
+  const seenNow = useRef<Seen | undefined>(undefined)
+  seenNow.current = loaded.state === 'ready' ? loaded.seen : undefined
+  const onGate = useCallback(() => {
+    const seen = seenNow.current
+    setPressed(false)
+    setGate(seen?.rows ?? [])
+    // The gate said it is not ready: no button while the checklist is read again.
+    setLoaded((l) =>
+      l.state === 'ready' ? { state: 'ready', seen: { ...l.seen, ready: false } } : l,
+    )
+    setAttempt((n) => n + 1)
+  }, [])
+  const onPress = useCallback(() => {
+    setPressed(true)
+    setGate(null)
+  }, [])
+  const onLanded = useCallback(() => setHeard(true), [])
+
   const slug = encodeURIComponent(project.slug)
   const tryingOut = `/apps/${slug}/preview?tab=trying-out`
+  const seen =
+    loaded.state === 'ready'
+      ? gate === null
+        ? loaded.seen
+        : { ...loaded.seen, rows: lightUp(loaded.seen.rows, gate) }
+      : undefined
+  const production = seen?.production
+  // The card: once pressed it stays to its end; otherwise only on a first launch that is ready.
+  const offer =
+    production !== undefined &&
+    seen !== undefined &&
+    (pressed || (!launched && seen.ready))
   return (
     <div className="going-live">
       <h1 className="page-title">{g.title}</h1>
-      {launched ? (
+      {launched && !pressed ? (
         // Decision 2: after launch the page stays, says so, and points at the Overview.
         <p className="body-lead">
           {g.live} <a {...linkTo(`/apps/${slug}`)}>{g.toOverview}</a>
         </p>
-      ) : loaded.state === 'loading' ? null : ( // Nothing said until it is read: it may turn out launched (no first launch's lead).
+      ) : launched || loaded.state === 'loading' ? null : ( // Nothing said until it is read: it may turn out launched (no first launch's lead).
         <p className="body-lead">{g.lead}</p>
       )}
       {loaded.state === 'trouble' ? (
         <TroubleNotice trouble={loaded.trouble} onRetry={retry} />
       ) : null}
-      {!launched && loaded.state === 'ready' ? (
+      {gate !== null && !launched ? (
+        <p className="body-lead going-live__gate" role="status">
+          {g.letIn.gate}
+        </p>
+      ) : null}
+      {offer ? (
+        <LetStudentsIn
+          platform={platform}
+          ours={ours}
+          project={project}
+          ready={seen.ready}
+          candidate={seen.candidate}
+          production={production}
+          back={back}
+          expire={expire}
+          now={now}
+          timeZone={timeZone}
+          onPress={onPress}
+          onGate={onGate}
+          onLanded={onLanded}
+        />
+      ) : null}
+      {!launched && seen !== undefined ? (
         <WhatStands
-          seen={loaded.seen}
+          seen={seen}
           tryingOut={tryingOut}
           job={(row) =>
             row.id === 'rehearsal' ? (
@@ -205,7 +295,7 @@ export function GoingLive({
               <SignOff
                 key={row.id}
                 row={row}
-                decided={loaded.seen.decided}
+                decided={seen.decided}
                 platform={platform}
                 ours={ours}
                 project={project}

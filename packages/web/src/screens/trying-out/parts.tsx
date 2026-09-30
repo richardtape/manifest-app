@@ -34,6 +34,13 @@ export function cutByOurDeadline(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'TimeoutError'
 }
 
+/** A new instance in these states never answered, and is not going to (M1). */
+export const ENDED_BADLY = new Set<Schemas['Instance']['state']>([
+  'failed',
+  'destroying',
+  'gone',
+])
+
 /** After our deadline, the new instance is read every second for up to five minutes more (M1). */
 export const UNSURE_READS = 300
 /** M2: an attempt's incident not yet written is read once more, this long after. */
@@ -66,18 +73,23 @@ export async function incidentLater(
   return incidentOf(platform, environmentId, instanceId).catch(() => undefined)
 }
 
-/** The four stations, as `Timeline` draws them, with the one at work said to a screen reader. */
+/**
+ * The four stations, as `Timeline` draws them, with the one at work said to a screen reader;
+ * named for where the version is going (trying-out's by default).
+ */
 export function Stations({
   instance,
+  name = t.stationsLabel,
 }: {
   instance: Pick<Schemas['Instance'], 'state'> | null
+  name?: string
 }) {
   const stations = stationsOf(instance)
   const label = (key: StationKey, halted: boolean) =>
     halted ? t.stations.never : t.stations[key]
   const now = stations.find((s) => s.state === 'now' || s.state === 'halted')
   return (
-    <section className="trying-out__stations" aria-label={t.stationsLabel}>
+    <section className="trying-out__stations" aria-label={name}>
       <Timeline
         stations={stations.map((s) => ({
           ...label(s.key, s.state === 'halted'),
@@ -168,15 +180,25 @@ export function Secrets({
 
 /**
  * SIGNING IN AGAIN, IN PLACE (moment 14's card): *[Sign in again]* goes to the platform's step-up
- * and back to `returnTo`. The platform never replays the refused request: they press again.
+ * and back to `returnTo`. The platform never replays the refused request: they press again. The
+ * card's rule, about what reaches students, is said only where it is true (going live).
  */
-export function StepUpCard({ returnTo }: { returnTo: string }) {
+export function StepUpCard({
+  returnTo,
+  aboutStudents = false,
+}: {
+  returnTo: string
+  aboutStudents?: boolean
+}) {
   return (
     <Card tone="attention">
       <p className="body-lead">
         <strong>{t.stepUp.title}</strong>
       </p>
       <p className="body-lead">{t.stepUp.body}</p>
+      {aboutStudents ? (
+        <p className="body-lead">{words.goingLive.letIn.stepUpRule}</p>
+      ) : null}
       <div className="describe__actions">
         <Button kind="primary" href={stepUpHref(returnTo)}>
           {t.stepUp.again}
@@ -187,23 +209,27 @@ export function StepUpCard({ returnTo }: { returnTo: string }) {
 }
 
 /**
- * [WHAT WENT WRONG] ON TRYING-OUT (walk-through moment 9): a fix conversation of ours, carrying the
- * incident, with a token minted for it in their session, then opened. The line starts it, or it
- * waits its turn. A fix already under way for the same incident is opened instead: its round
- * deploys to the draft, so trying-out's failed attempt, and this button, stay until they put the
- * fixed version there (the whole-branch review's I2).
+ * [WHAT WENT WRONG] ON TRYING-OUT (walk-through moment 9), AND ON THE LIVE ADDRESS (moment 14; F5
+ * Decision 13): a fix conversation of ours, carrying the incident and the address it happened on,
+ * with a token minted for it in their session, then opened. The line starts it, or it waits its
+ * turn. A fix already under way for the same incident is opened instead: its round deploys to the
+ * draft, so the failed attempt, and this button, stay until the fixed version is put there (the
+ * whole-branch review's I2).
  */
 export function WhatWentWrong({
   platform,
   ours,
   project,
   incidentId,
+  environment = 'staging',
   expire,
 }: {
   platform: Platform
   ours: Ours
   project: { id: string; slug: string }
   incidentId: string
+  /** Where it did not start: trying-out's (F4's fix, sent as F4 sent it) or the live address. */
+  environment?: 'staging' | 'production'
   expire: () => void
 }) {
   const [pressing, setPressing] = useState(false)
@@ -223,14 +249,15 @@ export function WhatWentWrong({
         return
       }
       step = 'mintToken'
+      const live = environment === 'production'
       const minted = await platform.mintToken(
         project.id,
-        mintRequest(t.fixTitle, 'changing'),
+        mintRequest(live ? words.goingLive.letIn.fixTitle : t.fixTitle, 'changing'),
         crypto.randomUUID(),
       )
       step = 'startChange'
       const made = await ours.startChange(project.id, {
-        fix: { incidentId },
+        fix: live ? { incidentId, environment } : { incidentId },
         token: minted.secret,
       })
       open(made.id)

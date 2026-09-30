@@ -41,6 +41,11 @@ export interface Row {
    * is never drawn until the owner may run it (FE-42 (a)): Task 7's press returns then.
    */
   action: 'dry-run' | 'talk-it-through' | null
+  /**
+   * Changed since the page last read it, when the gate refused a press (moment 14: "the changed
+   * row lit"). Never set by `rowsOf`: the page marks it, by comparing two readings.
+   */
+  lit?: boolean
   /** Shown last, set apart: `code-review`, which never blocks a launch (D33). */
   apart: boolean
 }
