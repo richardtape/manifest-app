@@ -248,6 +248,17 @@ describe('a refused token stops (M1, M3: a 1006, then a GET says why)', () => {
     expect(w.counts()).toMatchObject({ refused: 0, connections: 2 })
   })
 
+  it('4401, the token revoked or expired while its stream was open (FE-33, contract 1.5.0): refused without asking, never reopened', async () => {
+    vi.useFakeTimers()
+    const w = watching()
+    w.connections[0]!.replay([READY])
+    await w.watch.ready
+    w.connections[0]!.drop(4401)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(w.counts()).toEqual({ reconnected: 0, refused: 1, connections: 1 })
+    expect(w.probes).toEqual([])
+  })
+
   it('4404 and 4403 are refused without asking', async () => {
     for (const code of [4404, 4403]) {
       vi.useFakeTimers()

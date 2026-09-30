@@ -12,8 +12,8 @@ import { PLATFORM_TIMEOUT_MS } from './refusal.js'
  *   status, so a plain `GET` of the same URL with the same token says why (M1, M3): `401` or
  *   `404` is refused, and `426` means the token is good and the network dropped us.
  *
- * A token revoked while its stream is open keeps it (FE-33): the round learns of a revocation
- * from its next call's `401`, never from here.
+ * **A token revoked or expired while its stream is open closes it `4401`** (FE-33, contract 1.5.0):
+ * refused, like `4403` and `4404`, so the round pauses for a new token and nothing reopens it.
  */
 export type ProjectEvent = { id: string; type: string; subject: string; detail: unknown }
 
@@ -128,7 +128,7 @@ export function platformStream(
         )
         void subscription.closed.then(async ({ code }) => {
           if (over || current !== subscription) return
-          if (code === 4403 || code === 4404) return refused()
+          if (code === 4401 || code === 4403 || code === 4404) return refused()
           if (code === 1006) {
             const status = await probe(url, token)
             if (over) return
