@@ -13,6 +13,7 @@ import {
   type Said,
 } from '../preview/facts.js'
 import { CopyButton } from '../preview/try-it-as.js'
+import { LiveAddress } from '../your-apps/your-apps.js'
 
 const s = words.overview.students
 
@@ -127,7 +128,9 @@ export function ForYourStudents({ name, handed }: { name: string; handed: Handed
       </h2>
       {handed.address === null ? null : (
         <div className="overview__students-copy">
-          <p className="mono overview__students-address">{handed.address}</p>
+          <p className="mono overview__students-address">
+            <LiveAddress url={handed.address} />
+          </p>
           <CopyButton value={handed.address} name={s.copyAddress} />
         </div>
       )}

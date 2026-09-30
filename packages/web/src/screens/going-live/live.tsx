@@ -23,7 +23,7 @@ import {
 } from '../trying-out/parts.js'
 import { newestAttempt, versionAsked } from '../trying-out/stations.js'
 import { asServed } from '../your-apps/model.js'
-import { Hostname } from '../your-apps/your-apps.js'
+import { Hostname, LiveAddress } from '../your-apps/your-apps.js'
 
 const l = words.goingLive.letIn
 const t = words.tryingOut
@@ -539,7 +539,9 @@ export function LetStudentsIn({
           <p className="going-live__landed" role="status">
             {l.landed(project.name)}
           </p>
-          <p className="mono going-live__address">{production.url}</p>
+          <p className="mono going-live__address">
+            <LiveAddress url={production.url} />
+          </p>
           <div className="describe__actions">
             <Button kind="primary" {...linkTo(`/apps/${slug}`)}>
               {l.tellThem}

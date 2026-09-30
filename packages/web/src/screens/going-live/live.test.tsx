@@ -663,6 +663,12 @@ describe('the stations, and the end: deploy’s own answer', () => {
         (m) => m.textContent === `https://${HOST}`,
       ),
     ).toBe(true)
+    // Rich: it wraps only after :// and before a dot, never at the slug's hyphen.
+    expect(
+      [...document.querySelectorAll('.going-live__address .address__piece')].map(
+        (p) => p.textContent,
+      ),
+    ).toEqual(['https://', SLUG, '.manifest', '.internal'])
     expect(screen.queryByRole('region', { name: g.shortJobs.title })).toBeNull()
     expect(screen.queryByText(g.lead)).toBeNull()
     // The moment, not the page's plain line for a launch it did not see.

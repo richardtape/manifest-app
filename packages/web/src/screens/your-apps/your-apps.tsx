@@ -217,6 +217,32 @@ function AddressView({ label, address }: { label: string; address: Address }) {
 }
 
 /** A hostname that breaks, when it must, after a dot: never mid-label, as `mock-` did. */
+/**
+ * THE LIVE ADDRESS, LARGE (Rich, 2026-09-30): it may wrap only after `://` and before a dot, never
+ * at the slug's hyphen. Each piece is kept whole (`address__piece`, `nowrap`), a `<wbr>` between
+ * them; the text is the address exactly, so what is read or selected is what *[Copy]* copies.
+ */
+export function LiveAddress({ url }: { url: string }) {
+  const at = url.indexOf('://')
+  const scheme = at === -1 ? null : url.slice(0, at + 3)
+  const host = at === -1 ? url : url.slice(at + 3)
+  const labels = host.split('.')
+  const kept = [
+    ...(scheme === null ? [] : [scheme]),
+    ...labels.map((label, i) => (i === 0 ? label : `.${label}`)),
+  ]
+  return (
+    <>
+      {kept.map((piece, i) => (
+        <Fragment key={i}>
+          {i === 0 ? null : <wbr />}
+          <span className="address__piece">{piece}</span>
+        </Fragment>
+      ))}
+    </>
+  )
+}
+
 export function Hostname({ name }: { name: string }) {
   const labels = name.split('.')
   return (

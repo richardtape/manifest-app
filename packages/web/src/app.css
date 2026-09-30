@@ -819,7 +819,9 @@
 .app-main .going-live__address {
   margin: 0;
   font-size: 22px;
-  overflow-wrap: anywhere;
+  /* Rich: it wraps only after :// and before a dot (LiveAddress), never at the slug's hyphen; a
+     slug longer than the line scrolls within it rather than breaking there. */
+  overflow-x: auto;
 }
 @media (max-width: 599px) {
   .going-live__row {
@@ -874,6 +876,11 @@
 .app-main .overview__students-address {
   font-size: 22px;
   min-width: 0;
+  overflow-x: auto;
+}
+/* A piece of the live address kept whole (LiveAddress): it may wrap only between pieces. */
+.address__piece {
+  white-space: nowrap;
 }
 .overview__students .body-lead,
 .overview__students .body-small {

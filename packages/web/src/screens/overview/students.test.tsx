@@ -222,6 +222,10 @@ describe('for your students: the address handed over (moment 15)', () => {
     const address = region.querySelector('.overview__students-address')!
     expect(address.classList.contains('mono')).toBe(true)
     expect(address.textContent).toBe(URL_)
+    // Rich: it wraps only after :// and before a dot, never at the slug's hyphen; Copy unchanged.
+    expect(
+      [...address.querySelectorAll('.address__piece')].map((p) => p.textContent),
+    ).toEqual(['https://', 'reading-responses', '.manifest', '.internal'])
     fireEvent.click(within(region).getByRole('button', { name: copyOf(s_.copyAddress) }))
     await waitFor(() => expect(copied).toEqual([URL_]))
     expect(
