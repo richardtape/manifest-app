@@ -73,7 +73,12 @@ function lead(script: unknown[]) {
         async () => {
           const answer = script[next++]
           if (answer === undefined) return new Promise(() => undefined)
-          onAnswer({ model: 'default-chat-large', fallback: false, usage: null })
+          onAnswer({
+            model: 'default-chat-large',
+            fallback: false,
+            usage: null,
+            received: { chars: JSON.stringify(answer).length, firstWordMs: 5, ms: 10 },
+          })
           return answer
         },
         schema,

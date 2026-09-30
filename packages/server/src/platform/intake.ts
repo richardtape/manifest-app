@@ -1,5 +1,10 @@
 import type { Config } from '../config.js'
-import { ModelError, openAiCompatible, type Model } from '../model/client.js'
+import {
+  ASKING_DEADLINES,
+  ModelError,
+  openAiCompatible,
+  type Model,
+} from '../model/client.js'
 import { walkthroughModel } from '../model/walkthrough.js'
 import type { Conversation } from '../store/db.js'
 
@@ -92,6 +97,11 @@ export function intakeModelFor(
     return gatedIntakeModel(keys, () => walkthrough, false)
   }
   return gatedIntakeModel(keys, (key) =>
-    openAiCompatible({ baseUrl: config.modelGateway, key: key.key, model: key.model }),
+    openAiCompatible({
+      baseUrl: config.modelGateway,
+      key: key.key,
+      model: key.model,
+      deadlines: ASKING_DEADLINES,
+    }),
   )
 }

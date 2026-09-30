@@ -589,6 +589,26 @@ const CARDS: [
     ],
   ],
   [
+    'the model stopped answering (F5 Decision 14)',
+    { kind: 'stalled', why: 'quiet' },
+    'Our model stopped answering before it finished. Nothing is lost.',
+    true,
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
+  ],
+  [
+    'the model went on too long (F5 Decision 14)',
+    { kind: 'stalled', why: 'ceiling' },
+    "Our model's answer went on far longer than any should, so we stopped it. Nothing is lost.",
+    true,
+    [
+      [words.building.carryOn, 'build', ['c-1']],
+      [words.building.stopHere, 'stop', ['c-1']],
+    ],
+  ],
+  [
     'waiting on an administrator',
     { kind: 'refused', code: 'MODEL_NOT_AVAILABLE' },
     words.building.needs.waitingOnAdmin,
@@ -646,6 +666,62 @@ describe('what a round needs of them: one card each', () => {
       }
     },
   )
+
+  it('M10: a need this page does not know (a newer server) draws a card with a reference, reported, and its buttons, never nothing', async () => {
+    const s = stage()
+    await open(s)
+    s.state(
+      round(
+        {
+          status: 'needs-you',
+          needs: { kind: 'handed-over' } as unknown as Needs,
+          reference: null,
+        },
+        { pages: { state: 'halted' } },
+      ),
+    )
+    const card = (await screen.findByText(words.refused.body)).closest(
+      '.mf-card',
+    ) as HTMLElement
+    const reference = referenceIn(card)
+    expect(reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    await waitFor(() =>
+      expect(reports).toEqual([
+        expect.objectContaining({
+          reference,
+          code: 'NEEDS_NOT_DRAWN',
+          operation: 'handedOver',
+        }),
+      ]),
+    )
+    expect(
+      within(card).getByRole('button', { name: words.building.carryOn }),
+    ).toBeTruthy()
+    expect(
+      within(card).getByRole('button', { name: words.building.stopHere }),
+    ).toBeTruthy()
+  })
+
+  it('M10: a need this page does not know, with a reference the server recorded: that reference, and no second report', async () => {
+    const s = stage()
+    await open(s)
+    s.state(
+      round(
+        {
+          status: 'needs-you',
+          needs: { kind: 'handed-over' } as unknown as Needs,
+          reference: '0000-0C02',
+        },
+        { pages: { state: 'halted' } },
+      ),
+    )
+    const card = (await screen.findByText(words.refused.body)).closest(
+      '.mf-card',
+    ) as HTMLElement
+    expect(referenceIn(card)).toBe('0000-0C02')
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(reports).toEqual([])
+  })
 
   it('the chip names who has it: Manifest, the model, or them', async () => {
     const s = stage()

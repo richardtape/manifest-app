@@ -635,6 +635,17 @@ describe('refusals while the plan is written (Rich’s words)', () => {
     ['MODEL_GATEWAY_REFUSED', words.plan.waitingOnAdmin, 'carryOn'],
     ['MODEL_UNREACHABLE', words.plan.couldntWrite, 'carryOn'],
     ['MODEL_ANSWER_INVALID', words.plan.didntComeOut, 'tryAgain'],
+    // F5 Decision 14: a stall's own words, with Try again.
+    [
+      'MODEL_STALLED',
+      'Our model stopped answering before it finished. Nothing is lost.',
+      'tryAgain',
+    ],
+    [
+      'MODEL_TOO_LONG',
+      "Our model's answer went on far longer than any should, so we stopped it. Nothing is lost.",
+      'tryAgain',
+    ],
     ['INTERNAL', words.refused.body, 'carryOn'],
   ] as const)(
     '%s is said, with its reference; its button writes the plan again',

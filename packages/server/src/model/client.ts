@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import { chunksOf } from './stream.js'
 
 /**
  * THE MODEL, ASKED ONLY FOR STRUCTURED OUTPUT (F2 Decision 5). One zod schema is both the
@@ -14,17 +15,31 @@ export type ModelCode =
   | 'MODEL_NOT_AVAILABLE'
   | 'MODEL_BUDGET_EXHAUSTED'
   | 'MODEL_UNREACHABLE'
+  /** No first word by its deadline, or quiet too long mid-answer (F5 Decision 14). */
+  | 'MODEL_STALLED'
+  /** Words still arriving at the ceiling: longer than any answer should be (F5 Decision 14). */
+  | 'MODEL_TOO_LONG'
   | 'MODEL_KEY_REFUSED'
   /** No intake key handed over, or one lost to a restart (F2 Task 6). */
   | 'INTAKE_KEY_MISSING'
   /** An intake key past its `expiresAt`: dropped (F2 Task 6). */
   | 'INTAKE_KEY_EXPIRED'
 
-/** A code and the gateway's status: never the key, the gateway's words, or the answer. */
+/**
+ * HOW MUCH OF AN ANSWER CAME, COUNTED AND NEVER KEPT (F5 Decision 14): its characters, when its
+ * first word came (null: none did), and how long it took, each from the request.
+ */
+export type Received = { chars: number; firstWordMs: number | null; ms: number }
+
+/**
+ * A code and the gateway's status: never the key, the gateway's words, or the answer. A stall
+ * carries what was received, so the trace says how much came and why it ended.
+ */
 export class ModelError extends Error {
   constructor(
     readonly code: ModelCode,
     readonly status: number | null = null,
+    readonly received: Received | null = null,
   ) {
     super(status === null ? code : `${code} (${status})`)
     this.name = 'ModelError'
@@ -98,32 +113,15 @@ function refusal(status: number, body: unknown): ModelError {
 
 /**
  * WHICH MODEL ANSWERED (F3 Decision 4), for the trace and the round's one line. Never shown.
- * F3 M1 measured LiteLLM 1.98.0: `model` is its own name for what answered
- * (`default-chat-large` on the normal path, `ollama_chat/qwen3.5:4b` for 9b's fallback), and the
- * header `x-litellm-attempted-fallbacks` is above 0 when the fallback answered.
+ * S1's M2 measured LiteLLM 1.98.0 streaming: each chunk's `model` is only the alias asked for, so
+ * the header `x-litellm-attempted-fallbacks` (above 0 when the fallback answered) is the only
+ * word on a fallback; `usage` is in the last chunk. `received` is how much came, never what.
  */
 export interface Answered {
   model: string | null
   fallback: boolean
   usage: { in: number; out: number } | null
-}
-
-function answeredOf(payload: unknown, headers: Headers): Answered {
-  const body = payload as
-    | {
-        model?: unknown
-        usage?: { prompt_tokens?: unknown; completion_tokens?: unknown }
-      }
-    | undefined
-  const tokens = body?.usage
-  const count = (value: unknown) => (typeof value === 'number' ? value : null)
-  const input = count(tokens?.prompt_tokens)
-  const output = count(tokens?.completion_tokens)
-  return {
-    model: typeof body?.model === 'string' ? body.model : null,
-    fallback: Number(headers.get('x-litellm-attempted-fallbacks') ?? 0) > 0,
-    usage: input === null || output === null ? null : { in: input, out: output },
-  }
+  received: Received
 }
 
 /** Decision 4: the most capable model a session lists, or none. */
@@ -134,25 +132,51 @@ export function modelFor(listed: string[]): string | undefined {
 }
 
 /**
- * A ROUND'S MODEL WAITS LONGER THAN THE INTAKE'S 60 s: the lead writes whole files, and on the real
- * platform one commit took 68.9 s (9,564 tokens written; F4 Step 3, Rich's click), cut off and said
- * as unreachable. Nobody waits on the page for a round, and a call that answers is paid for.
+ * THREE DEADLINES, ONE SET PER USE (F5 Decision 14), in place of one total: a long answer whose
+ * words keep coming is never cut, and a dead one is known in seconds. From the request to the
+ * first word; between words once they come; and a ceiling on the whole.
  */
-export const ROUND_MODEL_TIMEOUT_MS = 5 * 60_000
+export interface Deadlines {
+  firstWordMs: number
+  quietMs: number
+  ceilingMs: number
+}
+
+/**
+ * A ROUND'S (S1: M2, on the gateway): the on-campus lead's first word came at 56.8 s on a 4.3k-token
+ * prompt, and the capable model reasons for 13.6 s before a commit; the longest gap between words
+ * anywhere was 667 ms. Nobody waits on the page for a round, and a call that answers is paid for.
+ */
+export const ROUND_DEADLINES: Deadlines = {
+  firstWordMs: 120_000,
+  quietMs: 30_000,
+  ceilingMs: 15 * 60_000,
+}
+
+/** THE INTAKE'S AND THE PLAN'S (S1: M2): `default-chat`'s first word came at 3.5 s cold, 0.14 s warm. */
+export const ASKING_DEADLINES: Deadlines = {
+  firstWordMs: 60_000,
+  quietMs: 30_000,
+  ceilingMs: 3 * 60_000,
+}
 
 /**
  * AN OPENAI-COMPATIBLE GATEWAY: the platform's LiteLLM, with an intake or agent session's
  * key. It sends no reasoning setting of its own: the gateway's `think: false` on
  * `default-chat` is load-bearing, and only a request's own `think: true` beats it (F2 M3).
+ * **Every call streams** (F5 Decision 14, Rich: *"Stream every call"*): the answer's words are
+ * gathered for the call alone and parsed whole; a stall aborts the request, which the gateway
+ * bills for what it streamed (S1: M2), and is never asked again here: that is the person's
+ * Carry on, since a retry re-asks and re-pays.
  */
 export function openAiCompatible(options: {
   baseUrl: string
   key: string
   model: string
   fetch?: typeof fetch
-  /** Per attempt. F1's 15 s is for reads; a model takes longer (M3: up to 7.8 s on a 4B model). */
-  timeoutMs?: number
-  /** Each 2xx answer's own model, whether a fallback answered, and its usage: every answer paid for. */
+  /** The intake's and the plan's, unless a round's are given. */
+  deadlines?: Deadlines
+  /** Each whole answer's model, whether a fallback answered, its usage and how much came: every answer paid for. */
   onAnswer?: (answered: Answered) => void
 }): Model {
   const {
@@ -160,7 +184,7 @@ export function openAiCompatible(options: {
     key,
     model,
     fetch: send = fetch,
-    timeoutMs = 60_000,
+    deadlines = ASKING_DEADLINES,
     onAnswer,
   } = options
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`
@@ -173,46 +197,100 @@ export function openAiCompatible(options: {
           type: 'json_schema',
           json_schema: { name: agent, strict: true, schema: z.toJSONSchema(schema) },
         },
+        stream: true,
+        stream_options: { include_usage: true },
       })
       return answered(
         async () => {
-          let status: number
-          let text: string
-          let headers: Headers
-          // The deadline covers the whole answer, its body included.
-          const deadline = new AbortController()
-          const timer = setTimeout(() => deadline.abort(), timeoutMs)
+          const started = Date.now()
+          const cut = new AbortController()
+          let why: 'quiet' | 'ceiling' | null = null
+          const stop = (reason: 'quiet' | 'ceiling') => {
+            why ??= reason
+            cut.abort()
+          }
+          let chars = 0
+          let firstWordMs: number | null = null
+          const received = (): Received => ({
+            chars,
+            firstWordMs,
+            ms: Date.now() - started,
+          })
+          // To the first word from the request; then between words; and the whole.
+          let quiet = setTimeout(() => stop('quiet'), deadlines.firstWordMs)
+          const ceiling = setTimeout(() => stop('ceiling'), deadlines.ceilingMs)
+          // Refused or cut: never the error itself, whose cause could carry the request, and
+          // the request carries the key.
+          const failed = (error: unknown): ModelError =>
+            why === 'quiet'
+              ? new ModelError('MODEL_STALLED', null, received())
+              : why === 'ceiling'
+                ? new ModelError('MODEL_TOO_LONG', null, received())
+                : error instanceof ModelError
+                  ? error
+                  : new ModelError('MODEL_UNREACHABLE')
           try {
-            const response = await send(url, {
-              method: 'POST',
-              headers: {
-                authorization: `Bearer ${key}`,
-                'content-type': 'application/json',
-              },
-              body,
-              signal: deadline.signal,
+            let response: Response
+            try {
+              response = await send(url, {
+                method: 'POST',
+                headers: {
+                  authorization: `Bearer ${key}`,
+                  'content-type': 'application/json',
+                },
+                body,
+                signal: cut.signal,
+              })
+            } catch (error) {
+              throw failed(error)
+            }
+            if (response.status < 200 || response.status >= 300) {
+              let payload: unknown
+              try {
+                payload = JSON.parse(await response.text())
+              } catch (error) {
+                if (why !== null) throw failed(error)
+                payload = undefined
+              }
+              throw refusal(response.status, payload)
+            }
+            let content = ''
+            let named: string | null = null
+            let usage: Answered['usage'] = null
+            try {
+              const words = (
+                response.body ?? new ReadableStream<Uint8Array>()
+              ).pipeThrough(new TransformStream<Uint8Array, Uint8Array>(), {
+                signal: cut.signal,
+              })
+              for await (const chunk of chunksOf(words)) {
+                if (chunk.content !== '') {
+                  firstWordMs ??= Date.now() - started
+                  content += chunk.content
+                  chars += chunk.content.length
+                }
+                if (firstWordMs !== null) {
+                  clearTimeout(quiet)
+                  quiet = setTimeout(() => stop('quiet'), deadlines.quietMs)
+                }
+                named ??= chunk.model
+                if (chunk.usage !== null) usage = chunk.usage
+              }
+            } catch (error) {
+              throw failed(error)
+            }
+            onAnswer?.({
+              model: named,
+              fallback:
+                Number(response.headers.get('x-litellm-attempted-fallbacks') ?? 0) > 0,
+              usage,
+              received: received(),
             })
-            status = response.status
-            headers = response.headers
-            text = await response.text()
-          } catch {
-            // Refused, or no answer by the deadline. Never the error itself: its cause
-            // could carry the request, and the request carries the key.
-            throw new ModelError('MODEL_UNREACHABLE')
+            return content
           } finally {
-            clearTimeout(timer)
+            clearTimeout(quiet)
+            clearTimeout(ceiling)
           }
-          let payload: unknown
-          try {
-            payload = JSON.parse(text)
-          } catch {
-            payload = undefined
-          }
-          if (status < 200 || status >= 300) throw refusal(status, payload)
-          onAnswer?.(answeredOf(payload, headers))
-          const content = (payload as { choices?: { message?: { content?: unknown } }[] })
-            ?.choices?.[0]?.message?.content
-          return typeof content === 'string' ? content : ''
         },
         schema,
         check,

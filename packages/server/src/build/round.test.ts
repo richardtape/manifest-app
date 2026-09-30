@@ -8,9 +8,11 @@ import { createWork } from '../api/work.js'
 import {
   answered,
   ModelError,
+  openAiCompatible,
   type Answered,
   type Message,
   type Model,
+  type Received,
 } from '../model/client.js'
 import type { AgentSessions } from '../platform/agent-sessions.js'
 import type { Build, Builds } from '../platform/builds.js'
@@ -26,7 +28,7 @@ import { storeTrace } from '../runtime/trace.js'
 import { openStore, type Conversation, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
 import { createLine, type Line } from './line.js'
-import { createRounds, type Rounds } from './round.js'
+import { createRounds, type RoundDeps, type Rounds } from './round.js'
 
 /**
  * F3 TASK 8: THE ROUND OF WORK. Moment 6's five steps, each ticking on its own platform signal;
@@ -172,6 +174,7 @@ function scriptedModel(script: Script, fallback: (agent: string, n: number) => b
               : 'default-chat-large',
             fallback: fallback(agent, index),
             usage: { in: 100, out: 10 },
+            received: { chars: JSON.stringify(answer).length, firstWordMs: 5, ms: 10 },
           })
           return answer
         },
@@ -212,6 +215,8 @@ interface Options {
   stagingIncident?: (incidentId: string) => Incident | 'confidential' | undefined
   /** Why the platform ended each session (its index), when it did: models_withdrawn (FE-36). */
   endReason?: (n: number) => string | null
+  /** The round's model itself, in place of the script: the real client over a fake gateway (F5 Task 2). */
+  modelFor?: RoundDeps['modelFor']
 }
 
 function harness(options: Options, file?: string, store0?: Store) {
@@ -469,7 +474,7 @@ function harness(options: Options, file?: string, store0?: Store) {
     ...(options.waits === undefined ? {} : { waits: options.waits }),
     modelFor: (session, onAnswer) => {
       models.push(session)
-      return model.bound(onAnswer)
+      return options.modelFor?.(session, onAnswer) ?? model.bound(onAnswer)
     },
   })
 
@@ -1558,6 +1563,156 @@ describe('the fallback (Rich: carry on, and say so; Decision 4)', () => {
       asked: 'default-chat-large',
       answered: 'ollama_chat/qwen3.5:4b',
     })
+  })
+})
+
+describe('a stall (F5 Decision 14, Review Focus 2)', () => {
+  const RECEIVED: Received = { chars: 2_354, firstWordMs: 13_600, ms: 43_600 }
+  const stall = (why: 'quiet' | 'ceiling') =>
+    new ModelError(why === 'quiet' ? 'MODEL_STALLED' : 'MODEL_TOO_LONG', null, RECEIVED)
+  const models = (h: H, id: string) =>
+    h.store
+      .listTrace(h.store.latestRun(id)!.id)
+      .map((t) => t.entry as { kind: string })
+      .filter((e) => e.kind === 'model')
+
+  it.each(['quiet', 'ceiling'] as const)(
+    'the model %s: needs you, a stall, with a reference; the trace says how much came; Carry on resumes in the same session, where it was',
+    async (why) => {
+      const { h, id } = await startedRound({
+        script: { lead: [read('server.js'), stall(why), commit(), done()] },
+        autoBuild: true,
+      })
+      await untilStatus(h, id, 'needs-you')
+      expect(viewOf(h, id)?.needs).toEqual({ kind: 'stalled', why })
+      expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+      expect(models(h, id).at(-1)).toEqual({
+        kind: 'model',
+        agent: 'lead',
+        asked: 'default-chat-large',
+        answered: null,
+        fallback: null,
+        usage: null,
+        received: RECEIVED,
+        stalled: why,
+      })
+
+      h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN)
+      await untilStatus(h, id, 'done')
+      expect(h.sessionStarts).toHaveLength(1)
+      // It carried on where it was: the read before the stall is still its last move.
+      expect(leadPrompts(h)[2]).toContain('Your last move (read)')
+    },
+  )
+
+  it('a stall is billed for what streamed (S1: M2): the cost line is read again', async () => {
+    const spent = [0.1]
+    let release = () => undefined as void
+    const held = new Promise<void>((resolve) => (release = resolve))
+    const { h, id } = await startedRound({
+      script: { lead: [async () => (await held, stall('quiet'))] },
+      spent,
+    })
+    await until(
+      () => viewOf(h, id)?.cost.conversationUsd === 0.1,
+      () => viewOf(h, id),
+    )
+    spent[0] = 0.25
+    release()
+    await untilStatus(h, id, 'needs-you')
+    await until(
+      () => viewOf(h, id)?.cost.conversationUsd === 0.25,
+      () => viewOf(h, id)?.cost,
+    )
+  })
+
+  it('every answer is traced with how much came, never what (Global Constraints): the real client over a gateway that streams a sentinel', async () => {
+    const SENTINEL = 'SENTINEL-7c1e-never-kept'
+    const whole = `{"move":"${SENTINEL}"}`
+    const partial = `{"move":{"kind":"read","paths":["${SENTINEL}`
+    let n = 0
+    const gateway = (async (_url: string, init: RequestInit) => {
+      const cut = n++ >= 2
+      const encoder = new TextEncoder()
+      const body = new ReadableStream<Uint8Array>({
+        start(c) {
+          const event = (payload: unknown) =>
+            c.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`))
+          init.signal?.addEventListener('abort', () => {
+            try {
+              c.error(init.signal!.reason)
+            } catch {
+              // Already closed: nothing to cut.
+            }
+          })
+          event({
+            model: 'default-chat-large',
+            choices: [{ delta: { content: cut ? partial : whole } }],
+          })
+          if (cut) return
+          event({
+            model: 'default-chat-large',
+            choices: [],
+            usage: { prompt_tokens: 4300, completion_tokens: 21 },
+          })
+          c.enqueue(encoder.encode('data: [DONE]\n\n'))
+          c.close()
+        },
+      })
+      return new Response(body, {
+        status: 200,
+        headers: {
+          'content-type': 'text/event-stream',
+          'x-litellm-attempted-fallbacks': '0',
+        },
+      })
+    }) as unknown as typeof fetch
+    const { h, id } = await startedRound({
+      script: {},
+      modelFor: (session, onAnswer) =>
+        openAiCompatible({
+          baseUrl: session.baseUrl,
+          key: session.key,
+          model: session.model,
+          fetch: gateway,
+          deadlines: { firstWordMs: 500, quietMs: 50, ceilingMs: 5_000 },
+          onAnswer,
+        }),
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'stalled', why: 'quiet' })
+    expect(JSON.stringify(dumpAll(h.file))).not.toContain(SENTINEL)
+    expect(JSON.stringify(h.frames)).not.toContain(SENTINEL)
+    // Two whole answers that were not moves (one asked twice), then one cut short.
+    expect(models(h, id)).toEqual([
+      ...[0, 1].map(() => ({
+        kind: 'model',
+        agent: 'lead',
+        asked: 'default-chat-large',
+        answered: 'default-chat-large',
+        fallback: false,
+        usage: { in: 4300, out: 21 },
+        received: {
+          chars: whole.length,
+          firstWordMs: expect.any(Number),
+          ms: expect.any(Number),
+        },
+      })),
+      {
+        kind: 'model',
+        agent: 'lead',
+        asked: 'default-chat-large',
+        answered: null,
+        fallback: null,
+        usage: null,
+        received: {
+          chars: partial.length,
+          firstWordMs: expect.any(Number),
+          ms: expect.any(Number),
+        },
+        stalled: 'quiet',
+      },
+    ])
   })
 })
 

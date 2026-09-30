@@ -1,3 +1,4 @@
+import type { Received } from '../model/client.js'
 import type { Store } from '../store/db.js'
 
 /**
@@ -17,6 +18,10 @@ export type TraceEntry =
       /** Whether 9b's fallback answered (`x-litellm-attempted-fallbacks`, Decision 4). */
       fallback: boolean | null
       usage: { in: number; out: number } | null
+      /** How much of the answer came, and when (F5 Decision 14): counted, never its text. */
+      received: Received
+      /** Why it ended before a whole answer came: its words stopped, or went on too long. */
+      stalled?: 'quiet' | 'ceiling'
     }
   | { kind: 'move'; move: string; verdict: 'ran' | 'guarded'; reason?: string }
   | {

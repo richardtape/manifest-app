@@ -568,6 +568,35 @@ describe('a refusal on the stream', () => {
     await waitFor(() => expect(s.called('intake')).toHaveLength(2))
   })
 
+  it.each([
+    ['MODEL_STALLED', 'Our model stopped answering before it finished. Nothing is lost.'],
+    [
+      'MODEL_TOO_LONG',
+      "Our model's answer went on far longer than any should, so we stopped it. Nothing is lost.",
+    ],
+  ])(
+    'a stall (%s, F5 Decision 14): its own words, the reference the server recorded; Try again reads again, or they name it',
+    async (code, said) => {
+      const s = stage()
+      await describeAndCarryOn(s)
+      s.state({})
+      s.say({ kind: 'step', step: 'understanding', state: 'halted' })
+      s.say({ kind: 'refusal', code, reference: '7F3A-9C22' })
+      const notice = await screen.findByRole('alert')
+      expect(within(notice).getByText(said)).toBeTruthy()
+      expect(within(notice).getByText(words.reference.line('7F3A-9C22'))).toBeTruthy()
+      expect(
+        within(notice).getByRole('button', { name: words.describe.nameItYourself }),
+      ).toBeTruthy()
+      await act(async () => {
+        fireEvent.click(
+          within(notice).getByRole('button', { name: words.describe.tryAgain }),
+        )
+      })
+      await waitFor(() => expect(s.called('intake')).toHaveLength(2))
+    },
+  )
+
   it('a key lost to a restart (Review Focus 5): a new intake session, handed over, and the step again, without a word; twice, it is said', async () => {
     const s = stage()
     await describeAndCarryOn(s)

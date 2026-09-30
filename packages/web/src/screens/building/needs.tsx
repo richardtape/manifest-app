@@ -68,6 +68,47 @@ function Interrupted({ presses }: { presses: Presses }) {
   )
 }
 
+/**
+ * M10 (F4's deferred Minor): A NEED THIS PAGE DOES NOT KNOW, from a newer server. Never nothing:
+ * our generic words and buttons, with the reference our server recorded, or one of ours,
+ * reported once, the kind as its operation (camel-cased, as our server takes one).
+ */
+function Undrawn({
+  kind,
+  reference,
+  presses,
+}: {
+  kind: string
+  reference: string | null
+  presses: Presses
+}) {
+  if (reference !== null)
+    return (
+      <NeedsCard tone="attention" said={words.refused.body} reference={reference}>
+        {carryOn(presses)}
+        {stopHere(presses)}
+      </NeedsCard>
+    )
+  return <UndrawnReported kind={kind} presses={presses} />
+}
+
+function UndrawnReported({ kind, presses }: { kind: string; presses: Presses }) {
+  const operation = kind
+    .replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase())
+    .replace(/[^A-Za-z0-9]/g, '')
+    .slice(0, 64)
+  const reference = useReported({
+    code: 'NEEDS_NOT_DRAWN',
+    ...(/^[a-z]/.test(operation) ? { operation } : {}),
+  })
+  return (
+    <NeedsCard tone="attention" said={words.refused.body} reference={reference}>
+      {carryOn(presses)}
+      {stopHere(presses)}
+    </NeedsCard>
+  )
+}
+
 /** A need, in words: the walk-through's, Rich's, or ours (words.ts marks which). */
 function needCard(
   needs: Exclude<Needs, { kind: 'token' }>,
@@ -154,6 +195,14 @@ function needCard(
           {stopHere(presses)}
         </NeedsCard>
       )
+    case 'stalled':
+      // F5 Decision 14: Carry on asks again (a retry re-pays, so it is theirs to press).
+      return (
+        <NeedsCard tone="attention" said={words.stalled[needs.why]} reference={reference}>
+          {carryOn(presses)}
+          {stopHere(presses)}
+        </NeedsCard>
+      )
     case 'cannot':
       return (
         <NeedsCard tone="waiting" said={said.cannot(needs.what)} reference={reference} />
@@ -177,6 +226,17 @@ function needCard(
           {stopHere(presses)}
         </NeedsCard>
       )
+    default: {
+      // Every kind above, or typecheck says so; a newer server's kind is still drawn (M10).
+      const unknown: never = needs
+      return (
+        <Undrawn
+          kind={String((unknown as { kind?: unknown }).kind)}
+          reference={reference}
+          presses={presses}
+        />
+      )
+    }
   }
 }
 

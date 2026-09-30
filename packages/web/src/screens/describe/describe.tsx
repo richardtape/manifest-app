@@ -301,7 +301,13 @@ export function Describing({
       return
     }
     setNotice({
-      words: words.describe.couldntRead,
+      // F5 Decision 14: a stall says which; anything else, that we couldn't read it.
+      words:
+        refusal.code === 'MODEL_STALLED'
+          ? words.stalled.quiet
+          : refusal.code === 'MODEL_TOO_LONG'
+            ? words.stalled.ceiling
+            : words.describe.couldntRead,
       reference: refusal.reference,
       then: 'choose',
     })

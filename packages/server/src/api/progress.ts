@@ -169,6 +169,11 @@ export type Needs =
   /** 40 moves in one step, or the same refusal three times in a row (Review Focus 2). */
   | { kind: 'moves' }
   | { kind: 'unreachable'; what: 'platform' | 'model' }
+  /**
+   * F5 Decision 14: the model's answer stopped coming (`quiet`: no first word, or too long
+   * between words) or went on past the ceiling. Never retried by itself: Carry on re-asks.
+   */
+  | { kind: 'stalled'; why: 'quiet' | 'ceiling' }
   /** FE-32: what they asked for that needs a piece we cannot install, in the lead's plain words. */
   | { kind: 'cannot'; what: string }
   /** The token was refused: the page mints another, without a word. */

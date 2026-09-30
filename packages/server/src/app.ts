@@ -16,8 +16,9 @@ import type { Config } from './config.js'
 import { whoIs } from './identity.js'
 import {
   notAvailable,
+  ASKING_DEADLINES,
   openAiCompatible,
-  ROUND_MODEL_TIMEOUT_MS,
+  ROUND_DEADLINES,
   type Answered,
   type Model,
 } from './model/client.js'
@@ -245,10 +246,12 @@ export function roundModelFor(config: Config): RoundDeps['modelFor'] {
     return (session, onAnswer) => ({
       async complete(agent, schema, messages, check) {
         const answer = await walkthrough.complete(agent, schema, messages, check)
+        // The walk-through answers at once, and whole: counted as the gateway's would be.
         onAnswer({
           model: session.model,
           fallback: false,
           usage: null,
+          received: { chars: JSON.stringify(answer).length, firstWordMs: 0, ms: 0 },
         } satisfies Answered)
         return answer
       },
@@ -261,7 +264,7 @@ export function roundModelFor(config: Config): RoundDeps['modelFor'] {
       baseUrl: config.modelGateway,
       key: session.key,
       model: session.model,
-      timeoutMs: ROUND_MODEL_TIMEOUT_MS,
+      deadlines: ROUND_DEADLINES,
       onAnswer,
     })
   }
@@ -286,5 +289,10 @@ export function planModelFor(config: Config): (key: string) => Model {
     return () => walkthrough
   }
   return (key) =>
-    openAiCompatible({ baseUrl: config.modelGateway, key, model: config.planModel })
+    openAiCompatible({
+      baseUrl: config.modelGateway,
+      key,
+      model: config.planModel,
+      deadlines: ASKING_DEADLINES,
+    })
 }

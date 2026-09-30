@@ -76,6 +76,15 @@ export const words = {
     body: 'Something went wrong on our side. Nothing of yours has changed.',
     button: 'Try again',
   },
+  /**
+   * F5 Decision 14, approved by Rich in the design: the model's answer stopped coming, or went on
+   * past our ceiling. A round's card, and the intake's and the plan's, each with its own buttons.
+   */
+  stalled: {
+    quiet: 'Our model stopped answering before it finished. Nothing is lost.',
+    ceiling:
+      "Our model's answer went on far longer than any should, so we stopped it. Nothing is lost.",
+  },
   signOut: {
     title: 'Sign out',
     button: 'Sign out',

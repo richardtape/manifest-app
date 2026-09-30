@@ -7,9 +7,9 @@ import { suggestNames } from '../agents/naming.js'
 import { chooseBlueprint } from '../agents/blueprint.js'
 import { writeChange } from '../agents/change.js'
 import { planMarkdown, writePlan } from '../agents/plan.js'
-import { buildServer, roundModelFor } from '../app.js'
+import { buildServer, planModelFor, roundModelFor } from '../app.js'
 import type { Config } from '../config.js'
-import { ModelError, ROUND_MODEL_TIMEOUT_MS, type Model } from '../model/client.js'
+import { ModelError, type Model } from '../model/client.js'
 import { scripted } from '../model/scripted.js'
 import { walkthroughModel } from '../model/walkthrough.js'
 import { openStore } from '../store/db.js'
@@ -39,7 +39,8 @@ interface Seen {
   headers: IncomingHttpHeaders
   body: unknown
 }
-type Reply = { status: number; body?: unknown }
+/** A JSON answer, or a model's answer streamed as the gateway's server-sent events (F5 Decision 14). */
+type Reply = { status: number; body?: unknown; stream?: string }
 
 const closers: (() => Promise<unknown> | void)[] = []
 afterEach(async () => {
@@ -60,6 +61,11 @@ async function fakePlatform(answer: (seen: Seen, count: number) => Reply) {
       }
       seen.push(one)
       const reply = answer(one, seen.length)
+      if (reply.stream !== undefined) {
+        response.writeHead(reply.status, { 'content-type': 'text/event-stream' })
+        response.end(reply.stream)
+        return
+      }
       response.writeHead(reply.status, { 'content-type': 'application/json' })
       response.end(reply.body === undefined ? '' : JSON.stringify(reply.body))
     })
@@ -552,7 +558,7 @@ describe('each mode’s intake model', () => {
   it('through the edge: the gateway our Config names, with the handed key and the platform’s one model', async () => {
     const gateway = await fakePlatform(() => ({
       status: 200,
-      body: { choices: [{ message: { content: '{"ok":true}' } }] },
+      stream: `data: ${JSON.stringify({ choices: [{ delta: { content: '{"ok":true}' } }] })}\n\ndata: [DONE]\n\n`,
     }))
     const config: Config = {
       mode: 'edge',
@@ -865,46 +871,89 @@ describe('the walk-through model (mock mode: Decision 7)', () => {
   })
 })
 
-describe("a round's model: how long it waits (F4 Step 3, Rich's click)", () => {
+describe("each use's deadlines (F5 Decision 14; F4 Step 3, Rich's click)", () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
   })
 
-  it("waits for a long answer: the lead writing the app's files took 68.9 s on the capable model, and the intake's 60 s cut it off and called it unreachable", async () => {
+  const config: Config = {
+    mode: 'edge',
+    port: 7105,
+    origin: 'https://app.manifest.internal',
+    platformOrigin: 'http://127.0.0.1:7100',
+    modelGateway: 'http://127.0.0.1:7106/v1',
+    planModel: 'default-chat',
+  }
+
+  /**
+   * A gateway that takes the request and sends no word; when did it give up, and how? The model
+   * is made after `fetch` is stubbed, so no request reaches a real gateway.
+   */
+  async function firstWordWait(
+    made: () => Model,
+  ): Promise<{ abortedAt: number; code: string }> {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
-    let aborted = false
+    let waited = 0
+    let abortedAt = -1
     vi.stubGlobal(
       'fetch',
       (_url: string, init: RequestInit) =>
         new Promise((_resolve, reject) => {
           init.signal?.addEventListener('abort', () => {
-            aborted = true
+            abortedAt = waited
             reject(new Error('aborted'))
           })
         }),
     )
-    const config: Config = {
-      mode: 'edge',
-      port: 7105,
-      origin: 'https://app.manifest.internal',
-      platformOrigin: 'http://127.0.0.1:7100',
-      modelGateway: 'http://127.0.0.1:7106/v1',
-      planModel: 'default-chat',
-    }
-    const model = roundModelFor(config)(
-      { key: 'sk-test-round', baseUrl: config.modelGateway, model: 'default-chat-large' },
-      () => undefined,
-    )
-    const answer = model
+    const answer = made()
       .complete('lead', z.object({ said: z.string() }), [
         { role: 'user', content: 'write it' },
       ])
       .catch((error: unknown) => error)
-    await vi.advanceTimersByTimeAsync(69_000)
-    expect(aborted).toBe(false)
-    await vi.advanceTimersByTimeAsync(ROUND_MODEL_TIMEOUT_MS - 69_000)
-    expect(aborted).toBe(true)
-    expect(((await answer) as ModelError).code).toBe('MODEL_UNREACHABLE')
+    while (waited < 20 * 60_000 && abortedAt === -1) {
+      waited += 1_000
+      await vi.advanceTimersByTimeAsync(1_000)
+    }
+    return { abortedAt, code: ((await answer) as ModelError).code }
+  }
+
+  it("a round's model waits 120 s for a first word: the on-campus lead's came at 56.8 s (S1: M2), and a commit's 68.9 s whole answer was cut by the old 60 s", async () => {
+    const model = () =>
+      roundModelFor(config)(
+        {
+          key: 'sk-test-round',
+          baseUrl: config.modelGateway,
+          model: 'default-chat-large',
+        },
+        () => undefined,
+      )
+    expect(await firstWordWait(model)).toEqual({
+      abortedAt: 120_000,
+      code: 'MODEL_STALLED',
+    })
+  })
+
+  it("the plan's model waits 60 s for a first word", async () => {
+    expect(await firstWordWait(() => planModelFor(config)('sk-test-plan'))).toEqual({
+      abortedAt: 60_000,
+      code: 'MODEL_STALLED',
+    })
+  })
+
+  it("the intake's model waits 60 s for a first word", async () => {
+    const keys = createIntakeKeys()
+    keys.put('c-1', {
+      key: 'sk-test-intake',
+      baseUrl: config.modelGateway,
+      model: 'default-chat',
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    })
+    expect(
+      await firstWordWait(() => intakeModelFor(config, keys)({ id: 'c-1' })),
+    ).toEqual({
+      abortedAt: 60_000,
+      code: 'MODEL_STALLED',
+    })
   })
 })

@@ -79,6 +79,11 @@ export function planRefused(
       return { words: words.plan.waitingOnAdmin, tone: 'waiting', button: 'carryOn' }
     case 'MODEL_ANSWER_INVALID':
       return { words: words.plan.didntComeOut, tone: 'attention', button: 'tryAgain' }
+    // F5 Decision 14: the model's answer stopped coming, or went on too long.
+    case 'MODEL_STALLED':
+      return { words: words.stalled.quiet, tone: 'attention', button: 'tryAgain' }
+    case 'MODEL_TOO_LONG':
+      return { words: words.stalled.ceiling, tone: 'attention', button: 'tryAgain' }
     case 'MODEL_UNREACHABLE':
     case 'MODEL_KEY_REFUSED':
     case 'PLATFORM_UNAVAILABLE':

@@ -416,6 +416,7 @@ export function createRounds(deps: RoundDeps): Rounds {
       answered: answer.model,
       fallback: answer.fallback,
       usage: answer.usage,
+      received: answer.received,
     })
     const d = detail(live)
     if (answer.fallback && !d.fallbackSaid) {
@@ -424,6 +425,25 @@ export function createRounds(deps: RoundDeps): Rounds {
       save(live)
     }
     void refreshCost(live)
+  }
+
+  /**
+   * AN ANSWER CUT SHORT (F5 Decision 14): the trace says how much came and why it ended, never
+   * what; the gateway bills what it streamed (S1: M2), so the cost is read again.
+   */
+  function stalled(live: Live, error: ModelError) {
+    if (error.received === null) return
+    deps.trace.record(live.run.id, {
+      kind: 'model',
+      agent: live.agent,
+      asked: live.run.model ?? '',
+      answered: null,
+      fallback: null,
+      usage: null,
+      received: error.received,
+      stalled: error.code === 'MODEL_TOO_LONG' ? 'ceiling' : 'quiet',
+    })
+    void refreshCost(live, true)
   }
 
   async function endSession(live: Live) {
@@ -523,7 +543,16 @@ export function createRounds(deps: RoundDeps): Rounds {
         model: {
           complete(agent, schema, messages, check) {
             live.agent = agent
-            return model.complete(agent, schema, messages, check)
+            return model
+              .complete(agent, schema, messages, check)
+              .catch((error: unknown) => {
+                if (
+                  error instanceof ModelError &&
+                  (error.code === 'MODEL_STALLED' || error.code === 'MODEL_TOO_LONG')
+                )
+                  stalled(live, error)
+                throw error
+              })
           },
         },
       }
@@ -1271,6 +1300,11 @@ export function createRounds(deps: RoundDeps): Rounds {
       }
       if (error.code === 'MODEL_UNREACHABLE')
         return needs({ kind: 'unreachable', what: 'model' }, error.code)
+      // Carry on re-asks, as from unreachable: a stall is never asked again by itself.
+      if (error.code === 'MODEL_STALLED')
+        return needs({ kind: 'stalled', why: 'quiet' }, error.code)
+      if (error.code === 'MODEL_TOO_LONG')
+        return needs({ kind: 'stalled', why: 'ceiling' }, error.code)
       return needs({ kind: 'refused', code: error.code }, error.code)
     }
     if (error instanceof PlatformRefusal) {
