@@ -636,6 +636,13 @@ try it.
 - **what the platform cannot do yet is F5b's**: *Draft the request*, *Fill in what we know*, *I've sent it* and *waiting
   since*, written when the platform's launch-path sittings 6–10 land.
 
+*Changed 2026-09-30, at F5 sitting 3's review (Rich):*
+- **a card never says done while the checklist says the item is unmet** (*"With the Manifest team"*): a registration UBC
+  made that does not cover the version on trying-out (a sign-in attribute added since) is with the Manifest team, *"The
+  newest version needs it changed."*;
+- **a change on file is with UBC's identity team** (*"With UBC, counting days"*), as the platform's record means it:
+  *"A change, recorded 18 September · waiting 3 days"*.
+
 **Trying to:** nothing. They did not know these existed. The design's job is that they never discover them on
 launch day (spec §13).
 

@@ -12,7 +12,10 @@ first, as sitting 0, while the platform's launch-path sitting 3 held 7100 (Rich:
 measured on 7100 and corrected Decisions 6, 7, 8, 10 and 14 and Tasks 2, 7 and 11, each correction marked **(S1)**, and
 Task 7 is now the administrator's row (FE-42, Rich). **Sitting 2 is done** (2026-09-30, `manifest-app-e2`): every model
 call streams (Task 2, with M10), and the final review's one Important (a model reasoning before its first word) is fixed,
-marked **(S2)** in Decision 14. **The next is the sittings table's `← next`.**
+marked **(S2)** in Decision 14. **Sitting 3 is done** (2026-09-30, `manifest-app-58`): `ClockItem`, the app's Overview and
+rail, *Going live* (Tasks 4–6); its final review changed Decision 5 at Rich's word, marked **(S3)**: a clock card reads
+its checklist item as well as its record, and a change on file is with UBC. **The next is the sittings table's
+`← next`.**
 
 **Goal:** A faculty member sees what stands between their app and their students from the day the draft is built, runs
 the dry run, sees the sign-off when it is given, lets their students in with one press (and a second sign-in), and is
@@ -59,8 +62,8 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 | 0 | 3 | **The mock-mode banner**, moved ahead of the measurements at Rich's word (2026-09-29, *"Banner first, then wait"*): it needs no measurement and no 7100, which the platform's launch-path sitting 3 holds | **done 2026-09-29** (`manifest-app-a0`): the banner on every page in mock mode, none in edge; **and Step 0 for contract 1.5.0** (FE-38 adopted). 1248 tests (the dated entry below) |
 | 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | **done 2026-09-30** (`manifest-app-a0`, 04:19–04:40Z on 7100): M1–M7 measured; Tasks 2, 6, 7, 10 and 11 corrected (S1); **FE-41 and FE-42 written, carried at Rich's word**; FE-33's `4401` adopted (Step 0). 1249 tests (the dated entry below) |
 | 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | **done 2026-09-30** (`manifest-app-e2`, no platform): `2009fba` (the stream, three deadlines, `stalled`, M10), `f6b09af` (the final review's I1: reasoning is working, not a stall). 1284 tests; the four acceptance scripts pass in mock mode (the dated entry below) |
-| 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | ← **next** (no platform needed) |
-| 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | |
+| 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | **done 2026-09-30** (`manifest-app-58`, no platform): `6505ea7` (the two components, `state` ours), `f113e5b` (the Overview, the rail, the Preview at `/preview`, *Your apps*' line), `b8a533e` (*Going live*), `518c05e` (the final review's fixes; **Decision 5 (S3)**, Rich). 1414 tests (the dated entry below) |
+| 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | ← **next** (no platform needed). **Task 8 must land here**: until it reads the approval, a rejected version's sign-off row reads as undecided (S3). Task 7 moves the dry-run row `rowsOf` already draws (S1's words, no button) into `dry-run.tsx`. **Carry to Task 9:** the App's lookup is read once per slug, so the Overview's `launchedAt` goes stale (S3's deferred minor, Important once Task 10 launches in the page). If the platform's sitting 4a (FE-42 (a)) has landed, ask Rich first whether Task 7's press goes in here |
 | 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | |
 | 6 | 11 | **The acceptance:** `scripts/check-going-live.sh` against the mock; the whole-branch review; a first launch walked end to end on 7100 at Rich's word; **Rich's click**. **Alone, and last** | |
 
@@ -117,6 +120,14 @@ against) and **Step 0: the platform's landings** (*Adopting what lands*, below).
   design had it. *Rejected by Rich:* holding Task 7 for the platform; accepting the administrator's row for good.
 - **FE-41, a starter's app cannot be made on real GitHub: "Carry it now"** (2026-09-30), to the platform session, the
   same evening.
+- **A clock card never says done while the checklist says unmet: "With the Manifest team"** (2026-09-30, sitting 3's
+  final review). An `active` registration that does not cover the version on trying-out is `unmet` on the platform
+  (`launch/readiness.ts`: a sign-in attribute added since, or its addresses changed); the card now reads its checklist
+  item too, and says the Manifest team has it (Decision 5, **(S3)**). *Rejected by Rich:* the card showing only what the
+  record says.
+- **A change on file is with UBC: "With UBC, counting days"** (2026-09-30, the same review). The contract's
+  `change_requested` is our change request, *"while a change is with UBC IAM"*; his approved *"UBC asked for a change.
+  The Manifest team has it."* said the opposite, and is replaced. *Rejected by Rich:* keeping those words.
 - **The plan approved as written, executed natively, Decision 7 accepted** (2026-09-29, `manifest-app-a0`'s first
   question: *"Approved as written"*, *"Native"*, *"Accept Decision 7"*).
 - **Task 3 first, then wait** (2026-09-29, *"Banner first, then wait"*): the platform's launch-path sitting 3 holds 7100
@@ -147,7 +158,8 @@ change at his click.*
 | The clock cards' titles and bodies | the prototype's titles, *"Registering with UBC's identity team"* and *"A privacy assessment"*; bodies *"Your app needs its own entry in UBC's identity register before real students can sign in. UBC's identity team makes it."* and the prototype's *"Your app keeps what students write, so the Privacy Office has to look at it. The most common reason a launch slips."* (the prototype's *"You ask"* is untrue with no stopgap) |
 | A clock not started ✓ | chip *"Not started"*; bar *"Nothing counting yet"* · *"May take several days"*; admission *"Manifest can't start this one for you yet."* · *"For now the Manifest team does it by hand, and this card shows where it has got to."* |
 | A clock waiting ✓ | *"With UBC's identity team"* / *"With UBC's Privacy Office"*; *"recorded 18 September · waiting 12 days"* |
-| A clock with a change asked, or run out ✓ | *"UBC asked for a change. The Manifest team has it."* · *"Its registration has run out. The Manifest team renews it."* |
+| A clock with a change asked, or run out ✓ | **(S3, Rich 2026-09-30)** a change on file: chip *"With UBC's identity team"*, *"A change, recorded 18 September"* · *"waiting 3 days"* (replacing *"UBC asked for a change. The Manifest team has it."*, which the contract contradicts) · run out: *"Its registration has run out. The Manifest team renews it."* |
+| A clock done on its record, unmet on the checklist ✓ | **(S3, Rich 2026-09-30)** chip *"With the Manifest team"*; *"Registered 3 October"* · *"The newest version needs it changed."* (ours); and nothing recorded but met: *"Done"*, *"Nothing more needed."* (ours) |
 | A clock done ✓ | *"Registered 3 October"* · *"Approved 3 October"* |
 | The staging clock's line on *Going live* | *"The trying-out address has a registration of its own, with UBC's identity team."* **[See Trying out]** |
 | Short jobs ✓ | *"Short jobs, for the end"* · *"minutes each, and not worth doing early"* |
@@ -194,6 +206,12 @@ change at his click.*
    **waiting on someone**, still, with *"recorded <day> · waiting <n> days"* from `updatedAt` for `submitted` (*recorded*,
    not *asked*: it is when an administrator wrote it; F5b's `submittedAt` replaces it); `active` / `approved` → **steady**,
    dated by `registeredAt` / `approvedAt`. Never animated (`20-states.md`).
+   - **(S3, Rich 2026-09-30, the final review) The card reads its checklist item as well as its record**, and never says
+     done while the item is `unmet`: an `active` registration that does not cover the candidate (a sign-in attribute
+     added since, or its addresses changed) is `unmet` on the platform, so the card is **waiting on someone**, *"With the
+     Manifest team"*, *"The newest version needs it changed."*; an item `met` with nothing recorded is done, *"Nothing
+     more needed."*. **`change_requested` is our change, with UBC's identity team** (the contract), counted from
+     `updatedAt` as `submitted` is.
 6. **The short jobs are the checklist's other items, each in our words** (FE-9), keyed on `id` × `state`: `met` → steady;
    `not_built` → not yet; `unmet` → *needs you* when the person can act now (the dry run, once there is a candidate),
    *waiting on someone* when someone else owns it (the sign-off; `scans`, Decision 7), *not yet* when it cannot be acted
@@ -1059,3 +1077,69 @@ mode. Rich asked this session to introduce itself to the other agents, take the 
   database), our mock on 7102; 7100 `manifest-a1`'s.
 - **Next: sitting 3** (Tasks 4, 5, 6: `ClockItem` and `ProgressBar`'s clock; the app's pages; *Going live*), which needs
   no platform, handed to `manifest-app-58`.
+
+### 2026-09-30 — Sitting 3: `ClockItem`, the app's pages, *Going live* (session `manifest-app-58`)
+
+*No platform: 7100 was `manifest-a1`'s throughout (the launch path's sitting 4; FE-41's fix, then FE-34, restarting
+`manifest-litellm`), and our server stayed in mock mode. The baton came from `manifest-app-e2`; `manifest-73` waits to run
+the platform's sitting 4a (FE-42 (a)) and was sent FE-42's pointers. The ledger has every ruling and control.*
+
+- **Step 0.** manifest at `0f2275a`, then (reported by `manifest-a1` mid-sitting) **FE-41 fixed across
+  `0f2275a..ebfc571`**: the cause was GitHub answering a repository it made seconds earlier as refused for 2–4 s, with or
+  without a starter; driver 2 now retries its seed push and first fetch within 30 s. Nothing in `packages/contract` or
+  `packages/mock`; contract **1.5.0, 66 operations**: nothing to adopt. `pgrep -fl vitest`: only the platform's own run
+  at the start, none at the close.
+- **Task 4, `6505ea7`:** `ProgressBar` and `ClockItem` ported, held byte for byte by the parity table (their
+  preview.html cases and every branch of the bundle's code). **Ours:** `ClockItem`'s `state`: `notyet` is the reference's
+  card with the not-yet chip; `waiting` and `steady` fill the track, still, the caller's words in the state's colour, never
+  the reference's not-started defaults (*"Takes weeks"*). Nothing on a clock moves in any state. `styles.test.ts` now
+  strips CSS comments: a comment holding a comma was read as the next rule's selector, so a check read nothing and passed.
+- **Task 5, `f113e5b`:** **the Overview is the app's landing page**: who it is for, one row per address (the Preview's
+  tab name, F4's serving fact, a link to its tab), *[Ask for a change]*, and **moment 10's band** only for an app built,
+  not launched, with a production clock unmet (one `getLaunchReadiness`, only then); after launch a *For your students*
+  slot leads (Task 9 fills it). **The rail:** Overview · Preview · Conversations · Going live. **The Preview is at
+  `/apps/:slug/preview`**; F4's `/apps/:slug?tab=…` still opens it, and `useRoute` rewrites the bar in its read
+  (`remember`, no navigation, so the focus never moves). ***Your apps*' line** and *[Going live]*, one checklist read per
+  built, unlaunched app and none for the rest. *[Open it in a new tab]* gone from *Trying out*. The session gains
+  `getLaunchReadiness`, `getLaunchRecords`, `getEnvironment`.
+- **Task 6, `b8a533e`:** ***Going live***, read in the person's session and again whenever shown: the version that would
+  go live (dated as F4 dates one, or *"Nothing is on your trying-out address yet"* with *[Trying out]*); **two
+  `ClockItem`s** from the records (`clocks.ts`: days counted in Vancouver, each moment by its own offset); the trying-out
+  address's registration in one line; **the short jobs** (`rowsOf`), each keyed on `id` × `state` × a candidate and never
+  on `why`, with a name, its state in a word, one sentence and its owner. **The rows follow S1, not the brief's pre-S1
+  line:** the dry run and the sign-off wait on *a Manifest administrator*, who is not told; nothing needs the person and
+  **no row can be pressed** (FE-42); `scans` unmet waits on the Manifest team (Decision 7); three rows are not yet
+  without a candidate (S1: M3); an id from tomorrow is shown; code review last, set apart; a launched app's page says
+  *"It's live."* and points at the Overview. No `mailto:`, no action on a clock, never *weeks*.
+- **Negative controls** (each red, each restored; the ledger lists them): Task 4's three (a pulse on waiting; `state`
+  changing the reference's markup; the held bars' CSS), Task 5's five (the `tab` redirect in two halves; the band's
+  launched condition; *weeks* in the band; *[Open it]* back on *Trying out*), Task 6's five (a clock `working`; an unknown
+  id hidden; *weeks* in the clocks; a `mailto:`; the re-read on show removed). **Two found weak guards:** control C3 left
+  the page's *"never weeks"* green, because `textContent` runs one element's words into the next (*"Takes weeksManifest"*)
+  and `\b` found no boundary; that guard and F4's on *Trying out* now match `/week/i`, each proved red.
+- **The walks** (headless Chrome against the mock-mode server, 1440 and 375; *Going live* with the mock's answers
+  rewritten in DevTools for FE-40's gaps): the Overview 25 checks, *Going live* 45. **One defect found and fixed at source:**
+  a clock card's chip (*"With the Manifest team"*) ran 28 px past the card at 375; its top row now wraps
+  (`components.css`, with a styles test and a walk check, each red first).
+- **The final review** (a fresh reviewer, the whole range): no Critical; **three Importants, fixed (`518c05e`)**, the first
+  two **at Rich's word**, changing Decision 5 **(S3)**:
+  1. an `active` registration the checklist counts `unmet` (a sign-in attribute added since, or its addresses changed:
+     the platform's `iamItem`) made the card say *"Done"* while the band and the launch said otherwise. **Rich: "With the
+     Manifest team"**: each card reads its checklist item too;
+  2. `change_requested` is our change, *"with UBC IAM"* (the contract), and his approved words said the opposite. **Rich:
+     "With UBC, counting days"**;
+  3. a `submitted` record with an unparsable day threw and lost the page; now undated.
+
+  And one Minor regraded Important by the *never "It works"* constraint: the launched page's *"Your students can use it
+  now"*, said without reading anything, is now *"It's live."*. **Seven Minors deferred** (the ledger): `launchedAt` read
+  once per slug (**carried to Task 9/10**, where it becomes Important); heading order on *Going live* (h1, the clocks'
+  h3, then an h2); an unnamed or empty rows list; a failed background re-read replacing a good page and reporting on each
+  tab switch; *"Its three addresses"* when fewer are drawn; the held waiting bar lighter than the not-started hatch (for
+  Rich's click); a test's `visibilityState` left defined.
+- **Not done, by the plan's rule:** the four acceptance scripts: this sitting touched no server code. **Not in F5 yet:**
+  a rejected version's sign-off reads as undecided until Task 8 (sitting 4 must land it).
+- **Gates:** `pnpm test` **1414** twice (1284 at the start), `pnpm lint`, `pnpm typecheck`, `pnpm format:check` clean.
+- **The machine at the close:** our server on 7105 in mock mode (e2's watcher, untouched), our mock on 7102; 7100 and
+  7106 `manifest-a1`'s.
+- **Next: sitting 4** (Tasks 7, 8, 9: the dry run's row in its own component, the sign-off from the approval, the
+  hand-over), no platform needed.
