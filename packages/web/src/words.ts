@@ -47,6 +47,14 @@ export const words = {
     /** The keyboard's first stop, so it can reach the page and not only the rail. */
     skipToContent: 'Skip to content',
   },
+  /**
+   * MOCK MODE SAYS SO (F5 Task 3), Rich's words, approved with the design (2026-09-29). The one
+   * sentence that names our own machinery: it is for us, and only ever shown in mock mode.
+   */
+  mockMode: {
+    banner:
+      'Mock mode: this server answers from manifest-mock on 7102, not the platform.',
+  },
   /** Rich's click-through: the person, from the rail, with Sign out on it. */
   profile: {
     title: 'Your profile',

@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { expect, it } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
 import config from '../vite.config.js'
 
 /**
@@ -23,4 +23,30 @@ it('vite.config.ts sends @manifest/contract to its src/index.ts', () => {
       : a.find === '@manifest/contract',
   )
   expect(contract?.replacement).toBe(SOURCE)
+})
+
+/**
+ * MOCK MODE SAYS SO (F5 Task 3). Our server runs this config in its own process, so the
+ * page is told the mode our server was started in: `pnpm dev:mock` sets MANIFEST_APP_MODE to
+ * mock, and `pnpm dev` leaves it unset, which is edge (server/src/config.ts).
+ */
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.resetModules()
+})
+
+async function definedWith(env: string | undefined): Promise<unknown> {
+  vi.stubEnv('MANIFEST_APP_MODE', env)
+  vi.resetModules()
+  const fresh = (await import('../vite.config.js')).default
+  return fresh.define?.['__MANIFEST_APP_MODE__']
+}
+
+it('defines the page’s mode as mock when our server runs in mock mode', async () => {
+  expect(await definedWith('mock')).toBe(JSON.stringify('mock'))
+})
+
+it('defines the page’s mode as edge when our server runs in edge mode', async () => {
+  expect(await definedWith(undefined)).toBe(JSON.stringify('edge'))
+  expect(await definedWith('edge')).toBe(JSON.stringify('edge'))
 })

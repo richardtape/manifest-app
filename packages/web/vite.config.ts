@@ -22,6 +22,10 @@ const EDGE = process.env['MANIFEST_APP_MODE'] !== 'mock'
 
 export default defineConfig({
   plugins: [react()],
+  // MOCK MODE SAYS SO (F5 Task 3): the page is told which platform our server answers from,
+  // so it can say so on every page (src/mode.ts). Rich met a mock-mode server through the
+  // edge on 2026-09-29, and nothing on the page told him.
+  define: { __MANIFEST_APP_MODE__: JSON.stringify(EDGE ? 'edge' : 'mock') },
   resolve: { alias: [{ find: /^@manifest\/contract$/, replacement: CONTRACT }] },
   server: {
     // Vite refuses a Host it does not know, and the edge PRESERVES the app's hostname.

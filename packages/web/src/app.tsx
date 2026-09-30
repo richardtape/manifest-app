@@ -1,6 +1,7 @@
 import { Button, Card, SideNav } from '@manifest-app/ui'
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { signInHref, signOut } from './auth.js'
+import { mode as MODE, type Mode } from './mode.js'
 import { createOurs, type Ours } from './ours/api.js'
 import type { Platform } from './platform/api.js'
 import { linkTo, navigate, useRoute } from './router.js'
@@ -29,9 +30,12 @@ export function App({
   ours = OURS,
   now,
   timeZone,
+  mode = MODE,
 }: {
   platform: Platform
   ours?: Ours
+  /** Which platform our server answers from: mode.ts's, unless a test says. */
+  mode?: Mode
   /** For a test: the clock and the zone the limits' times are said in. */
   now?: () => Date
   timeZone?: string
@@ -96,10 +100,24 @@ export function App({
                 : words.shell.manifest
   }, [session.state, route.name, lookup])
 
-  if (session.state === 'loading') return null
-  if (session.state === 'signed-out') return <SignIn returnTo={here} />
+  // MOCK MODE SAYS SO (F5 Task 3): first on every page, signed in or not, in words. Rich met
+  // a mock-mode server through the edge on 2026-09-29, and nothing on the page told him.
+  const framed = (page: ReactNode) =>
+    mode === 'mock' ? (
+      <div className="mock-frame">
+        <div className="mock-banner mono" role="note">
+          {words.mockMode.banner}
+        </div>
+        {page}
+      </div>
+    ) : (
+      page
+    )
+
+  if (session.state === 'loading') return framed(null)
+  if (session.state === 'signed-out') return framed(<SignIn returnTo={here} />)
   if (session.state === 'unreachable' || session.state === 'refused')
-    return (
+    return framed(
       <main className="app-alone">
         <TroubleNotice
           trouble={
@@ -109,7 +127,7 @@ export function App({
           }
           onRetry={retry}
         />
-      </main>
+      </main>,
     )
 
   const leave = () => {
@@ -223,7 +241,7 @@ export function App({
       </>
     )
 
-  return (
+  return framed(
     <div className="app-shell">
       {/* The keyboard's first stop: without it, Tab ran down the rail and out of the page. */}
       <a className="skip-link" href="#main">
@@ -289,6 +307,6 @@ export function App({
         ) : null}
         {page}
       </main>
-    </div>
+    </div>,
   )
 }

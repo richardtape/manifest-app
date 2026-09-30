@@ -23,6 +23,25 @@
   outline: none;
 }
 
+/* MOCK MODE SAYS SO (F5 Task 3): a strip above everything, in words, and the page below keeps
+   the height that is left, so nothing scrolls that did not. Edge mode draws neither. */
+.mock-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.mock-frame > :not(.mock-banner) {
+  flex-grow: 1;
+  min-height: 0;
+}
+.mock-banner {
+  padding: var(--space-2) var(--space-4);
+  background: var(--ink);
+  color: var(--ink-inverse-strong);
+  border-bottom: 3px solid var(--warning-mark);
+  text-align: center;
+}
+
 /* Signed in: the rail, and the page beside it. */
 .app-shell {
   display: flex;
