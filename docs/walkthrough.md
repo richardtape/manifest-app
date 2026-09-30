@@ -477,6 +477,11 @@ the pretend logins, never a date and never "We asked…", since nothing records 
 His words replace "That usually takes <n> weeks". The Preview's rail items are Preview and Conversations until
 their plans build the rest.*
 
+*Changed 2026-09-29, with F5's plan (Rich): **on *Trying out*, [Open it in a new tab] is shown only once UBC's identity
+team has registered the address** (*"Hide until registered"*), read from the platform's staging record when it exists
+(F5b); until then the address alone, in mono. The Preview moves to `/apps/<slug>/preview`, and the app's Overview is its
+landing page (F5).*
+
 **Trying to:** see the thing they asked for, as a student would and as they will.
 
 **The three addresses mean three different worlds** (Rich, 2026-09-27):
@@ -620,10 +625,21 @@ try it.
 
 ## 10. The three long clocks, started early
 
+*Changed 2026-09-29, with F5's plan (Rich):*
+- ***"each may take several days"***, not weeks, wherever the product states their duration (*"'each taking weeks' needs
+  to be 'each may take several days'"*);
+- **no stopgap** (*"Build now, no stopgap"*): no email to the Manifest team; each card says what the record says, and the
+  honest admission ends on what is true;
+- **two clocks on *Going live***, the production registration and the privacy assessment, because `ClockItem`'s rule is
+  *"Two at most on a screen"*; the staging registration's clock is on *Trying out*, where it gates, and *Going live*
+  names it in one line;
+- **what the platform cannot do yet is F5b's**: *Draft the request*, *Fill in what we know*, *I've sent it* and *waiting
+  since*, written when the platform's launch-path sittings 6–10 land.
+
 **Trying to:** nothing. They did not know these existed. The design's job is that they never discover them on
 launch day (spec §13).
 
-**Three clocks** (Rich, FE-24), each answered by people outside Manifest, each taking weeks:
+**Three clocks** (Rich, FE-24), each answered by people outside Manifest, each of which may take several days:
 
 | Clock | Needed for | Answered by |
 |---|---|---|
@@ -633,12 +649,15 @@ launch day (spec §13).
 
 **They see**, the moment the first draft is built (the attributes it signs people in with are known then):
 - **On the project's Overview and on *Your apps*, one band**, not a list: *"Before your students can use it."*
-  *"Three things other people answer, each taking weeks. Starting them now is the whole trick."* **[Start them]**
-- ***Going live*** (moment 11) has the full page, the prototype's *"Letting your students in"*, now with three
-  clock cards (`ClockItem`).
-  - Each card shows its owner, a still, hatched bar reading *"Nothing counting yet · Takes weeks"*, and one
-    action.
-  - The first to start is staging, because it gates the trying-out address.
+  *"Three things other people answer, and each may take several days. Going live shows where each one is."*
+  **[Going live]** (F5; **[Start them]** once they can be started, F5b). On *Your apps*, one line in the app's card:
+  *"Before your students can use it: three things other people answer, and each may take several days."*
+- ***Going live*** (moment 11) has the full page, the prototype's *"Letting your students in"*, with **two** clock
+  cards (`ClockItem`): the production registration and the privacy assessment.
+  - Each card shows its owner, a still bar (hatched while nothing counts: *"Nothing counting yet · May take several
+    days"*), and, once the platform can start it (F5b), one action.
+  - The staging registration's clock is on *Trying out*, because it gates the trying-out address; *Going live* names
+    it in one line, with a link.
 
 **Fed by: nothing yet, and the screen says so (FE-6).**
 - The actions the cards promise have no operation: *Draft the request*, *Fill in what we know*, and *"I've sent
@@ -647,18 +666,18 @@ launch day (spec §13).
   them** (`recordIamRegistration`, `recordPrivacyAssessment`), after UBC has answered.
 - `getLaunchRecords` reads those two records' state and `updatedAt`, which is enough to show *waiting since*
   once an administrator has written *submitted*.
-- **Meanwhile each card says the true thing, and offers the most useful thing left** (`10-language.md`,
-  *Honesty*): *"Manifest can't start this one for you yet. The Manifest team does it by hand: [Ask them to start
-  it]."*
-  - That opens an email to the platform team, with the app's name and address in it.
+- **Meanwhile each card says the true thing** (`10-language.md`, *Honesty*): *"Manifest can't start this one for
+  you yet. For now the Manifest team does it by hand, and this card shows where it has got to."* With no stopgap
+  (Rich, 2026-09-29), there is no email: the card follows the record an administrator keeps, *not started*, *with UBC's
+  identity team* (*"recorded 18 September · waiting 12 days"*), or done (*"Registered 3 October"*).
   - It is **not** a record the front-end keeps: a second record of launch state, beside the platform's, is the
     drift this design exists to avoid.
 
 **If it goes wrong:** nothing breaks. The band is **not yet**, then **waiting on someone**, and never **needs
 you** until the person is actually needed (a question from IAM, which reaches Manifest as nothing today).
 
-**They wait:** weeks, **waiting on someone**, completely still, with *"asked 18 September · waiting 12 days"*
-once there is a date to count from.
+**They wait:** days, **waiting on someone**, completely still, with *"recorded 18 September · waiting 12 days"*
+once there is a date to count from (*"asked"* once F5b has the day it was sent).
 
 ---
 
@@ -670,11 +689,11 @@ once there is a date to count from.
 
 **They see** *Going live* (rail), the prototype's *"Letting your students in"*, rebuilt on three clocks:
 - **Heading:** *"Letting your students in"*. *"Going live isn't a button. Most of it takes minutes, but three
-  things are answered by other people and take weeks. That's why this page exists from day one."*
+  things are answered by other people, and each may take several days. That's why this page exists from day one."*
 - **The version that would go live**, stated once, at the top: *"What goes live is the version on your
   trying-out address: the one from 18 September, 3:12pm."* Production deploys only what staging serves
   (`RELEASE_NOT_STAGED`), so this is a fact, not a choice. Changing it is moment 9.
-- **Three clocks** (moment 10's cards).
+- **Two clocks** (moment 10's cards), and the staging registration's line.
 - ***"Short jobs, for the end"*** (*"minutes each, and not worth doing early"*), one row per checklist item, each
   with its state as one of the five, its owner in words, and one plain sentence:
 
@@ -696,8 +715,10 @@ once there is a date to count from.
 
 **If it goes wrong:** there is no failure here, only states. The two that need words:
 - **An item is `unmet` and owned by the person**: **needs you**, with the one action.
-- **`scans` unmet**: *"Something it depends on has a known security problem with a fix available. We'll update it
-  in a conversation: [Fix it]."* This starts one, fed by the build's `scan`.
+- **`scans` unmet**: *"Something it's built on has a known security problem. Keeping what apps are built on up to
+  date is the Manifest team's job."*, **waiting on someone**, with no action. *Proposed with F5's plan, for Rich's
+  review (2026-09-29):* this moment first said *"We'll update it in a conversation: [Fix it]"*, but an agent cannot
+  change an app's dependencies (FE-32), and a blueprint's are the platform's. *[Fix it]* returns when FE-32 lands.
 
 **They wait:** nothing on this page. It is a map.
 
@@ -736,8 +757,10 @@ little that staging has not. FE-24 carries the question. Until then, the row sta
   `release.approved` / `release.approval_rejected` on the stream, which our server turns into an email.
 - **There is nothing for *asked* (FE-25).** No operation says *"please look at this"*, and a refused production
   deploy records nothing. So there is no date to count from, and no administrator is told.
-- Meanwhile the row says so and offers the next best thing: *"Nobody is told automatically yet. [Ask them]"*,
-  which opens an email to the platform team. It is not a record we keep.
+- Meanwhile the row says so, with no stopgap (Rich, 2026-09-29): *"Manifest doesn't tell them yet that it's
+  waiting."* No email, and no date. Asking is F5b's, when the platform's sign-off request lands (FE-25).
+- A rejection's **[Talk it through]** starts a change (moment 8, agreed first) seeded with their reason. A rejection is
+  final for its version, so the row also says *"A new version is needed, and it's looked at afresh."*
 
 **They wait:** days, **waiting on someone**, still.
 
@@ -791,9 +814,11 @@ little that staging has not. FE-24 carries the question. Until then, the row sta
 - *"Students sign in with their CWL."*
 - A message they can paste into Canvas or an email, pre-written and editable: *"This week's reading responses
   go here: <address>. Sign in with your CWL. You'll see everyone else's once you've posted your own."* The last
-  sentence comes from the agreed plan (D6).
+  sentence comes from the agreed plan (D6). *As F5 builds it (2026-09-29):* *"<Name> is here: <address>. Sign in with
+  your CWL."*, then the plan's *What students see* as written, with no model.
 - **The honest line about who can get in**: *"Anyone with a CWL can sign in, not only your class. It only shows
-  each student their own work until they post."* No course-restricted sign-in exists (FE-20).
+  each student their own work until they post."* No course-restricted sign-in exists (FE-20). *As F5 builds it:* the
+  first sentence, then the plan's *Who gets in* as written (the second sentence above was this app's own).
 - **The two facts, now for students**: *"Serving right now: the version from 18 September"* and *"Last attempt:
   the same"*, **steady**.
 
