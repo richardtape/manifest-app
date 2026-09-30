@@ -29,11 +29,14 @@ says which plan is current. This file states where things stand and the rules. I
   - **Sitting 6's first half done** (2026-09-30, `manifest-app-f1`, Rich awake): **Rich decided Spec action 8 = (b)+(c)** and
     said *"Build it now"* to **Task 7's press** (`71fceba`: *[Run the dry run]*, its step-up and `?then=dry-run`, *[Fix it]* with
     what it saw, our deadline, this attempt's incident; our server's `{ fix: { dryRun } }` and the lead's view of it);
-    **FE-34's `null` `200`** read as `MODEL_ANSWER_INVALID` (`1ae7189`); **the live address before a launch** (`asServed`: a dry
+    **FE-34's `null` `200`** read as `MODEL_ANSWER_INVALID` (`1ae7189`), the round's refusal at once (`30c4227`); **the live address before a launch** (`asServed`: a dry
     run's `gone` instance is nothing there, on every page, `14f5749`); **the whole-branch review** (fresh, opus: no Critical, no
     Important as graded; two Minors re-graded Important and fixed, `14f5749`: a stale page's press sends nothing once launched,
     and the page reads again when the version changes under the button); **`scripts/check-going-live.sh`, 8/8 on a fresh dev
-    database**, its four controls red.
+    database**, its four controls red. **A review of the half's own work**: four Importants fixed (`30c4227`, `f677845`: a
+    dry run whose app never started is its incident's fix; the press held in the page's memory while they are away; each
+    step said to a screen reader), seven Minors deferred, **FE-43** written. **The live address wraps only after `://` and
+    before a dot** (Rich, `ef1dd6b`).
   - **Every sitting starts** with `pgrep -fl vitest` and **Step 0** (the plan's *Adopting what lands*).
   - **F5b** is written when the platform's launch-path sittings 6–10 land (the clocks' own actions, *waiting since*, the
     staging clock and [Open it], asking an administrator).
@@ -43,8 +46,8 @@ says which plan is current. This file states where things stand and the rules. I
   (native recommended).
 - **Relayed from Rich by `manifest-00` (a planning session in manifest, 2026-09-30), to confirm in his own words at the
   window** (§8: a relay is a teammate's words): **sitting 4's ten and sitting 5's twelve overnight decisions accepted as
-  made**; **the live address wraps only after `://` and before a dot, never at the slug's hyphen** (display only; *Copy*
-  unchanged; not built: ask him, then build it test-first); **yes to one real private repository** in `Manifest-local-dev`
+  made**; **the live address wraps only after `://` and before a dot, never at the slug's hyphen** (**confirmed by Rich in
+  sitting 6 and built**, `ef1dd6b`); **yes to one real private repository** in `Manifest-local-dev`
   for F5's walk after 5b; **F6 is written after F4a**, while the platform runs its sittings 6–10; a mail sink (Mailpit, SMTP
   and an inbox, proposed 7111/7112) enters the platform's infra after 5b, and our server sends real SMTP to it; **FE-29,
   FE-31, FE-32 confirmed (a)**, the platform's next plan after the launch path being *"before faculty use it for real"*
@@ -54,7 +57,8 @@ says which plan is current. This file states where things stand and the rules. I
   external track deferred.
 - **Open for Rich:**
   - **Sitting 6's rulings** (the plan's sitting 6 entry): above all the dry run's row as **needs you**, the words of ours
-    (row *S6* of *Words proposed for Rich*), and FE-34's refusal said as *"didn't come out"*.
+    (row *S6* of *Words proposed for Rich*), FE-34's refusal said as *"didn't come out"*, and **the press held in the page's
+    memory**. **FE-43** (nothing reads a dry run back: a reload or another tab forgets one under way) is his to carry or not.
   - **Sitting 5's twelve overnight decisions** (above all **Decision 10 (S5)**) **and sitting 4's ten** (Decisions 9 and 12 (S4)):
     **accepted, as relayed** (above); his own word at the window closes them.
   - **The platform's F8** (a provider's `422` answered `200` with `null`): (a) accept, (b) a guard hook, (c) a newer LiteLLM.
@@ -153,7 +157,7 @@ says which plan is current. This file states where things stand and the rules. I
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1627 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (1638 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
       (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**, **`scripts/check-going-live.sh` (F5's, 8)**: each in mock mode, `pnpm
