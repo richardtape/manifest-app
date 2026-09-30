@@ -1280,12 +1280,16 @@ export function createRounds(deps: RoundDeps): Rounds {
     }
   }
 
-  /** Whether the platform ended this leg's session as `models_withdrawn` (FE-36): its key is refused for every model. */
-  async function withdrawn(live: Live): Promise<boolean> {
+  /**
+   * Why the platform ended this leg's session, if it did: `models_withdrawn` (FE-36: its key is refused
+   * for every model), or `member_removed` (the platform's sitting 5: their person was removed from the
+   * app, and their tokens on it revoked with it).
+   */
+  async function endedBecause(live: Live): Promise<string | null> {
     const id = live.session?.id ?? live.run.sessionIds.at(-1)
-    if (id === undefined) return false
+    if (id === undefined) return null
     const listed = await sessions.list(live.token, live.projectId).catch(() => [])
-    return listed.some((s) => s.id === id && s.endReason === 'models_withdrawn')
+    return listed.find((s) => s.id === id)?.endReason ?? null
   }
 
   /**
@@ -1305,10 +1309,13 @@ export function createRounds(deps: RoundDeps): Rounds {
   /** What a refusal nobody in the round answered means for the person. */
   async function fromError(live: Live, error: unknown): Promise<Ending> {
     if (error instanceof ModelError) {
-      if (error.code === 'MODEL_KEY_REFUSED' && (await withdrawn(live)))
+      const why = error.code === 'MODEL_KEY_REFUSED' ? await endedBecause(live) : null
+      if (why === 'models_withdrawn')
         // FE-36: the platform ended it (the app's data is now confidential). Rich: stop and ask
         // first; Carry on starts a new session, on what the app now allows.
         return needs({ kind: 'withdrawn' })
+      // The platform's sitting 5: their person was removed from the app, and the token went with it.
+      if (why === 'member_removed') return needs({ kind: 'token' })
       // The platform's sitting 5: it narrows the key instead, and our model alone is refused. The
       // same withdrawal, renewed once like it (a new session that still lists it carries on).
       if (error.code === 'MODEL_NOT_AVAILABLE' && (await narrowedAway(live)))

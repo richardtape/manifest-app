@@ -2437,6 +2437,16 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     expect(h.sessionStarts).toHaveLength(1)
   })
 
+  it('a key refused because its person was removed from the app (member_removed, the platform’s sitting 5): the token’s, never the checkpoint', async () => {
+    const { h, id } = started({
+      script: { lead: [new ModelError('MODEL_KEY_REFUSED', 401)] },
+      endReason: (n) => (n === 0 ? 'member_removed' : null),
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toMatchObject({ kind: 'token' })
+    expect(h.sessionStarts).toHaveLength(1)
+  })
+
   it('a key refused with no such reason (its clock ran out) is still the checkpoint', async () => {
     const { h, id } = started({
       script: { lead: [new ModelError('MODEL_KEY_REFUSED', 401)] },
