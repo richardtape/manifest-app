@@ -749,14 +749,38 @@ describe("the lead's view (Decision 3)", () => {
   })
 
   it('a fix round: what the platform recorded where it did not start, and the change paragraph', () => {
-    const user = said({ ...view([]), fix: { incident: INCIDENT, unread: null } })
+    const user = said({
+      ...view([]),
+      fix: { environment: 'staging', incident: INCIDENT, unread: null },
+    })
     expect(user).toMatch(/did not start on the trying-out address/)
     for (const value of Object.values(INCIDENT)) expect(user).toContain(value)
     expect(user).toContain(CHANGE_PARAGRAPH)
   })
 
+  it('a fix of a start on the live address says the live address, never trying-out (F5 Decision 13)', () => {
+    const user = said({
+      ...view([]),
+      fix: { environment: 'production', incident: INCIDENT, unread: null },
+    })
+    expect(user).toMatch(/did not start on the live address/)
+    expect(user).not.toMatch(/trying-out/)
+    for (const value of Object.values(INCIDENT)) expect(user).toContain(value)
+    expect(user).toContain(CHANGE_PARAGRAPH)
+    const unread = said({
+      ...view([]),
+      fix: { environment: 'production', incident: null, unread: 'confidential' },
+    })
+    expect(unread).toMatch(/did not start on the live address/)
+    expect(unread).toMatch(/cannot read why/i)
+    expect(unread).not.toMatch(/trying-out/)
+  })
+
   it("a fix whose record the platform keeps to the person (a confidential app's): only that it did not start, and why we cannot read it", () => {
-    const user = said({ ...view([]), fix: { incident: null, unread: 'confidential' } })
+    const user = said({
+      ...view([]),
+      fix: { environment: 'staging', incident: null, unread: 'confidential' },
+    })
     expect(user).toMatch(/did not start on the trying-out address/)
     expect(user).toMatch(/cannot read why/i)
     expect(user).toMatch(/confidential/)
@@ -777,6 +801,7 @@ describe("the lead's view (Decision 3)", () => {
       ...view([{ path: 'server.js', content: 's'.repeat(10_000) }]),
       change: { asked: [huge], parts: [huge] },
       fix: {
+        environment: 'production',
         incident: { ...INCIDENT, logTail: huge, prompt: huge, diffSinceHealthy: huge },
         unread: null,
       },

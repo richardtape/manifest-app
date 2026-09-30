@@ -78,6 +78,7 @@ const TOKEN = 'mft_test_x_the_conversations_token'
 const PROJECT = '6af9d7e5-2aa5-48fd-a1c8-85a6800cc687'
 const SANDBOX = 'e08ec65f-d36f-462e-b6a9-4c8655a77e54'
 const STAGING = '358558f7-9614-4787-8324-d4d300e8a1fd'
+const PRODUCTION = '7a1d2c3e-4f50-4617-8829-3a4b5c6d7e8f'
 const SHA = '169f00cf5aeb43689077cc56ec7c3e5f524ed95a'
 const NEXT = '23ed148f924ee0d410ad552938cd902d3c037a98'
 const BUILD = '60088ac3-31b8-42a0-9a4b-0ac3a0803070'
@@ -112,6 +113,14 @@ const ENVIRONMENTS = [
     kind: 'sandbox',
     hostname: 'f3-measure.sandbox.manifest.internal',
     url: 'https://f3-measure.sandbox.manifest.internal',
+    instance: null,
+  },
+  {
+    id: PRODUCTION,
+    projectId: PROJECT,
+    kind: 'production',
+    hostname: 'f3-measure.manifest.internal',
+    url: 'https://f3-measure.manifest.internal',
     instance: null,
   },
 ]
@@ -630,7 +639,7 @@ describe('instances: what is on the draft address, and what it printed', () => {
     prompt: 'The application failed to start in its staging environment.',
   }
 
-  it("stagingIncident finds a fix's incident by its id on the staging environment, by its kind (F4 Task 8)", async () => {
+  it("incident finds a fix's incident by its id on the staging environment, by its kind (F4 Task 8)", async () => {
     const fake = await fakePlatform((seen) =>
       seen.url?.endsWith('/environments')
         ? ok(ENVIRONMENTS)
@@ -638,7 +647,7 @@ describe('instances: what is on the draft address, and what it printed', () => {
     )
     const instances = platformInstances(fake.origin)
     expect(
-      await instances.stagingIncident(TOKEN, PROJECT, STAGING_INCIDENT.id),
+      await instances.incident(TOKEN, PROJECT, 'staging', STAGING_INCIDENT.id),
     ).toMatchObject({
       id: STAGING_INCIDENT.id,
       logTail: STAGING_INCIDENT.logTail,
@@ -649,29 +658,61 @@ describe('instances: what is on the draft address, and what it printed', () => {
       `/v1/environments/${STAGING}/incidents`,
     ])
     expect(
-      await instances.stagingIncident(
+      await instances.incident(
         TOKEN,
         PROJECT,
+        'staging',
         '00000000-0000-4000-8000-000000000000',
       ),
     ).toBeUndefined()
   })
 
-  it("a confidential app's staging incident refused to our token is `confidential`, and read no other way", async () => {
+  it("and on production's, for a fix of a start on the live address (F5 Decision 13): never another address's", async () => {
+    const LIVE_INCIDENT = {
+      ...STAGING_INCIDENT,
+      id: '5c3a4b71-1d49-4a97-8e5f-5a8d2e3f8b21',
+      prompt: 'The application failed to start in its production environment.',
+    }
     const fake = await fakePlatform((seen) =>
       seen.url?.endsWith('/environments')
         ? ok(ENVIRONMENTS)
-        : refusal(403, 'INCIDENT_LOG_CONFIDENTIAL'),
+        : path(seen) === `/v1/environments/${PRODUCTION}/incidents`
+          ? ok({ environmentId: PRODUCTION, incidents: [LIVE_INCIDENT] })
+          : ok({ environmentId: STAGING, incidents: [STAGING_INCIDENT] }),
     )
+    const instances = platformInstances(fake.origin)
     expect(
-      await platformInstances(fake.origin).stagingIncident(
-        TOKEN,
-        PROJECT,
-        STAGING_INCIDENT.id,
-      ),
-    ).toBe('confidential')
-    expect(fake.seen).toHaveLength(2)
+      await instances.incident(TOKEN, PROJECT, 'production', LIVE_INCIDENT.id),
+    ).toMatchObject({ id: LIVE_INCIDENT.id, prompt: LIVE_INCIDENT.prompt })
+    expect(fake.seen.map(path)).toEqual([
+      `/v1/projects/${PROJECT}/environments`,
+      `/v1/environments/${PRODUCTION}/incidents`,
+    ])
+    // Staging's incident is not production's, whatever its id.
+    expect(
+      await instances.incident(TOKEN, PROJECT, 'production', STAGING_INCIDENT.id),
+    ).toBeUndefined()
   })
+
+  it.each(['staging', 'production'] as const)(
+    "a confidential app's %s incident refused to our token is `confidential`, and read no other way",
+    async (environment) => {
+      const fake = await fakePlatform((seen) =>
+        seen.url?.endsWith('/environments')
+          ? ok(ENVIRONMENTS)
+          : refusal(403, 'INCIDENT_LOG_CONFIDENTIAL'),
+      )
+      expect(
+        await platformInstances(fake.origin).incident(
+          TOKEN,
+          PROJECT,
+          environment,
+          STAGING_INCIDENT.id,
+        ),
+      ).toBe('confidential')
+      expect(fake.seen).toHaveLength(2)
+    },
+  )
 
   it('any other refusal is thrown, by its code', async () => {
     const fake = await fakePlatform((seen) =>
@@ -680,7 +721,12 @@ describe('instances: what is on the draft address, and what it printed', () => {
         : refusal(503, 'PLATFORM_UNAVAILABLE'),
     )
     const error = await failure(
-      platformInstances(fake.origin).stagingIncident(TOKEN, PROJECT, STAGING_INCIDENT.id),
+      platformInstances(fake.origin).incident(
+        TOKEN,
+        PROJECT,
+        'production',
+        STAGING_INCIDENT.id,
+      ),
     )
     expect((error as PlatformRefusal).code).toBe('PLATFORM_UNAVAILABLE')
   })

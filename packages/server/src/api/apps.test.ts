@@ -220,6 +220,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       change: 1,
       asked: [WORDS],
       incidentId: null,
+      environment: null,
     })
   })
 
@@ -277,8 +278,49 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       change: 1,
       asked: ["It didn't start on the trying-out address"],
       incidentId: INCIDENT,
+      environment: 'staging',
     })
     expect(s.store.getConversation(made.id, ALICE.id)?.state).toBe('building')
+  })
+
+  it('a fix for the live address (F5 Decision 13) is titled for it, and keeps where it did not start', async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answer = await s.ask({
+      fix: { incidentId: INCIDENT, environment: 'production' },
+      token: GOOD,
+    })
+    expect(answer.statusCode).toBe(201)
+    const made = answer.json() as Conversation
+    expect(made.title).toBe("It didn't start on the live address")
+    expect(s.did).toEqual([`start ${made.title}`])
+    expect(s.store.listMessages(made.id).at(-1)?.body).toEqual({
+      kind: 'asked',
+      change: 1,
+      words: "It didn't start on the live address",
+      fix: { incidentId: INCIDENT, environment: 'production' },
+    })
+    expect(pieceOf(s.store, made.id)).toMatchObject({
+      kind: 'fix',
+      incidentId: INCIDENT,
+      environment: 'production',
+    })
+  })
+
+  it("a fix naming the trying-out address is F4's, stored as F4 stored it", async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answer = await s.ask({
+      fix: { incidentId: INCIDENT, environment: 'staging' },
+      token: GOOD,
+    })
+    expect(answer.statusCode).toBe(201)
+    const made = answer.json() as Conversation
+    expect(made.title).toBe(FIX_WORDS)
+    expect(s.store.listMessages(made.id).at(-1)?.body).toMatchObject({
+      fix: { incidentId: INCIDENT },
+    })
+    expect(pieceOf(s.store, made.id)).toMatchObject({ environment: 'staging' })
   })
 
   it('from a student app is 403 ORIGIN_REFUSED: nothing stored, the platform never asked', async () => {
@@ -312,6 +354,14 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
     [
       'a fix whose incident is no id',
       { fix: { incidentId: 'the last one' }, token: GOOD },
+    ],
+    [
+      'a fix on an address we never fix (the draft is ours to build)',
+      { fix: { incidentId: INCIDENT, environment: 'sandbox' }, token: GOOD },
+    ],
+    [
+      'a fix with a key of its own',
+      { fix: { incidentId: INCIDENT, why: 'it crashed' }, token: GOOD },
     ],
     ['a token with a space', { words: WORDS, token: 'mft_ x' }],
   ])('%s is 400 CHANGE_INVALID, and nothing is asked or stored', async (_what, body) => {

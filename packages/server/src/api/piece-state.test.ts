@@ -44,6 +44,7 @@ describe('pieceOf', () => {
       change: 0,
       asked: [],
       incidentId: null,
+      environment: null,
     })
   })
 
@@ -68,6 +69,7 @@ describe('pieceOf', () => {
       change: 2,
       asked: ['Now a bigger title', 'And bold'],
       incidentId: null,
+      environment: null,
     })
   })
 
@@ -84,6 +86,28 @@ describe('pieceOf', () => {
       change: 1,
       asked: ['It didn’t start on the trying-out address'],
       incidentId: 'incident-1',
+      // F4's fixes name no address: every one was the trying-out address's (F5 Decision 13).
+      environment: 'staging',
+    })
+  })
+
+  it('a fix for the live address says so: the incident is read where it happened (F5 Decision 13)', () => {
+    const store = fresh()
+    const c = store.createChange(ALICE.id, PROJECT, 'It didn’t start', 'ours')
+    store.addMessage(
+      c.id,
+      'we',
+      asked(1, 'It didn’t start on the live address', {
+        incidentId: 'incident-2',
+        environment: 'production',
+      }),
+    )
+    expect(pieceOf(store, c.id)).toEqual({
+      kind: 'fix',
+      change: 1,
+      asked: ['It didn’t start on the live address'],
+      incidentId: 'incident-2',
+      environment: 'production',
     })
   })
 })

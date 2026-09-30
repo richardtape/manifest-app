@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify'
 import type { Line } from '../build/line.js'
 import type { Config } from '../config.js'
+import type { FixEnvironment } from '../platform/instances.js'
 import type { ConversationTokens, Made, Projects } from '../platform/project.js'
 import { PlatformRefusal } from '../platform/refusal.js'
 import type { Conversation, Run, Store } from '../store/db.js'
@@ -30,19 +31,22 @@ const MOMENT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/
 const TITLE = 60
 /** A fix conversation's title and words (Words proposed for Rich). */
 export const FIX_WORDS = "It didn't start on the trying-out address"
+/** A fix for a start on the live address (F5 Decision 13; Words proposed for Rich). */
+export const LIVE_FIX_WORDS = "It didn't start on the live address"
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
 /**
  * `{ words, token }`, `{ words, token, refusal: { approvalId } }` (*[Talk it through]*: F5 Task 8)
- * or `{ fix: { incidentId }, token }`, and nothing else.
+ * or `{ fix: { incidentId, environment? }, token }` (`staging` when absent, as F4's; `production`
+ * for the live address: F5 Decision 13), and nothing else.
  */
 function changeOf(
   body: unknown,
 ):
   | { words: string; token: string; refusal: { approvalId: string } | null }
-  | { incidentId: string; token: string }
+  | { incidentId: string; environment: FixEnvironment; token: string }
   | undefined {
   if (!isObject(body)) return undefined
   const keys = Object.keys(body).length
@@ -64,10 +68,12 @@ function changeOf(
   }
   if (keys !== 2) return undefined
   const { fix } = body
-  if (!isObject(fix) || Object.keys(fix).length !== 1) return undefined
-  const { incidentId } = fix
+  if (!isObject(fix)) return undefined
+  const { incidentId, environment = 'staging' } = fix
+  if (Object.keys(fix).length !== ('environment' in fix ? 2 : 1)) return undefined
   if (typeof incidentId !== 'string' || !ID.test(incidentId)) return undefined
-  return { incidentId, token }
+  if (environment !== 'staging' && environment !== 'production') return undefined
+  return { incidentId, environment, token }
 }
 
 /** Their words, as a title: the first line, cut at a word, until the plan names it (Decision 6). */
@@ -154,14 +160,25 @@ export function registerApps(
 
       // No await from here to the line's answer: two asked in one tick are one and the next.
       store.rememberPerson(who.person)
-      const words = 'words' in asked ? asked.words : FIX_WORDS
+      const words =
+        'words' in asked
+          ? asked.words
+          : asked.environment === 'production'
+            ? LIVE_FIX_WORDS
+            : FIX_WORDS
       const change = store.createChange(who.person.id, projectId, titleOf(words), words)
       store.addMessage(change.id, 'we', { kind: 'project', project: made })
       store.addMessage(change.id, 'words' in asked ? 'person' : 'we', {
         kind: 'asked',
         change: 1,
         words,
-        fix: 'words' in asked ? null : { incidentId: asked.incidentId },
+        // A trying-out fix is stored as F4 stored it; the live address's says so.
+        fix:
+          'words' in asked
+            ? null
+            : asked.environment === 'production'
+              ? { incidentId: asked.incidentId, environment: 'production' }
+              : { incidentId: asked.incidentId },
         ...('words' in asked && asked.refusal !== null ? { refusal: asked.refusal } : {}),
       } satisfies Asked)
       tokens.put(change.id, asked.token)

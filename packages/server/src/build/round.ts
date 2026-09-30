@@ -587,8 +587,8 @@ export function createRounds(deps: RoundDeps): Rounds {
 
   /**
    * F4 DECISION 9: WHAT THIS ROUND IS FOR, IN THE LEAD'S VIEW: the agreed change (their words, and
-   * the plan's parts it changed, as they now read), or the fix (staging's incident, as our token
-   * may read it). A confidential app's incident refused to our token is said as that, and never
+   * the plan's parts it changed, as they now read), or the fix (the incident where it happened,
+   * trying-out's or the live address's, as our token may read it). A confidential app's incident refused to our token is said as that, and never
    * read another way: the person's own reading of it never reaches us (S1).
    */
   async function pieceFor(live: Live, plan: Plan | undefined) {
@@ -600,15 +600,18 @@ export function createRounds(deps: RoundDeps): Rounds {
       }
     if (piece.kind === 'fix' && piece.incidentId !== null && live.fix === null) {
       const incidentId = piece.incidentId
-      const read = await call(live, 'listIncidents', 'staging', () =>
-        instances.stagingIncident(live.token, live.projectId, incidentId),
+      // Where it did not start: F4's fixes were all the trying-out address's (F5 Decision 13).
+      const environment = piece.environment ?? 'staging'
+      const read = await call(live, 'listIncidents', environment, () =>
+        instances.incident(live.token, live.projectId, environment, incidentId),
       )
       live.fix =
         read === 'confidential'
-          ? { incident: null, unread: 'confidential' }
+          ? { environment, incident: null, unread: 'confidential' }
           : read === undefined
-            ? { incident: null, unread: 'missing' }
+            ? { environment, incident: null, unread: 'missing' }
             : {
+                environment,
                 incident: {
                   exitReason: read.exitReason,
                   failedCheck: read.failedCheck,

@@ -21,6 +21,9 @@ export interface Incident {
   prompt: string
 }
 
+/** The addresses a fix answers: the draft is our own round's to fix, never a fix's. */
+export type FixEnvironment = 'staging' | 'production'
+
 export interface Instances {
   list(token: string, environmentId: string): Promise<(Instance & { serving: boolean })[]>
   /** INSTANCE_OUTPUT_UNAVAILABLE, an instance that never ran or no longer runs, is `unavailable` (M4). */
@@ -32,13 +35,15 @@ export interface Instances {
   ): Promise<{ lines: string[]; failure: string | null } | { unavailable: true }>
   incidents(token: string, environmentId: string): Promise<Incident[]>
   /**
-   * F4 Decision 9: the trying-out address's incident a fix names, by its id; `undefined` when it
-   * is not there. A confidential app's is refused to our token while the capable model builds it
-   * (`403 INCIDENT_LOG_CONFIDENTIAL`): `confidential`, and never read another way.
+   * F4 Decision 9: the incident a fix names, by its id, on the address where it happened: the
+   * trying-out address's, or the live address's (F5 Decision 13); `undefined` when it is not
+   * there. A confidential app's is refused to our token while the capable model builds it (`403
+   * INCIDENT_LOG_CONFIDENTIAL`), on either: `confidential`, and never read another way.
    */
-  stagingIncident(
+  incident(
     token: string,
     projectId: string,
+    environment: FixEnvironment,
     incidentId: string,
   ): Promise<Incident | 'confidential' | undefined>
 }
@@ -85,7 +90,7 @@ export function platformInstances(origin: string): Instances {
   return {
     list,
     incidents,
-    async stagingIncident(token, projectId, incidentId) {
+    async incident(token, projectId, environment, incidentId) {
       const environments = await called(async () =>
         unwrap(
           await tokenClient(origin, token).GET('/v1/projects/{projectId}/environments', {
@@ -95,10 +100,10 @@ export function platformInstances(origin: string): Instances {
         ),
       )
       // By its kind, never its place in the list.
-      const staging = environments.find((environment) => environment.kind === 'staging')
-      if (staging === undefined) return undefined
+      const where = environments.find((e) => e.kind === environment)
+      if (where === undefined) return undefined
       try {
-        return (await incidents(token, staging.id)).find((i) => i.id === incidentId)
+        return (await incidents(token, where.id)).find((i) => i.id === incidentId)
       } catch (error) {
         if (
           error instanceof PlatformRefusal &&

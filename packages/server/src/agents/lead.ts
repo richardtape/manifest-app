@@ -33,10 +33,12 @@ export interface LeadView {
   /** F4: the agreed change: their words, and the plan's parts that changed, as they now read. */
   change: { asked: string[]; parts: string[] } | null
   /**
-   * F4: a fix of ours, when the app did not start on the trying-out address: what the platform
-   * recorded there, or none, and why (a confidential app's record is the person's alone).
+   * F4: a fix of ours, when the app did not start on the trying-out address, or (F5 Decision 13)
+   * on the live address: what the platform recorded there, or none, and why (a confidential app's
+   * record is the person's alone).
    */
   fix: {
+    environment: 'staging' | 'production'
     incident: {
       exitReason: string
       failedCheck: string
@@ -161,9 +163,10 @@ function pieceOf(view: LeadView): string[] {
     ]
   if (view.fix !== null) {
     const incident = view.fix.incident
+    const where = view.fix.environment === 'production' ? 'live' : 'trying-out'
     return [
       '',
-      'The app did not start on the trying-out address, and we are fixing that.',
+      `The app did not start on the ${where} address, and we are fixing that.`,
       ...(incident !== null
         ? [
             `How it ended: ${cut(incident.exitReason, FIX_FIELD_CAP)}`,

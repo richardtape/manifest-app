@@ -1,3 +1,4 @@
+import type { FixEnvironment } from '../platform/instances.js'
 import type { Store } from '../store/db.js'
 
 /**
@@ -12,8 +13,12 @@ export interface Asked {
   /** 1 for the first change in the conversation, then 2, 3… */
   change: number
   words: string
-  /** A fix of ours (F4 Decision 6): the incident it answers. Null for their change. */
-  fix: { incidentId: string } | null
+  /**
+   * A fix of ours (F4 Decision 6): the incident it answers, and where it happened: absent is the
+   * trying-out address, as every F4 fix was; `production` is the live address (F5 Decision 13).
+   * Null for their change.
+   */
+  fix: { incidentId: string; environment?: 'production' } | null
   /**
    * F5 Task 8: a change started by *[Talk it through]* answers an administrator's refusal, so
    * pressed again it opens this one (the final review's I1). Absent on every other change.
@@ -26,11 +31,19 @@ export interface Piece {
   change: number
   asked: string[]
   incidentId: string | null
+  /** Where a fix's app did not start; null for anything but a fix. */
+  environment: FixEnvironment | null
 }
 
 /** The latest change asked, whole; a conversation with none is on its first piece. */
 export function pieceOf(store: Store, conversationId: string): Piece {
-  let piece: Piece = { kind: 'first', change: 0, asked: [], incidentId: null }
+  let piece: Piece = {
+    kind: 'first',
+    change: 0,
+    asked: [],
+    incidentId: null,
+    environment: null,
+  }
   for (const { body } of store.listMessages(conversationId)) {
     const said = body as { kind?: unknown }
     if (said.kind !== 'asked') continue
@@ -41,6 +54,7 @@ export function pieceOf(store: Store, conversationId: string): Piece {
         change: asked.change,
         asked: [],
         incidentId: asked.fix?.incidentId ?? null,
+        environment: asked.fix === null ? null : (asked.fix.environment ?? 'staging'),
       }
     piece = { ...piece, asked: [...piece.asked, asked.words] }
   }

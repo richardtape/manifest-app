@@ -211,8 +211,11 @@ interface Options {
   ended?: (conversation: Conversation) => void
   /** Files of the tree's own beside FILES: docs/plan.md, as committed (F4 Task 8). */
   files?: Record<string, string>
-  /** Staging's incident a fix names, as our token reads it (F4 Task 8). */
-  stagingIncident?: (incidentId: string) => Incident | 'confidential' | undefined
+  /** The incident a fix names, where it happened, as our token reads it (F4 Task 8; F5 Decision 13). */
+  incident?: (
+    environment: 'staging' | 'production',
+    incidentId: string,
+  ) => Incident | 'confidential' | undefined
   /** Why the platform ended each session (its index), when it did: models_withdrawn (FE-36). */
   endReason?: (n: number) => string | null
   /** The round's model itself, in place of the script: the real client over a fake gateway (F5 Task 2). */
@@ -406,9 +409,9 @@ function harness(options: Options, file?: string, store0?: Store) {
           instanceId: i.id,
           releaseId: i.releaseId,
         })),
-    stagingIncident: async (_token, _project, incidentId) => {
-      did.push(`listIncidents staging ${incidentId}`)
-      return options.stagingIncident?.(incidentId)
+    incident: async (_token, _project, environment, incidentId) => {
+      did.push(`listIncidents ${environment} ${incidentId}`)
+      return options.incident?.(environment, incidentId)
     },
   }
 
@@ -1892,6 +1895,34 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     return fix
   }
 
+  /** The live address's incident: a first launch that did not start (F5 Decision 13). */
+  const LIVE: Incident = {
+    ...STAGING,
+    id: 'incident-live',
+    exitReason: 'the live start exited with code 1',
+    logTail: 'Error: MONGODB_URI is required (on the live address)',
+    prompt: 'The application failed to start in its production environment.',
+  }
+
+  /** A fix of ours for a start on the live address, as the page asks it. */
+  function fixingLive(h: H) {
+    h.store.rememberPerson(ALICE)
+    const fix = h.store.createChange(
+      ALICE.id,
+      PROJECT.id,
+      "It didn't start on the live address",
+      "It didn't start on the live address",
+    )
+    h.store.addMessage(fix.id, 'we', { kind: 'project', project: PROJECT })
+    h.store.addMessage(fix.id, 'we', {
+      kind: 'asked',
+      change: 1,
+      words: "It didn't start on the live address",
+      fix: { incidentId: LIVE.id, environment: 'production' },
+    })
+    return fix
+  }
+
   function started(options: Options, make: (h: H) => Conversation = agreed) {
     const h = harness(options)
     const conversation = make(h)
@@ -1954,8 +1985,8 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     const { h, id } = started(
       {
         script: { lead: [] },
-        stagingIncident: (incidentId) =>
-          incidentId === STAGING.id ? STAGING : undefined,
+        incident: (environment, incidentId) =>
+          environment === 'staging' && incidentId === STAGING.id ? STAGING : undefined,
       },
       fixing,
     )
@@ -1975,13 +2006,50 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
 
   it("a staging incident refused to our token (a confidential app's): only that it did not start, and why we cannot read it; nothing shown as a problem", async () => {
     const { h, id } = started(
-      { script: { lead: [] }, stagingIncident: () => 'confidential' },
+      { script: { lead: [] }, incident: () => 'confidential' },
       fixing,
     )
     const prompt = await firstPrompt(h)
     expect(prompt).toMatch(/did not start on the trying-out address/)
     expect(prompt).toMatch(/cannot read why/i)
     expect(prompt).not.toContain(STAGING.logTail)
+    expect(viewOf(h, id)).toMatchObject({
+      status: 'working',
+      needs: null,
+      reference: null,
+    })
+    expect(JSON.parse(dumpAll(h.file)['problems']!)).toEqual([])
+  })
+
+  it("a fix of a start on the live address reads production's incident, and its view says the live address (F5 Decision 13)", async () => {
+    const { h, id } = started(
+      {
+        script: { lead: [] },
+        incident: (environment, incidentId) =>
+          environment === 'production' && incidentId === LIVE.id ? LIVE : undefined,
+      },
+      fixingLive,
+    )
+    const prompt = await firstPrompt(h)
+    expect(h.did).toContain(`listIncidents production ${LIVE.id}`)
+    expect(h.did).not.toContain(`listIncidents staging ${LIVE.id}`)
+    expect(prompt).toMatch(/did not start on the live address/)
+    expect(prompt).not.toMatch(/trying-out address/)
+    for (const said of [LIVE.exitReason, LIVE.logTail, LIVE.prompt])
+      expect(prompt).toContain(said)
+    expect(viewOf(h, id)?.steps[0]).toMatchObject({ key: 'pages', state: 'now' })
+  })
+
+  it("a confidential app's live incident refused to our token: only that it did not start there, and why we cannot read it", async () => {
+    const { h, id } = started(
+      { script: { lead: [] }, incident: () => 'confidential' },
+      fixingLive,
+    )
+    const prompt = await firstPrompt(h)
+    expect(h.did).toContain(`listIncidents production ${LIVE.id}`)
+    expect(prompt).toMatch(/did not start on the live address/)
+    expect(prompt).toMatch(/cannot read why/i)
+    expect(prompt).not.toContain(LIVE.logTail)
     expect(viewOf(h, id)).toMatchObject({
       status: 'working',
       needs: null,

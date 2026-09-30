@@ -191,7 +191,7 @@ function setUp(script: unknown[] = []) {
           list: async () => [],
           output: async () => ({ lines: [], failure: null }),
           incidents: async () => [],
-          stagingIncident: async () => undefined,
+          incident: async () => undefined,
         },
         secrets: { setInSandbox: async () => undefined },
         members: { instructor: async () => ({ puid: 'ins000001', email: 'a@ubc.ca' }) },
@@ -680,6 +680,7 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
       change: 1,
       asked: ['Also a word count.'],
       incidentId: null,
+      environment: null,
     })
   })
 
