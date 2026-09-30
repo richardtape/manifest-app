@@ -4,88 +4,91 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-09-30, 08:50Z: F5's sittings 0–5 done; sitting 6, the acceptance, is next, and needs Rich)*:
+**Where things stand** *(2026-09-30, evening: F5's sittings 0–5 done; sitting 6's mock side done; its real-platform half waits for the 7100 window)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F5 — Going live, sitting 6** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)):
-  **Task 11, the acceptance, alone and last, AT RICH'S WORD**: `scripts/check-going-live.sh` against the mock; the
-  whole-branch review; a first launch walked end to end on 7100 (real GitHub, the platform session's admin grant); **Rich's
-  click**. Approved by Rich as written, executed natively (superpowers:executing-plans; the ledger is
-  `.superpowers/sdd/2026-09-29-f5-going-live/progress.md`). Read the sittings table's row 6 first. **Step 0:** the platform's
-  **4a landed at sitting 5's close** (`fa02bbc`: FE-42 (a), the owner may run the dry run; our typecheck and tests pass
-  against it): **Task 7's press waits on Rich's answer to the platform's Spec action 8** (4a's review found a rehearsal leaves the unapproved candidate on production's public address; the platform re-asks him, (c) recommended), then on his word for when; and FE-34's `null` `200` (our client reads it as unreachable). **Start from a
-  fresh dev database** (sitting 5 could not stop our server), and **update the roadmap**, which sitting 5 could not read.
-  - **Sittings 0–4 done** (2026-09-29/30): the mock-mode banner; FE-38 and FE-33 adopted; the measurements on 7100
-    (**FE-41**, **FE-42**; Rich: *"Both: row now, ask platform"*); **every model call streams**; `ClockItem`, **the Overview**,
-    ***Going live*** (Decision 5 (S3) at Rich's word); the dry run's row, the sign-off with *[Talk it through]*, the
-    hand-over (Decisions 9 and 12 (S4), overnight, for Rich's review).
-  - **Sitting 5 done** (2026-09-30, `manifest-app-6b`, **overnight, Rich asleep, decisions delegated**): ***[Let your
-    students in]*** (`live.tsx`): only when ready; **the press re-reads the checklist and sends only the version the button
-    named** (another is named and asked about: **Decision 10 (S5)**, reversed at the final review, for Rich's review); the
-    step-up card in place and `?then=live` back; the stations; *"<Name> is live."* and *[See what to tell your students]*;
-    the gate's changed row lit; a production secret; a start that never answered and **our server's fix for a live start**
-    (`{ fix: { incidentId, environment: 'production' } }`); **M1, M2 and M4 on *Trying out* too**; a create waits 90 s
-    (adopting the platform's sitting 4). Its final review's three Importants and four regraded Minors fixed (`39ed744`);
-    five Minors deferred (the dated entry).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F5 — Going live, sitting 6's second half** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)):
+  **it starts when the platform hands 7100 over.** The platform's order, Rich's: **its sitting 5 → its 5b → OUR WINDOW → its 5a**.
+  5b (Spec action 8's (b)+(c)) messages us at its close and hands 7100 over; its §7e records the window (no platform Vitest,
+  no control-plane restart, `admin-grant.sh grant opr000001` once `operator` has signed in). Read the sittings table's row 6,
+  the plan's sitting 6 entry, and the ledger's `Sitting 6` lines first. Then, in order:
+  1. **Step 0 for the platform's 5 and 5b** (the plan's *Adopting what lands*): `agent_session.narrowed` (the key trimmed in
+     place; a round whose model was withdrawn moves to the most capable one still listed) and `member_removed`; 5b's
+     `runRehearsal` (its `STEP_UP_REQUIRED`, its take-down refusal's final code, which we match as `REHEARSAL_TEARDOWN_FAILED`,
+     and whether `getEnvironment(production).instance` reads `gone` or `null` after a dry run). `pnpm typecheck`, `pnpm test`.
+  2. **Walk the dry run's press against the mock** (headless Chrome, 1440 and 375): the mock's checklist has the dry run met
+     and never asks a step-up (FE-40), so rewrite `launch-readiness` and `rehearsal` answers in DevTools (`Fetch`), as F4's
+     sitting 6 did for trying-out.
+  3. **Step 2 on 7100, at Rich's word**: our server to edge mode (say so), real GitHub (one new repository, his word), the
+     admin grant; the plan's Task 11 Step 2 list, **the dry run pressed as the owner** now (with its second sign-in: Rich types).
+  4. **Step 3: Rich's click.** Then the close: the gates twice, the dated entry, the table, this section, the roadmap. **F5 is
+     executed only then.**
+  - **Sittings 0–5 done** (2026-09-29/30): the mock-mode banner; FE-38 and FE-33 adopted; the measurements on 7100
+    (**FE-41**, **FE-42**); **every model call streams**; `ClockItem`, **the Overview**, ***Going live***; the dry run's row, the
+    sign-off with *[Talk it through]*, the hand-over; ***[Let your students in]***, M1, M2, M4.
+  - **Sitting 6's first half done** (2026-09-30, `manifest-app-f1`, Rich awake): **Rich decided Spec action 8 = (b)+(c)** and
+    said *"Build it now"* to **Task 7's press** (`71fceba`: *[Run the dry run]*, its step-up and `?then=dry-run`, *[Fix it]* with
+    what it saw, our deadline, this attempt's incident; our server's `{ fix: { dryRun } }` and the lead's view of it);
+    **FE-34's `null` `200`** read as `MODEL_ANSWER_INVALID` (`1ae7189`); **the live address before a launch** (`asServed`: a dry
+    run's `gone` instance is nothing there, on every page, `14f5749`); **the whole-branch review** (fresh, opus: no Critical, no
+    Important as graded; two Minors re-graded Important and fixed, `14f5749`: a stale page's press sends nothing once launched,
+    and the page reads again when the version changes under the button); **`scripts/check-going-live.sh`, 8/8 on a fresh dev
+    database**, its four controls red.
   - **Every sitting starts** with `pgrep -fl vitest` and **Step 0** (the plan's *Adopting what lands*).
-  - **What F5 is:** moments 10–15 as far as the contract serves them, **all built**; the acceptance and Rich's click remain.
   - **F5b** is written when the platform's launch-path sittings 6–10 land (the clocks' own actions, *waiting since*, the
     staging clock and [Open it], asking an administrator).
 - **F4a, *Only faculty build*, is written, approved by Rich, and waits on the platform** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md),
-  walk-through **D7**, **FE-39**). When the platform's contract answers `Me.mayBuild` (its launch-path sitting 5a; the
+  walk-through **D7**, **FE-39**). When the platform's contract answers `Me.mayBuild` (its launch-path **5a**, after 5b; the
   platform session messages us at that commit), **stop and ask Rich** whether to switch to F4a, and to confirm its method
   (native recommended).
 - **Open for Rich:**
-  - **Sitting 5's twelve overnight decisions** (the plan's sitting 5 entry, *"Decided overnight under Rich's delegation"*):
-    above all **Decision 10 (S5)** (the press asks when the version changed), the card held only while a press is under
-    way, and the changed row lit. **And sitting 4's ten** (Decisions 9 and 12 (S4), the honest line said once).
-  - **Spec action 8, the platform's re-ask** (4a closed at `09e3d7b`): a rehearsal leaves the unapproved candidate serving
-    production's public address until launch; (a) accept, (b) a step-up first, (c) take it down after the sign-in
-    (recommended), (d) administrators only again. **Task 7's press (the owner's dry run) waits on it**, then on his word
-    for which sitting.
-  - **A fresh-database run of the four acceptance scripts**: sitting 5's ran on sitting 4's database, since stopping our
-    server was refused by that session's permission classifier.
-  - Removing the GitHub repository `Manifest-local-dev/f5-reading` (sitting 1's), with `lp-real-a`.
+  - **Sitting 6's rulings** (the plan's sitting 6 entry): above all the dry run's row as **needs you**, the words of ours
+    (row *S6* of *Words proposed for Rich*), and FE-34's refusal said as *"didn't come out"*.
+  - **Sitting 5's twelve overnight decisions** (above all **Decision 10 (S5)**) **and sitting 4's ten** (Decisions 9 and 12 (S4)).
+  - **The platform's F8** (a provider's `422` answered `200` with `null`): (a) accept, (b) a guard hook, (c) a newer LiteLLM.
+    We read today's shape; (b) would change nothing for us. **And its Spec actions 1–5** (1 and 2 before its sitting 5's
+    tasks, 3–5 before F5b's sittings).
+  - Removing the GitHub repositories `Manifest-local-dev/f5-reading` (sitting 1's) and `lp-real-a`.
   - **Deferred minors:** F4's (M3, M5–M9, M11), F3's and F2's in F4's sitting 7 entry and the ledgers; **F5 sitting 2's nine,
-    sitting 3's seven, sitting 4's eight, sitting 5's five** in their dated entries.
-  - **Words of ours for his click**: sitting 3's, sitting 4's (rows marked S4) and sitting 5's (the row marked S5), in the
-    plan's *Words proposed for Rich*; and, seen at 375, the live address breaking at the slug's hyphen.
+    sitting 3's seven, sitting 4's eight, sitting 5's five, sitting 6's four** in their dated entries.
+  - **Words of ours for his click**: sittings 3's, 4's, 5's and 6's rows in the plan's *Words proposed for Rich*; and, seen at
+    375, the live address breaking at the slug's hyphen.
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md));
     moments 7, 10, 11, 13 and 15 changed with F5's plan, moment 12 with FE-42, moment 10's cards with sitting 3's review,
     and moments 13 and 15 with sitting 4's, for Rich's review (2026-09-30).
   - **F1** (2026-09-27): sign-in, the shell, *Your apps*, a profile. **F2** (2026-09-28): moments 3–5. **F3**
     (2026-09-28): moment 6. **F4** (2026-09-29): moments 7–9. Rich clicked each on the real platform.
-  - **F5's sittings 0–5** (2026-09-29/30): the banner; FE-38 and FE-33 adopted; the measurements; streaming; the Overview and
-    *Going live*; the dry run's row, the sign-off, the hand-over; **putting it live, M1, M2 and M4**.
+  - **F5's sittings 0–5 and sitting 6's first half** (2026-09-29/30): above.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
   - **Its launch-path plan** (`docs/superpowers/plans/2026-09-29-launch-path.md`, read-only), one sitting per session.
-    **Its sitting 4 CLOSED** (`manifest-a1`, `0510c63`): **FE-41 fixed** (`0f2275a..ebfc571`, `7fc25f9`; a create on real
-    GitHub may take ~40 s: our create waits 90 s) and **FE-34 built** (a provider's refusal reaches the caller; a `422`
-    arrives as `200` with `null`, LiteLLM's). **Its 4a, FE-42 (a), CLOSED** (`manifest-73`, `fa02bbc`, closed at
-    `09e3d7b`; **Spec action 8 re-asked of Rich**, above), the contract staying 1.5.0 and `packages/mock` unchanged: `runRehearsal` open to the owner, a collaborator or an administrator, each from their own
-    session; its `FORBIDDEN` gone; the token capability `launch:rehearse` added, person-only. Then 5 the key trim and member
-    removal; **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10 the console and the mock (FE-40); 11 the guides; 12
-    its acceptance. **When one lands, do F5's *Adopting what lands*.** It messages us before any commit to
-    `packages/contract` or `packages/mock`, and at each close.
-  - **The contract is 1.5.0, 66 operations** (`84d485a`): `Instance.createdAt`; close code `4401`.
+    Sittings 1–4 and **4a** closed (4a at `09e3d7b`: FE-42 (a), the owner may run the dry run). **Spec action 8 decided by Rich,
+    (b)+(c)** (`manifest-d4`, 2026-09-30): built by **5b (Task 6c)**, after 5. **Its sitting 5 was running at our first half's
+    close** (Tasks 7 and 8: `agent_session.narrowed`, then `member_removed`; each a contract commit under 1.5.0, announced to
+    us first; `packages/mock` untouched). Then **5b**, **our window**, **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10
+    the console and the mock (FE-40); 11 the guides; 12 its acceptance. **When one lands, do F5's *Adopting what lands*.**
+  - **The contract is 1.5.0, 66 operations** (`84d485a`), plus sitting 5's event `agent_session.narrowed` (`d061ad7`; our
+    typecheck passes against it). **Rich also decided, with `manifest-00`: UBC's order is sequential** (the privacy assessment,
+    then staging's IAM request carrying its number, then production's), and the platform will gate the owner's *"I've sent
+    it"* in that order (its Spec action 9): moment 10's clocks become a sequence, **F5b's to design**.
   - **7100 runs on real GitHub** (driver 2, `Manifest-local-dev`): **anything created through 7100 makes a real private
     repository on github.com that nothing deletes.** A real-platform walk is Rich's word, every time. **Never restart the
     control plane yourself.** Every platform sitting's first test run truncates its database, the admin grant included.
-  - **Findings:** FE-26 to FE-32 carried; FE-35 and FE-36 decided and built, FE-36 changing (sitting 5); FE-11 decided
-    (sitting 5); **FE-38 and FE-33 landed and adopted**; **FE-41 fixed and adopted**, **FE-34 built**; FE-37 fixed; FE-39
-    decided (sitting 5a); **FE-40 confirmed** (sitting 10); **FE-42 (a) landed** (`fa02bbc`, persons only; Task 7's press waits on Rich). Rich carries
-    what he decides.
+  - **Findings:** FE-26 to FE-32 carried; FE-35 and FE-36 decided and built; FE-11 decided; **FE-38 and FE-33 landed and
+    adopted**; **FE-41 fixed and adopted**; **FE-34 built and adopted** (its `null` `200`: `1ae7189`); FE-37 fixed; FE-39
+    decided (5a); **FE-40 confirmed** (sitting 10); **FE-42 (a) landed, and Spec action 8 decided** (5b). Rich carries what he
+    decides.
   - **The laptop's on-premise names are `qwen3.8:27b`**; the capable model is `default-chat-large`
     (`openai/gpt-6-luna`), read from `session.models`, never assumed. A fallback says so in
     `x-litellm-attempted-fallbacks: 1`, **on a stream too** (F5 sitting 1).
   - **The platform's `make doctor` asks our server `GET /api/__doctor`**, which answers `{"name":"manifest-app"}`, in
     either mode, with no session. **Keep that path and that answer.**
-- **The machine** *(2026-09-30, 08:45Z, queried)*:
-  - **Our server on 7105 is in mock mode** (one watcher, `nohup pnpm dev:mock` pid 64157's tree, restarted by sitting 4 and
-    never stopped since; tsx watch restarts its listener on each server edit), against **our mock on 7102** (pid 35047).
-    **Every page says *"Mock mode: …"* at its top.** Switch to edge mode before anyone clicks the real platform, and say so.
-    **Its dev database is sitting 4's, plus sitting 5's four acceptance runs**: not fresh.
-  - **The control plane on 7100 is the platform session's** (node 65663, restarted since sitting 4's close). Query it
+- **The machine** *(2026-09-30, sitting 6's first half, queried)*:
+  - **Our server on 7105 is in mock mode**, restarted by sitting 6 on a **fresh dev database** (`nohup pnpm dev:mock` from the
+    repository; the old file is `packages/server/.data/app-before-f5s6.sqlite`), against **our mock on 7102** (pid 35047).
+    The dev database now holds sitting 6's acceptance runs and its controls' (a control's run stays: the scripts scope their
+    checks to their own conversations). **Every page says *"Mock mode: …"* at its top.** Switch to edge mode before anyone
+    clicks the real platform, and say so.
+  - **The control plane on 7100 is the platform session's** (node 53532 at our first half). Query it
     (`lsof -nP -iTCP:7100 -sTCP:LISTEN`), ask Rich, and tell the platform session before using it. **LiteLLM is on 7106**
     (Docker). 7104 (the reference console) was not listening.
   - **Our dev script trusts the system's CAs** (`NODE_OPTIONS=--use-system-ca`), where the laptop's platform CA lives.
@@ -100,10 +103,12 @@ says which plan is current. This file states where things stand and the rules. I
     wraps, a styles test).
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
     `mode.ts` says which platform our server answers from (Vite's `define`), and `App` draws the mock-mode banner from it.
+    **Every reader of an address's instance takes its environment through `your-apps/model.ts`'s `asServed`** (sitting 6):
+    before a launch, the live address a dry run left `gone` is nothing there (the platform's 5b).
     **An app's pages:** `/apps/:slug` is the Overview (`screens/overview/`: its rows, moment 10's band, and **moment 15's
     hand-over in `students.tsx`**, read once launched), `/apps/:slug/preview?tab=…` the Preview (`screens/preview/`,
     moment 7: its facts pure, in `facts.ts`), `/apps/:slug/going-live` *Going live* (`screens/going-live/`: `checklist.ts`'s
-    `rowsOf` and `CLOCK_IDS`, `clocks.ts`'s `clockOf`, **`dry-run.tsx`'s `dryRunRow`** (where Task 7's press returns) and
+    `rowsOf` and `CLOCK_IDS`, `clocks.ts`'s `clockOf`, **`dry-run.tsx`: `dryRunRow` and *[Run the dry run]*** (Task 7's press, sitting 6: the step-up card and `?then=dry-run`, *[Fix it]* with what it saw, our deadline's reads, this attempt's incident) and
     **`sign-off.tsx`'s `signOffRow`, `talkWords` and *[Talk it through]***, all pure but the components; `row.tsx` draws a
     row, lit when it changed; **`live.tsx`, moment 14's *[Let your students in]***, held by the page while a press is under
     way), `/apps/:slug/conversations` and `/change` moment 8 (`screens/change/`). The router's `canonical` rewrites F4's
@@ -121,7 +126,9 @@ says which plan is current. This file states where things stand and the rules. I
       `piece-state.ts` and `line-state.ts`. `api/build.ts` is the building routes, `api/apps.ts` an app's
       conversations, the secrets we asked for, the fix under way for an incident (**a fix names its address: `environment:
       'production'` for the live address**), the change under way for a refusal
-      (`/refusals/:approvalId/conversation`), and the hand-over's two rows (`/plan?before=`), and `api/plan.ts` a plan.
+      (`/refusals/:approvalId/conversation`), **a dry run's fix** (`{ fix: { dryRun } }`, held to its four fields, never the
+      platform's `reason`; found again at `/rehearsals/:rehearsalId/conversation`), and the hand-over's two rows (`/plan?before=`),
+      and `api/plan.ts` a plan.
     - `model/` asks a model for structured output only, and says which model answered. **Every call streams** (F5
       sitting 2): `model/stream.ts` reads the events, and `client.ts` holds three deadlines per use (`ROUND_DEADLINES`,
       `ASKING_DEADLINES`: a first word, words or reasoning arriving, a ceiling); an answer is counted (`received`), never
@@ -133,11 +140,11 @@ says which plan is current. This file states where things stand and the rules. I
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1568 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (1624 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
-      (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**: each in mock mode, `pnpm mock` and `pnpm dev:mock` running.
-      Run `check-seeing.sh` first, while the mock's app is free.
+      (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**, **`scripts/check-going-live.sh` (F5's, 8)**: each in mock mode, `pnpm
+      mock` and `pnpm dev:mock` running. Run `check-seeing.sh` first, then `check-going-live.sh`, while the mock's app is free.
 
 ---
 
@@ -528,6 +535,22 @@ bash scripts/check-seeing.sh                                    # F4's acceptanc
   *"Interfere With Workloads"*): a fresh-database acceptance run then needs Rich, or a session allowed to. Never route
   around a refusal.
 
+- **`waitFor` polls with `setInterval`**, so in a test that fakes `setInterval` it re-checks only when the page changes: a
+  call made after an async read (the dry run's `runRehearsal`, after the press's `listInstances`) changes nothing, and
+  `waitFor` times out at 1 s. Settle the queue instead (`act` over a real `setTimeout(0)`: `dry-run-press.test.tsx`'s
+  `settle`) (F5 sitting 6).
+- **The mock lists no incident anywhere** (FE-27): a script that asks for a fix names an incident of its own, and checks
+  where our round reads it (`listIncidents` named `production`), never what the mock finds (`check-going-live.sh`).
+- **bash 3.2 reads a multibyte character straight after `$VAR` as part of its name** (`"…$REASON”"` is *"unbound
+  variable"*): write `${VAR}` (F5 sitting 6).
+- **The platform names the newest instance as an address's when no route serves one** (its `servingInstanceOf`, per
+  `manifest-d4`): after a first launch that never answered, `Environment.instance` is that failed attempt, and after a dry
+  run (the platform's 5b) the dry run's instance, `gone`. Neither is served: `asServed`, and a failed attempt compared by
+  its id (`live.tsx`) (F5 sitting 6).
+- **A control that sends a round's deploy elsewhere leaves that round needing you**, and every conversation after it waits
+  in line: the acceptance script then spends its 90-s budgets waiting (about ten minutes) before it reads the check the
+  control is for. Free the app through our own *Stop* after it (F5 sitting 6's `control.sh`, in its scratchpad).
+
 ## 8. Working with the platform session, and other agents
 
 The platform is built by **another Claude session**, in `/Users/rich/Developer/manifest`. It executes the front-end
@@ -537,7 +560,7 @@ enablement plan there, one sitting per session. We share the machine, the contro
   the live session named `manifest-…` (it was `manifest-de`, `manifest-b1`, `manifest-82`, then `manifest-7c`, which F3's sitting 7 found stopped by Rich
   and back at its close, then `manifest-c3` for its sitting 11a, `manifest-8b` for its sitting 12 and close, `manifest-63` for the next
   plan, the launch path, `manifest-13` for that plan's sitting 2, `manifest-c3` again for its sitting 3, `manifest-a1` for
-  its sitting 4, and `manifest-73` waiting for its 4a), or the one whose messages come
+  its sitting 4, `manifest-73` waiting for its 4a, and `manifest-d4` where Rich decided Spec action 8 and for its sitting 5), or the one whose messages come
   from manifest. Send to the name exactly as `ListAgents` prints it. Our own session's name is printed at the top of
   that list: tell the platform session to reply to it.
 - **What it tells us, and what we answer:**

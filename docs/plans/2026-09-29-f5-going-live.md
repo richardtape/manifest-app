@@ -17,8 +17,7 @@ rail, *Going live* (Tasks 4–6); its final review changed Decision 5 at Rich's 
 its checklist item as well as its record, and a change on file is with UBC. **Sitting 4 is done** (2026-09-30,
 `manifest-app-6d`, overnight, Rich asleep and decisions delegated): the dry run's row in its own component (Task 7, S1's),
 the sign-off from the approval with *[Talk it through]* (Task 8), the hand-over (Task 9); its final review changed
-Decisions 9 and 12, marked **(S4)**, **decided overnight for Rich's review**. **Sitting 5 is done** (2026-09-30, `manifest-app-6b`, overnight, decisions delegated): *[Let your students in]* with its step-up, the stations and every failure, M1, M2 and M4 on *Trying out* too, and our server's fix for a live start (Task 10); its final review changed Decision 10, marked **(S5)**, **decided overnight for Rich's review**: the press sends only the version the button named. **The next is the sittings table's
-`← next`.**
+Decisions 9 and 12, marked **(S4)**, **decided overnight for Rich's review**. **Sitting 5 is done** (2026-09-30, `manifest-app-6b`, overnight, decisions delegated): *[Let your students in]* with its step-up, the stations and every failure, M1, M2 and M4 on *Trying out* too, and our server's fix for a live start (Task 10); its final review changed Decision 10, marked **(S5)**, **decided overnight for Rich's review**: the press sends only the version the button named. **Sitting 6's first half is done** (2026-09-30, `manifest-app-f1`, Rich awake): Rich decided the platform's Spec action 8, (b)+(c), and said *"Build it now"*: **Task 7's press is built**, with its second sign-in; Step 0 (FE-34's `null`, 5b's `gone` ahead of it); the whole-branch review and its two re-graded Importants fixed; `check-going-live.sh` 8/8 on a fresh database. **The next is its second half, row 6's `← next`: the 7100 window after the platform's 5 → 5b.**
 
 **Goal:** A faculty member sees what stands between their app and their students from the day the draft is built, runs
 the dry run, sees the sign-off when it is given, lets their students in with one press (and a second sign-in), and is
@@ -68,7 +67,7 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 | 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | **done 2026-09-30** (`manifest-app-58`, no platform): `6505ea7` (the two components, `state` ours), `f113e5b` (the Overview, the rail, the Preview at `/preview`, *Your apps*' line), `b8a533e` (*Going live*), `518c05e` (the final review's fixes; **Decision 5 (S3)**, Rich). 1414 tests (the dated entry below) |
 | 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | **done 2026-09-30** (`manifest-app-6d`, overnight, no platform): `11377c8` (the dry run's row in `dry-run.tsx`, an administrator's, nothing pressable), `2bd6d94` (the sign-off from `getApproval`, *[Talk it through]*), `2788bde` (the hand-over; our `/api/apps/:projectId/plan`), `154a227` (*Going live* hears a launch from the checklist), `7f28d1d` (the final review: *[Talk it through]* opens the change under way, the hand-over speaks for the version live: **Decisions 9 and 12 (S4)**, decided overnight for Rich's review). 1505 tests; the four acceptance scripts pass in mock mode (the dated entry below) |
 | 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | **done 2026-09-30** (`manifest-app-6b`, overnight, no platform): `2e3108f` (trying-out's parts shared), `6f7b713` (our server's fix for a live start; the launch-action guard), `2ed58c9` (M1, M2, M4 on *Trying out*), `74c8a85` (*[Let your students in]*, the step-up and `?then=live`, the stations, every failure), `ac1a0d1` (Step 0: a create waits 90 s, adopting the platform's sitting 4), `39ed744` (the final review: **Decision 10 (S5)**, the press sends only the version the button named, decided overnight for Rich's review; the card held exactly while needed). 1568 tests; the four acceptance scripts pass in mock mode, **not from a fresh database** (the dated entry) |
-| 6 | 11 | **The acceptance:** `scripts/check-going-live.sh` against the mock; the whole-branch review; a first launch walked end to end on 7100 at Rich's word; **Rich's click**. **Alone, and last** | ← **next**, **at Rich's word** (it needs 7100, real GitHub, the platform session's admin grant and his click). **Step 0 first:** 4a (FE-42 (a)) **landed at `fa02bbc`** (typecheck and tests pass against it), closed at `09e3d7b` with **Spec action 8 re-asked of Rich** (a rehearsal leaves the unapproved candidate on production's public address): Task 7's press waits on his answer; FE-34's `null` `200` (our client reads it as unreachable). A fresh dev database (sitting 5 could not stop our server). Measure the on-campus lead's first word on a late prompt (S2) |
+| 6 | 11 | **The acceptance:** `scripts/check-going-live.sh` against the mock; the whole-branch review; a first launch walked end to end on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **in progress** (`manifest-app-f1`, 2026-09-30, Rich awake; the dated entry): **the mock side is done**. Step 0: **Spec action 8 decided by Rich, (b)+(c)** (a step-up before a dry run; it takes itself down), built by the platform's **5b**, which runs after its sitting 5; **Task 7's press built** at Rich's *"Build it now"* (`71fceba`), against 5b as `manifest-d4` described it; FE-34's `null` `200` adopted (`1ae7189`); the live address before a launch read as nothing there when a dry run leaves it `gone` (`14f5749`). The whole-branch review: no Critical, no Important as graded, two Minors re-graded Important and fixed (`14f5749`). `check-going-live.sh` 8/8 on a **fresh dev database**, its four controls red. **← next: the 7100 window, AFTER the platform's 5 → 5b and BEFORE its 5a's first Vitest** (recorded in its §7e; 5b messages us and hands 7100 over): Step 0 for 5 and 5b, the walks against the mock (the dry run's press at 1440 and 375), Step 2 on 7100 at Rich's word, Step 3 Rich's click |
 
 **Every sitting starts** with `pgrep -fl vitest` (a stray worker loads the machine the platform times its tiers
 against) and **Step 0: the platform's landings** (*Adopting what lands*, below). **Every sitting ends as F4's did:**
@@ -174,6 +173,7 @@ change at his click.*
 | Putting it live ✓ | the walk-through's **[Let your students in]**, its sentence, the step-up card, *"You're signed in again."*, F4's stations, *"Reading responses is live."*, and ours: **[See what to tell your students]** |
 | Putting it live, when it goes wrong ✓ | *"The version on your trying-out address changed a moment ago. Go live with the new one?"* · *"Nothing reached your students. The address shows nothing yet, not a broken app."* · **[What went wrong]** · our deadline: *"We stopped waiting, but it may still be going. This shows it when it answers."* |
 | Putting it live, ours (S5) | the stations' name *"Letting your students in"*; the facts' heading *"Your students' address"*; the gate *"It can't go live yet: something on the list changed a moment ago."*, a changed row *"Changed a moment ago"*; five minutes more with no end, *"We stopped waiting, and couldn't see how it ended. The Overview shows whether it's live."* (and on *Trying out*, *"… The Preview's Trying out shows what's there now."*) |
+| The dry run, pressed (S6) | ✓ the walk-through's and the plan's: **[Run the dry run]**; the row *"We put it up with nobody watching, check it answers and signs someone in, then take it down."*, owner *"you start it; minutes"*, **needs you**; while it runs *"Putting it up with nobody watching, signing someone in, taking it down."* and *"You can leave: it carries on."*; failed *"It didn't sign anyone in on the live setup."* **[Fix it]**; *"It didn't start on the live setup."*; our deadline *"We stopped waiting, but it may still finish. This row updates when it does."*; its fix *"The dry run didn't sign anyone in"*. **Ours (S6):** the plan's *"About a minute and a half."* left out (measured: seconds); five minutes with the row unmoved *"We couldn't see how it ended. You can run it again."*; 5b's take-down refused *"It ran, but didn't finish taking itself down. Run it again."*; the step-up card without the sentence about students |
 | A fix conversation's title, for production | *"It didn't start on the live address"*; for a dry run, *"The dry run didn't sign anyone in"* **(S1: M4)** (not built until FE-42 (a): nothing gives the page a failed run's evidence) |
 | The hand-over ✓ | *"For your students"*; the address, **[Copy]**; *"Students sign in with their CWL."*; the message *"<Name> is here: <address>. Sign in with your CWL."* followed by the plan's *What students see*; the honest line *"Anyone with a CWL can sign in, not only your class."* followed by the plan's *Who gets in* (**S4:** the plan's row alone when it opens *"Anyone with a CWL can sign in"*); the two facts |
 | The hand-over, ours (S4) | the field's label *"A message to send them"*; its hint *"For Canvas or an email. Change it as you like: nothing here is saved."*; the Copy buttons' hidden names *"the address"*, *"the message"* |
@@ -382,8 +382,9 @@ change at his click.*
 |---|---|
 | **3** (Tasks 4, 5) | **FE-38** (**adopted 2026-09-29**, `33e9251`, against `d894b8e`): `Instance.createdAt` replaces `facts.ts`'s comparison by the versions' dates, for the last attempt. **FE-33** (Task 5, **not landed at sitting 0's close**): a platform stream closed `4401` means its credential is gone: our server's subscription is not reopened, and the round's needs is `token` |
 | **4** (Task 6a, first; then Task 6) | **FE-41** (Task 6a, confirmed by Rich 2026-09-30): a starter's `createProject` works on real GitHub, so moments 3–6 can be made through our page on 7100 again (the acceptance, sitting 6, needs it; nothing of ours changes). **FE-34**: a malformed request answers its own `400`, which the client already maps; the trace's fallback line becomes rarer |
-| **4a** (Task 6b) | **FE-42 (a)** (confirmed by Rich 2026-09-30): the owner may run the rehearsal, and `runRehearsal`'s description says who may. **Then Task 7's press returns** as Decision 8 was approved (the button, the working row, *"You can leave: it carries on."*, our deadline, and a failure's words): ask Rich whether it goes into the next F5 sitting or a later one |
+| **4a** (Task 6b) | **FE-42 (a)** (confirmed by Rich 2026-09-30): the owner may run the rehearsal, and `runRehearsal`'s description says who may. **Then Task 7's press returns** as Decision 8 was approved (the button, the working row, *"You can leave: it carries on."*, our deadline, and a failure's words): ask Rich whether it goes into the next F5 sitting or a later one **Built in sitting 6** (`71fceba`, Rich: *"Build it now"*), with Spec action 8's (b)+(c) as below |
 | **5** (Tasks 7, 8) | `agent_session.narrowed` (the key trimmed in place) parsed and traced, the round carrying on; `member_removed` as an end reason (`needs: token`); F4's renewal after `models_withdrawn` stays as the net |
+| **5b** (Task 6c; **Spec action 8, decided by Rich 2026-09-30: (b)+(c)**; the platform's order is 5 → 5b → our 7100 window → 5a) | **Adopted ahead, from `manifest-d4`'s description (sitting 6):** `runRehearsal` asks a step-up, `403 STEP_UP_REQUIRED` as a production deploy's (the dry run's card, `?then=dry-run`); the answer comes after the take-down, and the live address still names the dry run's instance, `gone` (`asServed`: nothing there before a launch, on every page); a take-down refused writes no record and answers a code, **`REHEARSAL_TEARDOWN_FAILED` proposed** (matched by that name: rename it if 5b names it otherwise). **At its landing:** re-read `runRehearsal`'s description and responses; whether `getEnvironment` answers `null` instead (then `asServed` is a no-op); the take-down's time; tell Rich |
 | **5a** (Task 8a) | `Me.mayBuild`: **that is F4a**. The platform session messages us; **stop and ask Rich** whether to switch to F4a (native recommended) |
 
 ## Global Constraints
@@ -1385,3 +1386,85 @@ every such decision is in the list below, and in the ledger as a `Ruling:`.*
   grant and Rich's click, so **it starts at Rich's word**. Its Step 0: **4a landed at the close (`fa02bbc`): ask Rich whether Task
   7's press goes in first**, and FE-34's `null` `200`. It starts from a fresh dev database (stop our server's tree, move
   `packages/server/.data/app.sqlite` aside, `pnpm dev:mock`), and updates the roadmap this sitting could not.
+
+### 2026-09-30 — Sitting 6, its first half: the dry run pressed, Step 0, the review, the mock's acceptance (session `manifest-app-f1`)
+
+*Rich awake, deciding the platform's Spec action 8 in another session (`manifest-d4`), who asked us to introduce ourselves
+there, to work in isolation, and to check with the platform session before taking control of anything. Our server stayed in
+mock mode, restarted once on a fresh database; nothing of ours touched 7100. Executed natively (superpowers:executing-plans);
+the ledger's `Sitting 6` lines are the record of each ruling.*
+
+- **Step 0.** manifest at `09e3d7b`: contract **1.5.0, 66 operations**; `pgrep -fl vitest`: none. **Rich decided Spec action
+  8 = (b)+(c)**: a second sign-in before a dry run, and the dry run takes its production instance down once its probe is
+  recorded. `manifest-d4` answered our five questions (*api-findings*' row): the refusal is a production deploy's
+  `403 STEP_UP_REQUIRED`; the answer comes after the take-down; the live address then still names the dry run's instance,
+  `gone`; `Rehearsal` unchanged; a take-down refused answers a code (`REHEARSAL_TEARDOWN_FAILED` proposed); the mock gains
+  no step-up (sitting 10's); F8 stays open with Rich. **The platform's order is Rich's: 5 → 5b (its Task 6c) → our 7100 window
+  → 5a**, and its §7e records the window. **Adopted:** FE-34's `null` `200` (`1ae7189`), and 5b's `gone` ahead of it
+  (`14f5749`). At our half's close the platform's sitting 5 was running: Task 7's `agent_session.narrowed` announced to us
+  before its contract commit (`packages/mock` untouched); Task 8's `member_removed` next. Both are the second half's Step 0.
+- **Task 7's press** (`71fceba`), at Rich's *"Build it now"* (asked: now, recommended, or later): the row, with a version on
+  trying-out, is **needs you**, *"you start it; minutes"*, with **[Run the dry run]**: one `runRehearsal` from the person's
+  session, its own `Idempotency-Key`, a 150-s deadline; working while it runs, *"You can leave: it carries on."*; passed is done
+  and the page reads again; signed nobody in is needs you, one sentence and **[Fix it]**, which opens the fix under way or
+  mints a token and hands our server what the dry run saw (the sign-in's status, the details asked for and carried), never
+  the platform's `reason`; `STEP_UP_REQUIRED` the step-up card and `?then=dry-run`; our deadline read on, every 5 s for five
+  minutes; `REHEARSAL_DEPLOY_FAILED` *[What went wrong]* fed by this attempt's incident; `…_NO_CANDIDATE`, `…_LAUNCHED`,
+  `…_NOT_CWL` the page read again. **Our server:** `{ fix: { dryRun } }` held to its four fields (a detail is a name, at most
+  32), titled *"The dry run didn't sign anyone in"*, joining the line; the lead's view carries what it saw and reads no
+  incident; `/rehearsals/:rehearsalId/conversation` finds it again. Red first throughout; controls C1–C4 (server) and W1–W4
+  (web) each red, restored. A harness trap found on the way: `waitFor` under a faked `setInterval` (§7).
+- **The whole-branch review** (dispatched at the start: fresh, opus, `2a5390a..2b8c795`, 31 commits, four passes): *"Yes"*: no
+  Critical, no Important, five Minors. It met this sitting's uncommitted server edits mid-review, re-read those passages at
+  `HEAD` in a detached worktree, and could not load the whole suite there (the contract's `link:` resolves outside the tree;
+  a symlink was refused and not routed around). **Re-graded by what a person gets, two are Important and fixed** (`14f5749`):
+  **I1**, a stale page's *[Let your students in]* read nothing of a launch since, and could send a newer version to the live
+  app through a first launch's press: now it sends nothing and the page says *"It's live."* (also after `RELEASE_NOT_STAGED`);
+  **I2**, after *"changed a moment ago"* the page's own line and the sign-off still spoke of the old version: now the page
+  reads again. **Deferred:** `AbortError` not read as our deadline; *Stop* does not cut a streaming answer (its ceiling now
+  15 min); an unknown record's empty clock label. **Overtaken:** its fifth (check 2 of a fix never built): the press is built.
+- **The live address before a launch** (`14f5749`, Step 0 ahead of 5b): **`asServed`** reads production's `gone` instance
+  as nothing there before a launch, on *Your apps*, the Overview, the Preview (it said *"Switched off"*, *"The same version.
+  It's the one answering."* and offered *[Open it]*) and a first launch that never answered; the last also when the
+  platform names the failed attempt itself as the address's instance, for want of a route (a defect before 5b too).
+- **`scripts/check-going-live.sh`** (Task 11 Step 1), seven checks through our API: **1** a live address's fix kept with its
+  environment, titled, holding the app, its round reading production's incident; **2** the dry run's fix, kept exactly, reading
+  no incident, built; **3** *[Talk it through]*'s change, their reason in its words, planned and waiting for *Yes*, found again
+  by the decision; **4** no deploy but the sandbox's, no launch action, production only read; **5** the hand-over's two rows,
+  exactly, `404` before any agreement, `400` for a moment that is not one, `401` for nobody; **6** a student app's post of
+  each F5 shape `403 ORIGIN_REFUSED`, nothing kept; **7** no `mft_`, no `sk-`, and none of the model's words in this run's
+  trace. **8/8 on a fresh dev database**, after `check-seeing.sh` 8/8. **Controls, each red, restored:** a third row from the
+  plan route (5); the fix's environment dropped (1); a move's input traced (7, which then showed a whole-table scan stays red
+  for good: scoped to the run's own conversations, and re-run red); a round's deploy sent to production (4: its deploys answered by a production instance; 2 and 3 failed with it, the line held behind a round needing you).
+  "Another person's rows are `404`" stays `api/apps.test.ts`'s: the mock is one person (FE-26).
+- **Gates:** `pnpm test` **1624** twice (1568 at the start), `pnpm lint`, `pnpm typecheck` (also against the platform's
+  `d061ad7`, `agent_session.narrowed`), `pnpm format:check` clean; on the fresh database `check-seeing.sh` 8/8 (first),
+  `check-going-live.sh` 8/8 (and again, clean, after every control), `check-slice.sh` 8/8, `check-describing.sh` 18/18,
+  `check-building.sh` 12/12. `pgrep -fl vitest`: none of ours.
+- **Not done, and why:** **the real platform (Step 2) and Rich's click (Step 3)** wait for the 7100 window after the
+  platform's 5b. **The dry run's press is not yet walked in a browser** (ruling: in the window's sitting, against the mock at
+  1440 and 375 before 7100; the mock never asks a step-up and has the dry run met, so its answers are rewritten in DevTools).
+  **The on-campus lead's first word on a late prompt (S2)** needs 7100's LiteLLM key: the window's.
+- **The machine at the half's close** (queried 22:47Z): our server on 7105 in mock mode, on the fresh database since
+  15:18 local (`nohup pnpm dev:mock` from the repository; one watcher, pid 77778; the listener restarted by tsx watch on each
+  server edit); our mock on 7102 (pid 35047); 7100 the platform's (node 53532; its sitting 5 running, `d061ad7` committed);
+  7106 LiteLLM. The old dev database is `packages/server/.data/app-before-f5s6.sqlite`. No walk's Chrome.
+
+**Decided this sitting, for Rich's review** (each with what reverting it costs; the ledger has the rest):
+
+1. **The dry run's row is *needs you*** once a version is on trying-out, owner *"you start it; minutes"* (the walk-through's
+   table), and S1's administrator's words are gone. *Back:* the row's state and owner in `dryRunRow`.
+2. **Words (S6):** the plan's *"About a minute and a half."* left out (it takes seconds); *"We couldn't see how it ended.
+   You can run it again."*; *"It ran, but didn't finish taking itself down. Run it again."*; the step-up card without the
+   sentence about students (nobody has the address). One sentence for every failed dry run (none was ever measured).
+3. **FE-34's refusal is *"didn't come out"* with *Try again*** (`MODEL_ANSWER_INVALID`, `422`, not retried): not *"we can't
+   reach the model"* (it answered) and not *"waiting on an administrator"* (nobody can fix a refused request). *Back:* one
+   line in `refusal()` and two in `stream.ts`.
+4. **5b built ahead, from its description**: the refusal by code; `REHEARSAL_TEARDOWN_FAILED` by its proposed name; a dry
+   run's `gone` instance read as nothing before a launch. 5b's landing confirms each (the second half's Step 0).
+5. **Two review Minors re-graded Important and fixed** (I1, I2 above): each changes what a person sees at the moment they
+   decide what reaches their students.
+
+- **Next: sitting 6's second half, in the 7100 window** (after the platform's 5 → 5b, before 5a): Step 0 for 5 and 5b; the
+  dry run walked against the mock; Step 2 on 7100 at Rich's word, the dry run pressed as the owner; **Rich's click**. F5 is
+  executed only then.
