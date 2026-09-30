@@ -33,8 +33,7 @@ says which plan is current. This file states where things stand and the rules. I
   platform session messages us at that commit), **stop and ask Rich** whether to switch to F4a, and to confirm its method
   (native recommended).
 - **Open for Rich:** removing the GitHub repository `Manifest-local-dev/f5-reading` (sitting 1's, launched on 7100, all of
-  it disposable at the platform's next truncation), with `lp-real-a`. **Confirming FE-41 and FE-42 (a) to a platform
-  session** (carried by us at his word; PROPOSED on its side until he does). **F4's other deferred minors** (M3, M5–M9,
+  it disposable at the platform's next truncation), with `lp-real-a`. **F4's other deferred minors** (M3, M5–M9,
   M11), and F3's and F2's, are in F4's sitting 7 entry and the ledgers.
 - **Done so far:**
   - The faculty experience is designed moment by moment, and **approved by Rich** ([`walkthrough.md`](./walkthrough.md));
@@ -44,8 +43,10 @@ says which plan is current. This file states where things stand and the rules. I
   - **F5's sittings 0 and 1** (2026-09-29/30): the mock-mode banner; FE-38 and FE-33 adopted; the measurements.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
   - **Its launch-path plan** (`docs/superpowers/plans/2026-09-29-launch-path.md`, read-only), one sitting per session.
-    **Sitting 3 closed** (`bf94c73`, `manifest-c3`). **Next: its sitting 4** (Task 6, FE-34; Spec action 6 first), which
-    **truncates 7100 at its first test run** (it asks us first) and restarts `manifest-litellm`. Then 5 the key trim and
+    **Sitting 3 closed** (`bf94c73`, `manifest-c3`). **Next: its sitting 4**: **Task 6a, FE-41, first** (a starter on real
+    GitHub), then Task 6 (FE-34; Spec action 6 first); it **truncates 7100 at its first test run** (it asks us first) and
+    restarts `manifest-litellm`. **Then 4a: Task 6b, FE-42 (a)** (the owner may run the rehearsal: Task 7's press returns;
+    ask Rich when). Then 5 the key trim and
     member removal; **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10 the console and the mock (FE-40); 11 the
     guides; 12 its acceptance. **When one lands, do F5's *Adopting what lands*.** It messages us before any commit to
     `packages/contract` or `packages/mock`, and at each close.
@@ -55,7 +56,8 @@ says which plan is current. This file states where things stand and the rules. I
     control plane yourself.** Every platform sitting's first test run truncates its database, the admin grant included.
   - **Findings:** FE-26 to FE-32 carried; FE-35 and FE-36 decided and built, FE-36 changing (sitting 5); FE-11 decided
     (sitting 5); **FE-38 and FE-33 landed and adopted**; FE-34 in sitting 4; FE-37 fixed; FE-39 decided (sitting 5a);
-    **FE-40 confirmed** (sitting 10); **FE-41 and FE-42 (a) carried 2026-09-30**. Rich carries what he decides.
+    **FE-40 confirmed** (sitting 10); **FE-41 and FE-42 (a) confirmed by Rich 2026-09-30** (the launch path's Tasks 6a and 6b, sittings 4 and 4a). Rich carries
+    what he decides.
   - **The laptop's on-premise names are `qwen3.8:27b`**; the capable model is `default-chat-large`
     (`openai/gpt-6-luna`), read from `session.models`, never assumed. A fallback says so in
     `x-litellm-attempted-fallbacks: 1`, **on a stream too** (F5 sitting 1).
