@@ -8,9 +8,18 @@ const g = words.goingLive
 
 /**
  * One short job: its state in a word, what it is, one sentence, and whose it is; and, when it is
- * theirs, the one thing to press (`children`).
+ * theirs, the one thing to press (`children`). `announce`: its sentence is said to a screen reader
+ * when it changes (a press replaced by its working line, or how it ended).
  */
-export function RowView({ row, children }: { row: Row; children?: ReactNode }) {
+export function RowView({
+  row,
+  children,
+  announce = false,
+}: {
+  row: Row
+  children?: ReactNode
+  announce?: boolean
+}) {
   const [before, after] =
     row.address !== null && row.words.includes(row.address)
       ? row.words.split(row.address, 2)
@@ -24,7 +33,7 @@ export function RowView({ row, children }: { row: Row; children?: ReactNode }) {
       <StateChip state={row.state} label={g.state[row.state]} />
       <div className="going-live__row-words">
         <span className="going-live__name">{row.name}</span>
-        <p className="body-small">
+        <p className="body-small" {...(announce ? { role: 'status' } : {})}>
           {before}
           {after === undefined || row.address === null ? null : (
             <>

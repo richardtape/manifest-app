@@ -180,14 +180,17 @@ function pieceOf(view: LeadView): string[] {
       '',
       'The dry run on the live setup did not sign anyone in, and we are fixing that. It put the app up on its live address with nobody watching, tried one CWL sign-in, and took it down again.',
       d.signInStatus === null
-        ? 'No sign-in was completed: no signed-in person reached the app at its sign-in address.'
+        ? 'No sign-in was completed: no signed-in person reached the app at its sign-in address. It may not have started, or its sign-in may have failed.'
         : `What the app answered at its sign-in address: ${d.signInStatus}`,
       `The details its registration asks for: ${listed(d.attributesAsked)}`,
       `The details the sign-in carried: ${listed(d.attributesReleased)}`,
       ...(missing.length === 0
         ? []
         : [`Asked for and never carried: ${listed(missing)}`]),
-      "Look for what in the app's sign-in would cause that, and change only that.",
+      // The review's I-A: with no sign-in at all, never assume the sign-in is at fault.
+      d.signInStatus === null
+        ? 'Look for what would stop it starting or signing someone in, and change only that.'
+        : "Look for what in the app's sign-in would cause that, and change only that.",
       CHANGE_PARAGRAPH,
     ]
   }

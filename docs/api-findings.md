@@ -1211,6 +1211,27 @@ sitting 6 (`71fceba`), at his "Build it now", against 5b as described (the table
   - (c) Both: (b) now, (a) carried for the launch path.
 - **When:** before F5's sitting 4 (Task 7, the dry run).
 
+### FE-43 — No read of a dry run: one under way, or how the last one ended, cannot be read back
+
+*Found 2026-09-30 by F5's sitting 6, in its own review (I-C), building the owner's press against 4a and the platform's 5b
+as `manifest-d4` described it. Not carried: Rich's word carries it.*
+
+- **Screen and moment:** *Going live*, the dry run's row (moment 12): *[Run the dry run]*, *"You can leave: it carries
+  on."*, and a failure's *[Fix it]* with what it saw.
+- **What we would call:** a read of the project's dry runs: whether one is under way, and the latest one's answer (the
+  `Rehearsal`: `passed`, and its `evidence`), for the candidate on trying-out.
+- **What is missing:** only `runRehearsal`'s own answer carries it, to the one request that ran it. The checklist item
+  says `met` or `unmet`, never "under way" and never why; `rehearsal.completed` reaches us only on an event stream (F6's
+  watch). **So the page holds the press in its own memory** (sitting 6: per app, never browser storage): a person who
+  leaves as told and comes back in the same tab sees it working, then how it ended; **after a reload, or in another tab,
+  nothing** — the row offers *[Run the dry run]* again beside one under way, and a failure's evidence is gone.
+- **Why it matters:** a second run beside the first is a second deploy to the live setup (with 5b, one run's take-down
+  could meet the other's probe); and a failed run's *[Fix it]* is lost to anyone who did not stay on the page.
+- **Options:** **(a)** `listRehearsals(projectId)` (or the latest on `getLaunchReadiness`'s item), with an `inProgress`
+  state; **(b)** the platform refuses a second run while one is under way (`409`), and F5 reads the checklist; **(c)**
+  leave it, and say less than *"You can leave: it carries on."* (Rich's words).
+- **When:** before faculty run it for real; F5 works meanwhile in one tab.
+
 ## Not a gap: decisions that are Rich's
 
 - **The building agent's model on the laptop is `qwen3.5:4b`**, a 4B-parameter model ✓ (`infra/models.txt`;

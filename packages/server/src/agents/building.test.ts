@@ -813,6 +813,9 @@ describe("the lead's view (Decision 3)", () => {
     })
     expect(user).toMatch(/dry run on the live setup did not sign anyone in/)
     expect(user).toMatch(/No sign-in was completed/)
+    // Nothing says the sign-in is at fault: the app may never have started (the review's I-A).
+    expect(user).toMatch(/may not have started, or its sign-in may have failed/)
+    expect(user).not.toMatch(/Look for what in the app's sign-in would cause that/)
     expect(user).toContain('The details the sign-in carried: none')
     expect(user).toContain('Asked for and never carried: ubcEduCwlPuid, mail')
     expect(user).not.toMatch(/did not start|cannot read why/)

@@ -1,6 +1,6 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, Card } from '@manifest-app/ui'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
@@ -78,16 +78,74 @@ type Phase =
   | { at: 'passed' }
   /** It signed nobody in: what it saw, for *[Fix it]*. */
   | { at: 'failed'; rehearsal: Schemas['Rehearsal'] }
-  /** Its start never answered (REHEARSAL_DEPLOY_FAILED): this attempt's incident, once read. */
+  /** Its start never answered (REHEARSAL_DEPLOY_FAILED, or a start that failed inside it): its incident, once read. */
   | { at: 'didnt-start'; incidentId: string | null }
   | { at: 'step-up' }
+
+const OFFER: Phase = { at: 'offer', said: null }
+
+/**
+ * A PRESS UNDER WAY, OR HOW IT ENDED, PER APP, IN THIS PAGE'S MEMORY (the second review's I-C):
+ * *"You can leave: it carries on."* is true of the platform, and here of its answer too. The row
+ * they come back to reads it, and never offers a second run beside the first. Never browser
+ * storage: a reload forgets it, since no operation reads a dry run back (FE-43).
+ */
+type Held = {
+  phase: Phase
+  /** The rows drawn now, told each change. */
+  heard: Set<(phase: Phase) => void>
+  /** Our deadline's reads, which go on when the row is not drawn. */
+  poll: ReturnType<typeof setInterval> | undefined
+}
+const held = new Map<string, Held>()
+
+function heldFor(projectId: string): Held {
+  let h = held.get(projectId)
+  if (h === undefined) {
+    h = { phase: OFFER, heard: new Set(), poll: undefined }
+    held.set(projectId, h)
+  }
+  return h
+}
+
+/** Forget every press: a fresh page (a test's, or a sign-in that reloads the app). */
+export function forgetDryRuns(): void {
+  for (const h of held.values()) clearInterval(h.poll)
+  held.clear()
+}
+
+/** The press's phase, held beyond the row: the same for every row drawn for this app. */
+function useHeld(
+  projectId: string,
+): [Phase, (next: Phase | ((now: Phase) => Phase)) => void] {
+  const [phase, setPhase] = useState<Phase>(() => heldFor(projectId).phase)
+  useEffect(() => {
+    const h = heldFor(projectId)
+    h.heard.add(setPhase)
+    setPhase(h.phase)
+    return () => {
+      h.heard.delete(setPhase)
+    }
+  }, [projectId])
+  const set = useCallback(
+    (next: Phase | ((now: Phase) => Phase)) => {
+      const h = heldFor(projectId)
+      h.phase = typeof next === 'function' ? next(h.phase) : next
+      for (const hear of h.heard) hear(h.phase)
+    },
+    [projectId],
+  )
+  return [phase, set]
+}
 
 /**
  * THE DRY RUN, DRAWN AND PRESSED (walk-through moment 12; F5 Task 7, Decision 8). **Everything
  * here is the person's own session, in the browser**: our server never runs it, and is only handed
  * what a failed one saw, for a fix.
  * - **[Run the dry run]** sends one `runRehearsal`, and the row works while it runs: *"You can
- *   leave: it carries on."* (S1: M4). It ends done, or needs you with *[Fix it]*.
+ *   leave: it carries on."* (S1: M4), and its answer is held for the row they come back to. It
+ *   ends done, or needs you: *[Fix it]* when it signed nobody in, *[What went wrong]* when the app
+ *   never started (an incident on the live setup: Decision 8).
  * - **A second sign-in** (Spec action 8 (b)) is a card in place; *[Sign in again]* comes back with
  *   `?then=dry-run`, and one press runs it.
  * - **Our deadline is not its answer**: the checklist is read until the row moves.
@@ -114,27 +172,31 @@ export function DryRun({
   /** Its answer moved the checklist: the page reads it again. */
   onRan: () => void
 }) {
-  const [phase, setPhase] = useState<Phase>({ at: 'offer', said: null })
+  const [phase, set] = useHeld(project.id)
   const [pressedOnce, setPressedOnce] = useState(false)
   const [reference, setReference] = useState<string>()
   const [fixing, setFixing] = useState(false)
-  const poll = useRef<ReturnType<typeof setInterval>>(undefined)
   const live = useRef(true)
 
   useEffect(() => {
     live.current = true
     return () => {
       live.current = false
-      clearInterval(poll.current)
     }
   }, [])
+
+  // The checklist says it passed (this run, or another's since): done, whatever was held.
+  useEffect(() => {
+    if (row.state !== 'steady') return
+    set((p) => (p.at === 'running' || p.at === 'passed' ? p : OFFER))
+  }, [row.state, set])
 
   const slug = encodeURIComponent(project.slug)
 
   const press = async () => {
     setPressedOnce(true)
     setReference(undefined)
-    setPhase({ at: 'running' })
+    set({ at: 'running' })
     // M2: what the live setup listed at the press, so a start that failed is this attempt's.
     let listed: ReadonlySet<string> | null = null
     if (production !== undefined)
@@ -149,37 +211,53 @@ export function DryRun({
     try {
       ran = await platform.runRehearsal(project.id, crypto.randomUUID())
     } catch (error) {
-      if (!live.current) return
       if (cutByOurDeadline(error)) return readOn()
       return refused(error, listed)
     }
-    if (!live.current) return
-    if (!ran.passed) return setPhase({ at: 'failed', rehearsal: ran })
-    setPhase({ at: 'passed' })
-    onRan()
+    if (ran.passed) {
+      set({ at: 'passed' })
+      return onRan()
+    }
+    // THE APP NEVER STARTED (the second review's I-A): no sign-in reached it, and the start it
+    // named left an incident on the live setup. That is the incident's fix (Decision 8), never
+    // a sign-in's. The platform answers after the start ended, so one read finds its incident.
+    const instanceId = ran.evidence.instanceId
+    if (
+      ran.evidence.signInStatus === null &&
+      instanceId !== null &&
+      production !== undefined
+    )
+      try {
+        const incident = await incidentOf(platform, production.id, instanceId)
+        if (incident !== undefined)
+          return set({ at: 'didnt-start', incidentId: incident.id })
+      } catch (error) {
+        if (refusalOf(error).kind === 'signed-out') return expire()
+      }
+    set({ at: 'failed', rehearsal: ran })
   }
 
   const refused = (error: unknown, listed: ReadonlySet<string> | null) => {
     const refusal = refusalOf(error)
     const code = refusal.kind === 'refused' ? refusal.code : null
-    if (code === 'STEP_UP_REQUIRED') return setPhase({ at: 'step-up' })
+    if (code === 'STEP_UP_REQUIRED') return set({ at: 'step-up' })
     if (code !== null && READ_AGAIN.has(code)) {
-      setPhase({ at: 'offer', said: null })
+      set(OFFER)
       return onRan()
     }
     // The platform's 5b (Spec action 8 (c)): it ran, and its take-down was refused.
     if (code === 'REHEARSAL_TEARDOWN_FAILED')
-      return setPhase({ at: 'offer', said: d.teardown })
+      return set({ at: 'offer', said: d.teardown })
     if (code === 'REHEARSAL_DEPLOY_FAILED') return void didntStart(listed)
+    set(OFFER)
     const said = pressFailed(error, 'runRehearsal')
     if (said.expired) return expire()
-    setReference(said.reference)
-    setPhase({ at: 'offer', said: null })
+    if (live.current) setReference(said.reference)
   }
 
   /** Its start never answered: M2's *[What went wrong]*, fed by THIS attempt's incident. */
   const didntStart = async (listed: ReadonlySet<string> | null) => {
-    setPhase({ at: 'didnt-start', incidentId: null })
+    set({ at: 'didnt-start', incidentId: null })
     if (production === undefined || listed === null) return
     try {
       const attempt = newestAttempt(
@@ -190,8 +268,8 @@ export function DryRun({
       const found =
         (await incidentOf(platform, production.id, attempt.id)) ??
         (await incidentLater(platform, production.id, attempt.id))
-      if (found === undefined || !live.current) return
-      setPhase((p) =>
+      if (found === undefined) return
+      set((p) =>
         p.at === 'didnt-start' ? { at: 'didnt-start', incidentId: found.id } : p,
       )
     } catch (error) {
@@ -201,35 +279,38 @@ export function DryRun({
 
   /**
    * OUR DEADLINE CUT THE WAIT, NOT THE DRY RUN (Review Focus 3): never "it failed". The checklist
-   * is read every 5 s for five minutes; the item met is done, and the page reads again. Still
-   * unmet by then, we say we could not see how it ended, and offer it again.
+   * is read every 5 s for five minutes, whether or not the row is drawn; the item met is done, and
+   * the page reads again. Still unmet by then, we say we could not see how it ended, and offer it
+   * again.
    */
   const readOn = () => {
-    setPhase({ at: 'unsure' })
+    set({ at: 'unsure' })
+    const h = heldFor(project.id)
     let reads = 0
     let ended = false
     const gaveUp = () =>
-      setPhase((p) => (p.at === 'unsure' ? { at: 'offer', said: d.unsureLong } : p))
-    clearInterval(poll.current)
-    poll.current = setInterval(() => {
+      set((p) => (p.at === 'unsure' ? { at: 'offer', said: d.unsureLong } : p))
+    clearInterval(h.poll)
+    const poll = setInterval(() => {
       reads += 1
       const last = reads >= DRY_RUN_READS
-      if (last) clearInterval(poll.current)
+      if (last) clearInterval(poll)
       platform.getLaunchReadiness(project.id).then(
         (readiness) => {
-          if (!live.current || ended) return
+          if (ended) return
           const item = readiness.items.find((i) => i.id === row.id)
           if (readiness.launched || item?.state === 'met') {
             ended = true
-            clearInterval(poll.current)
-            if (item?.state === 'met') setPhase({ at: 'passed' })
+            clearInterval(poll)
+            if (item?.state === 'met') set({ at: 'passed' })
             return onRan()
           }
           if (last) gaveUp()
         },
-        () => live.current && !ended && last && gaveUp(),
+        () => !ended && last && gaveUp(),
       )
     }, DRY_RUN_POLL_MS)
+    h.poll = poll
   }
 
   /**
@@ -288,10 +369,12 @@ export function DryRun({
     action: null,
   })
 
+  // Said to a screen reader as it goes (the second review's I-D): the button pressed is replaced
+  // by the working line, and the line by how it ended.
   switch (phase.at) {
     case 'running':
       return (
-        <RowView row={as('working', d.running)}>
+        <RowView row={as('working', d.running)} announce>
           <p className="body-small">{d.leave}</p>
         </RowView>
       )
@@ -304,10 +387,10 @@ export function DryRun({
         </RowView>
       )
     case 'passed':
-      return <RowView row={as('steady', r.rehearsal.met)} />
+      return <RowView row={as('steady', r.rehearsal.met)} announce />
     case 'failed':
       return (
-        <RowView row={as('attention', d.failed)}>
+        <RowView row={as('attention', d.failed)} announce>
           {noticeCard}
           <div className="going-live__row-action">
             <Button
@@ -323,7 +406,7 @@ export function DryRun({
       )
     case 'didnt-start':
       return (
-        <RowView row={as('attention', d.didntStart)}>
+        <RowView row={as('attention', d.didntStart)} announce>
           {phase.incidentId === null ? null : (
             <WhatWentWrong
               platform={platform}

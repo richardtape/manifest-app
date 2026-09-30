@@ -10,7 +10,7 @@ import type { Then } from '../../router.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
 import { mintRequest } from '../making/token.js'
-import { DRY_RUN_POLL_MS, DRY_RUN_READS } from './dry-run.js'
+import { DRY_RUN_POLL_MS, DRY_RUN_READS, forgetDryRuns } from './dry-run.js'
 import { GoingLive } from './going-live.js'
 
 /**
@@ -55,7 +55,7 @@ const FAILED: Schemas['Rehearsal'] = {
   attributes: ['ubcEduCwlPuid', 'mail'],
   evidence: {
     ...PASSED.evidence,
-    signInStatus: null,
+    signInStatus: 500,
     attributesReleased: ['mail'],
     reason: SENTINEL,
   },
@@ -231,6 +231,8 @@ afterEach(() => {
   cleanup()
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  // A fresh page: nothing pressed in an earlier test is remembered.
+  forgetDryRuns()
 })
 
 async function open(s: Stage, then: Then = null) {
@@ -350,7 +352,7 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
         fix: {
           dryRun: {
             rehearsalId: FAILED.id,
-            signInStatus: null,
+            signInStatus: 500,
             attributesReleased: ['mail'],
             attributesAsked: ['ubcEduCwlPuid', 'mail'],
           },
@@ -504,6 +506,96 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
     expect(runButton(li)).toBeTruthy()
   })
 
+  it('its app never started on the live setup (a failed start inside the dry run, the platform’s commonest failure): “It didn’t start”, and [What went wrong] fed by that start’s incident, never a sign-in fix (the review’s I-A)', async () => {
+    const s = stage()
+    const li = await press(s)
+    s.world.incidents = [OLDER_INCIDENT, INCIDENT]
+    await s.answer({
+      ...FAILED,
+      evidence: {
+        ...FAILED.evidence,
+        instanceId: NEW.id,
+        signInStatus: null,
+        attributesReleased: [],
+        reason: 'the candidate did not become healthy',
+      },
+    })
+    expect(await within(li).findByText('It didn’t start on the live setup.')).toBeTruthy()
+    expect(within(li).queryByRole('button', { name: 'Fix it' })).toBeNull()
+    fireEvent.click(await within(li).findByRole('button', { name: 'What went wrong' }))
+    await settle()
+    expect(s.oursCalls.find((c) => c[0] === 'startChange')).toEqual([
+      'startChange',
+      PROJECT.id,
+      {
+        fix: { incidentId: INCIDENT.id, environment: 'production' },
+        token: 'mft_test_fix',
+      },
+    ])
+  })
+
+  it('said to a screen reader as it goes: the working line when the button is replaced, and how it ended (the review’s I-D)', async () => {
+    const s = stage()
+    const li = await press(s)
+    expect(within(li).getByRole('status').textContent).toBe(
+      'Putting it up with nobody watching, signing someone in, taking it down.',
+    )
+    await s.answer(FAILED)
+    expect(within(li).getByRole('status').textContent).toBe(
+      'It didn’t sign anyone in on the live setup.',
+    )
+    cleanup()
+    forgetDryRuns()
+    const t = stage()
+    const again = await press(t)
+    t.world.readiness = MET
+    await t.answer(PASSED)
+    expect(within(again).getByRole('status').textContent).toBe(
+      'Done. It answered and signed someone in on the live setup.',
+    )
+  })
+
+  it('left while it runs and come back (it carries on): still working, never a second press offered, and its end shown when it comes (the review’s I-C)', async () => {
+    const s = stage()
+    await press(s)
+    cleanup()
+    const li = await open(s)
+    expect(within(li).getByText('Working')).toBeTruthy()
+    expect(within(li).queryByRole('button', { name: 'Run the dry run' })).toBeNull()
+    await s.answer(FAILED)
+    expect(
+      await within(await row()).findByText('It didn’t sign anyone in on the live setup.'),
+    ).toBeTruthy()
+    expect(s.called('runRehearsal')).toHaveLength(1)
+  })
+
+  it('left after it signed nobody in, and come back: its sentence and [Fix it] are still there', async () => {
+    const s = stage()
+    await press(s)
+    await s.answer(FAILED)
+    cleanup()
+    const li = await open(s)
+    expect(
+      within(li).getByText('It didn’t sign anyone in on the live setup.'),
+    ).toBeTruthy()
+    expect(within(li).getByRole('button', { name: 'Fix it' })).toBeTruthy()
+  })
+
+  it('come back once the checklist says it passed (someone ran it since): done, whatever this page remembered', async () => {
+    const s = stage()
+    await press(s)
+    await s.answer(FAILED)
+    cleanup()
+    s.world.readiness = MET
+    const li = await open(s)
+    expect(
+      await within(li).findByText(
+        'Done. It answered and signed someone in on the live setup.',
+      ),
+    ).toBeTruthy()
+    expect(within(li).queryByRole('button', { name: 'Fix it' })).toBeNull()
+  })
+
   it('no word of machinery, and never the platform’s name for it, in any of its states (C3)', async () => {
     const seen: string[] = []
     const through = async (end: (s: Stage) => Promise<unknown>) => {
@@ -513,6 +605,7 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
       await end(s)
       seen.push((await row()).textContent ?? '')
       cleanup()
+      forgetDryRuns()
     }
     await through((s) => s.answer(PASSED))
     await through((s) => s.answer(FAILED))
