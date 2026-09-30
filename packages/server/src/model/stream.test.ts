@@ -58,10 +58,15 @@ describe('chunksOf: each event, its words, its model and its usage', () => {
       ),
     )
     expect(chunks).toEqual([
-      { content: '', model: 'default-chat-large', usage: null },
-      { content: '{"a":', model: 'default-chat-large', usage: null },
-      { content: '1}', model: 'default-chat-large', usage: null },
-      { content: '', model: 'default-chat-large', usage: { in: 4300, out: 12 } },
+      { content: '', thinking: false, model: 'default-chat-large', usage: null },
+      { content: '{"a":', thinking: false, model: 'default-chat-large', usage: null },
+      { content: '1}', thinking: false, model: 'default-chat-large', usage: null },
+      {
+        content: '',
+        thinking: false,
+        model: 'default-chat-large',
+        usage: { in: 4300, out: 12 },
+      },
     ])
   })
 
@@ -104,7 +109,23 @@ describe('chunksOf: each event, its words, its model and its usage', () => {
     const chunks = await all(
       body(event({ choices: [{ delta: { content: 'y' } }] }), DONE),
     )
-    expect(chunks).toEqual([{ content: 'y', model: null, usage: null }])
+    expect(chunks).toEqual([{ content: 'y', thinking: false, model: null, usage: null }])
+  })
+
+  it("a delta of the model's reasoning is thinking, never words of the answer (the final review's I1)", async () => {
+    const chunks = await all(
+      body(
+        event({ choices: [{ delta: { reasoning_content: 'First, the weeks' } }] }),
+        event({ choices: [{ delta: { reasoning: 'then the posts' } }] }),
+        event({ choices: [{ delta: { reasoning_content: '' } }] }),
+        DONE,
+      ),
+    )
+    expect(chunks.map((c) => [c.content, c.thinking])).toEqual([
+      ['', true],
+      ['', true],
+      ['', false],
+    ])
   })
 
   it('stops at [DONE], whatever follows', async () => {

@@ -263,13 +263,17 @@ export function openAiCompatible(options: {
               ).pipeThrough(new TransformStream<Uint8Array, Uint8Array>(), {
                 signal: cut.signal,
               })
+              let arriving = false
               for await (const chunk of chunksOf(words)) {
                 if (chunk.content !== '') {
                   firstWordMs ??= Date.now() - started
                   content += chunk.content
                   chars += chunk.content.length
                 }
-                if (firstWordMs !== null) {
+                // Its answer's words, or its reasoning before them: either way it is working, and
+                // from then on the quiet deadline runs between chunks. Only the answer is counted.
+                arriving ||= chunk.content !== '' || chunk.thinking
+                if (arriving) {
                   clearTimeout(quiet)
                   quiet = setTimeout(() => stop('quiet'), deadlines.quietMs)
                 }

@@ -461,6 +461,12 @@ function paced(
     },
     words: (content: string) =>
       event({ model: 'default-chat-large', choices: [{ index: 0, delta: { content } }] }),
+    /** The model's reasoning, streamed before its answer, as LiteLLM names it. */
+    thinks: (reasoning: string) =>
+      event({
+        model: 'default-chat-large',
+        choices: [{ index: 0, delta: { reasoning_content: reasoning } }],
+      }),
     usage: (input: number, output: number) =>
       event({
         model: 'default-chat-large',
@@ -580,6 +586,42 @@ describe('openAiCompatible: three deadlines, never one total (F5 Decision 14, Re
     expect(error.received).toEqual({ chars: 0, firstWordMs: null, ms: 120_000 })
     expect(gateway.requests[0]!.signal.aborted).toBe(true)
     expect(gateway.requests).toHaveLength(1)
+  })
+
+  it("a model that reasons for three minutes before its first word is working, not stalled: its first word is the answer's, and only the answer is counted (the final review's I1)", async () => {
+    const gateway = paced()
+    const heard: Answered[] = []
+    const result = asked(gateway, (a) => heard.push(a))
+    // Its reasoning every 20 s, past the 120 s to a first word.
+    for (let t = 0; t < 180_000; t += 20_000) {
+      await vi.advanceTimersByTimeAsync(20_000)
+      gateway.thinks('Weighing the weeks against the posts. ')
+    }
+    await vi.advanceTimersByTimeAsync(20_000)
+    gateway.words(GOOD)
+    gateway.done()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(await result).toEqual({
+      value: { restatement: 'A page where your students post', scale: 'class' },
+    })
+    expect(heard[0]!.received).toEqual({
+      chars: GOOD.length,
+      firstWordMs: 200_000,
+      ms: 200_000,
+    })
+  })
+
+  it('a model that reasons, then goes quiet past 30 s: MODEL_STALLED, with no first word and nothing of the answer counted', async () => {
+    const gateway = paced()
+    const result = asked(gateway)
+    await vi.advanceTimersByTimeAsync(10_000)
+    gateway.thinks('Weighing the weeks. ')
+    await vi.advanceTimersByTimeAsync(29_999)
+    expect(gateway.requests[0]!.signal.aborted).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    const { error } = (await result) as { error: ModelError }
+    expect(error.code).toBe('MODEL_STALLED')
+    expect(error.received).toEqual({ chars: 0, firstWordMs: null, ms: 40_000 })
   })
 
   it('a gateway that takes the request and never answers it: MODEL_STALLED at the first-word deadline', async () => {

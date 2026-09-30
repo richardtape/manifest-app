@@ -7,6 +7,11 @@ import { ModelError } from './client.js'
  */
 export type Chunk = {
   content: string
+  /**
+   * The model's reasoning arrived (`reasoning_content`, or `reasoning`): it is working, though
+   * not yet answering. Never kept, never counted as the answer (the final review's I1).
+   */
+  thinking: boolean
   model: string | null
   usage: { in: number; out: number } | null
 }
@@ -21,17 +26,22 @@ function chunkOf(data: string): Chunk {
   const body = payload as {
     error?: unknown
     model?: unknown
-    choices?: { delta?: { content?: unknown } }[]
+    choices?: {
+      delta?: { content?: unknown; reasoning_content?: unknown; reasoning?: unknown }
+    }[]
     usage?: { prompt_tokens?: unknown; completion_tokens?: unknown } | null
   } | null
   // The gateway's own error mid-answer. Never its words: they can carry anything.
   if (body === null || typeof body !== 'object' || body.error !== undefined)
     throw new ModelError('MODEL_UNREACHABLE')
-  const content = body.choices?.[0]?.delta?.content
+  const delta = body.choices?.[0]?.delta
+  const content = delta?.content
+  const said = (value: unknown) => typeof value === 'string' && value !== ''
   const input = body.usage?.prompt_tokens
   const output = body.usage?.completion_tokens
   return {
     content: typeof content === 'string' ? content : '',
+    thinking: said(delta?.reasoning_content) || said(delta?.reasoning),
     model: typeof body.model === 'string' ? body.model : null,
     usage:
       typeof input === 'number' && typeof output === 'number'
