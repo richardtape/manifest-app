@@ -16,7 +16,8 @@ import {
   type Attempt,
   type Said,
 } from './facts.js'
-import { PutOnTryingOut, WhatWentWrong } from '../trying-out/put.js'
+import { WhatWentWrong } from '../trying-out/parts.js'
+import { PutOnTryingOut } from '../trying-out/put.js'
 import { TryItAs } from './try-it-as.js'
 
 const w = words.preview

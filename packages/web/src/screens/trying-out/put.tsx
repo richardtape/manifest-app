@@ -1,25 +1,21 @@
 import type { Schemas } from '@manifest/contract'
-import { Button, Card, FormField, StateChip, Timeline, TwoFacts } from '@manifest-app/ui'
+import { Button, Card, StateChip, TwoFacts } from '@manifest-app/ui'
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { stepUpHref } from '../../auth.js'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import { navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { pressFailed } from '../change/press.js'
-import { mintRequest } from '../making/token.js'
 import { agoWords, servingFact, type Said } from '../preview/facts.js'
 import { SupportReference } from '../reference.js'
 import { Hostname } from '../your-apps/your-apps.js'
-import { newestAttempt, stationsOf, versionAsked, type StationKey } from './stations.js'
+import { Secrets, Stations, StepUpCard, WhatWentWrong, type Missing } from './parts.js'
+import { newestAttempt, versionAsked } from './stations.js'
 
 const t = words.tryingOut
 
 /** The new instance is read every second while the deploy runs: a deploy is 5–9 s (F4 M3). */
 export const POLL_MS = 1000
-/** The platform refuses a value under 6 characters (F3 M1): said before it is sent. */
-const SECRET_LEAST = 6
 
 /** The version the question named, and where it goes: fixed when they are asked (Decision 11). */
 type Held = {
@@ -28,7 +24,6 @@ type Held = {
   stagingId: string
   somethingThere: boolean
 }
-type Missing = { name: string; ask: string | null }
 /** The draft's address and trying-out's. */
 type Addresses = {
   sandbox: Schemas['Environment'] | undefined
@@ -453,20 +448,7 @@ export function PutOnTryingOut({
         />
       ) : null}
       {phase.at === 'step-up' ? (
-        <Card tone="attention">
-          <p className="body-lead">
-            <strong>{t.stepUp.title}</strong>
-          </p>
-          <p className="body-lead">{t.stepUp.body}</p>
-          <div className="describe__actions">
-            <Button
-              kind="primary"
-              href={stepUpHref(window.location.pathname + window.location.search)}
-            >
-              {t.stepUp.again}
-            </Button>
-          </div>
-        </Card>
+        <StepUpCard returnTo={window.location.pathname + window.location.search} />
       ) : null}
     </section>
   )
@@ -487,175 +469,5 @@ function Unbroken({ words: said }: { words: string }) {
         </Fragment>
       ))}
     </span>
-  )
-}
-
-/** The four stations, as `Timeline` draws them, with the one at work said to a screen reader. */
-function Stations({ instance }: { instance: Pick<Schemas['Instance'], 'state'> | null }) {
-  const stations = stationsOf(instance)
-  const label = (key: StationKey, halted: boolean) =>
-    halted ? t.stations.never : t.stations[key]
-  const now = stations.find((s) => s.state === 'now' || s.state === 'halted')
-  return (
-    <section className="trying-out__stations" aria-label={t.stationsLabel}>
-      <Timeline
-        stations={stations.map((s) => ({
-          ...label(s.key, s.state === 'halted'),
-          state: s.state,
-        }))}
-      />
-      <p className="visually-hidden" role="status">
-        {now === undefined
-          ? t.stations.answering.label
-          : label(now.key, now.state === 'halted').label}
-      </p>
-    </section>
-  )
-}
-
-/**
- * A SECRET WITH NO VALUE THERE: needs you, one password field for each, named by the question we
- * asked on the draft. Its value leaves this page for the platform alone, and is emptied once sent.
- */
-function Secrets({
-  missing,
-  onSet,
-}: {
-  missing: Missing[]
-  onSet: (values: Record<string, string>) => Promise<void>
-}) {
-  const [values, setValues] = useState<Record<string, string>>({})
-  const [setting, setSetting] = useState(false)
-  const short = (name: string) => {
-    const value = values[name] ?? ''
-    return value.length > 0 && value.length < SECRET_LEAST
-  }
-  const ready = missing.every(({ name }) => (values[name] ?? '').length >= SECRET_LEAST)
-  const field = ({ name, ask }: Missing) => (
-    <FormField
-      key={name}
-      id={`trying-out-secret-${name}`}
-      label={ask ?? name}
-      value={values[name] ?? ''}
-      onChange={(e) => setValues((v) => ({ ...v, [name]: e.target.value }))}
-      secret
-      hint={words.building.question.secretHint}
-      {...(short(name)
-        ? {
-            message: {
-              tone: 'attention',
-              title: words.building.question.secretShort,
-            },
-          }
-        : {})}
-    />
-  )
-  // Those we asked for on the draft, then any we never asked for: each said of its own.
-  const asked = missing.filter((m) => m.ask !== null)
-  const never = missing.filter((m) => m.ask === null)
-  return (
-    <Card tone="attention">
-      <StateChip state="attention" label={t.needsYou} />
-      {asked.length === 0 ? null : (
-        <>
-          <p className="body-lead">{t.secret.asked(asked.length > 1)}</p>
-          {asked.map(field)}
-        </>
-      )}
-      {never.length === 0 ? null : (
-        <>
-          <p className="body-lead">{t.secret.never}</p>
-          {never.map(field)}
-        </>
-      )}
-      <div className="describe__actions">
-        <Button
-          kind="primary"
-          disabled={!ready || setting}
-          onClick={() => {
-            const sent = values
-            setValues({})
-            setSetting(true)
-            void onSet(sent).finally(() => setSetting(false))
-          }}
-        >
-          {t.secret.set}
-        </Button>
-      </div>
-    </Card>
-  )
-}
-
-/**
- * [WHAT WENT WRONG] ON TRYING-OUT (walk-through moment 9): a fix conversation of ours, carrying the
- * incident, with a token minted for it in their session, then opened. The line starts it, or it
- * waits its turn. A fix already under way for the same incident is opened instead: its round
- * deploys to the draft, so trying-out's failed attempt, and this button, stay until they put the
- * fixed version there (the whole-branch review's I2).
- */
-export function WhatWentWrong({
-  platform,
-  ours,
-  project,
-  incidentId,
-  expire,
-}: {
-  platform: Platform
-  ours: Ours
-  project: { id: string; slug: string }
-  incidentId: string
-  expire: () => void
-}) {
-  const [pressing, setPressing] = useState(false)
-  const [reference, setReference] = useState<string>()
-  const press = async () => {
-    setPressing(true)
-    setReference(undefined)
-    let step = 'fixFor'
-    const open = (id: string) =>
-      navigate(
-        `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(id)}`,
-      )
-    try {
-      const under = await ours.fixFor(project.id, incidentId)
-      if (under !== null) {
-        open(under.id)
-        return
-      }
-      step = 'mintToken'
-      const minted = await platform.mintToken(
-        project.id,
-        mintRequest(t.fixTitle, 'changing'),
-        crypto.randomUUID(),
-      )
-      step = 'startChange'
-      const made = await ours.startChange(project.id, {
-        fix: { incidentId },
-        token: minted.secret,
-      })
-      open(made.id)
-    } catch (error) {
-      setPressing(false)
-      const said = pressFailed(error, step)
-      if (said.expired) expire()
-      else setReference(said.reference)
-    }
-  }
-  return (
-    <>
-      {reference === undefined ? null : (
-        <div role="alert">
-          <Card tone="attention">
-            <p className="body-lead">{t.couldnt}</p>
-            <SupportReference reference={reference} />
-          </Card>
-        </div>
-      )}
-      <div className="describe__actions">
-        <Button kind="secondary" disabled={pressing} onClick={() => void press()}>
-          {t.whatWentWrong}
-        </Button>
-      </div>
-    </>
   )
 }
