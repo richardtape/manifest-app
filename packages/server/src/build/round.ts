@@ -915,9 +915,11 @@ export function createRounds(deps: RoundDeps): Rounds {
         case 'limit':
           return needs({ kind: 'moves' }, 'ROUND_MOVES')
         case 'refused':
+          // FE-34: a request the provider refused (422) would be refused again: the round's refusal.
           if (
             stop.error instanceof ModelError &&
-            stop.error.code === 'MODEL_ANSWER_INVALID'
+            stop.error.code === 'MODEL_ANSWER_INVALID' &&
+            stop.error.status !== 422
           ) {
             // Not one move of the five, twice: it costs a move, and it is told.
             live.run.moves += 1

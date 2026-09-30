@@ -242,7 +242,12 @@ const askCwl = defineTool({
         files,
       })
     } catch (error) {
-      if (error instanceof ModelError && error.code === 'MODEL_ANSWER_INVALID')
+      // FE-34: a request the provider refused (422) is the round's refusal, never "ask it again".
+      if (
+        error instanceof ModelError &&
+        error.code === 'MODEL_ANSWER_INVALID' &&
+        error.status !== 422
+      )
         return {
           report:
             'The sign-in specialist could not propose a change that held. Ask it again, or write it yourself.',

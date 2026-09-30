@@ -690,6 +690,72 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(viewOf(h, id)?.line).toBe('The pages are written.')
   })
 
+  it('an answer that was not one of the moves costs a move and is told, and the round goes on', async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          new ModelError('MODEL_ANSWER_INVALID'),
+          read('server.js'),
+          commit(),
+          done(),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(leadPrompts(h)[1]).toMatch(/Your answer was not one of the moves/)
+  })
+
+  it('a request the provider refused (FE-34, a 422) is the round’s refusal at once: one call, never re-asked to the move limit', async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          new ModelError('MODEL_ANSWER_INVALID', 422),
+          read('server.js'),
+          commit(),
+          done(),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toMatchObject({
+      kind: 'refused',
+      code: 'MODEL_ANSWER_INVALID',
+    })
+    expect(leadPrompts(h)).toHaveLength(1)
+  })
+
+  it('the sign-in specialist’s request refused (FE-34, a 422): the round’s refusal, never "ask it again"', async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          {
+            move: {
+              kind: 'ask_cwl',
+              brief: {
+                whoGetsIn: 'Anyone with a CWL.',
+                youSee: 'Every response.',
+                studentsSee: 'Their own.',
+                namedEmails: [],
+              },
+            },
+          },
+          read('server.js'),
+          done(),
+        ],
+        cwl: [new ModelError('MODEL_ANSWER_INVALID', 422)],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toMatchObject({
+      kind: 'refused',
+      code: 'MODEL_ANSWER_INVALID',
+    })
+    expect(leadPrompts(h)).toHaveLength(1)
+  })
+
   it("the specialist's proposal stays in the lead's view across a read, and leaves once committed (the real platform's ping-pong)", async () => {
     const STAFF = write(
       'config/staff.json',
