@@ -11,8 +11,10 @@ says which plan is current. This file states where things stand and the rules. I
   5b (Spec action 8's (b)+(c)) messages us at its close and hands 7100 over; its §7e records the window (no platform Vitest,
   no control-plane restart, `admin-grant.sh grant opr000001` once `operator` has signed in). Read the sittings table's row 6,
   the plan's sitting 6 entry, and the ledger's `Sitting 6` lines first. Then, in order:
-  1. **Step 0 for the platform's 5 and 5b** (the plan's *Adopting what lands*): `agent_session.narrowed` (the key trimmed in
-     place; a round whose model was withdrawn moves to the most capable one still listed) and `member_removed`; 5b's
+  1. **Step 0 for the platform's 5 and 5b** (the plan's *Adopting what lands*): `agent_session.narrowed` (**committed,
+     `d061ad7`**: the key trimmed in place; **today a withdrawn model's gateway `403` reads as `MODEL_NOT_AVAILABLE`, *"waiting
+     on an administrator"*, which is untrue**: the round should re-pick the most capable model still listed and carry on, as
+     F4's renewal does; the ledger's last Step 0 line) and `member_removed`; 5b's
      `runRehearsal` (its `STEP_UP_REQUIRED`, its take-down refusal's final code, which we match as `REHEARSAL_TEARDOWN_FAILED`,
      and whether `getEnvironment(production).instance` reads `gone` or `null` after a dry run). `pnpm typecheck`, `pnpm test`.
   2. **Walk the dry run's press against the mock** (headless Chrome, 1440 and 375): the mock's checklist has the dry run met
