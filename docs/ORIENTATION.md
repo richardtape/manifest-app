@@ -43,8 +43,9 @@ says which plan is current. This file states where things stand and the rules. I
   - **F5's sittings 0 and 1** (2026-09-29/30): the mock-mode banner; FE-38 and FE-33 adopted; the measurements.
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
   - **Its launch-path plan** (`docs/superpowers/plans/2026-09-29-launch-path.md`, read-only), one sitting per session.
-    **Sitting 3 closed** (`bf94c73`, `manifest-c3`). **Next: its sitting 4**: **Task 6a, FE-41, first** (a starter on real
-    GitHub), then Task 6 (FE-34; Spec action 6 first); it **truncates 7100 at its first test run** (it asks us first) and
+    **Sitting 3 closed** (`bf94c73`, `manifest-c3`). **Its sitting 4 is RUNNING** (opened by `manifest-a1`, 2026-09-30,
+    after our sitting 1; we told it to truncate freely and that we are in mock mode): **Task 6a, FE-41, first** (a starter on real
+    GitHub; it reproduces it on 7100 at Rich's yes), then Task 6 (FE-34; Spec action 6 first); it **truncates 7100 at its first test run** (it asks us first) and
     restarts `manifest-litellm`. **Then 4a: Task 6b, FE-42 (a)** (the owner may run the rehearsal: Task 7's press returns;
     ask Rich when). Then 5 the key trim and
     member removal; **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10 the console and the mock (FE-40); 11 the
@@ -468,7 +469,8 @@ enablement plan there, one sitting per session. We share the machine, the contro
 - **Finding it.** Call `ListAgents`. Load `SendMessage` with `ToolSearch` if it is deferred. The platform session is
   the live session named `manifest-…` (it was `manifest-de`, `manifest-b1`, `manifest-82`, then `manifest-7c`, which F3's sitting 7 found stopped by Rich
   and back at its close, then `manifest-c3` for its sitting 11a, `manifest-8b` for its sitting 12 and close, `manifest-63` for the next
-  plan, the launch path, `manifest-13` for that plan's sitting 2, and `manifest-c3` again for its sitting 3), or the one whose messages come
+  plan, the launch path, `manifest-13` for that plan's sitting 2, `manifest-c3` again for its sitting 3, and `manifest-a1` for
+  its sitting 4), or the one whose messages come
   from manifest. Send to the name exactly as `ListAgents` prints it. Our own session's name is printed at the top of
   that list: tell the platform session to reply to it.
 - **What it tells us, and what we answer:**
