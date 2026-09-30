@@ -92,3 +92,10 @@ describe('a clock, held by a person (F5 Task 4, ClockItem’s `state`)', () => {
       /background:\s*var\(--steady\)/,
     ))
 })
+
+describe('a clock card at a phone’s width (F5 Task 6’s walk)', () => {
+  // A chip holding its owner ("With the Manifest team") beside a two-line title ran 28 px past
+  // the card at 375: the title and the chip share one row until they cannot.
+  it('its title and chip wrap onto two lines rather than run past the card', () =>
+    expect(declarationsFor(CSS, '.mf-clockitem__top')).toMatch(/flex-wrap:\s*wrap/))
+})

@@ -8,6 +8,7 @@ import { linkTo, navigate, useRoute } from './router.js'
 import { AskForChange } from './screens/change/ask.js'
 import { AppConversations } from './screens/change/conversations.js'
 import { Describing } from './screens/describe/describe.js'
+import { GoingLive } from './screens/going-live/going-live.js'
 import { Overview } from './screens/overview/overview.js'
 import { Preview } from './screens/preview/preview.js'
 import { useApp } from './screens/preview/use-app.js'
@@ -190,7 +191,16 @@ export function App({
           expire={expire}
           timeZone={timeZone}
         />
-      ) : route.name === 'app-going-live' ? null : route.name === 'app-preview' ? (
+      ) : route.name === 'app-going-live' ? (
+        <GoingLive
+          key={lookup.project.id}
+          platform={platform}
+          project={lookup.project}
+          expire={expire}
+          timeZone={timeZone}
+          {...(now === undefined ? {} : { now })}
+        />
+      ) : route.name === 'app-preview' ? (
         <Preview
           key={lookup.project.id}
           platform={platform}

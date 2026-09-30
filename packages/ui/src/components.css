@@ -301,11 +301,14 @@
   font-family: var(--font-sans);
   box-sizing: border-box;
 }
+/* OURS (F5 Task 6's walk): the title and its chip wrap onto two lines where they cannot share
+   one. A chip naming its owner ("With the Manifest team") ran 28 px past the card at 375. */
 .mf-clockitem__top {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-2) var(--space-4);
 }
 .mf-clockitem__title {
   margin: 0;

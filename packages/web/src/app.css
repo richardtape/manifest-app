@@ -718,6 +718,80 @@
   white-space: nowrap;
   border: 0;
 }
+/* GOING LIVE (F5 Task 6): the version, two clocks side by side where there is room, the
+   trying-out line, and the short jobs as rows with their state, name, sentence and owner. */
+.going-live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 960px;
+}
+.going-live__clocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+.going-live__staging {
+  margin: 0;
+  color: var(--ink-secondary);
+}
+.going-live__jobs .heading {
+  margin: 0;
+}
+.app-main .going-live__jobs-lead {
+  margin: var(--space-1) 0 var(--space-4);
+  color: var(--ink-muted);
+}
+.going-live__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+/* Code review, set apart: last, below a rule. */
+.going-live__apart {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+}
+.going-live__row {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  align-items: start;
+}
+.going-live__row > .mf-chip {
+  justify-self: start;
+}
+.going-live__row-words {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.going-live__name {
+  font-weight: 600;
+}
+.going-live__row-words .body-small {
+  margin: 0;
+  color: var(--ink-secondary);
+}
+.going-live__row-words .mono {
+  overflow-wrap: anywhere;
+}
+.going-live__owner {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+@media (max-width: 599px) {
+  .going-live__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* THE APP'S OVERVIEW, ITS LANDING PAGE (F5 Task 5): who it is for, the band, one row per
    address, and Ask for a change. Its rows read as the app card's addresses do. */
 .overview {

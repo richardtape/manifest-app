@@ -544,6 +544,145 @@ export const words = {
     },
   },
   /**
+   * GOING LIVE, MOMENTS 10 AND 11 (F5 Task 6). The walk-through's words and those Rich approved
+   * with the plan (✓ in its *Words proposed for Rich*); ours where neither has any, marked "ours".
+   * The clocks may take several days, never weeks (Rich, 2026-09-29), and nothing on the page is
+   * a stopgap: no email, and no action a card cannot honour.
+   */
+  goingLive: {
+    title: 'Letting your students in',
+    lead: 'Going live isn’t a button. Most of it takes minutes, but three things are answered by other people, and each may take several days. That’s why this page exists from day one.',
+    /** ✓ `when` is "18 September, 3:12pm" or "today, 3:12pm"; null when its date cannot be read (ours). */
+    version: (when: string | null) =>
+      when === null
+        ? 'What goes live is the version on your trying-out address.'
+        : `What goes live is the version on your trying-out address: the one from ${when}.`,
+    noVersion:
+      'Nothing is on your trying-out address yet. What goes live is what’s there.',
+    toTryingOut: 'Trying out',
+    /** Decision 4: the staging registration's clock is on Trying out, named here in one line. */
+    staging:
+      'The trying-out address has a registration of its own, with UBC’s identity team.',
+    seeTryingOut: 'See Trying out',
+    clocks: {
+      registration: {
+        title: 'Registering with UBC’s identity team',
+        body: 'Your app needs its own entry in UBC’s identity register before real students can sign in. UBC’s identity team makes it.',
+        with: 'With UBC’s identity team',
+        done: (day: string | null) => (day === null ? 'Registered' : `Registered ${day}`),
+      },
+      assessment: {
+        title: 'A privacy assessment',
+        body: 'Your app keeps what students write, so the Privacy Office has to look at it. The most common reason a launch slips.',
+        with: 'With UBC’s Privacy Office',
+        done: (day: string | null) => (day === null ? 'Approved' : `Approved ${day}`),
+      },
+      notStarted: 'Not started',
+      nothingCounting: 'Nothing counting yet',
+      duration: 'May take several days',
+      admission: {
+        title: 'Manifest can’t start this one for you yet.',
+        body: 'For now the Manifest team does it by hand, and this card shows where it has got to.',
+      },
+      /** *Recorded*, not *asked*: it is when an administrator wrote it (Decision 5). */
+      recorded: (day: string) => `recorded ${day}`,
+      /** Ours for none and one; "waiting 12 days" ✓. */
+      waiting: (days: number) =>
+        days <= 0
+          ? 'waiting since today'
+          : days === 1
+            ? 'waiting 1 day'
+            : `waiting ${days} days`,
+      withTeam: 'With the Manifest team',
+      changeAsked: { said: 'UBC asked for a change.', who: 'The Manifest team has it.' },
+      runOut: {
+        said: 'Its registration has run out.',
+        who: 'The Manifest team renews it.',
+      },
+      /** Ours: a clock answered. */
+      done: 'Done',
+      /** A record in a state we do not know (Review Focus 5). */
+      cantTell: 'We can’t tell right now',
+    },
+    shortJobs: {
+      title: 'Short jobs, for the end',
+      lead: 'minutes each, and not worth doing early',
+    },
+    /** Ours: each row's state, in a word. Five states only. */
+    state: {
+      working: 'Working',
+      waiting: 'Waiting on someone',
+      attention: 'Needs you',
+      steady: 'Done',
+      notyet: 'Not yet',
+    },
+    /** Owners, in words (the walk-through's), and ours for Decision 7's. */
+    owners: {
+      forYou: 'done for you',
+      us: 'us, in minutes',
+      admin: 'a Manifest administrator',
+      nobody: 'nobody yet',
+      team: 'the Manifest team',
+    },
+    /** Each row: a name (ours) and a sentence per state (the walk-through's, and S1's). */
+    rows: {
+      /** S1: M3: rehearsal, scans and admin-approval with nothing on trying-out. */
+      once: 'Once a version is on your trying-out address.',
+      /** Ours: an item Manifest does not track yet (`not_built`). */
+      notTracked: 'Manifest doesn’t check this one yet.',
+      scans: {
+        name: 'A check for security problems',
+        met: 'Checked for security problems. Nothing needs fixing, and we check again on every build.',
+        /** Decision 7, accepted by Rich: no [Fix it] until FE-32 lands. */
+        unmet:
+          'Something it’s built on has a known security problem. Keeping what apps are built on up to date is the Manifest team’s job.',
+      },
+      rehearsal: {
+        name: 'A dry run on the live setup',
+        /** S1, FE-42 (Rich: "Both: row now, ask platform"): an administrator's, with no button. */
+        unmet:
+          'A Manifest administrator runs it. Manifest doesn’t tell them yet that it’s waiting.',
+        met: 'Done. It answered and signed someone in on the live setup.',
+      },
+      loadRehearsal: {
+        name: 'A test with everyone at once',
+        said: 'We pretend to be your whole class arriving together.',
+      },
+      approval: {
+        name: 'A Manifest administrator’s sign-off',
+        unmet:
+          'A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off, so nobody’s app reaches students with something it shouldn’t have. Manifest doesn’t tell them yet that it’s waiting.',
+        /** Ours, until Task 8 names who and when from the approval itself. */
+        met: 'Signed off by a Manifest administrator.',
+      },
+      domain: {
+        name: 'Its address',
+        met: (hostname: string | null) =>
+          hostname === null
+            ? 'Its address is yours for good.'
+            : `Its address is ${hostname}, yours for good.`,
+        /** Ours: never seen on the laptop. */
+        unmet: 'Its address isn’t settled yet.',
+      },
+      codeReview: {
+        name: 'A review of the code',
+        notYet:
+          'Nobody reviews the code itself yet. What keeps it safe is how it runs: it can only reach what it asks for, and only its own data.',
+        /** Ours: a reviewer the platform does not have yet. */
+        met: 'Its code has been reviewed.',
+      },
+      /** An id the platform adds tomorrow (spec D23.8): shown, never hidden. */
+      unknown: {
+        name: (title: string) => `Something new on the list: ${title}`,
+        met: 'Done.',
+        unmet: 'Not done yet.',
+      },
+    },
+    /** Decision 2: after launch the page stays, says so, and points at the Overview (ours). */
+    live: 'It’s live. Your students can use it now.',
+    toOverview: 'Go to the Overview',
+  },
+  /**
    * MOMENT 8, ASKING FOR A CHANGE (F4 Task 9): the walk-through's words, and those Rich approved
    * with the plan (its *Words proposed for Rich*); ours where neither has any, marked "ours".
    */

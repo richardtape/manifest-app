@@ -534,7 +534,8 @@ describe("Trying out: UBC's words, everywhere (Rich)", () => {
     await ready()
     const here = panel()
     expect(here.textContent).not.toMatch(/we asked/i)
-    expect(here.textContent).not.toMatch(/weeks?\b/i)
+    // No word boundary: textContent runs one element's words into the next (F5 Task 6).
+    expect(here.textContent).not.toMatch(/week/i)
     const wait = here.querySelector('.preview__wait') as HTMLElement
     expect(wait).not.toBeNull()
     expect(wait.textContent).not.toMatch(
