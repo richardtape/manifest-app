@@ -7,9 +7,10 @@
 **Status: APPROVED BY RICH AS WRITTEN, 2026-09-29** (*"Approved as written"*, session `manifest-app-a0`), **executed
 natively** (superpowers:executing-plans, as F3 and F4 ran), **Decision 7 accepted**. Written by `manifest-app-ce` with
 Rich; the design was approved by Rich in conversation, in six sections, and is recorded below in *Decided by Rich* and
-*Decisions this plan makes*. **Task 3 (the banner) runs first, as sitting 0, while the platform's launch-path sitting 3
-holds 7100** (Rich: *"Banner first, then wait"*). Sitting 1 (the measurements) runs on 7100 after that sitting closes, at
-Rich's word, and corrects Tasks 2 and 4–11 to what it finds; each correction is marked **(S1)**.
+*Decisions this plan makes*. **Sittings 0 and 1 are done** (2026-09-29/30, `manifest-app-a0`): Task 3 (the banner) ran
+first, as sitting 0, while the platform's launch-path sitting 3 held 7100 (Rich: *"Banner first, then wait"*); sitting 1
+measured on 7100 and corrected Decisions 6, 7, 8, 10 and 14 and Tasks 2, 7 and 11, each correction marked **(S1)**, and
+Task 7 is now the administrator's row (FE-42, Rich). **The next is the sittings table's `← next`.**
 
 **Goal:** A faculty member sees what stands between their app and their students from the day the draft is built, runs
 the dry run, sees the sign-off when it is given, lets their students in with one press (and a second sign-in), and is
