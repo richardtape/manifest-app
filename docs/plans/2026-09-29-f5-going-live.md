@@ -10,7 +10,9 @@ Rich; the design was approved by Rich in conversation, in six sections, and is r
 *Decisions this plan makes*. **Sittings 0 and 1 are done** (2026-09-29/30, `manifest-app-a0`): Task 3 (the banner) ran
 first, as sitting 0, while the platform's launch-path sitting 3 held 7100 (Rich: *"Banner first, then wait"*); sitting 1
 measured on 7100 and corrected Decisions 6, 7, 8, 10 and 14 and Tasks 2, 7 and 11, each correction marked **(S1)**, and
-Task 7 is now the administrator's row (FE-42, Rich). **The next is the sittings table's `← next`.**
+Task 7 is now the administrator's row (FE-42, Rich). **Sitting 2 is done** (2026-09-30, `manifest-app-e2`): every model
+call streams (Task 2, with M10), and the final review's one Important (a model reasoning before its first word) is fixed,
+marked **(S2)** in Decision 14. **The next is the sittings table's `← next`.**
 
 **Goal:** A faculty member sees what stands between their app and their students from the day the draft is built, runs
 the dry run, sees the sign-off when it is given, lets their students in with one press (and a second sign-in), and is
@@ -56,8 +58,8 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 |---|---|---|---|
 | 0 | 3 | **The mock-mode banner**, moved ahead of the measurements at Rich's word (2026-09-29, *"Banner first, then wait"*): it needs no measurement and no 7100, which the platform's launch-path sitting 3 holds | **done 2026-09-29** (`manifest-app-a0`): the banner on every page in mock mode, none in edge; **and Step 0 for contract 1.5.0** (FE-38 adopted). 1248 tests (the dated entry below) |
 | 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | **done 2026-09-30** (`manifest-app-a0`, 04:19–04:40Z on 7100): M1–M7 measured; Tasks 2, 6, 7, 10 and 11 corrected (S1); **FE-41 and FE-42 written, carried at Rich's word**; FE-33's `4401` adopted (Step 0). 1249 tests (the dated entry below) |
-| 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | ← **next** (no platform needed; the deadlines are set, S1) |
-| 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | |
+| 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | **done 2026-09-30** (`manifest-app-e2`, no platform): `2009fba` (the stream, three deadlines, `stalled`, M10), `f6b09af` (the final review's I1: reasoning is working, not a stall). 1284 tests; the four acceptance scripts pass in mock mode (the dated entry below) |
+| 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | ← **next** (no platform needed) |
 | 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | |
 | 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | |
 | 6 | 11 | **The acceptance:** `scripts/check-going-live.sh` against the mock; the whole-branch review; a first launch walked end to end on 7100 at Rich's word; **Rich's click**. **Alone, and last** | |
@@ -301,6 +303,10 @@ change at his click.*
       generating is not visible from the laptop. So *Stop here* after a stall costs only what arrived.
     - **A stall is not retried by itself**: a retry re-asks and re-pays, so it is the person's *Carry on*. A complete
       answer that fails its schema is still asked once more.
+    - **(S2: the final review's I1) A model's reasoning is working, not a stall.** A delta of `reasoning_content` (or
+      `reasoning`) is never the answer and never counted, but from the first thought or word the quiet deadline runs
+      between chunks, so a model that reasons past the first-word deadline is not cut. `received` counts the answer alone;
+      the ceiling still bounds a reasoning loop. Whether the laptop's models stream their reasoning was not measured.
     - **The round's needs gains `{ kind: 'stalled'; why: 'quiet' | 'ceiling' }`**; the intake's and the plan's cards say
       the stall's words with their *Try again*.
     - **Mock mode is untouched**: its walkthrough model answers at once.
@@ -993,3 +999,63 @@ The throwaway scripts are in the session's scratchpad (`s1/`: `lib.mjs`, `build.
   PIA records and an approval; `operator` an administrator. All of it disposable at the platform's next truncation (told
   to `manifest-c3`); **the repository `Manifest-local-dev/f5-reading` stays on GitHub, and removing it is Rich's**.
 - **Next: sitting 2** (Task 2, every model call streams), which needs no platform: its deadlines are set.
+
+### 2026-09-30 — Sitting 2: every model call streams (session `manifest-app-e2`)
+
+*No platform: 7100 was `manifest-a1`'s throughout (the launch path's sitting 4, FE-41 first), and our server stayed in mock
+mode. Rich asked this session to introduce itself to the other agents, take the next sitting, and pass the baton to
+`manifest-app-58` at its close. The ledger has every ruling and control.*
+
+- **Step 0.** manifest at `1af171b` (documents only since `84d485a`: Spec action 6 decided for its sitting 4); contract
+  **1.5.0, 66 operations**: nothing to adopt. `pgrep -fl vitest` empty at the start and the close.
+- **Task 2, `2009fba`:**
+  - `model/stream.ts` (new, pure) reads the gateway's server-sent events by hand: each chunk's words, its model (the
+    alias) and the last chunk's usage; `[DONE]` ends it. An `error` chunk, a payload that is not JSON, or **a body that
+    ends before `[DONE]`** is `MODEL_UNREACHABLE` (a ruling: parsing a cut answer would re-ask and re-pay by the schema's
+    retry).
+  - `model/client.ts` asks with `stream: true` and `include_usage`, and holds **three deadlines**: a round's
+    `ROUND_DEADLINES` (120 s / 30 s / 15 min), the intake's and the plan's `ASKING_DEADLINES` (60 s / 30 s / 3 min), each
+    passed by its use (`app.ts`, `platform/intake.ts`). `MODEL_STALLED` and `MODEL_TOO_LONG` abort the request (the body
+    is piped through with the signal, and the reviewer saw real undici close the connection at the deadline) and **are
+    never asked again by the client**. `Answered` and `ModelError` carry `received: { chars, firstWordMs, ms }`, never
+    the text. `ROUND_MODEL_TIMEOUT_MS` and `timeoutMs` are gone.
+  - **The round:** a stall is `needs: { kind: 'stalled', why: 'quiet' | 'ceiling' }`, with a reference; *Carry on*
+    re-asks in the same session, as from unreachable. The round's own model wrapper writes a stall's trace entry
+    (`received`, `stalled`; `answered`, `fallback` and `usage` null) and reads the cost again, since a cut stream is billed
+    (S1: M2). An answer's entry gains `received`.
+  - **The page:** each stall's card in Rich's words with **[Carry on]** and **[Stop here]** (tone: needs you); the intake's
+    and the plan's notices say **each stall's own sentence** with their *Try again* (a ruling: the words table's "the
+    same first sentence" read as each stall's, since each is true only of its own). **M10:** the needs switch ends in a
+    `never` check, and a kind it does not know draws our generic card with Carry on and Stop here, and the reference our
+    server recorded, or one of ours reported once as `NEEDS_NOT_DRAWN`.
+- **Negative controls** (each red, each restored): a 5-minute ceiling (the old total) → the six-minute answer red; the
+  quiet timer removed → the mid-answer stall red; usage not read → the round's trace test red; the text kept in
+  `received` → the sentinel scan red; `case 'stalled'` removed → typecheck red (the `never` check) and its cards red;
+  the default removed → the two M10 tests red (typecheck stays green: the switch is still exhaustive, so M10's control
+  is two controls); the stall's cost read removed → its test red. **My own first "total deadline" control stayed green:
+  the mutation was wrong** (a 5-minute first-word timer is replaced at the first word), and the ceiling was the right one.
+- **The final review** (a fresh reviewer, the whole range): no Critical; **one Important, fixed (`f6b09af`)**: a model
+  that streams its reasoning before its first word was cut at the first-word deadline and said as *"stopped answering"*,
+  and *Carry on* would have met the same. A reasoning delta now counts as arriving, never as the answer (Decision 14,
+  **(S2)**; two tests red first, and their control). **Nine Minors deferred** (the ledger): a non-2xx whose body stalls is
+  said as a stall; a mid-stream `MODEL_UNREACHABLE` is billed but untraced; the stall's cost read comes before the
+  spend settles, so the line shows the old figure until *Carry on*; a bodiless 2xx waits out the first-word deadline;
+  `"error": null` read as an error; `fetch` taken when the model is made; ORIENTATION's code map (fixed at this close);
+  old trace rows lack `received`; `chars` counts UTF-16 units.
+- **For sitting 6's acceptance (a ruling):** measure the on-campus lead's first word on a late round's prompt. The 120 s
+  rests on 56.8 s for a 4.3k-token prompt, and the lead's prompt grows through a round; a model that processes a long
+  prompt sends nothing, reasoning or words, until it is done.
+- **Not done:** Step 5 (one round's call against the real gateway): 7100 was the platform's sitting 4's, which
+  truncates it, and it needed Rich's word. S1's M2 measured streaming on 7106 already; **the client's first real stream
+  is sitting 6's**. No browser walk: mock mode cannot stall (its model answers at once), and the stall card is the same
+  card as its siblings, drawn by the table test. **A harness bug of mine sent two requests to the real LiteLLM on 7106**
+  with made-up keys (`sk-test-round`, `sk-test-plan`), both refused: the round's model was made before `fetch` was
+  stubbed; fixed in the test.
+- **Gates:** `pnpm test` 1284 twice (1249 at the start), `pnpm lint`, `pnpm typecheck`, `pnpm format:check` clean;
+  **`check-seeing.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12** in mock mode,
+  from a fresh dev database (the old one kept as `packages/server/.data/app-before-f5s2.sqlite`); a mock-mode round's
+  trace rows carry `received`.
+- **The machine at the close:** our server on 7105 in mock mode (`nohup pnpm dev:mock`, one watcher, on the fresh
+  database), our mock on 7102; 7100 `manifest-a1`'s.
+- **Next: sitting 3** (Tasks 4, 5, 6: `ClockItem` and `ProgressBar`'s clock; the app's pages; *Going live*), which needs
+  no platform, handed to `manifest-app-58`.
