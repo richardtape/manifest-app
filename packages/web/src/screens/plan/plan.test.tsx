@@ -163,6 +163,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     conversationFor: never,
     askedSecrets: never,
     fixFor: never,
+    agreedRows: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)

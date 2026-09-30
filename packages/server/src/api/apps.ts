@@ -198,6 +198,25 @@ export function registerApps(
     },
   )
 
+  // THE HAND-OVER (F5 Task 9, Decision 12): two rows of the plan the person last agreed on the app,
+  // *What students see* and *Who gets in*, as written, for the message and the honest line. Never
+  // another row; nobody else's (their conversations are theirs); no model.
+  app.get<{ Params: { projectId: string } }>(
+    '/api/apps/:projectId/plan',
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      const { projectId } = request.params
+      if (!ID.test(projectId)) return refuse(reply, 404, 'NOT_FOUND')
+      const agreed = store.agreedPlanOn(projectId, who.person.id) as
+        Partial<Record<'studentsSee' | 'whoGetsIn', unknown>> | undefined
+      const { studentsSee, whoGetsIn } = agreed ?? {}
+      if (typeof studentsSee !== 'string' || typeof whoGetsIn !== 'string')
+        return refuse(reply, 404, 'NOT_FOUND')
+      return { studentsSee, whoGetsIn }
+    },
+  )
+
   app.get<{ Params: { projectId: string; instanceId: string } }>(
     '/api/apps/:projectId/instances/:instanceId/conversation',
     async (request, reply) => {

@@ -542,6 +542,26 @@ export const words = {
       body: 'Three things other people answer, and each may take several days. Going live shows where each one is.',
       button: 'Going live',
     },
+    /**
+     * MOMENT 15, THE HAND-OVER (F5 Task 9, Decision 12): Rich's words, then the agreed plan's two
+     * rows as written. No model.
+     */
+    students: {
+      /** ✓ */
+      signIn: 'Students sign in with their CWL.',
+      /** ✓ The message's first part; the plan's *What students see* follows it. */
+      message: (name: string, address: string) =>
+        `${name} is here: ${address}. Sign in with your CWL.`,
+      /** Ours: the field's label, and what it is for. */
+      messageLabel: 'A message to send them',
+      messageHint:
+        'For Canvas or an email. Change it as you like: nothing here is saved.',
+      /** ✓ The honest line's first part (FE-20); the plan's *Who gets in* follows it. */
+      honest: 'Anyone with a CWL can sign in, not only your class.',
+      /** Ours: whose value each Copy copies, for a screen reader. */
+      copyAddress: 'the address',
+      copyMessage: 'the message',
+    },
   },
   /**
    * GOING LIVE, MOMENTS 10 AND 11 (F5 Task 6). The walk-through's words and those Rich approved

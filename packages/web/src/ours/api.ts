@@ -184,6 +184,14 @@ export interface Ours {
    * [What went wrong] pressed again opens it, and never starts a second (the review's I2).
    */
   fixFor(projectId: string, incidentId: string): Promise<{ id: string } | null>
+  /**
+   * F5 TASK 9, THE HAND-OVER: *What students see* and *Who gets in* from the plan the person last
+   * agreed on the app, as written, for the message and the honest line. None agreed (an app made
+   * elsewhere), null.
+   */
+  agreedRows(
+    projectId: string,
+  ): Promise<{ studentsSee: string; whoGetsIn: string } | null>
   events(id: string): StreamSource
 }
 
@@ -270,6 +278,22 @@ export function createOurs(): Ours {
           `/api/apps/${encodeURIComponent(projectId)}/incidents/${encodeURIComponent(incidentId)}/conversation`,
         )) as { id?: unknown } | undefined
         return typeof found?.id === 'string' ? { id: found.id } : null
+      } catch (error) {
+        if (error instanceof OurRefusal && error.status === 404) return null
+        throw error
+      }
+    },
+    agreedRows: async (projectId) => {
+      try {
+        const rows = (await call(
+          'GET',
+          `/api/apps/${encodeURIComponent(projectId)}/plan`,
+        )) as { studentsSee?: unknown; whoGetsIn?: unknown } | undefined
+        const { studentsSee, whoGetsIn } = rows ?? {}
+        // A success without the two rows is not a plan: never drawn as one.
+        if (typeof studentsSee !== 'string' || typeof whoGetsIn !== 'string')
+          throw new OurRefusal('UNEXPECTED', 200)
+        return { studentsSee, whoGetsIn }
       } catch (error) {
         if (error instanceof OurRefusal && error.status === 404) return null
         throw error

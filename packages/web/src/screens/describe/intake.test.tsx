@@ -261,6 +261,7 @@ function stage(
     conversationFor: () => new Promise(() => undefined),
     askedSecrets: () => new Promise(() => undefined),
     fixFor: () => new Promise(() => undefined),
+    agreedRows: () => new Promise(() => undefined),
     events: () => {
       const source = new FakeSource()
       sources.push(source)

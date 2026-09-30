@@ -706,3 +706,72 @@ describe('conversations on an app (F4 Task 6)', () => {
     expect(store.fixFor(PROJECT, 'nothing', ALICE.id)).toBeUndefined()
   })
 })
+
+describe('the plan agreed on an app (F5 Task 9, the hand-over)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const OTHER = '99999999-9999-4999-8999-999999999999'
+  const plan = (tag: string) => ({
+    studentsSee: `${tag}: what students see`,
+    youSee: `${tag}: what you see`,
+    itKeeps: `${tag}: what it keeps`,
+    whoGetsIn: `${tag}: who gets in`,
+    ai: `${tag}: its AI`,
+    assumed: [],
+    onlyYouKnow: [],
+    changed: [],
+  })
+  const agree = (store: Store, conversationId: string, version: number) =>
+    store.addMessage(conversationId, 'person', {
+      kind: 'agreed',
+      version,
+      answers: {},
+      commitSha: 'abc123',
+      sent: true,
+    })
+  const onApp = (store: Store, personId: string, projectId = PROJECT) => {
+    const made = store.createConversation(personId, WORDS)
+    return store.setState(made.id, 'built', { projectId })
+  }
+
+  it('is the version their Yes named, not the newest one written', () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const built = onApp(store, ALICE.id)
+    store.savePlan(built.id, plan('first'))
+    agree(store, built.id, 1)
+    store.savePlan(built.id, plan('written after'))
+    expect(store.agreedPlanOn(PROJECT, ALICE.id)).toEqual(plan('first'))
+  })
+
+  it('a change agreed later is the latest', async () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    const built = onApp(store, ALICE.id)
+    store.savePlan(built.id, plan('first'))
+    agree(store, built.id, 1)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const change = store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    store.savePlan(change.id, plan('changed'))
+    store.savePlan(change.id, plan('changed, corrected'))
+    agree(store, change.id, 2)
+    expect(store.agreedPlanOn(PROJECT, ALICE.id)).toEqual(plan('changed, corrected'))
+  })
+
+  it('nothing agreed, another person’s, another app’s: none', () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    store.rememberPerson(BOB)
+    const written = onApp(store, ALICE.id)
+    store.savePlan(written.id, plan('only written'))
+    expect(store.agreedPlanOn(PROJECT, ALICE.id)).toBeUndefined()
+    const bobs = onApp(store, BOB.id)
+    store.savePlan(bobs.id, plan('bob'))
+    agree(store, bobs.id, 1)
+    expect(store.agreedPlanOn(PROJECT, ALICE.id)).toBeUndefined()
+    const elsewhere = onApp(store, ALICE.id, OTHER)
+    store.savePlan(elsewhere.id, plan('elsewhere'))
+    agree(store, elsewhere.id, 1)
+    expect(store.agreedPlanOn(PROJECT, ALICE.id)).toBeUndefined()
+    expect(store.agreedPlanOn(OTHER, ALICE.id)).toEqual(plan('elsewhere'))
+  })
+})

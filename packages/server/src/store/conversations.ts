@@ -76,6 +76,11 @@ export interface Store {
   /** Answers the plan's version: 1, 2, 3… */
   savePlan(conversationId: string, plan: unknown): number
   latestPlan(conversationId: string): { version: number; plan: unknown } | undefined
+  /**
+   * THE PLAN AGREED ON AN APP (F5 Task 9): the version the person's latest *Yes* named, on any of
+   * their conversations on it (a first build's, or a change's since). Theirs alone.
+   */
+  agreedPlanOn(projectId: string, personId: string): unknown | undefined
   /** False, and nothing written, when the reference is already recorded. */
   recordProblem(problem: Problem): boolean
   /** F3 Decision 10: a round's run, saved after every move. A second save replaces the first. */

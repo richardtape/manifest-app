@@ -187,9 +187,11 @@ export function App({
         <Overview
           key={lookup.project.id}
           platform={platform}
+          ours={ours}
           project={lookup.project}
           expire={expire}
           timeZone={timeZone}
+          {...(now === undefined ? {} : { now })}
         />
       ) : route.name === 'app-going-live' ? (
         <GoingLive

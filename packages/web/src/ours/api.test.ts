@@ -259,6 +259,69 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
   })
 })
 
+describe('agreedRows: the hand-over’s two rows (F5 Task 9)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  it('asks our server for the plan agreed on the app, and answers its two rows', async () => {
+    const rows = { studentsSee: 'Your own first.', whoGetsIn: 'Only theirs.' }
+    const fetch = vi.fn(async () => new Response(JSON.stringify(rows), { status: 200 }))
+    vi.stubGlobal('fetch', fetch)
+    expect(await createOurs().agreedRows(PROJECT)).toEqual(rows)
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect([url, init.method, init.credentials]).toEqual([
+      `/api/apps/${PROJECT}/plan`,
+      'GET',
+      'same-origin',
+    ])
+  })
+
+  it('no plan agreed on it (404) is null, a state and not an error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: { code: 'NOT_FOUND' } }), { status: 404 }),
+      ),
+    )
+    expect(await createOurs().agreedRows(PROJECT)).toBeNull()
+  })
+
+  it('an answer without its two rows is refused as unexpected, never drawn', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ studentsSee: 'Only one.' }), { status: 200 }),
+      ),
+    )
+    await expect(createOurs().agreedRows(PROJECT)).rejects.toMatchObject({
+      code: 'UNEXPECTED',
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(null, { status: 204 })),
+    )
+    await expect(createOurs().agreedRows(PROJECT)).rejects.toMatchObject({
+      code: 'UNEXPECTED',
+    })
+  })
+
+  it('anything else is thrown, with its code', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: { code: 'PLATFORM_UNAVAILABLE' } }), {
+            status: 502,
+          }),
+      ),
+    )
+    await expect(createOurs().agreedRows(PROJECT)).rejects.toMatchObject({
+      code: 'PLATFORM_UNAVAILABLE',
+      status: 502,
+    })
+  })
+})
+
 describe('conversationEvents', () => {
   it("opens the conversation's stream, its id encoded", () => {
     const opened: string[] = []

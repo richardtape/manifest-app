@@ -117,7 +117,12 @@ function stage(
 beforeEach(() => {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => new Response(null, { status: 204 })),
+    // Our own API: no plan agreed on the app (Task 9's hand-over reads it once launched).
+    vi.fn(async (url: string) =>
+      /^\/api\/apps\/[^/]+\/plan$/.test(url)
+        ? new Response(JSON.stringify({ error: { code: 'NOT_FOUND' } }), { status: 404 })
+        : new Response(null, { status: 204 }),
+    ),
   )
 })
 afterEach(() => {

@@ -240,6 +240,23 @@ export function openStore(file: string): Store {
         : { version: row.version, plan: JSON.parse(row.body) }
     },
 
+    agreedPlanOn(projectId, personId) {
+      const row = db
+        .prepare(
+          `select plans.body from messages
+           join conversations on conversations.id = messages.conversation_id
+           join plans on plans.conversation_id = messages.conversation_id
+             and plans.version = json_extract(messages.body, '$.version')
+           where conversations.project_id = ? and conversations.person_id = ?
+             and json_extract(messages.body, '$.kind') = 'agreed'
+           order by messages.at desc, conversations.created_at desc, conversations.rowid desc,
+             messages.seq desc
+           limit 1`,
+        )
+        .get(projectId, personId) as { body: string } | undefined
+      return row === undefined ? undefined : JSON.parse(row.body)
+    },
+
     recordProblem(problem: Problem) {
       const { changes } = db
         .prepare(

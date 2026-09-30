@@ -176,6 +176,7 @@ function stage(refusals: Refusals = {}) {
     conversationFor: never,
     askedSecrets: never,
     fixFor: never,
+    agreedRows: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)

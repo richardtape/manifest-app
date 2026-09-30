@@ -823,10 +823,45 @@
 .app-main .overview__band .body-lead {
   margin: 0 0 var(--space-2);
 }
+/* MOMENT 15, THE HAND-OVER (F5 Task 9): the address large, the message to paste, the honest
+   line, the two facts. */
+.overview__students {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
 .overview__students .mono {
   margin: 0;
   font-size: 18px;
   overflow-wrap: anywhere;
+}
+.overview__students-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+.app-main .overview__students-address {
+  font-size: 22px;
+  min-width: 0;
+}
+.overview__students .body-lead,
+.overview__students .body-small {
+  margin: 0;
+}
+.overview__students-message {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.overview__students-message textarea {
+  min-height: 5.5em;
+  resize: vertical;
+}
+.overview__students-hint,
+.overview__students-honest {
+  color: var(--ink-secondary);
 }
 .overview__addresses {
   margin: 0;

@@ -6,7 +6,7 @@ import { words } from '../../words.js'
 const w = words.preview
 
 /** "Copy", named for whose value it copies; "Copied" said in a status once it has. */
-function CopyButton({ value, name }: { value: string; name: string }) {
+export function CopyButton({ value, name }: { value: string; name: string }) {
   const [copied, setCopied] = useState(false)
   const copy = () => {
     void navigator.clipboard

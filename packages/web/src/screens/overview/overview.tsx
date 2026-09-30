@@ -1,6 +1,7 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, StateChip, type FactTone, type State } from '@manifest-app/ui'
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, TABS, type Tab } from '../../router.js'
@@ -10,8 +11,8 @@ import { releasesToRead, servingFact, type Said } from '../preview/facts.js'
 import { KIND } from '../preview/preview.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { audienceWords, beforeLaunch } from '../your-apps/model.js'
-import { Hostname } from '../your-apps/your-apps.js'
 import { Band } from './band.js'
+import { ForYourStudents, handOver, type Handed } from './students.js'
 
 const w = words.overview
 
@@ -28,8 +29,8 @@ type Seen = {
   rows: { tab: Tab; serving: Said }[]
   /** Moment 10's band (Decision 3). */
   band: boolean
-  /** The address students use, for the slot that leads once the app has launched. */
-  students: Schemas['Environment'] | undefined
+  /** Moment 15, once the app has launched (Task 9): what leads the page. */
+  handed: Handed | null
 }
 type Loaded =
   | { state: 'loading' }
@@ -40,11 +41,17 @@ type Loaded =
  * THE OVERVIEW'S READS, IN THE PERSON'S SESSION: the app's addresses and the versions that date
  * them (F4's serving facts), and, only for an app built and not launched, its checklist, for
  * the band. A version or a checklist that cannot be read loses its date or the band, not the
- * page; a session that ended anywhere is the shell's to say.
+ * page; a session that ended anywhere is the shell's to say. **Once launched, the hand-over's
+ * reads** (Task 9). Launched is the project's `launchedAt` **or the checklist's own `launched`**:
+ * the App reads the project once per slug, so a launch since (in another tab, or F5's own press)
+ * would otherwise leave the band up and the hand-over away until a reload (sitting 3's carried
+ * minor).
  */
 async function read(
   platform: Platform,
+  ours: Ours,
   project: Schemas['Project'],
+  now: Date,
   timeZone: string | undefined,
 ): Promise<Seen> {
   const environments = await platform.listEnvironments(project.id)
@@ -71,32 +78,51 @@ async function read(
     ),
   )
   const answered = checklist[0]
+  const readiness = answered?.status === 'fulfilled' ? answered.value : undefined
+  const launched = (project.launchedAt ?? null) !== null || readiness?.launched === true
+  const students = of('students')
+  const serving = (env: Schemas['Environment']) =>
+    env.instance === null ? undefined : byId.get(env.instance.releaseId)
   return {
     rows: TABS.flatMap((tab) => {
       const env = of(tab)
       if (env === undefined) return []
-      const release = env.instance === null ? undefined : byId.get(env.instance.releaseId)
-      return [{ tab, serving: servingFact(env, release, timeZone) }]
+      return [{ tab, serving: servingFact(env, serving(env), timeZone) }]
     }),
-    band: answered?.status === 'fulfilled' && clocksUnmet(answered.value),
-    students: of('students'),
+    band: !launched && readiness !== undefined && clocksUnmet(readiness),
+    handed: launched
+      ? await handOver(
+          platform,
+          ours,
+          project,
+          students,
+          students === undefined ? undefined : serving(students),
+          now,
+          timeZone,
+        )
+      : null,
   }
 }
 
 /**
  * THE APP'S OVERVIEW, ITS LANDING PAGE (F5 Task 5, Decision 1): who it is for, one row per
  * address that opens its tab, *[Ask for a change]*, and moment 10's band. Once it has launched,
- * *For your students* leads (moment 15, Task 9). Nothing of moment 16's: F6.
+ * *For your students* leads (moment 15, Task 9: the address handed over). Nothing of moment
+ * 16's: F6.
  */
 export function Overview({
   platform,
+  ours,
   project,
   expire,
+  now = () => new Date(),
   timeZone,
 }: {
   platform: Platform
+  ours: Ours
   project: Schemas['Project']
   expire: () => void
+  now?: () => Date
   timeZone?: string | undefined
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
@@ -104,7 +130,7 @@ export function Overview({
 
   useEffect(() => {
     let live = true
-    read(platform, project, timeZone).then(
+    read(platform, ours, project, now(), timeZone).then(
       (seen) => live && setLoaded({ state: 'ready', seen }),
       (error: unknown) => {
         if (!live) return
@@ -116,7 +142,8 @@ export function Overview({
     return () => {
       live = false
     }
-  }, [platform, project, timeZone, expire, attempt])
+    // `now` is a clock, read once per attempt: never a reason to read again.
+  }, [platform, ours, project, timeZone, expire, attempt])
 
   const retry = useCallback(() => {
     setLoaded({ state: 'loading' })
@@ -125,7 +152,6 @@ export function Overview({
 
   const slug = encodeURIComponent(project.slug)
   const audience = audienceWords(project.audience)
-  const launched = (project.launchedAt ?? null) !== null
   return (
     <div className="overview">
       <h1 className="page-title">{project.name}</h1>
@@ -137,7 +163,9 @@ export function Overview({
       ) : null}
       {loaded.state === 'ready' ? (
         <>
-          {launched ? <ForYourStudents address={loaded.seen.students} /> : null}
+          {loaded.seen.handed === null ? null : (
+            <ForYourStudents name={project.name} handed={loaded.seen.handed} />
+          )}
           {loaded.seen.band ? <Band slug={project.slug} /> : null}
           <ul className="overview__addresses" aria-label={w.addresses}>
             {loaded.seen.rows.map(({ tab, serving }) => (
@@ -160,25 +188,5 @@ export function Overview({
         </>
       ) : null}
     </div>
-  )
-}
-
-/**
- * MOMENT 15'S SLOT: once the app has launched, the address students use leads the page. Task 9
- * hands it over (the address large, *[Copy]*, the message to send them).
- */
-function ForYourStudents({ address }: { address: Schemas['Environment'] | undefined }) {
-  const id = useId()
-  return (
-    <section className="overview__students" aria-labelledby={id}>
-      <h2 id={id} className="heading">
-        {words.preview.tabs.students}
-      </h2>
-      {address === undefined ? null : (
-        <p className="mono">
-          <Hostname name={address.hostname} />
-        </p>
-      )}
-    </section>
   )
 }

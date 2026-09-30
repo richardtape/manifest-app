@@ -638,3 +638,113 @@ describe('a restart (Review Focus 5)', () => {
     expect(await restartedWith('plan-ready')).toBe('waiting')
   })
 })
+
+describe('GET /api/apps/:projectId/plan: the hand-over’s two rows (F5 Task 9, Decision 12)', () => {
+  const plan = (tag: string) => ({
+    studentsSee: `${tag}: You’ll see everyone else’s once you’ve posted your own.`,
+    youSee: `${tag}: every response, by student`,
+    itKeeps: `${tag}: each response, and who wrote it`,
+    whoGetsIn: `${tag}: It only shows each student their own work until they post.`,
+    ai: `${tag}: none`,
+    assumed: [`${tag}: one class`],
+    onlyYouKnow: [{ id: 'q1', ask: `${tag}: which week?` }],
+    changed: [],
+  })
+  const agree = (s: Setup, conversationId: string, version: number) =>
+    s.store.addMessage(conversationId, 'person', {
+      kind: 'agreed',
+      version,
+      answers: { q1: 'week one' },
+      commitSha: 'abc123',
+      sent: true,
+    })
+
+  it('answers What students see and Who gets in from the latest plan agreed on the app, and nothing else', async () => {
+    const s = setUp()
+    const built = first(s, 'built', 'done')
+    s.store.savePlan(built.id, plan('first'))
+    agree(s, built.id, 1)
+    const answer = await s.get(`/api/apps/${PROJECT}/plan`)
+    expect(answer.statusCode).toBe(200)
+    expect(answer.json()).toEqual({
+      studentsSee: plan('first').studentsSee,
+      whoGetsIn: plan('first').whoGetsIn,
+    })
+  })
+
+  it('a change agreed since is the one answered', async () => {
+    const s = setUp()
+    const built = first(s, 'built', 'done')
+    s.store.savePlan(built.id, plan('first'))
+    agree(s, built.id, 1)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const change = s.store.createChange(ALICE.id, PROJECT, 'Word count', WORDS)
+    s.store.savePlan(change.id, plan('changed'))
+    agree(s, change.id, 1)
+    expect((await s.get(`/api/apps/${PROJECT}/plan`)).json()).toEqual({
+      studentsSee: plan('changed').studentsSee,
+      whoGetsIn: plan('changed').whoGetsIn,
+    })
+  })
+
+  it('a plan written and never agreed: 404', async () => {
+    const s = setUp()
+    const built = first(s, 'plan-ready')
+    s.store.savePlan(built.id, plan('only written'))
+    const answer = await s.get(`/api/apps/${PROJECT}/plan`)
+    expect(answer.statusCode).toBe(404)
+    expect(answer.json()).toEqual({ error: { code: 'NOT_FOUND' } })
+  })
+
+  it('another person, whose conversations are not on it: 404, never Alice’s rows', async () => {
+    const s = setUp()
+    const built = first(s, 'built', 'done')
+    s.store.savePlan(built.id, plan('alice'))
+    agree(s, built.id, 1)
+    const answer = await s.get(`/api/apps/${PROJECT}/plan`, AS_BOB)
+    expect(answer.statusCode).toBe(404)
+    expect(answer.body).not.toContain('alice')
+  })
+
+  it('another app’s plan is not this one’s: 404; an id that is not one: 404', async () => {
+    const s = setUp()
+    const built = first(s, 'built', 'done')
+    s.store.savePlan(built.id, plan('first'))
+    agree(s, built.id, 1)
+    expect((await s.get(`/api/apps/${ANOTHER}/plan`)).statusCode).toBe(404)
+    expect((await s.get('/api/apps/not-an-id/plan')).statusCode).toBe(404)
+  })
+
+  it('nobody signed in: 401', async () => {
+    const s = setUp()
+    const answer = await s.get(`/api/apps/${PROJECT}/plan`, '')
+    expect(answer.statusCode).toBe(401)
+  })
+
+  it('a student app’s page is given no permission to read it (a read is judged by the person; Origin guards changes: F2 Decision 3)', async () => {
+    const s = setUp()
+    const built = first(s, 'built', 'done')
+    s.store.savePlan(built.id, plan('first'))
+    agree(s, built.id, 1)
+    const answer = await s.app.inject({
+      method: 'GET',
+      url: `/api/apps/${PROJECT}/plan`,
+      headers: { cookie: AS_ALICE, origin: STUDENT_APP },
+    })
+    expect(answer.headers['access-control-allow-origin']).toBeUndefined()
+    expect(answer.headers['access-control-allow-credentials']).toBeUndefined()
+  })
+
+  it('a change to it is no route: a student app’s post is refused first, and ours finds nothing', async () => {
+    const s = setUp()
+    const post = (origin: string) =>
+      s.app.inject({
+        method: 'POST',
+        url: `/api/apps/${PROJECT}/plan`,
+        headers: { cookie: AS_ALICE, origin, 'content-type': 'application/json' },
+        payload: '{}',
+      })
+    expect((await post(STUDENT_APP)).statusCode).toBe(404)
+    expect((await post(ORIGIN)).statusCode).toBe(404)
+  })
+})
