@@ -7,6 +7,7 @@ import {
   createPlatform,
   DEPLOY_TIMEOUT_MS,
   READ_TIMEOUT_MS,
+  REHEARSAL_TIMEOUT_MS,
 } from './api.js'
 import { refusalOf } from './refusal.js'
 
@@ -391,6 +392,74 @@ async function recording(status: number, answer: unknown) {
     close: () => new Promise((resolve) => server.close(resolve)),
   }
 }
+
+describe('the dry run (F5 Task 7, moment 12), in the person’s session', () => {
+  it('runRehearsal names the project, with the Idempotency-Key it is given and no body, and answers the rehearsal', async () => {
+    const fake = await recording(200, fixtures.REHEARSAL)
+    try {
+      expect(
+        await platform(fake.origin).runRehearsal(fixtures.PROJECT.id, 'dry-run-0001'),
+      ).toEqual(fixtures.REHEARSAL)
+      expect(fake.seen).toEqual([
+        {
+          method: 'POST',
+          url: `/v1/projects/${fixtures.PROJECT.id}/rehearsal`,
+          key: 'dry-run-0001',
+          body: undefined,
+        },
+      ])
+    } finally {
+      await fake.close()
+    }
+  })
+
+  it('a rehearsal that signed nobody in is a 200, returned, never thrown: a measurement, not an error', async () => {
+    const failed = { ...fixtures.REHEARSAL, passed: false }
+    const fake = await recording(200, failed)
+    try {
+      expect(
+        (await platform(fake.origin).runRehearsal(fixtures.PROJECT.id, 'dry-run-0002'))
+          .passed,
+      ).toBe(false)
+    } finally {
+      await fake.close()
+    }
+  })
+
+  it('its step-up refusal is thrown with its code, for the page to ask for the second sign-in (Spec action 8 (b))', async () => {
+    const fake = await recording(403, envelopeWith('STEP_UP_REQUIRED'))
+    try {
+      const refusal = refusalOf(
+        await thrown(() =>
+          platform(fake.origin).runRehearsal(fixtures.PROJECT.id, 'dry-run-0003'),
+        ),
+      )
+      expect(refusal).toMatchObject({ kind: 'refused', code: 'STEP_UP_REQUIRED' })
+    } finally {
+      await fake.close()
+    }
+  })
+
+  it('its deadline is 150 s, where every other call keeps 15 s (Decision 8: the platform says up to ~90 s)', async () => {
+    const deadlines = vi.spyOn(AbortSignal, 'timeout')
+    try {
+      await withMock(async (origin) => {
+        const p = platform(origin)
+        await p.getLaunchReadiness(fixtures.PROJECT.id)
+        await p.runRehearsal(fixtures.PROJECT.id, 'dry-run-0004')
+        await p.getLaunchRecords(fixtures.PROJECT.id)
+      })
+      expect(REHEARSAL_TIMEOUT_MS).toBe(150_000)
+      expect(deadlines.mock.calls.map(([ms]) => ms)).toEqual([
+        READ_TIMEOUT_MS,
+        REHEARSAL_TIMEOUT_MS,
+        READ_TIMEOUT_MS,
+      ])
+    } finally {
+      deadlines.mockRestore()
+    }
+  })
+})
 
 describe('trying-out (F4 Task 10), in the person’s session', () => {
   it('deploy names the environment it is given, with the release and the Idempotency-Key, and answers the instance', async () => {

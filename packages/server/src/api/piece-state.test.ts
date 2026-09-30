@@ -45,6 +45,7 @@ describe('pieceOf', () => {
       asked: [],
       incidentId: null,
       environment: null,
+      dryRun: null,
     })
   })
 
@@ -70,6 +71,7 @@ describe('pieceOf', () => {
       asked: ['Now a bigger title', 'And bold'],
       incidentId: null,
       environment: null,
+      dryRun: null,
     })
   })
 
@@ -88,6 +90,7 @@ describe('pieceOf', () => {
       incidentId: 'incident-1',
       // F4's fixes name no address: every one was the trying-out address's (F5 Decision 13).
       environment: 'staging',
+      dryRun: null,
     })
   })
 
@@ -108,6 +111,32 @@ describe('pieceOf', () => {
       asked: ['It didn’t start on the live address'],
       incidentId: 'incident-2',
       environment: 'production',
+      dryRun: null,
+    })
+  })
+
+  it("a dry run's fix carries what it saw, on the live setup, and no incident (F5 Task 7)", () => {
+    const store = fresh()
+    const c = store.createChange(ALICE.id, PROJECT, 'The dry run', 'ours')
+    const dryRun = {
+      rehearsalId: 'rehearsal-1',
+      signInStatus: null,
+      attributesReleased: [],
+      attributesAsked: ['mail'],
+    }
+    store.addMessage(c.id, 'we', {
+      kind: 'asked',
+      change: 1,
+      words: 'The dry run didn’t sign anyone in',
+      fix: { dryRun },
+    })
+    expect(pieceOf(store, c.id)).toEqual({
+      kind: 'fix',
+      change: 1,
+      asked: ['The dry run didn’t sign anyone in'],
+      incidentId: null,
+      environment: 'production',
+      dryRun,
     })
   })
 })

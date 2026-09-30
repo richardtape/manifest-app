@@ -8,6 +8,11 @@ import { useEffect, useState, type MouseEvent } from 'react'
 export type Tab = 'draft' | 'trying-out' | 'students'
 export const TABS: Tab[] = ['draft', 'trying-out', 'students']
 
+/** Where the step-up sends them back to on *Going live*: the press they were making. */
+export type Then = 'live' | 'dry-run' | null
+const thenOf = (then: string | null): Then =>
+  then === 'live' || then === 'dry-run' ? then : null
+
 export type Route =
   | { name: 'your-apps' }
   | { name: 'signed-out' }
@@ -27,9 +32,10 @@ export type Route =
   | { name: 'app-preview'; slug: string; tab: Tab }
   /**
    * Going live (F5, moments 10–14): `/apps/:slug/going-live`, and `?then=live` when the step-up
-   * sends them back to finish letting their students in (Decision 10).
+   * sends them back to finish letting their students in (Decision 10), or `?then=dry-run` to run
+   * the dry run (Task 7: Spec action 8 (b)).
    */
-  | { name: 'app-going-live'; slug: string; then: 'live' | null }
+  | { name: 'app-going-live'; slug: string; then: Then }
   /** Every piece of work on an app (F4 Task 9). */
   | { name: 'app-conversations'; slug: string }
   /** Ask for a change (F4 Task 9). */
@@ -72,7 +78,7 @@ export function parse(pathname: string, search = ''): Route {
       return {
         name: 'app-going-live',
         slug,
-        then: query.get('then') === 'live' ? 'live' : null,
+        then: thenOf(query.get('then')),
       }
     // The Preview, and F4's address for it: a `tab` on the bare path (Decision 1).
     if (page === 'preview' || query.has('tab')) {

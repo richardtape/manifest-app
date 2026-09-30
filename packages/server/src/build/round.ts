@@ -598,6 +598,16 @@ export function createRounds(deps: RoundDeps): Rounds {
         asked: piece.asked,
         parts: (plan?.changed ?? []).map((row) => `${HEADINGS[row]}: ${plan![row]}`),
       }
+    // F5 Task 7: a dry run's fix carries what it saw, and left no incident to read.
+    if (piece.kind === 'fix' && piece.dryRun !== null && live.fix === null) {
+      const { signInStatus, attributesReleased, attributesAsked } = piece.dryRun
+      live.fix = {
+        environment: 'production',
+        incident: null,
+        unread: null,
+        dryRun: { signInStatus, attributesReleased, attributesAsked },
+      }
+    }
     if (piece.kind === 'fix' && piece.incidentId !== null && live.fix === null) {
       const incidentId = piece.incidentId
       // Where it did not start: F4's fixes were all the trying-out address's (F5 Decision 13).
@@ -607,10 +617,11 @@ export function createRounds(deps: RoundDeps): Rounds {
       )
       live.fix =
         read === 'confidential'
-          ? { environment, incident: null, unread: 'confidential' }
+          ? { environment, incident: null, unread: 'confidential', dryRun: null }
           : read === undefined
-            ? { environment, incident: null, unread: 'missing' }
+            ? { environment, incident: null, unread: 'missing', dryRun: null }
             : {
+                dryRun: null,
                 environment,
                 incident: {
                   exitReason: read.exitReason,

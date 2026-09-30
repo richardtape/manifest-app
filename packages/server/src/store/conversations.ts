@@ -79,6 +79,15 @@ export interface Store {
     approvalId: string,
     personId: string,
   ): string | undefined
+  /**
+   * The person's fix for this dry run, the latest, unless it was set aside: so *[Fix it]* pressed
+   * again opens it (F5 Task 7).
+   */
+  fixForDryRun(
+    projectId: string,
+    rehearsalId: string,
+    personId: string,
+  ): string | undefined
   /** `body` is our structured JSON. */
   addMessage(conversationId: string, from: Sender, body: unknown): void
   listMessages(conversationId: string): { from: Sender; body: unknown; at: string }[]

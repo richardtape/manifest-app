@@ -204,6 +204,7 @@ function stage(start: Partial<World> = {}) {
       secrets: world.secrets,
     })),
     setAppSecret: record('setAppSecret', () => undefined),
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
@@ -242,6 +243,7 @@ function stage(start: Partial<World> = {}) {
       return Promise.resolve(world.fix === null ? null : { id: world.fix })
     },
     agreedRows: () => Promise.resolve(null),
+    fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: () => Promise.resolve(null),
     events: () => new FakeSource(),
   }

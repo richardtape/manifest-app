@@ -1,16 +1,19 @@
 // @vitest-environment jsdom
 import type { Schemas } from '@manifest/contract'
+import { fixtures } from '@manifest/mock'
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import type { Ours } from '../../ours/api.js'
+import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
 import { DryRun, dryRunRow } from './dry-run.js'
 
 /**
- * THE DRY RUN ON THE LIVE SETUP, MOMENT 12 (F5 Task 7, as S1 rewrote it). The owner is refused
- * `runRehearsal` (FE-42; Rich, 2026-09-30: "Both: row now, ask platform"), so the row is an
- * administrator's, read from the checklist item alone, and **nothing on it can be pressed** in
- * any state. The press returns here when FE-42 (a) lands.
+ * THE DRY RUN ON THE LIVE SETUP, MOMENT 12 (F5 Task 7): its row, read from the checklist item
+ * alone. Since the platform's 4a (FE-42 (a)) the owner may run it, and Rich brought the press back
+ * (2026-09-30, "Build it now"): **theirs to start once a version is on trying-out**, and nothing to
+ * press otherwise. The press itself is `dry-run-press.test.tsx`'s.
  */
 const g = words.goingLive
 const STATES = ['met', 'unmet', 'not_built'] as const
@@ -27,41 +30,61 @@ const item = (
 
 afterEach(cleanup)
 
+/** Nothing is pressed here: a platform or a server asked anything fails the test. */
+const untouchable = new Proxy(
+  {},
+  {
+    get: (_target, name) => () => {
+      throw new Error(`asked ${String(name)}`)
+    },
+  },
+)
+
 /** The row, drawn as the page draws it: one item of a list. */
 function drawn(row: ReturnType<typeof dryRunRow>) {
   render(
     <ul>
-      <DryRun row={row} />
+      <DryRun
+        row={row}
+        platform={untouchable as Platform}
+        ours={untouchable as Ours}
+        project={fixtures.PROJECT}
+        production={undefined}
+        back={false}
+        expire={() => undefined}
+        onRan={() => undefined}
+      />
     </ul>,
   )
   return screen.getByRole('listitem')
 }
 
-describe('the dry run’s row, read from the checklist item (S1, FE-42)', () => {
+describe('the dry run’s row, read from the checklist item (FE-42 (a), Spec action 8)', () => {
   it('nothing on trying-out: not yet, once a version is there', () =>
     expect(dryRunRow(item('unmet'), false)).toMatchObject({
       id: 'rehearsal',
       state: 'notyet',
       name: 'A dry run on the live setup',
       words: 'Once a version is on your trying-out address.',
-      owner: 'a Manifest administrator',
+      owner: 'you start it; minutes',
       action: null,
       apart: false,
     }))
 
-  it('a version on trying-out, not yet run: waiting on a Manifest administrator, who is not told', () =>
+  it('a version on trying-out, not yet run: needs you, the walk-through’s sentence, and theirs to start', () =>
     expect(dryRunRow(item('unmet'), true)).toMatchObject({
-      state: 'waiting',
+      state: 'attention',
       words:
-        'A Manifest administrator runs it. Manifest doesn’t tell them yet that it’s waiting.',
-      owner: 'a Manifest administrator',
-      action: null,
+        'We put it up with nobody watching, check it answers and signs someone in, then take it down.',
+      owner: 'you start it; minutes',
+      action: 'dry-run',
     }))
 
   it('run and passed: done, it answered and signed someone in', () =>
     expect(dryRunRow(item('met'), true)).toMatchObject({
       state: 'steady',
       words: 'Done. It answered and signed someone in on the live setup.',
+      owner: 'you start it; minutes',
       action: null,
     }))
 
@@ -72,9 +95,9 @@ describe('the dry run’s row, read from the checklist item (S1, FE-42)', () => 
       owner: 'nobody yet',
     }))
 
-  it('a failed run is not told apart from one not yet run (unmeasured): waiting, with no Fix it', () => {
-    // The laptop's IdP releases every attribute asked for, so a failure's `why` was never seen
-    // (S1: M4), and nothing gives the page a failed run's evidence.
+  it('a failed run is not told apart from one not yet run, read from the checklist: theirs to run again', () => {
+    // No operation reads a rehearsal back: only the press's own answer carries what it saw
+    // (dry-run-press.test.tsx), and never the checklist's `why` (FE-9).
     const failed = {
       ...item('unmet'),
       why: 'The last rehearsal did not sign anyone in: attribute ubcEduCwlPuid was not released.',
@@ -85,7 +108,7 @@ describe('the dry run’s row, read from the checklist item (S1, FE-42)', () => 
 
 describe('the dry run’s row, drawn', () => {
   it.each([
-    ['unmet', true, 'Waiting on someone'],
+    ['unmet', true, 'Needs you'],
     ['unmet', false, 'Not yet'],
     ['met', true, 'Done'],
     ['not_built', true, 'Not yet'],
@@ -101,12 +124,17 @@ describe('the dry run’s row, drawn', () => {
     },
   )
 
-  it('nothing to press in any state: no button, no link, no mailto (FE-42; no stopgap)', () => {
+  it('one button, [Run the dry run], only when it is theirs to start: a version there, not yet run; never a link or a mailto', () => {
     for (const state of STATES)
       for (const candidate of [true, false]) {
         const li = drawn(dryRunRow(item(state), candidate))
         const where = `${state} × ${candidate ? 'a version' : 'none'}`
-        expect(within(li).queryAllByRole('button'), where).toEqual([])
+        const buttons = within(li)
+          .queryAllByRole('button')
+          .map((b) => b.textContent)
+        expect(buttons, where).toEqual(
+          state === 'unmet' && candidate ? ['Run the dry run'] : [],
+        )
         expect(within(li).queryAllByRole('link'), where).toEqual([])
         expect(li.innerHTML, where).not.toMatch(/mailto:/i)
         cleanup()

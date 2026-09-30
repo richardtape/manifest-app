@@ -47,10 +47,11 @@ describe('the router', () => {
   it.each([
     ['?then=live', 'live'],
     ['then=live', 'live'],
+    ['?then=dry-run', 'dry-run'],
     ['?then=somewhere', null],
     ['', null],
   ])(
-    'Going live’s `then` from %s is %s (Decision 10: back from the step-up)',
+    'Going live’s `then` from %s is %s (Decision 10, and the dry run’s: back from the step-up)',
     (search, then) =>
       expect(parse('/apps/mock-app/going-live', search)).toEqual({
         name: 'app-going-live',

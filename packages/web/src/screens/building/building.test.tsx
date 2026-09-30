@@ -142,6 +142,7 @@ function stage(refusals: Refusals = {}) {
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
@@ -177,6 +178,7 @@ function stage(refusals: Refusals = {}) {
     askedSecrets: never,
     fixFor: never,
     agreedRows: never,
+    fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: never,
     events: () => {
       const source = new FakeSource()

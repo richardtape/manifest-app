@@ -92,6 +92,7 @@ function stage(
       environmentId,
       incidents: [],
     })),
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: answer('getLaunchReadiness', () => readiness),
     getLaunchRecords: answer('getLaunchRecords', () => fixtures.LAUNCH_RECORDS),
     getApproval: answer('getApproval', () => null),

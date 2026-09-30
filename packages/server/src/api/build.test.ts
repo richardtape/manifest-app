@@ -681,6 +681,7 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
       asked: ['Also a word count.'],
       incidentId: null,
       environment: null,
+      dryRun: null,
     })
   })
 

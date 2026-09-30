@@ -90,6 +90,7 @@ function stage(
     listEnvironments: answer('listEnvironments', () => environments),
     listInstances: never,
     listIncidents: never,
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: answer('getLaunchReadiness', () => w.readiness),
     getLaunchRecords: answer('getLaunchRecords', () => w.records),
     getApproval: answer('getApproval', () => w.approval),

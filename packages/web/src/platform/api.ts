@@ -99,6 +99,14 @@ export interface Platform {
    */
   getLaunchReadiness(projectId: string): Promise<Schemas['LaunchReadiness']>
   /**
+   * THE DRY RUN (F5 Task 7, moment 12), in the person's session: the candidate put up on the live
+   * setup with nobody watching, one sign-in tried, and taken down again. A run that signed nobody in
+   * is a `200` with `passed: false`, a measurement and not an error. It asks a second sign-in
+   * (`STEP_UP_REQUIRED`: Spec action 8 (b)). One `Idempotency-Key` per press; its deadline is
+   * `REHEARSAL_TIMEOUT_MS`.
+   */
+  runRehearsal(projectId: string, idempotencyKey: string): Promise<Schemas['Rehearsal']>
+  /**
    * The two records a first launch waits on, as an administrator keeps them: UBC's identity
    * team's registration and the Privacy Office's assessment. Either may be null, which is a
    * state, not an error (Decision 5).
@@ -132,6 +140,11 @@ export const READ_TIMEOUT_MS = 15_000
 /** A deploy answers once it has proved itself, up to about 90 s (F3 Decision 17's reason). */
 export const DEPLOY_TIMEOUT_MS = 120_000
 /**
+ * A dry run answers once it has signed someone in and taken the app down again: the platform says
+ * up to ~90 s (it took 7 s as sitting 1 measured it); ours is 150 s (Decision 8).
+ */
+export const REHEARSAL_TIMEOUT_MS = 150_000
+/**
  * A create answers once its repository is seeded: on real GitHub, 8–11 s, and up to ~30 s more
  * while GitHub refuses a repository it made seconds ago (FE-41's fix retries it). The platform
  * says never to time one out under ~60 s.
@@ -156,6 +169,7 @@ export function createPlatform(options: {
     })
   const client = clientWith(timeoutMs)
   const deploys = clientWith(DEPLOY_TIMEOUT_MS)
+  const rehearsals = clientWith(REHEARSAL_TIMEOUT_MS)
   const creates = clientWith(CREATE_TIMEOUT_MS)
   return {
     async getMe() {
@@ -261,6 +275,17 @@ export function createPlatform(options: {
           body: { releaseId },
         }),
         'deploy',
+      )
+    },
+    async runRehearsal(projectId, idempotencyKey) {
+      return unwrap(
+        await rehearsals.POST('/v1/projects/{projectId}/rehearsal', {
+          params: {
+            path: { projectId },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+        }),
+        'runRehearsal',
       )
     },
     async getLaunchReadiness(projectId) {

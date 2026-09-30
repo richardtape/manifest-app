@@ -135,8 +135,13 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
           const said = [r.name, r.words, r.owner].join(' ').replace(HOST, '')
           expect(machineryIn(said), where).toEqual([])
           expect(said, where).not.toMatch(/weeks?\b|§|why|staging/i)
-          // No row can be pressed until the owner may run the dry run (FE-42).
-          expect(r.action, where).toBeNull()
+          // From the checklist alone, one row can be pressed: the dry run, theirs to start once a
+          // version is on trying-out (FE-42 (a); Rich: "Build it now").
+          expect(r.action, where).toBe(
+            id === 'rehearsal' && state === 'unmet' && candidate !== null
+              ? 'dry-run'
+              : null,
+          )
         }
   })
 
@@ -179,13 +184,13 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
       action: null,
     }))
 
-  it('the dry run with a candidate: waiting on a Manifest administrator, who is not told (S1, FE-42)', () =>
+  it('the dry run with a candidate: needs you, theirs to start (FE-42 (a); Rich: "Build it now")', () =>
     expect(row('rehearsal', 'unmet')).toMatchObject({
-      state: 'waiting',
+      state: 'attention',
       words:
-        'A Manifest administrator runs it. Manifest doesn’t tell them yet that it’s waiting.',
-      owner: 'a Manifest administrator',
-      action: null,
+        'We put it up with nobody watching, check it answers and signs someone in, then take it down.',
+      owner: 'you start it; minutes',
+      action: 'dry-run',
     }))
 
   it('the dry run passed: done', () =>
@@ -249,11 +254,13 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
     expect(refused).toMatchObject({ state: 'attention', action: 'talk-it-through' })
   })
 
-  it('from the checklist alone, nothing needs you and nothing is at work: the dry run is not theirs (FE-42), and nobody has decided', () => {
+  it('from the checklist alone, nothing is at work, and only the dry run needs you: nobody has decided', () => {
     const rows = IDS.flatMap((id) =>
       STATES.flatMap((state) => [row(id, state), row(id, state, null)].filter(Boolean)),
     )
-    expect(rows.map((r) => r.state)).not.toContain('attention')
+    expect(rows.filter((r) => r.state === 'attention').map((r) => r.id)).toEqual([
+      'rehearsal',
+    ])
     expect(rows.map((r) => r.state)).not.toContain('working')
   })
 })

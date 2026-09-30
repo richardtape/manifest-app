@@ -1923,6 +1923,29 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     return fix
   }
 
+  /** A dry run that signed nobody in (F5 Decision 8, M4's shape), as the page hands it over. */
+  const DRY_RUN = {
+    rehearsalId: '55555555-5555-4555-8555-555555555555',
+    signInStatus: null,
+    attributesReleased: ['mail'],
+    attributesAsked: ['ubcEduCwlPuid', 'mail'],
+  }
+
+  /** A fix of ours for a dry run on the live setup that signed nobody in. */
+  function fixingDryRun(h: H) {
+    h.store.rememberPerson(ALICE)
+    const words = "The dry run didn't sign anyone in"
+    const fix = h.store.createChange(ALICE.id, PROJECT.id, words, words)
+    h.store.addMessage(fix.id, 'we', { kind: 'project', project: PROJECT })
+    h.store.addMessage(fix.id, 'we', {
+      kind: 'asked',
+      change: 1,
+      words,
+      fix: { dryRun: DRY_RUN },
+    })
+    return fix
+  }
+
   function started(options: Options, make: (h: H) => Conversation = agreed) {
     const h = harness(options)
     const conversation = make(h)
@@ -2056,6 +2079,47 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
       reference: null,
     })
     expect(JSON.parse(dumpAll(h.file)['problems']!)).toEqual([])
+  })
+
+  it("a dry run's fix reads no incident: its view says the dry run signed nobody in, what the sign-in answered, and which details it asked for and never got (F5 Decision 8)", async () => {
+    const { h, id } = started(
+      { script: { lead: [] }, incident: () => LIVE },
+      fixingDryRun,
+    )
+    const prompt = await firstPrompt(h)
+    expect(h.did.filter((d) => d.startsWith('listIncidents'))).toEqual([])
+    expect(prompt).toMatch(/dry run on the live setup did not sign anyone in/)
+    expect(prompt).toMatch(/no sign-in was completed/i)
+    expect(prompt).toContain('The details its registration asks for: ubcEduCwlPuid, mail')
+    expect(prompt).toContain('The details the sign-in carried: mail')
+    expect(prompt).toContain('Asked for and never carried: ubcEduCwlPuid')
+    expect(prompt).not.toMatch(/did not start/)
+    expect(prompt).not.toContain(LIVE.logTail)
+    expect(viewOf(h, id)?.steps[0]).toMatchObject({ key: 'pages', state: 'now' })
+    expect(h.store.latestPlan(id)).toBeUndefined()
+  })
+
+  it("a dry run's fix whose sign-in answered says what the app answered at its sign-in address", async () => {
+    const answered = (h: H) => {
+      const fix = fixingDryRun(h)
+      h.store.addMessage(fix.id, 'we', {
+        kind: 'asked',
+        change: 2,
+        words: "The dry run didn't sign anyone in",
+        fix: {
+          dryRun: {
+            ...DRY_RUN,
+            signInStatus: 500,
+            attributesReleased: ['ubcEduCwlPuid', 'mail'],
+          },
+        },
+      })
+      return fix
+    }
+    const { h } = started({ script: { lead: [] } }, answered)
+    const prompt = await firstPrompt(h)
+    expect(prompt).toContain('What the app answered at its sign-in address: 500')
+    expect(prompt).not.toMatch(/Asked for and never carried/)
   })
 
   it('unread (Review Focus 3): a first move that writes server.js whole is sent back, read it first; read, the same commit is taken', async () => {

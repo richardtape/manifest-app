@@ -47,6 +47,16 @@ export interface LeadView {
       diffSinceHealthy: string
     } | null
     unread: 'confidential' | 'missing' | null
+    /**
+     * F5 Task 7: a dry run on the live setup that signed nobody in, as the page read it: what the
+     * app answered at its sign-in address (null when no sign-in completed), and the details asked
+     * for and carried. No incident: it left none. Null for an incident's fix.
+     */
+    dryRun: {
+      signInStatus: number | null
+      attributesReleased: string[]
+      attributesAsked: string[]
+    } | null
   } | null
 }
 
@@ -161,6 +171,26 @@ function pieceOf(view: LeadView): string[] {
       ...view.change.parts.map((part) => `- ${cut(part, CHANGE_CAP)}`),
       CHANGE_PARAGRAPH,
     ]
+  if (view.fix?.dryRun != null) {
+    const d = view.fix.dryRun
+    const listed = (details: string[]) =>
+      details.length === 0 ? 'none' : details.map((a) => cut(a, FIX_FIELD_CAP)).join(', ')
+    const missing = d.attributesAsked.filter((a) => !d.attributesReleased.includes(a))
+    return [
+      '',
+      'The dry run on the live setup did not sign anyone in, and we are fixing that. It put the app up on its live address with nobody watching, tried one CWL sign-in, and took it down again.',
+      d.signInStatus === null
+        ? 'No sign-in was completed: no signed-in person reached the app at its sign-in address.'
+        : `What the app answered at its sign-in address: ${d.signInStatus}`,
+      `The details its registration asks for: ${listed(d.attributesAsked)}`,
+      `The details the sign-in carried: ${listed(d.attributesReleased)}`,
+      ...(missing.length === 0
+        ? []
+        : [`Asked for and never carried: ${listed(missing)}`]),
+      "Look for what in the app's sign-in would cause that, and change only that.",
+      CHANGE_PARAGRAPH,
+    ]
+  }
   if (view.fix !== null) {
     const incident = view.fix.incident
     const where = view.fix.environment === 'production' ? 'live' : 'trying-out'

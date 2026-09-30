@@ -248,6 +248,7 @@ function stage(
     listEnvironments: answer('listEnvironments', () => fixtures.ENVIRONMENTS),
     listInstances: never,
     listIncidents: never,
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: answer('getLaunchReadiness', () => w.readiness),
     getLaunchRecords: answer('getLaunchRecords', () => fixtures.LAUNCH_RECORDS),
     getEnvironment: never,
@@ -268,6 +269,7 @@ function stage(
   }
   const theirs = {
     startChange: answer('startChange', () => ({ id: 'conv-talk' })),
+    fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: answer('changeForRefusal', () =>
       w.talking === null ? null : { id: w.talking },
     ),

@@ -208,6 +208,7 @@ function stage(start: Partial<World> = {}) {
       environmentId,
       incidents: environmentId === ID.production ? world.incidents : [],
     })),
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: record('getLaunchReadiness', () => world.readiness),
     getLaunchRecords: record('getLaunchRecords', () => ({
       projectId: PROJECT.id,
@@ -274,6 +275,7 @@ function stage(start: Partial<World> = {}) {
       return Promise.resolve(world.fix === null ? null : { id: world.fix })
     },
     agreedRows: () => Promise.resolve(null),
+    fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: () => Promise.resolve(null),
     events: () => new FakeSource(),
   }

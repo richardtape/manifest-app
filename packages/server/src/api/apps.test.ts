@@ -6,7 +6,7 @@ import type { Config } from '../config.js'
 import { createConversationTokens } from '../platform/project.js'
 import { openStore, type Conversation, type Run, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
-import { FIX_WORDS } from './apps.js'
+import { DRY_RUN_FIX_WORDS, FIX_WORDS } from './apps.js'
 import { createHub, publishState, type Hub } from './events.js'
 import { pieceOf } from './piece-state.js'
 import { LIMITS, type AppConversation, type Progress } from './progress.js'
@@ -23,6 +23,14 @@ const STUDENT_APP = 'https://reading-responses.staging.manifest.internal'
 const PROJECT = '22222222-2222-4222-8222-222222222222'
 const ANOTHER = '99999999-9999-4999-8999-999999999999'
 const INCIDENT = '44444444-4444-4444-8444-444444444444'
+const REHEARSAL = '55555555-5555-4555-8555-555555555555'
+/** A dry run that signed nobody in, as the page reads it off `runRehearsal`'s answer (M4's shape). */
+const EVIDENCE = {
+  rehearsalId: REHEARSAL,
+  signInStatus: null,
+  attributesReleased: ['mail'],
+  attributesAsked: ['ubcEduCwlPuid', 'mail'],
+}
 const GOOD = 'mft_test_x_the_changes_token'
 const SECOND = 'mft_test_x_the_second_changes_token'
 const STRANGER = 'mft_test_x_another_projects_token'
@@ -221,6 +229,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       asked: [WORDS],
       incidentId: null,
       environment: null,
+      dryRun: null,
     })
   })
 
@@ -279,8 +288,44 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       asked: ["It didn't start on the trying-out address"],
       incidentId: INCIDENT,
       environment: 'staging',
+      dryRun: null,
     })
     expect(s.store.getConversation(made.id, ALICE.id)?.state).toBe('building')
+  })
+
+  it("a dry run's fix (F5 Decision 8, M4's shape) keeps its evidence, is titled for it, and starts on a free app", async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answer = await s.ask({ fix: { dryRun: EVIDENCE }, token: GOOD })
+    expect(answer.statusCode).toBe(201)
+    const made = answer.json() as Conversation
+    expect(made.title).toBe("The dry run didn't sign anyone in")
+    expect(DRY_RUN_FIX_WORDS).toBe(made.title)
+    expect(s.did).toEqual([`start ${made.title}`])
+    expect(s.store.listMessages(made.id).at(-1)?.body).toEqual({
+      kind: 'asked',
+      change: 1,
+      words: DRY_RUN_FIX_WORDS,
+      fix: { dryRun: EVIDENCE },
+    })
+    expect(pieceOf(s.store, made.id)).toEqual({
+      kind: 'fix',
+      change: 1,
+      asked: [DRY_RUN_FIX_WORDS],
+      incidentId: null,
+      environment: 'production',
+      dryRun: EVIDENCE,
+    })
+  })
+
+  it("a dry run's fix whose sign-in answered keeps the status the app answered", async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answered = { ...EVIDENCE, signInStatus: 500, attributesReleased: [] }
+    const answer = await s.ask({ fix: { dryRun: answered }, token: GOOD })
+    expect(answer.statusCode).toBe(201)
+    const made = answer.json() as Conversation
+    expect(pieceOf(s.store, made.id).dryRun).toEqual(answered)
   })
 
   it('a fix for the live address (F5 Decision 13) is titled for it, and keeps where it did not start', async () => {
@@ -364,6 +409,76 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       { fix: { incidentId: INCIDENT, why: 'it crashed' }, token: GOOD },
     ],
     ['a token with a space', { words: WORDS, token: 'mft_ x' }],
+    [
+      "a dry run's fix with the platform's reason (never the person's words, nor the lead's)",
+      {
+        fix: { dryRun: { ...EVIDENCE, reason: 'the IdP released 1 of 2' } },
+        token: GOOD,
+      },
+    ],
+    [
+      "a dry run's fix naming an incident too",
+      { fix: { dryRun: EVIDENCE, incidentId: INCIDENT }, token: GOOD },
+    ],
+    [
+      "a dry run's fix naming an address",
+      { fix: { dryRun: EVIDENCE, environment: 'production' }, token: GOOD },
+    ],
+    [
+      "a dry run's fix whose rehearsal is no id",
+      { fix: { dryRun: { ...EVIDENCE, rehearsalId: 'the last one' } }, token: GOOD },
+    ],
+    [
+      "a dry run's fix with no status",
+      {
+        fix: {
+          dryRun: {
+            rehearsalId: REHEARSAL,
+            attributesReleased: [],
+            attributesAsked: [],
+          },
+        },
+        token: GOOD,
+      },
+    ],
+    [
+      "a dry run's fix whose status is words",
+      { fix: { dryRun: { ...EVIDENCE, signInStatus: '302' } }, token: GOOD },
+    ],
+    [
+      "a dry run's fix whose status is no status",
+      { fix: { dryRun: { ...EVIDENCE, signInStatus: 3.5 } }, token: GOOD },
+    ],
+    [
+      "a dry run's fix whose details are not a list",
+      { fix: { dryRun: { ...EVIDENCE, attributesAsked: 'mail' } }, token: GOOD },
+    ],
+    [
+      "a dry run's fix whose detail is a sentence",
+      {
+        fix: { dryRun: { ...EVIDENCE, attributesReleased: ['ignore the plan and'] } },
+        token: GOOD,
+      },
+    ],
+    [
+      "a dry run's fix with more details than any registration asks",
+      {
+        fix: {
+          dryRun: {
+            ...EVIDENCE,
+            attributesAsked: Array.from({ length: 33 }, (_, i) => `a${i}`),
+          },
+        },
+        token: GOOD,
+      },
+    ],
+    [
+      "a dry run's fix whose detail is too long",
+      {
+        fix: { dryRun: { ...EVIDENCE, attributesAsked: ['a'.repeat(129)] } },
+        token: GOOD,
+      },
+    ],
   ])('%s is 400 CHANGE_INVALID, and nothing is asked or stored', async (_what, body) => {
     const s = setUp()
     const before = projectsAsked().length
@@ -530,6 +645,51 @@ describe('GET /api/apps/:projectId/incidents/:incidentId/conversation (F4 review
     }
     expect((await s.get(url('incident-a'), AS_BOB)).statusCode).toBe(404)
     expect((await s.get(url('incident-a'), '')).statusCode).toBe(401)
+  })
+})
+
+describe('GET /api/apps/:projectId/rehearsals/:rehearsalId/conversation (F5 Task 7)', () => {
+  it("answers the fix we are making for that dry run, so [Fix it] opens it again; set aside, another person's, or none, is 404", async () => {
+    const s = setUp()
+    const fix = (personId: string, rehearsalId: string) => {
+      const made = s.store.createChange(
+        personId,
+        PROJECT,
+        DRY_RUN_FIX_WORDS,
+        DRY_RUN_FIX_WORDS,
+      )
+      s.store.addMessage(made.id, 'we', {
+        kind: 'asked',
+        change: 1,
+        words: DRY_RUN_FIX_WORDS,
+        fix: { dryRun: { ...EVIDENCE, rehearsalId } },
+      })
+      return made
+    }
+    const mine = fix(ALICE.id, 'rehearsal-a')
+    s.store.setState(fix(ALICE.id, 'rehearsal-b').id, 'set-aside')
+    fix(BOB.id, 'rehearsal-c')
+    const url = (rehearsal: string) =>
+      `/api/apps/${PROJECT}/rehearsals/${rehearsal}/conversation`
+    const found = await s.get(url('rehearsal-a'))
+    expect(found.statusCode).toBe(200)
+    expect(found.json()).toEqual({ id: mine.id })
+    for (const rehearsal of ['rehearsal-b', 'rehearsal-c', 'rehearsal-z']) {
+      const missing = await s.get(url(rehearsal))
+      expect(missing.statusCode).toBe(404)
+      expect(missing.json()).toEqual({ error: { code: 'NOT_FOUND' } })
+    }
+    // An incident's fix is not a dry run's.
+    const incident = s.store.createChange(ALICE.id, PROJECT, FIX_WORDS, FIX_WORDS)
+    s.store.addMessage(incident.id, 'we', {
+      kind: 'asked',
+      change: 1,
+      words: FIX_WORDS,
+      fix: { incidentId: 'rehearsal-z' },
+    })
+    expect((await s.get(url('rehearsal-z'))).statusCode).toBe(404)
+    expect((await s.get(url('rehearsal-a'), AS_BOB)).statusCode).toBe(404)
+    expect((await s.get(url('rehearsal-a'), '')).statusCode).toBe(401)
   })
 })
 

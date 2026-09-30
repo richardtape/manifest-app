@@ -751,7 +751,7 @@ describe("the lead's view (Decision 3)", () => {
   it('a fix round: what the platform recorded where it did not start, and the change paragraph', () => {
     const user = said({
       ...view([]),
-      fix: { environment: 'staging', incident: INCIDENT, unread: null },
+      fix: { environment: 'staging', incident: INCIDENT, unread: null, dryRun: null },
     })
     expect(user).toMatch(/did not start on the trying-out address/)
     for (const value of Object.values(INCIDENT)) expect(user).toContain(value)
@@ -761,7 +761,7 @@ describe("the lead's view (Decision 3)", () => {
   it('a fix of a start on the live address says the live address, never trying-out (F5 Decision 13)', () => {
     const user = said({
       ...view([]),
-      fix: { environment: 'production', incident: INCIDENT, unread: null },
+      fix: { environment: 'production', incident: INCIDENT, unread: null, dryRun: null },
     })
     expect(user).toMatch(/did not start on the live address/)
     expect(user).not.toMatch(/trying-out/)
@@ -769,7 +769,12 @@ describe("the lead's view (Decision 3)", () => {
     expect(user).toContain(CHANGE_PARAGRAPH)
     const unread = said({
       ...view([]),
-      fix: { environment: 'production', incident: null, unread: 'confidential' },
+      fix: {
+        environment: 'production',
+        incident: null,
+        unread: 'confidential',
+        dryRun: null,
+      },
     })
     expect(unread).toMatch(/did not start on the live address/)
     expect(unread).toMatch(/cannot read why/i)
@@ -779,12 +784,39 @@ describe("the lead's view (Decision 3)", () => {
   it("a fix whose record the platform keeps to the person (a confidential app's): only that it did not start, and why we cannot read it", () => {
     const user = said({
       ...view([]),
-      fix: { environment: 'staging', incident: null, unread: 'confidential' },
+      fix: {
+        environment: 'staging',
+        incident: null,
+        unread: 'confidential',
+        dryRun: null,
+      },
     })
     expect(user).toMatch(/did not start on the trying-out address/)
     expect(user).toMatch(/cannot read why/i)
     expect(user).toMatch(/confidential/)
     expect(user).not.toMatch(/exited|readiness/)
+  })
+
+  it("a dry run's fix: what the sign-in answered, the details asked for and carried, and never that it did not start (F5 Task 7)", () => {
+    const user = said({
+      ...view([]),
+      fix: {
+        environment: 'production',
+        incident: null,
+        unread: null,
+        dryRun: {
+          signInStatus: null,
+          attributesReleased: [],
+          attributesAsked: ['ubcEduCwlPuid', 'mail'],
+        },
+      },
+    })
+    expect(user).toMatch(/dry run on the live setup did not sign anyone in/)
+    expect(user).toMatch(/No sign-in was completed/)
+    expect(user).toContain('The details the sign-in carried: none')
+    expect(user).toContain('Asked for and never carried: ubcEduCwlPuid, mail')
+    expect(user).not.toMatch(/did not start|cannot read why/)
+    expect(user).toContain(CHANGE_PARAGRAPH)
   })
 
   it('a first round has no change and no fix, and no change paragraph', () => {
@@ -804,6 +836,7 @@ describe("the lead's view (Decision 3)", () => {
         environment: 'production',
         incident: { ...INCIDENT, logTail: huge, prompt: huge, diffSinceHealthy: huge },
         unread: null,
+        dryRun: null,
       },
     }
     const messages = [

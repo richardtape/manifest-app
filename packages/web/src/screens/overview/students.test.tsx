@@ -125,6 +125,7 @@ function stage(world: Partial<World> = {}) {
       environmentId,
       incidents: [],
     })),
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: answer('getLaunchReadiness', () => ({
       ...fixtures.LAUNCH_READINESS,
       launched: w.launched,

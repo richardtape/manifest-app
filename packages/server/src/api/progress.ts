@@ -292,3 +292,17 @@ export type Progress =
    * allowance says whose it is and when it resets (Rich).
    */
   | { kind: 'refusal'; code: string; reference: string; allowance?: Allowance }
+
+/**
+ * A DRY RUN THAT SIGNED NOBODY IN (F5 Decision 8, M4's shape), as the page read it off
+ * `runRehearsal`'s answer: the rehearsal, what the app answered at its sign-in address (null when
+ * no sign-in completed), and the details the registration asked for and the sign-in carried. The
+ * page's, so context for the lead and never trusted for anything else; never the platform's
+ * `reason`, which is refused.
+ */
+export interface DryRunEvidence {
+  rehearsalId: string
+  signInStatus: number | null
+  attributesReleased: string[]
+  attributesAsked: string[]
+}

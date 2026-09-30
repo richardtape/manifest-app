@@ -208,6 +208,7 @@ function stage(
     deploy: () => new Promise(() => undefined),
     listAppSecrets: () => new Promise(() => undefined),
     setAppSecret: () => new Promise(() => undefined),
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: () => new Promise(() => undefined),
     getLaunchRecords: () => new Promise(() => undefined),
     getApproval: () => new Promise(() => undefined),
@@ -262,6 +263,7 @@ function stage(
     askedSecrets: () => new Promise(() => undefined),
     fixFor: () => new Promise(() => undefined),
     agreedRows: () => new Promise(() => undefined),
+    fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: () => new Promise(() => undefined),
     events: () => {
       const source = new FakeSource()

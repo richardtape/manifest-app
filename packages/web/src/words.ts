@@ -658,6 +658,8 @@ export const words = {
       team: 'the Manifest team',
       /** Ours: a sign-off refused; what follows is theirs to start (Task 8). */
       you: 'you',
+      /** ✓ The dry run's (the walk-through's table, moment 12). */
+      youStart: 'you start it; minutes',
     },
     /** Each row: a name (ours) and a sentence per state (the walk-through's, and S1's). */
     rows: {
@@ -674,9 +676,9 @@ export const words = {
       },
       rehearsal: {
         name: 'A dry run on the live setup',
-        /** S1, FE-42 (Rich: "Both: row now, ask platform"): an administrator's, with no button. */
-        unmet:
-          'A Manifest administrator runs it. Manifest doesn’t tell them yet that it’s waiting.',
+        /** ✓ The walk-through's sentence: theirs to start (FE-42 (a); Rich: "Build it now"). */
+        yours:
+          'We put it up with nobody watching, check it answers and signs someone in, then take it down.',
         met: 'Done. It answered and signed someone in on the live setup.',
       },
       loadRehearsal: {
@@ -796,6 +798,35 @@ export const words = {
         'We stopped waiting, and couldn’t see how it ended. The Overview shows whether it’s live.',
       /** Ours: the fix conversation's title (our server's LIVE_FIX_WORDS). */
       fixTitle: "It didn't start on the live address",
+    },
+    /**
+     * MOMENT 12, THE DRY RUN PRESSED (F5 Task 7, Decision 8): the walk-through's words and the
+     * plan's (*Words proposed for Rich*, ✓), and ours where neither has any, marked (S6).
+     */
+    dryRun: {
+      button: 'Run the dry run',
+      /**
+       * ✓ While it runs. The plan's "About a minute and a half." is left out (S6): measured, it
+       * takes seconds (S1: M4).
+       */
+      running: 'Putting it up with nobody watching, signing someone in, taking it down.',
+      /** ✓ Measured true (S1: M4): it carries on when its caller goes. */
+      leave: 'You can leave: it carries on.',
+      /** ✓ It signed nobody in: one sentence for every failure, none measured (S1: M4). */
+      failed: 'It didn’t sign anyone in on the live setup.',
+      /** ✓ */
+      fixIt: 'Fix it',
+      /** ✓ REHEARSAL_DEPLOY_FAILED: its start never answered. */
+      didntStart: 'It didn’t start on the live setup.',
+      /** ✓ Our deadline, not its answer (Review Focus 3). */
+      unsure:
+        'We stopped waiting, but it may still finish. This row updates when it does.',
+      /** (S6) Ours: our deadline, and five minutes of reads without the row moving. */
+      unsureLong: 'We couldn’t see how it ended. You can run it again.',
+      /** (S6) Ours: the platform's 5b take-down refused (REHEARSAL_TEARDOWN_FAILED, proposed). */
+      teardown: 'It ran, but didn’t finish taking itself down. Run it again.',
+      /** ✓ The fix conversation's title (our server's DRY_RUN_FIX_WORDS). */
+      fixTitle: "The dry run didn't sign anyone in",
     },
   },
   /**

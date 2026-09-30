@@ -56,6 +56,7 @@ function platform(
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    runRehearsal: never,
     getLaunchReadiness: (answers.getLaunchReadiness ??
       never) as Platform['getLaunchReadiness'],
     getLaunchRecords: (answers.getLaunchRecords ?? never) as Platform['getLaunchRecords'],

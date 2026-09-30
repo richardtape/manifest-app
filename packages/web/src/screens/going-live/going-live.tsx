@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import { linkTo, remember } from '../../router.js'
+import { linkTo, remember, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { rowsOf, type Row } from './checklist.js'
@@ -157,17 +157,22 @@ export function GoingLive({
   expire: () => void
   now?: () => Date
   timeZone?: string | undefined
-  /** `live` when the step-up sent them back to finish letting their students in (Decision 10). */
-  then?: 'live' | null
+  /**
+   * Where the step-up sent them back to: `live` to finish letting their students in (Decision 10),
+   * `dry-run` to run the dry run (Task 7, Spec action 8 (b)).
+   */
+  then?: Then
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
   // BACK FROM SIGNING IN AGAIN: said once, and `then` taken out of the address without a
   // navigation (the focus stays put), so a reload is not "back" again.
   const [back] = useState(then === 'live')
+  const [backToDryRun] = useState(then === 'dry-run')
   useEffect(() => {
-    if (back) remember(`/apps/${encodeURIComponent(project.slug)}/going-live`)
-  }, [back, project.slug])
+    if (back || backToDryRun)
+      remember(`/apps/${encodeURIComponent(project.slug)}/going-live`)
+  }, [back, backToDryRun, project.slug])
   // PRESSED IN THIS PAGE: the card that let them in stays, whatever the page reads meanwhile,
   // until it ends in its own words (a launch heard mid-press never unmounts it).
   const [pressed, setPressed] = useState(false)
@@ -235,6 +240,8 @@ export function GoingLive({
     if (hold) setGate(null)
   }, [])
   const onLanded = useCallback(() => setHeard(true), [])
+  // The dry run's answer moved the checklist: read it again, quietly.
+  const onRan = useCallback(() => setAttempt((n) => n + 1), [])
 
   const slug = encodeURIComponent(project.slug)
   const tryingOut = `/apps/${slug}/preview?tab=trying-out`
@@ -301,7 +308,17 @@ export function GoingLive({
           tryingOut={tryingOut}
           job={(row) =>
             row.id === 'rehearsal' ? (
-              <DryRun key={row.id} row={row} />
+              <DryRun
+                key={row.id}
+                row={row}
+                platform={platform}
+                ours={ours}
+                project={project}
+                production={seen.production}
+                back={backToDryRun}
+                expire={expire}
+                onRan={onRan}
+              />
             ) : row.id === 'admin-approval' ? (
               <SignOff
                 key={row.id}

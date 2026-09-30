@@ -303,6 +303,48 @@ describe('Talk it through (F5 Task 8, the final review’s I1)', () => {
   })
 })
 
+describe('the dry run’s fix (F5 Task 7)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const REHEARSAL = '66666666-6666-4666-8666-666666666666'
+  const dryRun = {
+    rehearsalId: REHEARSAL,
+    signInStatus: null,
+    attributesReleased: ['mail'],
+    attributesAsked: ['ubcEduCwlPuid', 'mail'],
+  }
+  it('startChange sends what the dry run saw, and the token, in one request', async () => {
+    const fetch = vi.fn(
+      async () => new Response(JSON.stringify({ id: 'c-1' }), { status: 201 }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    await createOurs().startChange(PROJECT, { fix: { dryRun }, token: 'mft_x' })
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect([url, JSON.parse(String(init.body))]).toEqual([
+      `/api/apps/${PROJECT}/conversations`,
+      { fix: { dryRun }, token: 'mft_x' },
+    ])
+  })
+
+  it('fixForDryRun answers the fix already under way for it, or null (404)', async () => {
+    const fetch = vi.fn(
+      async () => new Response(JSON.stringify({ id: 'c-8' }), { status: 200 }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    expect(await createOurs().fixForDryRun(PROJECT, REHEARSAL)).toEqual({ id: 'c-8' })
+    expect((fetch.mock.calls[0] as unknown as [string])[0]).toBe(
+      `/api/apps/${PROJECT}/rehearsals/${REHEARSAL}/conversation`,
+    )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: { code: 'NOT_FOUND' } }), { status: 404 }),
+      ),
+    )
+    expect(await createOurs().fixForDryRun(PROJECT, REHEARSAL)).toBeNull()
+  })
+})
+
 describe('agreedRows: the hand-over’s two rows (F5 Task 9)', () => {
   const PROJECT = '22222222-2222-4222-8222-222222222222'
   it('asks our server for the plan agreed by the moment the version live was made, and answers its two rows', async () => {

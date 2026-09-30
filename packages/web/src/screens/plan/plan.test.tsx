@@ -119,6 +119,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
@@ -164,6 +165,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     askedSecrets: never,
     fixFor: never,
     agreedRows: never,
+    fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: never,
     events: () => {
       const source = new FakeSource()

@@ -1,5 +1,9 @@
 import type { Schemas } from '@manifest/contract'
-import type { AppConversation, Conversation } from '@manifest-app/server/progress'
+import type {
+  AppConversation,
+  Conversation,
+  DryRunEvidence,
+} from '@manifest-app/server/progress'
 
 /**
  * OUR OWN API (`/api/*`), FROM THE PAGE: this file is its one caller, as src/platform/ is
@@ -172,7 +176,9 @@ export interface Ours {
       /** F5 Task 8: *[Talk it through]*, answering an administrator's refusal. */
       | { words: string; token: string; refusal: { approvalId: string } }
       /** A fix of ours: absent `environment` is trying-out's (F4); the live address's says so. */
-      | { fix: { incidentId: string; environment?: 'production' }; token: string },
+      | { fix: { incidentId: string; environment?: 'production' }; token: string }
+      /** F5 Task 7: a dry run that signed nobody in, and what it saw. */
+      | { fix: { dryRun: DryRunEvidence }; token: string },
   ): Promise<Conversation>
   /** The person's conversations on the app, newest first, each where it left off. */
   conversationsOn(projectId: string): Promise<AppConversation[]>
@@ -193,6 +199,11 @@ export interface Ours {
    * none, null. So *[Talk it through]* pressed again opens it (F5 Task 8, the final review's I1).
    */
   changeForRefusal(projectId: string, approvalId: string): Promise<{ id: string } | null>
+  /**
+   * The fix we are already making for this dry run, unless it was set aside; none, null. So
+   * *[Fix it]* pressed again opens it (F5 Task 7).
+   */
+  fixForDryRun(projectId: string, rehearsalId: string): Promise<{ id: string } | null>
   /**
    * F5 TASK 9, THE HAND-OVER: *What students see* and *Who gets in* from the plan the person last
    * agreed on the app **by `before`, when the version live was made** (the final review's I2: a
@@ -299,6 +310,18 @@ export function createOurs(): Ours {
         const found = (await call(
           'GET',
           `/api/apps/${encodeURIComponent(projectId)}/refusals/${encodeURIComponent(approvalId)}/conversation`,
+        )) as { id?: unknown } | undefined
+        return typeof found?.id === 'string' ? { id: found.id } : null
+      } catch (error) {
+        if (error instanceof OurRefusal && error.status === 404) return null
+        throw error
+      }
+    },
+    fixForDryRun: async (projectId, rehearsalId) => {
+      try {
+        const found = (await call(
+          'GET',
+          `/api/apps/${encodeURIComponent(projectId)}/rehearsals/${encodeURIComponent(rehearsalId)}/conversation`,
         )) as { id?: unknown } | undefined
         return typeof found?.id === 'string' ? { id: found.id } : null
       } catch (error) {

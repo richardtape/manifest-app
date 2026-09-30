@@ -8,7 +8,7 @@ import type { Conversation, Run, Store } from '../store/db.js'
 import type { Hub } from './events.js'
 import { guard } from './guard.js'
 import { lineOf, waitsOnPerson } from './line-state.js'
-import type { Asked } from './piece-state.js'
+import type { Asked, DryRunEvidence } from './piece-state.js'
 import { LIMITS, type AppConversation, type Chip } from './progress.js'
 
 /**
@@ -33,20 +33,54 @@ const TITLE = 60
 export const FIX_WORDS = "It didn't start on the trying-out address"
 /** A fix for a start on the live address (F5 Decision 13; Words proposed for Rich). */
 export const LIVE_FIX_WORDS = "It didn't start on the live address"
+/** A fix for a dry run that signed nobody in (F5 Task 7; Words proposed for Rich, S1: M4). */
+export const DRY_RUN_FIX_WORDS = "The dry run didn't sign anyone in"
+/**
+ * A detail a sign-in carries, as the platform names one (`mail`, `ubcEduCwlPuid`, an `urn:oid:`):
+ * never a sentence, since the page's evidence reaches the lead's view.
+ */
+const DETAIL = /^[A-Za-z0-9._:-]{1,128}$/
+/** More than any registration asks for. */
+const DETAILS = 32
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
+const isDetails = (value: unknown): value is string[] =>
+  Array.isArray(value) &&
+  value.length <= DETAILS &&
+  value.every((d) => typeof d === 'string' && DETAIL.test(d))
+
 /**
- * `{ words, token }`, `{ words, token, refusal: { approvalId } }` (*[Talk it through]*: F5 Task 8)
- * or `{ fix: { incidentId, environment? }, token }` (`staging` when absent, as F4's; `production`
- * for the live address: F5 Decision 13), and nothing else.
+ * A dry run's evidence, exactly its four fields (F5 Task 7): the page's, so held to its shape, and
+ * never the platform's `reason`.
+ */
+function dryRunOf(value: unknown): DryRunEvidence | undefined {
+  if (!isObject(value) || Object.keys(value).length !== 4) return undefined
+  const { rehearsalId, signInStatus, attributesReleased, attributesAsked } = value
+  if (typeof rehearsalId !== 'string' || !ID.test(rehearsalId)) return undefined
+  if (signInStatus !== null && !Number.isInteger(signInStatus)) return undefined
+  if (!isDetails(attributesReleased) || !isDetails(attributesAsked)) return undefined
+  return {
+    rehearsalId,
+    signInStatus: signInStatus as number | null,
+    attributesReleased,
+    attributesAsked,
+  }
+}
+
+/**
+ * `{ words, token }`, `{ words, token, refusal: { approvalId } }` (*[Talk it through]*: F5 Task 8),
+ * `{ fix: { incidentId, environment? }, token }` (`staging` when absent, as F4's; `production`
+ * for the live address: F5 Decision 13) or `{ fix: { dryRun }, token }` (F5 Task 7), and nothing
+ * else.
  */
 function changeOf(
   body: unknown,
 ):
   | { words: string; token: string; refusal: { approvalId: string } | null }
   | { incidentId: string; environment: FixEnvironment; token: string }
+  | { dryRun: DryRunEvidence; token: string }
   | undefined {
   if (!isObject(body)) return undefined
   const keys = Object.keys(body).length
@@ -69,6 +103,11 @@ function changeOf(
   if (keys !== 2) return undefined
   const { fix } = body
   if (!isObject(fix)) return undefined
+  if ('dryRun' in fix) {
+    if (Object.keys(fix).length !== 1) return undefined
+    const dryRun = dryRunOf(fix['dryRun'])
+    return dryRun === undefined ? undefined : { dryRun, token }
+  }
   const { incidentId, environment = 'staging' } = fix
   if (Object.keys(fix).length !== ('environment' in fix ? 2 : 1)) return undefined
   if (typeof incidentId !== 'string' || !ID.test(incidentId)) return undefined
@@ -163,9 +202,11 @@ export function registerApps(
       const words =
         'words' in asked
           ? asked.words
-          : asked.environment === 'production'
-            ? LIVE_FIX_WORDS
-            : FIX_WORDS
+          : 'dryRun' in asked
+            ? DRY_RUN_FIX_WORDS
+            : asked.environment === 'production'
+              ? LIVE_FIX_WORDS
+              : FIX_WORDS
       const change = store.createChange(who.person.id, projectId, titleOf(words), words)
       store.addMessage(change.id, 'we', { kind: 'project', project: made })
       store.addMessage(change.id, 'words' in asked ? 'person' : 'we', {
@@ -176,9 +217,11 @@ export function registerApps(
         fix:
           'words' in asked
             ? null
-            : asked.environment === 'production'
-              ? { incidentId: asked.incidentId, environment: 'production' }
-              : { incidentId: asked.incidentId },
+            : 'dryRun' in asked
+              ? { dryRun: asked.dryRun }
+              : asked.environment === 'production'
+                ? { incidentId: asked.incidentId, environment: 'production' }
+                : { incidentId: asked.incidentId },
         ...('words' in asked && asked.refusal !== null ? { refusal: asked.refusal } : {}),
       } satisfies Asked)
       tokens.put(change.id, asked.token)
@@ -276,6 +319,20 @@ export function registerApps(
       if (who === undefined) return reply
       const { projectId, approvalId } = request.params
       const id = store.changeForRefusal(projectId, approvalId, who.person.id)
+      if (id === undefined) return refuse(reply, 404, 'NOT_FOUND')
+      return { id }
+    },
+  )
+
+  // [FIX IT] AGAIN (F5 Task 7): the fix we are already making for this dry run, so the press opens
+  // it rather than starting a second. One set aside is not under way.
+  app.get<{ Params: { projectId: string; rehearsalId: string } }>(
+    '/api/apps/:projectId/rehearsals/:rehearsalId/conversation',
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      const { projectId, rehearsalId } = request.params
+      const id = store.fixForDryRun(projectId, rehearsalId, who.person.id)
       if (id === undefined) return refuse(reply, 404, 'NOT_FOUND')
       return { id }
     },

@@ -157,6 +157,7 @@ function stage(
     deploy: never,
     listAppSecrets: never,
     setAppSecret: never,
+    runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
