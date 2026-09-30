@@ -23,6 +23,11 @@ type Seen = {
   rows: Row[]
   /** The candidate's sign-off, for *[Talk it through]*'s words (Task 8). */
   decided: Decided
+  /**
+   * The checklist's own word that the app has launched: the App reads the project once per slug,
+   * so a launch since (another tab; Task 10's press) is known here first (sitting 3's minor).
+   */
+  launched: boolean
 }
 type Loaded =
   | { state: 'loading' }
@@ -104,6 +109,7 @@ async function read(
       timeZone,
     }),
     decided,
+    launched: readiness.launched,
   }
 }
 
@@ -130,10 +136,11 @@ export function GoingLive({
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
-  const launched = (project.launchedAt ?? null) !== null
+  const known = (project.launchedAt ?? null) !== null
+  const launched = known || (loaded.state === 'ready' && loaded.seen.launched)
 
   useEffect(() => {
-    if (launched) return
+    if (known) return
     let live = true
     read(platform, project, now(), timeZone).then(
       (seen) => live && setLoaded({ state: 'ready', seen }),
@@ -148,7 +155,7 @@ export function GoingLive({
       live = false
     }
     // `now` is a clock, read once per attempt: never a reason to read again.
-  }, [platform, project, timeZone, expire, attempt, launched])
+  }, [platform, project, timeZone, expire, attempt, known])
 
   const retry = useCallback(() => {
     setLoaded({ state: 'loading' })

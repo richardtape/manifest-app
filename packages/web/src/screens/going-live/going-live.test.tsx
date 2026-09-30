@@ -359,4 +359,18 @@ describe('an app already launched (Decision 2, Review Focus 5)', () => {
     expect(clocks()).toHaveLength(0)
     expect(screen.queryByRole('region', { name: g.shortJobs.title })).toBeNull()
   })
+
+  it('launched since the App read the project (sitting 3’s carried minor): the checklist says so, and so does the page', async () => {
+    await open(
+      stage({
+        launchedAt: null,
+        readiness: { ...fixtures.LAUNCH_READINESS, launched: true },
+      }),
+    )
+    expect(await screen.findByText(g.live)).toBeTruthy()
+    expect(screen.getByRole('link', { name: g.toOverview })).toBeTruthy()
+    expect(clocks()).toHaveLength(0)
+    expect(screen.queryByRole('region', { name: g.shortJobs.title })).toBeNull()
+    expect(screen.queryByText(g.lead)).toBeNull()
+  })
 })
