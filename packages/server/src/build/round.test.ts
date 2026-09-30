@@ -218,6 +218,11 @@ interface Options {
   ) => Incident | 'confidential' | undefined
   /** Why the platform ended each session (its index), when it did: models_withdrawn (FE-36). */
   endReason?: (n: number) => string | null
+  /**
+   * What each session's key holds now, when the platform narrowed it in place (its sitting 5,
+   * `d061ad7`): undefined is what it started with.
+   */
+  narrowed?: (n: number) => string[] | undefined
   /** The round's model itself, in place of the script: the real client over a fake gateway (F5 Task 2). */
   modelFor?: RoundDeps['modelFor']
 }
@@ -275,6 +280,9 @@ function harness(options: Options, file?: string, store0?: Store) {
         id: `${options.sessionIds ?? 'session'}-${i + 1}`,
         spentUsd: options.spent?.[i] === undefined ? 0.1 : options.spent[i]!,
         endReason: options.endReason?.(i) ?? null,
+        models: options.narrowed?.(i) ??
+          options.modelsOf?.(i) ??
+          options.models ?? ['default-chat', 'default-chat-large', 'default-embed'],
       })),
   }
 
@@ -2321,6 +2329,46 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     await untilStatus(h, id, 'done')
     expect(h.sessionStarts).toHaveLength(3)
     expect(h.models.at(-1)?.model).toBe('default-chat-onprem')
+  })
+
+  it('a model narrowed away from the live session (the platform’s sitting 5): never "waiting on an administrator"; renewed once, and with it gone, stop and ask first (Rich), then on what the app allows', async () => {
+    const ONPREM = [
+      'default-chat-onprem',
+      'default-chat-onprem-reasoning',
+      'default-embed',
+    ]
+    const { h, id, conversation } = started({
+      script: {
+        lead: [
+          new ModelError('MODEL_NOT_AVAILABLE', 403),
+          read('server.js'),
+          commit(),
+          done(),
+        ],
+      },
+      narrowed: (n) => (n === 0 ? ONPREM : undefined),
+      modelsOf: (n) =>
+        n === 0 ? ['default-chat', 'default-chat-large', 'default-embed'] : ONPREM,
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)).toMatchObject({ needs: { kind: 'withdrawn' }, reference: null })
+    expect(h.sessionStarts).toHaveLength(2)
+    h.rounds.carryOn(h.store.getConversation(conversation.id, ALICE.id)!, TOKEN)
+    await untilStatus(h, id, 'done')
+    expect(h.models.at(-1)?.model).toBe('default-chat-onprem')
+  })
+
+  it('a model refused while the key still holds it is not a narrowing: the refusal stands', async () => {
+    const { h, id } = started({
+      script: { lead: [new ModelError('MODEL_NOT_AVAILABLE', 403)] },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toMatchObject({
+      kind: 'refused',
+      code: 'MODEL_NOT_AVAILABLE',
+    })
+    expect(h.sessionStarts).toHaveLength(1)
   })
 
   it('a key refused with no such reason (its clock ran out) is still the checkpoint', async () => {

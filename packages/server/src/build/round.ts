@@ -1286,12 +1286,30 @@ export function createRounds(deps: RoundDeps): Rounds {
     return listed.some((s) => s.id === id && s.endReason === 'models_withdrawn')
   }
 
+  /**
+   * Whether our model was narrowed away from this leg's live session (the platform's sitting 5,
+   * `d061ad7`): the key lives on and refuses it alone, with the gateway's `403`. That is a
+   * withdrawal as FE-36's was, never an administrator's wait.
+   */
+  async function narrowedAway(live: Live): Promise<boolean> {
+    const id = live.session?.id ?? live.run.sessionIds.at(-1)
+    const model = live.run.model
+    if (id === undefined || model === null) return false
+    const listed = await sessions.list(live.token, live.projectId).catch(() => [])
+    const mine = listed.find((s) => s.id === id)
+    return mine !== undefined && !mine.models.includes(model)
+  }
+
   /** What a refusal nobody in the round answered means for the person. */
   async function fromError(live: Live, error: unknown): Promise<Ending> {
     if (error instanceof ModelError) {
       if (error.code === 'MODEL_KEY_REFUSED' && (await withdrawn(live)))
         // FE-36: the platform ended it (the app's data is now confidential). Rich: stop and ask
         // first; Carry on starts a new session, on what the app now allows.
+        return needs({ kind: 'withdrawn' })
+      // The platform's sitting 5: it narrows the key instead, and our model alone is refused. The
+      // same withdrawal, renewed once like it (a new session that still lists it carries on).
+      if (error.code === 'MODEL_NOT_AVAILABLE' && (await narrowedAway(live)))
         return needs({ kind: 'withdrawn' })
       if (error.code === 'MODEL_BUDGET_EXHAUSTED' || error.code === 'MODEL_KEY_REFUSED') {
         // The gateway's 429 is the session's cap or the month alike; an expired key is the

@@ -33,12 +33,16 @@ export interface AgentSessions {
   end(token: string, sessionId: string): Promise<void>
   /**
    * Each of the project's sessions, what it has spent (`null` when the gateway did not say, F3
-   * Decision 14), and why the platform ended it, if it did (`models_withdrawn`: FE-36).
+   * Decision 14), why the platform ended it, if it did (`models_withdrawn`: FE-36), and the models
+   * its key holds now: the platform narrows a live key in place when the project stops allowing
+   * one (its sitting 5, `d061ad7`).
    */
   list(
     token: string,
     projectId: string,
-  ): Promise<{ id: string; spentUsd: number | null; endReason: string | null }[]>
+  ): Promise<
+    { id: string; spentUsd: number | null; endReason: string | null; models: string[] }[]
+  >
 }
 
 /**
@@ -119,6 +123,7 @@ export function platformAgentSessions(origin: string): AgentSessions {
           id: session.id,
           spentUsd: session.spentUsd,
           endReason: session.endReason ?? null,
+          models: session.models,
         })),
       ),
     end: (token, sessionId) =>

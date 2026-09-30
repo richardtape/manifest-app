@@ -864,10 +864,34 @@ describe('agent sessions, with their cap and their clock (Decision 9)', () => {
       }),
     )
     expect(await platformAgentSessions(fake.origin).list(TOKEN, PROJECT)).toEqual([
-      { id: SESSION.session.id, spentUsd: 0.021253, endReason: null },
-      { id: 'c988abc1-c8ee-4ac8-b499-52f37c9f9b52', spentUsd: null, endReason: null },
+      {
+        id: SESSION.session.id,
+        spentUsd: 0.021253,
+        endReason: null,
+        models: SESSION.session.models,
+      },
+      {
+        id: 'c988abc1-c8ee-4ac8-b499-52f37c9f9b52',
+        spentUsd: null,
+        endReason: null,
+        models: SESSION.session.models,
+      },
     ])
     expect(path(fake.seen[0]!)).toBe(`/v1/projects/${PROJECT}/agent-sessions`)
+  })
+
+  it('list reads what each key holds now: a session narrowed in place lists only what is left (the platform’s sitting 5, `d061ad7`)', async () => {
+    const fake = await fakePlatform(() =>
+      ok({
+        sessions: [{ ...SESSION.session, models: ['default-chat-onprem'] }],
+        truncated: false,
+      }),
+    )
+    expect(
+      (await platformAgentSessions(fake.origin).list(TOKEN, PROJECT)).map(
+        (s) => s.models,
+      ),
+    ).toEqual([['default-chat-onprem']])
   })
 
   it('list says why the platform ended a session: models_withdrawn (FE-36, F4 Task 8)', async () => {
@@ -885,7 +909,12 @@ describe('agent sessions, with their cap and their clock (Decision 9)', () => {
       }),
     )
     expect(await platformAgentSessions(fake.origin).list(TOKEN, PROJECT)).toEqual([
-      { id: SESSION.session.id, spentUsd: 0.4, endReason: 'models_withdrawn' },
+      {
+        id: SESSION.session.id,
+        spentUsd: 0.4,
+        endReason: 'models_withdrawn',
+        models: SESSION.session.models,
+      },
     ])
   })
 })
