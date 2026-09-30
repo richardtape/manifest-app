@@ -194,6 +194,23 @@
   margin-top: 7px;
   font-family: var(--font-sans);
 }
+/* OURS (F5 Task 4): a clock someone has, and one that is done (ClockItem's `state`). The
+   reference's track, filled and still: a person holds it, so it never moves, and it is never
+   partly full, since nothing says how far along a wait on someone else is. Its words take the
+   state's colour; the chip beside it says the state in a word. */
+.mf-clockbar--waiting .mf-clock {
+  background: var(--waiting-tint);
+}
+.mf-clockbar--waiting .mf-bar__meta {
+  color: var(--waiting);
+}
+.mf-clockbar--steady .mf-clock {
+  background: var(--steady);
+  border-color: var(--steady);
+}
+.mf-clockbar--steady .mf-bar__meta {
+  color: var(--steady);
+}
 
 .mf-overline {
   font-size: 11px;

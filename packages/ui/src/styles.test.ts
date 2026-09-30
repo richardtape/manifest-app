@@ -5,7 +5,12 @@ import { describe, expect, it } from 'vitest'
  * THE DESIGN SYSTEM'S CSS, READ AS TEXT: what jsdom cannot see, because it applies no
  * stylesheet (the final review). Each case names a rule a person depends on.
  */
-const CSS = readFileSync(new URL('./components.css', import.meta.url), 'utf8')
+const CSS = readFileSync(new URL('./components.css', import.meta.url), 'utf8').replace(
+  // A comment is not a rule: left in, it is read as part of the next rule's selector, and a
+  // comment holding a comma hides that rule from `declarationsFor` (F5 Task 4 found it).
+  /\/\*[\s\S]*?\*\//g,
+  '',
+)
 
 /** The body of the first `@media <query>` block. */
 function media(query: string): string {
@@ -64,4 +69,26 @@ describe('machine text at a phone’s width (F3 Task 10)', () => {
 
   it('a step holding a disclosure may shrink below its content’s width', () =>
     expect(declarationsFor(CSS, '.mf-step__body')).toMatch(/min-width:\s*0/))
+})
+
+describe('a clock, held by a person (F5 Task 4, ClockItem’s `state`)', () => {
+  // ProgressBar/README.md: "Never animate it. Motion would imply the platform is doing something
+  // about it, and it is not; a person is."
+  it.each([
+    '.mf-clock',
+    '.mf-clockbar--waiting .mf-clock',
+    '.mf-clockbar--steady .mf-clock',
+  ])('%s never moves', (selector) =>
+    expect(declarationsFor(CSS, selector)).not.toMatch(/animation|transition/),
+  )
+
+  it('a clock someone has is filled, still, in the waiting tint', () =>
+    expect(declarationsFor(CSS, '.mf-clockbar--waiting .mf-clock')).toMatch(
+      /background:\s*var\(--waiting-tint\)/,
+    ))
+
+  it('a clock that is done is filled steady', () =>
+    expect(declarationsFor(CSS, '.mf-clockbar--steady .mf-clock')).toMatch(
+      /background:\s*var\(--steady\)/,
+    ))
 })

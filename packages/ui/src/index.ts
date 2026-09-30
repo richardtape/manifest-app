@@ -8,6 +8,7 @@
 export { Button, type ButtonProps } from './Button.js'
 export { Card, type CardProps } from './Card.js'
 export { Choice, type ChoiceOption, type ChoiceProps } from './Choice.js'
+export { ClockItem, type ClockItemProps } from './ClockItem.js'
 export { Disclosure, type DisclosureProps } from './Disclosure.js'
 export {
   FieldCount,
@@ -20,6 +21,7 @@ export {
 export { InverseSurface, type InverseSurfaceProps } from './InverseSurface.js'
 export { LiveSteps, type LiveStepsProps, type Step } from './LiveSteps.js'
 export { LogPane, type LogPaneProps } from './LogPane.js'
+export { ProgressBar, type ProgressBarProps } from './ProgressBar.js'
 export {
   SegmentedControl,
   type SegmentedControlProps,

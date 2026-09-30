@@ -472,6 +472,56 @@ const CASES: Record<string, Record<string, unknown>[]> = {
     { stations: [], className: 'extra' },
     {},
   ],
+  // F5 Task 4: moments 10 and 11's two clocks, and the bar they draw.
+  ProgressBar: [
+    {},
+    // preview.html: drifting, done, and a clock that has not started
+    {
+      kind: 'working',
+      value: 62,
+      label: 'Working, a few minutes',
+      meta: 'you can leave',
+    },
+    { kind: 'done', value: 100, label: 'Built', meta: '2 minutes 14 seconds' },
+    { kind: 'clock' },
+    // a clock's words of its own, one of them alone, a value it ignores, a className
+    { kind: 'clock', label: 'With UBC’s identity team', meta: 'waiting 12 days' },
+    { kind: 'clock', meta: 'May take several days' },
+    { kind: 'clock', value: 40, className: 'extra' },
+    // a value out of range both ways, none at all; a label alone, a meta alone; neither
+    { kind: 'working', value: -5, label: 'Low' },
+    { kind: 'working', value: 150, meta: 'High' },
+    { kind: 'done' },
+    { kind: 'done', label: 'Built', className: 'extra' },
+    { value: 30 },
+    // a kind from nowhere draws its own fill class, in the working colour
+    { kind: 'no-such-kind', value: 10, label: 'Unknown' },
+  ],
+  ClockItem: [
+    { title: 'Registering', body: 'Body' },
+    // preview.html
+    {
+      title: 'A privacy assessment',
+      body: 'Your app keeps what students write, so the Privacy Office has to look at it. The most common reason a launch slips.',
+      admissionTitle: 'Manifest can’t do this one for you yet',
+      admissionBody:
+        'We know what it stores and who signs in, so most of the form answers itself. Three questions are yours.',
+      action: 'Fill in what we know',
+    },
+    // every word its own; the admission's title alone, its body alone (drawn only with a title)
+    {
+      title: 'Registering with UBC’s identity team',
+      body: 'Body',
+      chip: 'With UBC’s identity team',
+      clockLabel: 'recorded 18 September',
+      clockMeta: 'waiting 12 days',
+    },
+    { title: 'T', body: 'B', admissionTitle: 'Only a title' },
+    { title: 'T', body: 'B', admissionBody: 'Only a body' },
+    // an action with an address of its own, and without; a className
+    { title: 'T', body: 'B', action: 'Start it', actionHref: '/start' },
+    { title: 'T', body: 'B', action: 'Start it', className: 'extra' },
+  ],
 }
 
 /**
