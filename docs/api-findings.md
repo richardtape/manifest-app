@@ -41,6 +41,8 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Decided by Rich, 2026-09-29, to carry** (after F4's close; the platform's launch-path plan was being written) | **FE-39** | Only faculty build, for now; and administrators | **Written and decided the same day** (walk-through D7): the platform decides who may build (faculty by CWL's `eduPersonAffiliation`, administrators by a prescribed list **by PUID** in its settings; someone who stops being faculty keeps their apps and starts nothing new), refuses `createProject`, `startIntakeSession` and `addMember` to anyone else with a code of its own, and `getMe` answers the decision (`mayBuild`). Rich: *"the platform, because this would then also work for agentic use"*. **Carried at Rich's word, 2026-09-29**, to `manifest-63`, for the launch-path plan while it is open |
 | **Decided by Rich, 2026-09-29, to carry** (while F5 was written, `manifest-app-ce`; the platform's launch-path sitting 2 was running) | **FE-40** | The mock cannot play a launch: its checklist is never ready for a first launch, it never asks for step-up, and its approval and dry run each answer one fixture | **File it, and carry it now** (Rich, 2026-09-29): opt-in switches in the mock, for the launch path's Task 13, which already changes the mock. F5 never waits on it. **Carried the same day** to `manifest-13`, which recorded it in the launch-path plan (its own section, and a note at Task 13's head), **PROPOSED there until Rich confirms it to a platform session** (its house rule for a relayed decision; its next §7e asks him). **Confirmed by Rich to `manifest-c3`** (its launch-path sitting 3, 2026-09-29), and **to us in his own words** the same evening (*"I approve the FE-40 were my words"*, to `manifest-app-a0`); Task 13 (sitting 10) carries it |
 | **Landed, the platform's launch-path sitting 3, Task 4, 2026-09-29** (`d894b8e`, announced before and after by `manifest-c3` to F5's sitting 0, `manifest-app-a0`; the sitting was still running at our close) | **FE-38** | — | **Contract 1.5.0** (66 operations, 128 codes): **`Instance.createdAt`**, required, ISO 8601, never null, when the deploy made the instance, inherited by `InstanceSummary` (`listInstances`), `deploy`'s and `getEnvironment`'s answers; the list's order unchanged (`last_seen_at desc nulls last`: one made but not yet seen is listed LAST). Every mock fixture instance has it. `SOURCE_PROVIDER_MISMATCH`'s description widened (the same driver on another GitHub). **Adopted the same day** (`33e9251`): the last attempt is the newest failure made after the one serving, whatever its version (FE-38's rollback now reads right), and the Preview reads only the serving version. Our typecheck went red on seven test fakes when it landed; with them given `createdAt`, typecheck and 1248 tests pass, twice. Our mock on 7102 was restarted to serve 1.5.0's fixtures. **Still to land on 1.5.0: Task 5, FE-33's close code `4401`** (the next F5 sitting's Step 0 adopts it) |
+| **Landed, the platform's launch-path sitting 3, Task 5 and its reviews, 2026-09-29** (`4bac1cf`, `9ac609d`, `84d485a`; closed at `bf94c73`, relayed by `manifest-c3`) | **FE-33** | — | **Contract 1.5.0, no version change**: close code **`4401`** on the event stream (*"The credential was revoked or expired. Get a new one — sign the person in again, or ask them for a new token; reconnecting with the same credential is refused."*); a token's open streams close `4401` at its revoke, expiry or archive, a signed-in person's at the session's expiry, and a deleted project's other streams `4404`; `InstanceList`'s description says `createdAt` says which attempt is newest; the mock's instances made after their release (`09:01`, `09:00:30`); the mock never closes `4401` or `4404`. **Adopted** (`35102dc`): our server's subscription treats `4401` as refused and never reopens it, so the round asks for a new token; the page's own stream (*Making it*'s seconds) settles on any close. Our typecheck and 1249 tests pass against `84d485a`; our mock was restarted for its fixtures |
+| **Written 2026-09-30, F5's sitting 1** (on 7100, real GitHub, at Rich's word) | **FE-41**, **FE-42** | *Make it* fails for an app on a starter (`409 SOURCE_GIT_FAILED`); the dry run is an administrator's alone (`403` to the owner) | **Decided by Rich the same evening**: FE-41 **carried** (*"Carry it now"*); FE-42 **(c)**, the administrator's row now and the owner's press (a) **carried** (*"Both: row now, ask platform"*). Both relayed to `manifest-c3`, PROPOSED there until he confirms them to a platform session |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -1130,6 +1132,70 @@ at `20838d4` (contract 1.4.0, 66 operations). **Decided by Rich the same day:** 
 - **Carried 2026-09-29, at Rich's word,** to `manifest-13`, which recorded it in the launch-path plan (its own section
   after FE-39's, and a note at Task 13's head listing the four switches, the defaults unmoved). **PROPOSED there until
   Rich confirms it to a platform session**, its house rule for a relayed decision; its next session's §7e asks him.
+  **Confirmed by Rich** to `manifest-c3`, and to us in his words (2026-09-29).
+- **Measured by F5's sitting 1 (M7), against our mock at manifest `84d485a`:** each point above holds. `getApproval`
+  answers the fixture's approval for the fixture release and `404` for any other id; `runRehearsal` answers
+  `passed: true`; a production `deploy` answers `200` with **staging's** instance though the checklist says
+  `ready: false`; `getEnvironment(production)` answers staging's environment; `listAppSecrets(production)` answers a
+  staging fixture under a random environment id; `createApprovalPreview` answers `201`; and **`/auth/step-up` is `404`**,
+  so our page's *[Sign in again]* leads nowhere in mock mode.
+
+---
+
+### FE-41 — Make it fails for an app on a starter: `createProject` with `proof-app` answers `409 SOURCE_GIT_FAILED` on real GitHub
+
+*Found 2026-09-30 (04:20Z) by F5's sitting 1 (`manifest-app-a0`), on 7100 at manifest `84d485a` against REAL GitHub
+(driver 2, `Manifest-local-dev`), contract 1.5.0. **Carried at Rich's word the same evening** (*"Carry it now"*) to
+`manifest-c3`, PROPOSED on its side until he confirms it to a platform session.*
+
+- **Screen and moment:** moment 4, *Make it* (*"We couldn't make it just now. Nothing was made. Try again."*).
+- **What we called:** `createProject` from the person's session, as the page does, with the blueprint our blueprint agent
+  chose: `{ blueprint: 'node-ts-mongo@1', starter: 'proof-app', … }` (read back from our store: the conversation's
+  `blueprint` message).
+- **What happened:** **`409 SOURCE_GIT_FAILED`, twice**, about 8 s after the press (references `CCB0-30F0`, `7FC2-5D35`,
+  different slugs). **Nothing was made**: the slug stayed free, no project was listed, and no mirror was left. **The same
+  call from Node with no `starter` answered `201`** in 8.8 s (`f5-reading`). The control plane's log (its `cp-close.log`)
+  has only its boot lines, so the cause is not visible from our side; a starter's seed on real GitHub is the difference
+  we can see.
+- **Why it matters:** our blueprint agent chooses `proof-app` whenever sign-in is wanted, which is nearly every class app;
+  on real GitHub **no such app can be made**, and the person is told to try again, which fails the same way. The real
+  platform's first-run fixes (its launch-path sitting 2) did not cover a starter.
+- **Options:**
+  - **(a) Recommended:** the platform finds and fixes the starter's seed on real GitHub (its own diagnosis: we cannot see
+    its log), with a test of `createProject` with a starter on the real driver.
+  - (b) Meanwhile our blueprint agent is told never to choose a starter. **A workaround, so not ours to take** (the rule:
+    an API gap is a finding): it would also change what apps start from.
+- **When:** before F5's acceptance (sitting 6), which makes its project through our page on 7100; and before faculty
+  use it for real.
+
+---
+
+### FE-42 — The dry run is an administrator's alone: the owner is refused `runRehearsal`
+
+*Found 2026-09-30 by F5's sitting 1 (M4), on 7100 at manifest `84d485a`, contract 1.5.0. It corrects F5's Decision 8 and
+the walk-through's moment 12. **Decided by Rich, 2026-09-30: (c)** (*"Both: row now, ask platform"*): F5 shows the
+administrator's row now, and **(a) is carried** to `manifest-c3`, PROPOSED on its side until he confirms it to a platform
+session.*
+
+- **Screen and moment:** *Going live*, the dry run (moment 12): **[Run the dry run]**, the person's own press in F5's
+  design (Decision 8, approved with Section 3).
+- **What we called:** `runRehearsal` from the owner's session, with an `Idempotency-Key`.
+- **What happened:** **`403 FORBIDDEN`, *"role 'owner' may not 'launch:record'"***. By design ✓: the platform's
+  authorization table says *"D21's rehearsal … the same actor answers as the other two: an administrator alone, in an
+  interactive session"* (`packages/control-plane/src/api/authz-contract.ts`, the rehearsal row: owner `403`, collaborator
+  `403`), and the checklist names the item's owner *"Manifest"*. The contract's description of `runRehearsal` does not
+  say who may run it. As `operator` (an administrator) it passed in 7 s, and **it carries on when its caller goes**.
+- **Why it matters:** the walk-through's moment 12 gives the faculty member the press (*"Run the dry run"*, minutes, done
+  for you), and F5's Task 7 builds it. As the platform stands, the only honest row is *waiting on someone*: an
+  administrator runs it, and nothing tells them it is waiting (FE-25's gap, for the sign-off, is the same shape).
+- **Options:**
+  - **(a)** The platform lets the project's owner run the rehearsal: it deploys the candidate the owner already put on
+    staging, behind the gate, with production-shaped values, and proves only a shape, which is not a decision about UBC's
+    records. Then F5's Decision 8 stands as approved.
+  - **(b)** F5 shows the row as an administrator's: *"A Manifest administrator runs it. Manifest doesn't tell them yet
+    that it's waiting."*, no button (Rich's no-stopgap rule), and F5b asks for it with the sign-off (FE-25's request).
+  - (c) Both: (b) now, (a) carried for the launch path.
+- **When:** before F5's sitting 4 (Task 7, the dry run).
 
 ## Not a gap: decisions that are Rich's
 

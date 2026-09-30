@@ -740,6 +740,15 @@ little that staging has not. FE-24 carries the question. Until then, the row sta
 
 **They wait:** minutes, **working**. They may leave.
 
+**As the platform stands, the press is not theirs (FE-42; Rich, 2026-09-30: *"Both: row now, ask platform"*).** On
+7100 the owner is refused `runRehearsal` (`403`, *"role 'owner' may not 'launch:record'"*): an administrator alone may
+run it. So until the platform lets the owner run it, the row is **waiting on someone**, with no button (no stopgap):
+*"A Manifest administrator runs it."* · *"Manifest doesn't tell them yet that it's waiting."* Once someone has run it,
+it says what came of it, in the words above (*"Done. It answered and signed someone in on the live setup."*, or the
+failure in a sentence with *[Fix it]*). FE-42 (a), the owner's own press, is carried to the platform: when it lands,
+**[Run the dry run]** returns as designed. Measured (F5 sitting 1): it takes seconds, and it carries on when its
+caller goes.
+
 ## 13. Waiting on an administrator
 
 **Trying to:** get the sign-off, without knowing who gives it.

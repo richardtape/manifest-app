@@ -54,8 +54,8 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 0 | 3 | **The mock-mode banner**, moved ahead of the measurements at Rich's word (2026-09-29, *"Banner first, then wait"*): it needs no measurement and no 7100, which the platform's launch-path sitting 3 holds | **done 2026-09-29** (`manifest-app-a0`): the banner on every page in mock mode, none in edge; **and Step 0 for contract 1.5.0** (FE-38 adopted). 1248 tests (the dated entry below) |
-| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | ← **next**, once the platform's launch-path sitting 3 has closed (its Task 5, FE-33's `4401`, still to land at our close) and Rich gives his word for 7100 |
-| 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | |
+| 1 | 1 | **The measurements**, on 7100 at Rich's word (after telling the platform session): streaming on the gateway; every checklist `id` × `state` the laptop produces, with its `why`; a dry run; a production deploy's step-up and gate; `getApproval`; a production secret; the mock's answers. **One project, a real private repository on GitHub**, remade by a script at the acceptance (every platform sitting's first test run truncates). Rich types, as the administrator. **Alone** | **done 2026-09-30** (`manifest-app-a0`, 04:19–04:40Z on 7100): M1–M7 measured; Tasks 2, 6, 7, 10 and 11 corrected (S1); **FE-41 and FE-42 written, carried at Rich's word**; FE-33's `4401` adopted (Step 0). 1249 tests (the dated entry below) |
+| 2 | 2 | Every model call streams, and a stall has its own card (M10 with it) | ← **next** (no platform needed; the deadlines are set, S1) |
 | 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | |
 | 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | |
 | 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | |
@@ -106,6 +106,14 @@ against) and **Step 0: the platform's landings** (*Adopting what lands*, below).
   FE-40 were my words"*); Task 13 (the platform's sitting 10) carries it.
 - **Sitting 1 starts when the platform session messages us at its sitting 3's close** (2026-09-29, *"when it messages
   you, please feel free to begin sitting 1"*): his word for 7100 for this sitting.
+- **The administrator's part is scripted, as `operator`** (2026-09-29, *"Script does it"*), and **the platform session
+  runs the admin grant** (*"Platform session"*). *Rejected by Rich:* clicking the reference console himself.
+- **FE-42, the dry run: "Both: row now, ask platform"** (2026-09-30). The owner is refused `runRehearsal` (an
+  administrator's alone, by the platform's design), so **F5 shows the row as an administrator's, with no button**, and
+  **FE-42 (a), the owner's own press, is carried** to the platform; when it lands, *[Run the dry run]* returns as the
+  design had it. *Rejected by Rich:* holding Task 7 for the platform; accepting the administrator's row for good.
+- **FE-41, a starter's app cannot be made on real GitHub: "Carry it now"** (2026-09-30), to the platform session, the
+  same evening.
 - **The plan approved as written, executed natively, Decision 7 accepted** (2026-09-29, `manifest-app-a0`'s first
   question: *"Approved as written"*, *"Native"*, *"Accept Decision 7"*).
 - **Task 3 first, then wait** (2026-09-29, *"Banner first, then wait"*): the platform's launch-path sitting 3 holds 7100
@@ -142,12 +150,12 @@ change at his click.*
 | Short jobs ✓ | *"Short jobs, for the end"* · *"minutes each, and not worth doing early"* |
 | The rows ✓ | the walk-through's table, for `scans` met, `rehearsal`, `load-rehearsal`, `admin-approval`, `domain` met and `code-review`; an unknown id, *"Something new on the list: <title>"* |
 | The rows, ours | **`scans` unmet** (Decision 7): *"Something it's built on has a known security problem. Keeping what apps are built on up to date is the Manifest team's job."*, owner *"the Manifest team"*; **(S1)** a stale security list, if M3 sees one: *"We couldn't check it against the newest list of security problems. The Manifest team refreshes that list."* · **`rehearsal` with nothing on trying-out**: *"Once a version is on your trying-out address."* · owners in words: *done for you* · *you start it; minutes* · *us, in minutes* · *a Manifest administrator* · *nobody yet* |
-| The dry run ✓ | **[Run the dry run]**; while it runs *"Putting it up with nobody watching, signing someone in, taking it down. About a minute and a half."*, and *"You can leave: it carries on."* **(S1: M4, only if true)**; passed *"Done. It answered and signed someone in on the live setup."*; failed, one sentence per failure M4 reads, else *"It didn't sign anyone in on the live setup."*, **[Fix it]**; *"It didn't start on the live setup"*; our deadline *"We stopped waiting, but it may still finish. This row updates when it does."* |
+| The dry run ✓ | **(S1, FE-42: until the owner may run it, the row is an administrator's: *"A Manifest administrator runs it."* · *"Manifest doesn't tell them yet that it's waiting."*; no button; the rest of this row returns with FE-42 (a). *"You can leave: it carries on."* is measured true; it takes seconds, not a minute and a half)** **[Run the dry run]**; while it runs *"Putting it up with nobody watching, signing someone in, taking it down. About a minute and a half."*, and *"You can leave: it carries on."* **(S1: M4, only if true)**; passed *"Done. It answered and signed someone in on the live setup."*; failed, one sentence per failure M4 reads, else *"It didn't sign anyone in on the live setup."*, **[Fix it]**; *"It didn't start on the live setup"*; our deadline *"We stopped waiting, but it may still finish. This row updates when it does."* |
 | The sign-off ✓ | the table of Section 3: *"A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off, so nobody's app reaches students with something it shouldn't have."* · *"Manifest doesn't tell them yet that it's waiting."* · *"Signed off by <name>, 23 September."* · *"Nothing in this version needs a sign-off."* · *"Not signed off: '<their reason>'"* · *"A new version is needed, and it's looked at afresh."* · **[Talk it through]** |
 | *[Talk it through]*'s change | *"A Manifest administrator didn't sign it off, and said: '<their reason>'"* (their reason cut at a word to the change's limit) |
 | Putting it live ✓ | the walk-through's **[Let your students in]**, its sentence, the step-up card, *"You're signed in again."*, F4's stations, *"Reading responses is live."*, and ours: **[See what to tell your students]** |
 | Putting it live, when it goes wrong ✓ | *"The version on your trying-out address changed a moment ago. Go live with the new one?"* · *"Nothing reached your students. The address shows nothing yet, not a broken app."* · **[What went wrong]** · our deadline: *"We stopped waiting, but it may still be going. This shows it when it answers."* |
-| A fix conversation's title, for production | *"It didn't start on the live address"*; for a dry run, *"The dry run didn't sign anyone in"* **(S1: M4)** |
+| A fix conversation's title, for production | *"It didn't start on the live address"*; for a dry run, *"The dry run didn't sign anyone in"* **(S1: M4)** (not built until FE-42 (a): nothing gives the page a failed run's evidence) |
 | The hand-over ✓ | *"For your students"*; the address, **[Copy]**; *"Students sign in with their CWL."*; the message *"<Name> is here: <address>. Sign in with your CWL."* followed by the plan's *What students see*; the honest line *"Anyone with a CWL can sign in, not only your class."* followed by the plan's *Who gets in*; the two facts |
 | A stall, in a round ✓ | *"Our model stopped answering before it finished. Nothing is lost."* · *"Our model's answer went on far longer than any should, so we stopped it. Nothing is lost."* · **[Carry on]** · **[Stop here]** |
 | A stall, on the intake or the plan | the same first sentence, with their **[Try again]** |
@@ -188,14 +196,35 @@ change at his click.*
    *waiting on someone* when someone else owns it (the sign-off; `scans`, Decision 7), *not yet* when it cannot be acted
    on yet. An unknown `id` is shown, never hidden (spec D23.8: the enum grows). `code-review` last, set apart. **(S1:
    M3)** every `why` the laptop produces is read, and every combination it can produce has words.
+   - **(S1: M3) `rehearsal`, `scans` and `admin-approval` are `unmet` with NO candidate** (*"Nothing is serving in staging
+     yet, so there is no release to …"*): each is then **not yet**, *"Once a version is on your trying-out address."*,
+     keyed on `candidateReleaseId === null`, never on the `why`. `scans` unmet **with** a candidate is Decision 7's.
+   - **(S1: M3) an unfixable finding does not block**: the blueprint's own `passport-saml` critical (GHSA-4mxg-3p6v-xgq3,
+     *"no published fix"*) leaves `scans` **met**, its `why` saying *"1 finding(s) with no published fix are recorded"*.
+     `scans` unmet with a candidate means a finding **with** a published fix, or a failed secret or lockfile gate.
+   - **(S1: M3) `load-rehearsal` is absent** for a class-sized audience (the platform adds it for large courses only):
+     its row is drawn only when the item is listed.
+   - **(S1: M3) a registration or assessment that is `submitted`** is `unmet` (*"must be 'active'"*, *"must be
+     'approved'"*); `active` / `approved` is `met`. The clocks read the records (Decision 5), not these `why`s.
 7. **`scans` unmet is waiting on the Manifest team, with no *[Fix it]*** (**a correction to Section 2, accepted by Rich
    at review**, 2026-09-29). Section 2 said *[Fix it]* would start a fix conversation fed by the build's scan. Writing the task found it
    cannot be true: **an agent cannot change an app's dependencies** (FE-32: nothing regenerates `package-lock.json`, and
    F3's dependency guard refuses it), and a blueprint's dependencies and base image are the platform's. A *[Fix it]* that
    can only fail is the bureaucracy `ClockItem` warns of. *Changing course:* when FE-32 lands, one row gains its button.
+   **(S1: M3)** it applies only with a candidate (Decision 6's first S1 note); without one the row is *not yet*.
 8. **The dry run is the person's, in the browser** (`runRehearsal` is session-only): one `Idempotency-Key` per press, a
    150-s deadline (the platform says *up to ~90 s*). **(S1: M4)** whether it finishes when its caller goes decides *"You can
    leave"*; what a failure's `evidence` holds decides its sentences and its fix's shape.
+   - **(S1: M4) THE OWNER CANNOT RUN IT: `403 FORBIDDEN`, *"role 'owner' may not 'launch:record'"*.** The platform's
+     authorization table says so by design (P6a Task 14: *"an administrator alone, in an interactive session"*;
+     `authz-contract.ts`), and the checklist names its owner *"Manifest"*. **Rich decided (FE-42, *"Both: row now, ask
+     platform"*): the row is an administrator's, with no button**, until the platform lets the owner run it (FE-42 (a),
+     carried). Task 7 is rewritten to that (S1); this decision's press, deadline and *"You can leave"* return with (a).
+   - **(S1: M4) measured as the administrator:** it passed in **7 s** (and in under 13 s when its caller left at 3 s),
+     never near 90 s; **it carries on when its caller goes** (the item turned `met` with nobody waiting), so *"You can
+     leave: it carries on."* is true; its answer is `{ id, releaseId, passed, entityId, acsUrl, attributes, evidence:
+     { instanceId, hostname, listener, signInStatus, attributesReleased, reason }, ranAt }`. A failure's shape was not made
+     (the laptop's IdP releases every attribute asked for).
    - **Its fix (S1: M4 chooses one):** a failure that left an **incident** on production is the existing fix path,
      generalised to production (Decision 13); a failure with **only evidence** (the sign-in's status, the attributes
      released) is a fix whose asked message carries those fields, handed from the page, which the lead's view carries as
@@ -214,6 +243,14 @@ change at his click.*
       button names the candidate it will send, read at that moment, so a candidate that changed while they were away is
       the one they see. *(F4's trying-out keeps its `sessionStorage`: its question is a version they chose; this one is
       what the checklist says.)* **(S1: M5)** measures that `returnTo` keeps its query.
+    - **(S1: M5) measured:** `returnTo` **keeps its query** (`/auth/step-up?returnTo=/apps/f5-reading/going-live?then=live`
+      came back to exactly that); a step-up lasts **10 minutes** (`STEP_UP_TTL_MS`, read in the control plane's
+      `identity/step-up.ts`); **the step-up is asked BEFORE the gate**, so a press before `ready` answers `403
+      STEP_UP_REQUIRED` first, and only a stepped-up press sees `409 RELEASE_PRODUCTION_GATE_UNAVAILABLE`, whose envelope
+      carries the whole checklist as `error.launchReadiness`; the press after the step-up answered **`200 healthy` in 5.3 s**,
+      the new instance listed **last** (3 of 3) while `starting` at 1 s, `launchedAt` set at the healthy moment, and
+      production's `getEnvironment` answers its `url` (`https://f5-reading.manifest.internal`). The skeleton declares no
+      production secret (`listAppSecrets` answered none), so *setting one* was not measured.
     - The shared pieces (`Stations`, `Secrets`, the step-up card, `WhatWentWrong`) move from `put.tsx` into
       `screens/trying-out/parts.tsx`, exported, so *Going live* and *Trying out* draw the same things.
 11. **M1, M2, M4** are fixed where F5 meets them, and on *Trying out* too:
@@ -242,12 +279,25 @@ change at his click.*
     - **Three deadlines**, one set per use: **to the first word** (from the request), **between words**, and a **ceiling**.
       Provisional values, **set by M2**: a round's 120 s / 60 s / 15 min; the intake's and the plan's 60 s / 30 s / 3 min.
       `ROUND_MODEL_TIMEOUT_MS` and `timeoutMs` go.
+      **(S1: M2) set: a round's 120 s / 30 s / 15 min; the intake's and the plan's 60 s / 30 s / 3 min.** Measured on 7106:
+      `default-chat-large` writing a commit (3,360 tokens) gave its **first word at 13.6 s** (it reasons first) and was done
+      at 24.4 s; its first moves' first words came in 1.2–2.4 s; **the on-premise `default-chat-onprem` (`qwen3.8:27b`)
+      gave its first word at 56.8 s** on the lead's 4.3k-token prompt, so a round's 120 s leaves twice that; the intake's
+      `default-chat` 3.5 s cold, 0.14 s warm. **The longest gap between words anywhere was 667 ms** (the on-premise model;
+      98 ms on the capable one), so 30 s between words is still forty times the worst seen.
     - **New codes:** `MODEL_STALLED` (no first word, or a gap) and `MODEL_TOO_LONG` (the ceiling). A connection refused, a
       `5xx` or a gateway `error` chunk stays `MODEL_UNREACHABLE`.
     - **What arrived is counted, never kept**: `Answered` gains `received: { chars, firstWordMs, ms }`, and `ModelError`
       carries the same for a stall, so the trace records how much came and why it ended. The text lives only for the call.
     - **Which model answered**: the fallback header when a stream carries it; **(S1: M2)** if it does not, the chunks'
       `model` (F3 M1: *"`ollama_chat/qwen3.5:4b` for 9b's fallback"*) says so.
+      **(S1: M2) a stream DOES carry `x-litellm-attempted-fallbacks`** (`0` on all 16 streamed answers), and **each chunk's
+      `model` is the alias asked for** (`default-chat-large`, `default-chat-onprem`, `default-chat`), never the provider's,
+      so the header is the only word on a fallback; `usage` arrives in the last chunk, before `[DONE]`.
+    - **(S1: M2) a stream we cut is billed for what was streamed**: LiteLLM's own spend log (read by `manifest-c3`) billed
+      the cut call **594 completion tokens** ($0.0015; 2,354 characters had arrived), against a whole commit's 3,360
+      ($0.0032); the session's `spentUsd` showed it within 60 s and grew no more. Whether the upstream provider stopped
+      generating is not visible from the laptop. So *Stop here* after a stall costs only what arrived.
     - **A stall is not retried by itself**: a retry re-asks and re-pays, so it is the person's *Carry on*. A complete
       answer that fails its schema is still asked once more.
     - **The round's needs gains `{ kind: 'stalled'; why: 'quiet' | 'ceiling' }`**; the intake's and the plan's cards say
@@ -418,8 +468,8 @@ export type Chunk = { content: string; model: string | null; usage: { in: number
 export function chunksOf(body: ReadableStream<Uint8Array>): AsyncIterable<Chunk>   // throws ModelError('MODEL_UNREACHABLE') on an error chunk
 // model/client.ts
 export interface Deadlines { firstWordMs: number; quietMs: number; ceilingMs: number }
-export const ROUND_DEADLINES: Deadlines      // (S1: M2)
-export const ASKING_DEADLINES: Deadlines     // the intake's and the plan's (S1: M2)
+export const ROUND_DEADLINES: Deadlines      // (S1: M2) first word 120 s, between words 30 s, ceiling 15 min
+export const ASKING_DEADLINES: Deadlines     // the intake's and the plan's (S1: M2) 60 s, 30 s, 3 min
 export type ModelCode = … | 'MODEL_STALLED' | 'MODEL_TOO_LONG'
 export class ModelError { readonly received: Received | null }
 export type Received = { chars: number; firstWordMs: number | null; ms: number }
@@ -435,8 +485,8 @@ export type Needs = … | { kind: 'stalled'; why: 'quiet' | 'ceiling' }
     by `firstWordMs` → `MODEL_STALLED`, `firstWordMs: null`; past `ceilingMs` → `MODEL_TOO_LONG`; **each aborts the
     request** (the recorded `signal` is aborted);
   - the request body carries `stream: true` and `stream_options: { include_usage: true }`, and the schema as before;
-  - `usage` from the last chunk, `model` from the chunks, the fallback from the header (and, **(S1: M2)** if streams
-    carry none, from the chunks' `model`); `onAnswer` gets `received`;
+  - `usage` from the last chunk, `model` from the chunks, the fallback from the header (**(S1: M2)** streams carry it;
+    the chunks' `model` is only the alias asked for, so it is never read as the fallback); `onAnswer` gets `received`;
   - a `5xx`, a refused connection and an `error` chunk are `MODEL_UNREACHABLE`; `429` / `401` / `403` keep their codes;
   - a complete answer that fails the schema is asked once more (F2's rule); **a stall is never asked again by the
     client**;
@@ -575,6 +625,20 @@ export function clockOf(which: Clock['which'], record: Schemas['IamRegistration'
 - [ ] **Step 6: Commit** `feat(web): Going live — what stands between the app and its students, in our words`.
 
 ## Task 7: The dry run (moment 12; sitting 4)
+
+> **(S1, FE-42, Rich 2026-09-30: *"Both: row now, ask platform"*.) The owner cannot run it**, so this task builds **the
+> row only**, read from the checklist item (no operation reads a rehearsal back; its `rehearsal.completed` event reaches
+> us with F6's watch):
+> - no candidate → **not yet**, *"Once a version is on your trying-out address."*;
+> - `unmet` with a candidate → **waiting on someone**: *"A Manifest administrator runs it."* · *"Manifest doesn't tell
+>   them yet that it's waiting."* No button, no `mailto:`;
+> - `met` → **steady**, *"Done. It answered and signed someone in on the live setup."*;
+> - a failed run's `why` was not measured (the laptop's IdP releases every attribute asked for): its row is *waiting on
+>   someone* with the same words until one is seen, and **no *[Fix it]*** (nothing gives the page the evidence).
+>
+> The press, `runRehearsal` in `platform/api.ts`, `REHEARSAL_TIMEOUT_MS`, the fix's `dryRun` shape and the server side
+> below are **not built**: they return with FE-42 (a). What remains of the steps below: the row's tests (each state,
+> `machineryIn` empty, no button in any state, a control that draws one goes red), and its walk.
 
 **Files:** `web/src/screens/going-live/{dry-run.tsx,dry-run.test.tsx}`, `web/src/platform/api.ts`, `web/src/ours/api.ts`,
 `server/src/api/{apps.ts,apps.test.ts}`, `server/src/build/round.ts`, `server/src/agents/lead.ts` (the view's dry run),
@@ -715,6 +779,14 @@ incident(token: string, projectId: string, environment: 'staging' | 'production'
 
 ## Task 11: The acceptance (sitting 6, alone)
 
+> **(S1) Before it runs:** a project made through our page on real GitHub needs **FE-41** fixed (a starter's
+> `createProject` answers `409 SOURCE_GIT_FAILED`; carried at Rich's word). Every platform sitting's first test run
+> truncates 7100, **the admin grant included**: the acceptance asks the platform session for
+> `scripts/admin-grant.sh grant opr000001` after `operator` has signed in once, and plays the administrator by script
+> (Rich: *"Script does it"*). Sitting 1's scripts (`lib.mjs`: the three hops and the step-up in Node; `m.mjs`:
+> the records, the preview and approval, the gate, the press) are the acceptance's starting point: copy them into the
+> repository's `scripts/` then, or rewrite them in its bash, as `check-going-live.sh` needs.
+
 - [ ] **Step 0:** the platform's landings (*Adopting what lands*); re-read `openapi.json`.
 - [ ] **Step 1: Against the mock** (from a fresh dev database, ORIENTATION §7). `scripts/check-going-live.sh`, beside
   `check-seeing.sh`, drives our API as the browser does, and asserts **what our server sent**, from the trace and the
@@ -847,3 +919,75 @@ first test run, so Task 3, which needs neither 7100 nor a measurement, ran first
   listening. No Vitest process, no walk's Chrome left. Manifest at `2a26547`; the contract 1.5.0, 66 operations.
 - **Next:** sitting 1, the measurements, once `manifest-c3`'s sitting 3 has closed (it messages us), at Rich's word for
   7100; its Step 0 adopts FE-33's `4401` if it has landed.
+
+### 2026-09-30 — Sitting 1: the measurements, on 7100 (session `manifest-app-a0`)
+
+*At Rich's word (*"when it messages you, please feel free to begin sitting 1"*), when `manifest-c3` closed the platform's
+launch-path sitting 3 (`bf94c73`) and said 7100 was ours. 7100 was used from 04:19 to 04:40Z; nothing was restarted.
+The throwaway scripts are in the session's scratchpad (`s1/`: `lib.mjs`, `build.mjs`, `prep.mjs`, `m.mjs`, `m2.mts`,
+`m7.mjs`), their records in `s1/out/` (`m2.jsonl` to `m7.txt`); the ledger has every run.*
+
+- **Step 0.** Contract **1.5.0** (66 operations): FE-38 adopted in sitting 0; **FE-33's `4401` adopted** (`35102dc`: our
+  server's platform stream treats `4401` as refused and never reopens it, so the round asks for a new token; red first,
+  one test); `9ac609d` (the `4401` text) and `84d485a` (the mock's `createdAt`, `InstanceList`'s description) need
+  nothing of ours: typecheck and 1249 tests pass against each, and **our mock was restarted to read the new fixtures**.
+- **The platform's side, at the start:** control plane 98101 on `84d485a`, real GitHub, an empty database.
+  `operator` and `instructor` signed in from Node by the three hops (`lib.mjs`, manifest's `idp-login.sh` ported: one
+  host-keyed jar per person, so the ACS post carries the login cookie); **`manifest-c3` ran the admin grant** for
+  `opr000001` at Rich's word; our server switched to edge mode for the sitting, and back to mock mode at its end.
+- **FE-41 (written, carried): *Make it* failed twice through our page**, `409 SOURCE_GIT_FAILED`, nothing made. Our blueprint
+  agent had chosen the `proof-app` starter (read back from our store); **the same `createProject` from Node without a
+  starter answered `201`**. So the project is **`f5-reading`** (a real private repository,
+  `Manifest-local-dev/f5-reading`), made from Node; **the bare skeleton failed to start** (*"MONGODB_URI is required"*:
+  it declares no `services:`), so the starter's five files were committed through the authoring API (the manifest's
+  `name` set to the slug), then built (20 s), released, and put on the draft (8.6 s) and trying-out (8.1 s), healthy.
+  **Our round was not run on 7100 this sitting**: moments 3–6 through our page wait on FE-41; sitting 6 runs them.
+- **M2, streaming on the gateway** (16 streamed answers on `default-chat-large`, `default-chat-onprem`, `default-chat`):
+  the capable model's commit move (3,360 tokens) gave its **first word at 13.6 s** and finished at 24.4 s; its first moves
+  1.2–2.4 s; **the on-premise lead's first word at 56.8 s**; the intake's `default-chat` 3.5 s cold, 0.14 s warm; **the
+  longest gap between words anywhere, 667 ms**. `usage` is in the last chunk; **`x-litellm-attempted-fallbacks` rides on
+  a stream** (`0` every time); **each chunk's `model` is the alias asked for**, never the provider's. **A cut stream is
+  billed for what was streamed** (LiteLLM's own spend log, read by `manifest-c3`: 594 completion tokens for 2,354
+  characters, against 3,360 for a whole commit); the session's `spentUsd` settles within 60 s. **→ Decision 14's
+  deadlines set: a round's 120 s / 30 s / 15 min; the intake's and the plan's 60 s / 30 s / 3 min.** A gateway error
+  mid-stream was not made.
+- **M3, the checklist from nothing to launched** (every `why` in `s1/out/m3.jsonl`): made → built → released → on the
+  draft: `domain` met, everything else `unmet` (the IAM and PIA with nothing recorded; `rehearsal`, `scans` and
+  `admin-approval` **for want of a candidate**), `code-review` `not_built`; **on trying-out: `scans` met** although the scan
+  lists the blueprint's own unfixable `passport-saml` critical (*"no published fix"* does not block); the registration
+  `submitted` → unmet, `active` → met; the assessment `submitted` → unmet, `approved` → met; after the approval
+  **`ready: true`**; after launch, the launched clause (no `rehearsal` item). **No `load-rehearsal` for a class-sized
+  audience.** The platform's own words say *"multi-week lead time"*; ours stay Rich's *"may take several days"*. **→
+  Decisions 6 and 7 corrected (S1):** three rows are *not yet* without a candidate, and `scans` unmet with one means a
+  fixable finding.
+- **M4, the dry run: THE OWNER IS REFUSED** (`403 FORBIDDEN`, *"role 'owner' may not 'launch:record'"*), by the platform's
+  design (`authz-contract.ts`: an administrator alone). **FE-42 written.** As `operator`: passed in **7 s**; **it carries
+  on when its caller goes** (cut at 3 s, `met` by the next read); `evidence` is `{ instanceId, hostname, listener,
+  signInStatus, attributesReleased, reason }`. A failure was not made. **→ Rich: *"Both: row now, ask platform"*; Task 7
+  rewritten to the administrator's row (S1), FE-42 (a) carried.**
+- **M5, going live:** **the step-up is asked before the gate** (a press before `ready` answers `403 STEP_UP_REQUIRED`;
+  stepped up, `409 RELEASE_PRODUCTION_GATE_UNAVAILABLE` with the checklist as `error.launchReadiness`); **`returnTo` keeps
+  its query** (`…/going-live?then=live` came back exactly); a step-up lasts **10 minutes** (read in the control plane's
+  `identity/step-up.ts`); the press after the step-up: **`200 healthy` in 5.3 s**, the new instance listed **last** while
+  `starting`, `launchedAt` set, production's environment answering its `url`. The app declares no production secret:
+  setting one was not measured. **The recording of the registration and the assessment asks no step-up; the approval
+  does.**
+- **M6, the sign-off:** `getApproval` **`404` before a decision** (to the owner and the administrator); a stored preview
+  (`201`, expires in 30 minutes) then `approveRelease` naming it: **`403 STEP_UP_REQUIRED`, then `201`**; after, the owner's
+  `getApproval` is `200` with `decidedByName` (*"Test Operator"*), `decidedAt`, `reason`. **After launch a README-only
+  release is self-serve**: `admin-approval` met, `ready: true`, and `getApproval` `404`, so *"Nothing in this version
+  needs a sign-off."* is keyed on met with no approval.
+- **M7, our mock** (before 7100, as it is ours): FE-40 confirmed point by point, and **`/auth/step-up` is `404` in the
+  mock**; recorded in FE-40.
+- **Rich decided** (the plan's *Decided by Rich*): the administrator scripted, the grant the platform session's; **FE-42
+  (c)**; **FE-41 carried**. Both carried to `manifest-c3` the same evening, **PROPOSED on its side** until Rich confirms
+  them to a platform session.
+- **Rulings** (the ledger): M7 measured before 7100 was free; the app made from Node and filled with the platform's own
+  starter when our page could not make it (the measurements need a launchable app, not our round, which sitting 6
+  walks); the dry run measured as the administrator once the owner was refused.
+- **Gates:** no product code changed in this sitting beyond Step 0's `35102dc` (its gates: typecheck, lint, format, 1249
+  tests, twice with `84d485a`'s run). `pgrep -fl vitest` empty at the start and the close.
+- **What 7100 holds at our close:** `f5-reading`, **launched** (production, staging and the draft healthy), its IAM and
+  PIA records and an approval; `operator` an administrator. All of it disposable at the platform's next truncation (told
+  to `manifest-c3`); **the repository `Manifest-local-dev/f5-reading` stays on GitHub, and removing it is Rich's**.
+- **Next: sitting 2** (Task 2, every model call streams), which needs no platform: its deadlines are set.
