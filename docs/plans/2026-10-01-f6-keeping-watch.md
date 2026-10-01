@@ -1042,3 +1042,19 @@ export function StartForStudents(props: { platform: Platform; project: Schemas['
   - `deleteProject` → **`200` `{ id, slug, state: 'deleted', deletedAt }`** (`DeletedProject`), not an empty body (Task 8,
     corrected **(S1)**); the mock keeps nothing, so the project reads as before afterwards;
   - the event stream's URL by `GET` with a Bearer → `426` (the token is good; it wants a WebSocket).
+- **`manifest-8e`'s answer** (2026-10-01, ~16:15Z): **(a) it conflicts, hold**: its `pnpm test` truncates the control
+  database, and the control plane on 7100 is stopped until its close, **expected ~16:40–16:50Z**; it messages when 7100
+  is up, and nothing of ours starts before. **(b) The shortest honest way to a launched app** is the sequence in
+  manifest's `packages/journey/src/production.ts`, **read, never run** (`make demo-production` would make `launch-app`
+  on real GitHub): the owner (`instructor`) creates a CWL project, commits a CWL manifest, builds, releases, deploys
+  staging; `operator` signs in once, `scripts/admin-grant.sh grant opr000001` (**Rich's to run or approve**:
+  `MANIFEST_ADMIN_PUIDS` is not set), signs in again; the administrator records the assessment `submitted` → `approved`
+  and **production's** registration `submitted` → `active` with exactly the derived values (`entityId`
+  `https://manifest.internal/sp/<slug>/production`, the production hostname's ACS and SLO with the manifest's paths,
+  `registeredAttributes` ⊇ the manifest's); the dry run, stepped up; the approval, stepped up, preview first; the
+  owner's production deploy, stepped up. Its sitting 7 adds nothing to that path (drafts and submissions are the owner's;
+  the gate reads only the administrator's records). The scans' database is fresh until 2026-10-06. **(c) Stopping one
+  app container** (`docker stop mf-…`, never a `manifest-*` one) is safe for the platform: the instance keeps reading
+  `healthy` (FE-4), the edge answers `502`, a redeploy retires it; `scripts/dead-app-resources.sh` after, if anything is
+  left. **And:** the platform's sitting 8 truncates at its first Vitest, so `f6-watch` (launched, never deletable) will
+  need removing on github.com afterwards. **FE-45 confirmed by Rich** in its session (*"Yes, confirmed."*).
