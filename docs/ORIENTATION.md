@@ -4,14 +4,15 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-01, 15:55Z: **F6 is written** (`manifest-app-34`): the design and the plan, waiting for Rich's review; the platform's sitting 7 is running, its contract commit `6cbb489` and fix wave `dec71d8` adopted)*:
+**Where things stand** *(2026-10-01, 15:55Z: **F6 is approved** (Rich, native; `manifest-app-34` in its sitting 1); the platform's sitting 7 is running, its contract commit `6cbb489` and fix wave `dec71d8` adopted)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F6 is WRITTEN, waiting for Rich's review** (`manifest-app-34`, 2026-10-01):
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6, natively** (approved by Rich 2026-10-01, *"yes approved. native."*;
+  `manifest-app-34` started its sitting 1, holding for 7100 until the platform's sitting 7 says it is free):
   the design, [`plans/2026-10-01-f6-keeping-watch-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md) (approved by
   Rich section by section, and reviewed: *"looks good"*), and the plan,
-  [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md) (seven sittings, twelve tasks). **Ask
-  Rich to approve it and choose how it runs**; then its sitting 1 (the measurements, on 7100 in the platform's window,
-  at his word), or sittings 2–4 first if 7100 is not free (they need no platform). Its mail sink is live (below). **Rich's decisions so far (2026-10-01):** **two plans**: **F6, *Keeping watch*** (moments 16, 19, 20:
+  [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md) (seven sittings, twelve tasks): its
+  sittings table says where it is. Sitting 1 measures on 7100 in the platform's window, at Rich's word; sittings 2–4 need
+  no platform, and may run first. Its mail sink is live (below). **Rich's decisions so far (2026-10-01):** **two plans**: **F6, *Keeping watch*** (moments 16, 19, 20:
   the watch token, the history and *Since you were last here*, the needs-you band, emails, the live-address watch and
   *Start it again*, switch off, back on, delete) and **F6b, *Working on it together*** (moments 17, 18 and the *Agents*
   screen), written after F6; **the watch token is kept on disk, encrypted** (AES-256-GCM, its key apart from `.data/`:

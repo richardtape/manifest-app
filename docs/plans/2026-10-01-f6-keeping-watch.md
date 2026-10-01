@@ -4,7 +4,8 @@
 > as Rich chooses at approval) to implement this plan task-by-task, one sitting per session. Steps use checkbox (`- [ ]`)
 > syntax for tracking. **Read [`../ORIENTATION.md`](../ORIENTATION.md) first. F4a is executed; this plan starts from it.**
 
-**Status: WRITTEN 2026-10-01, waiting for Rich's review** (session `manifest-app-34`). The design was approved by Rich
+**Status: APPROVED BY RICH, 2026-10-01** (*"yes approved. native."*, session `manifest-app-34`), **executed natively**
+(superpowers:executing-plans, as F3 to F5 ran). The design was approved by Rich
 section by section and is its own file, [`2026-10-01-f6-keeping-watch-design.md`](./2026-10-01-f6-keeping-watch-design.md):
 **read it first**. This plan says how to build it, and the decisions only an implementation needs.
 
