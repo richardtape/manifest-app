@@ -667,6 +667,9 @@ export const words = {
       once: 'Once a version is on your trying-out address.',
       /** Ours: an item Manifest does not track yet (`not_built`). */
       notTracked: 'Manifest doesn’t check this one yet.',
+      /** (S6) Ours: not built, and blocking: it holds the launch until Manifest can do it. */
+      notBuiltBlocks:
+        'Manifest can’t do this one yet, and your app can’t go live until it can. It comes in a later Manifest release.',
       scans: {
         name: 'A check for security problems',
         met: 'Checked for security problems. Nothing needs fixing, and we check again on every build.',

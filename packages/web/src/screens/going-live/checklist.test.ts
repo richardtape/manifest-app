@@ -145,17 +145,25 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
         }
   })
 
-  it('met is steady; not built is not yet', () => {
+  it('met is steady; not built and blocking holds the launch: waiting on the Manifest team, and said so (sitting 6’s real walk: a large course’s load rehearsal)', () => {
     for (const id of [
       'domain',
       'rehearsal',
       'scans',
       'admin-approval',
       'load-rehearsal',
+      'accessibility-audit',
     ]) {
       expect(row(id, 'met').state, id).toBe('steady')
-      expect(row(id, 'not_built').state, id).toBe('notyet')
+      expect(row(id, 'not_built'), id).toMatchObject({
+        state: 'waiting',
+        owner: 'the Manifest team',
+        words:
+          'Manifest can’t do this one yet, and your app can’t go live until it can. It comes in a later Manifest release.',
+        action: null,
+      })
     }
+    expect(row('load-rehearsal', 'not_built').name).toBe('A test with everyone at once')
   })
 
   it.each(['rehearsal', 'scans', 'admin-approval'])(

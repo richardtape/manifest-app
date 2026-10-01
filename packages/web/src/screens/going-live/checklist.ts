@@ -70,11 +70,23 @@ export function rowsOf(
   const candidate = readiness.candidateReleaseId !== null
   const rows = readiness.items
     .filter((i) => !CLOCK_IDS.includes(i.id))
-    .map((i) =>
-      i.id === 'admin-approval'
-        ? signOffRow(i, candidate, context.approval ?? null, context.timeZone)
-        : rowOf(i, candidate, context.hostname),
-    )
+    .map((i): Row => {
+      const drawn =
+        i.id === 'admin-approval'
+          ? signOffRow(i, candidate, context.approval ?? null, context.timeZone)
+          : rowOf(i, candidate, context.hostname)
+      // NOT BUILT, AND BLOCKING (sitting 6's real walk: a large course's load rehearsal): it holds
+      // the launch until Manifest can do it, and the page says so: never "doesn't check this one".
+      return i.blocking && i.state === 'not_built'
+        ? {
+            ...drawn,
+            state: 'waiting',
+            owner: o.team,
+            words: r.notBuiltBlocks,
+            action: null,
+          }
+        : drawn
+    })
   return [...rows.filter((row) => !row.apart), ...rows.filter((row) => row.apart)]
 }
 
