@@ -6,6 +6,7 @@ import {
   type EventFrame,
   type Schemas,
 } from '@manifest/contract'
+import { noticeRefusal } from '../not-open.js'
 
 /**
  * THE ONE PLACE THE FRONT-END CALLS THE PLATFORM (Decision 3; the console's api.ts is the
@@ -164,8 +165,22 @@ export function createPlatform(options: {
     createManifestClient({
       origin: options.origin,
       ...(options.session === undefined ? {} : { session: options.session }),
-      fetch: (request) =>
-        globalThis.fetch(request, { signal: AbortSignal.timeout(deadline) }),
+      fetch: async (request) => {
+        const response = await globalThis.fetch(request, {
+          signal: AbortSignal.timeout(deadline),
+        })
+        // D7 (FE-39): a refusal because they may not build is heard by the shell; the answer
+        // itself is left to `unwrap`, read from a copy.
+        if (response.status === 403)
+          void response
+            .clone()
+            .json()
+            .then((body: { error?: { code?: unknown } }) =>
+              noticeRefusal(body?.error?.code),
+            )
+            .catch(() => undefined)
+        return response
+      },
     })
   const client = clientWith(timeoutMs)
   const deploys = clientWith(DEPLOY_TIMEOUT_MS)

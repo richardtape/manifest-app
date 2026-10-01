@@ -13,6 +13,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../app.js'
 import { signInHref } from '../auth.js'
+import { notOpen } from '../not-open.js'
 import { machineryIn } from './machinery.js'
 import type { Platform } from '../platform/api.js'
 import { words } from '../words.js'
@@ -800,5 +801,185 @@ describe('a failed sign-out’s notice does not follow them round (the final rev
     })
     await screen.findByRole('heading', { name: words.profile.title })
     expect(screen.queryByText(words.signOut.failed)).toBeNull()
+  })
+})
+
+const STUDENT: Schemas['Me'] = {
+  id: '22222222-2222-4222-8222-222222222222',
+  puid: 'stu000001',
+  displayName: 'Student One',
+  email: 'student@example.test',
+  role: 'member',
+  mayBuild: false,
+}
+/** Someone who stopped being faculty, and owns an app (Rich: they keep it, and start nothing new). */
+const LAPSED: Schemas['Me'] = { ...ME, mayBuild: false }
+
+describe('someone who may not build, with no apps (D7, FE-39)', () => {
+  it.each(['/', '/new', '/apps/x', '/apps/x/conversations/y', '/profile', '/nowhere'])(
+    'at %s: the screen, their name, Sign out, no rail, the address kept',
+    async (path) => {
+      window.history.pushState({}, '', path)
+      const listProjects = vi.fn(() => Promise.resolve([]))
+      const getProject = vi.fn(() => new Promise<never>(() => undefined))
+      render(
+        <App
+          platform={platform({
+            getMe: () => Promise.resolve(STUDENT),
+            listProjects,
+            getProject,
+          })}
+        />,
+      )
+      expect(
+        await screen.findByRole('heading', { level: 1, name: words.notOpen.title }),
+      ).toBeTruthy()
+      expect(screen.getByText(words.notOpen.body)).toBeTruthy()
+      expect(screen.getByText(words.notOpen.who('Student One'))).toBeTruthy()
+      expect(screen.getByRole('button', { name: words.signOut.button })).toBeTruthy()
+      expect(screen.queryByRole('navigation', { name: 'Manifest' })).toBeNull()
+      expect(listProjects).toHaveBeenCalledTimes(1)
+      expect(getProject).not.toHaveBeenCalled()
+      expect(window.location.pathname).toBe(path)
+      expect(machineryIn(document.body.textContent ?? '')).toEqual([])
+      await waitFor(() => expect(document.title).toBe(words.shell.manifest))
+      cleanup()
+    },
+  )
+
+  it('Sign out POSTs, and a refusal says so on the same screen', async () => {
+    const posts: string[] = []
+    vi.stubGlobal('fetch', async (url: string) => {
+      posts.push(url)
+      return new Response('', { status: 500 })
+    })
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(STUDENT),
+          listProjects: () => Promise.resolve([]),
+        })}
+      />,
+    )
+    // Found before the click's act: inside it, React holds the screen's arrival until it ends.
+    const button = await screen.findByRole('button', { name: words.signOut.button })
+    await act(async () => {
+      fireEvent.click(button)
+    })
+    expect(await screen.findByText(words.signOut.failed)).toBeTruthy()
+    expect(posts).toEqual(['/auth/logout'])
+    expect(screen.getByText(words.notOpen.title)).toBeTruthy()
+  })
+
+  it('their session ends while we look (401): sign in again, never a blank page', async () => {
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(STUDENT),
+          listProjects: () => Promise.reject(refused(401, 'UNAUTHENTICATED')),
+        })}
+      />,
+    )
+    expect(await screen.findByText(words.expired.body)).toBeTruthy()
+    expect(
+      screen.getByRole('link', { name: words.expired.button }).getAttribute('href'),
+    ).toBe(signInHref('/'))
+    expect(screen.queryByRole('navigation', { name: 'Manifest' })).toBeNull()
+    expect(screen.queryByText(words.notOpen.title)).toBeNull()
+  })
+
+  it('listProjects fails: moment 2’s words and Try again, never the screen by guess', async () => {
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(STUDENT),
+          listProjects: () => Promise.reject(new TypeError('no network')),
+        })}
+      />,
+    )
+    expect(await screen.findByText(words.unreachable.body)).toBeTruthy()
+    expect(screen.getByRole('button', { name: words.unreachable.button })).toBeTruthy()
+    expect(screen.queryByText(words.notOpen.title)).toBeNull()
+  })
+})
+
+describe('someone who stopped being faculty, and keeps apps (D7: they start nothing new)', () => {
+  it('Your apps, with their app, and no Start something new', async () => {
+    const mineToo = {
+      ...fixtures.PROJECT,
+      owner: { id: LAPSED.id, displayName: LAPSED.displayName },
+    }
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(LAPSED),
+          listProjects: () => Promise.resolve([mineToo]),
+        })}
+      />,
+    )
+    const rail = await screen.findByRole('navigation', { name: 'Manifest' })
+    expect(within(rail).queryByText(words.shell.startNew)).toBeNull()
+    expect(screen.queryByText(words.notOpen.title)).toBeNull()
+  })
+
+  it('/new says the two sentences, in the page, beside the rail', async () => {
+    window.history.pushState({}, '', '/new')
+    const mineToo = {
+      ...fixtures.PROJECT,
+      owner: { id: LAPSED.id, displayName: LAPSED.displayName },
+    }
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(LAPSED),
+          listProjects: () => Promise.resolve([mineToo]),
+        })}
+      />,
+    )
+    const main = await screen.findByRole('main')
+    expect(
+      await within(main).findByRole('heading', { level: 1, name: words.notOpen.title }),
+    ).toBeTruthy()
+    expect(within(main).getByText(words.notOpen.body)).toBeTruthy()
+    expect(screen.getByRole('navigation', { name: 'Manifest' })).toBeTruthy()
+    expect(document.querySelector('#describe-words')).toBeNull()
+  })
+})
+
+describe('the decision, as it arrives (FE-39)', () => {
+  it('a getMe from before FE-39, with no mayBuild in it, builds as today', async () => {
+    const before = Object.fromEntries(
+      Object.entries(ME).filter(([key]) => key !== 'mayBuild'),
+    )
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(before as Schemas['Me']),
+          listProjects: () => Promise.resolve([]),
+        })}
+      />,
+    )
+    const rail = await screen.findByRole('navigation', { name: 'Manifest' })
+    expect(within(rail).getByText(words.shell.startNew)).toBeTruthy()
+    expect(screen.queryByText(words.notOpen.title)).toBeNull()
+  })
+
+  it('refused part-way: the signal reads getMe again, and the screen follows, never an error', async () => {
+    let asked = 0
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(++asked === 1 ? ME : STUDENT),
+          listProjects: () => Promise.resolve([]),
+        })}
+      />,
+    )
+    await screen.findByRole('navigation', { name: 'Manifest' })
+    await act(async () => {
+      notOpen.dispatchEvent(new Event('refused'))
+    })
+    expect(await screen.findByText(words.notOpen.title)).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(asked).toBe(2)
   })
 })

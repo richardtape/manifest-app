@@ -9,6 +9,8 @@ import { AskForChange } from './screens/change/ask.js'
 import { AppConversations } from './screens/change/conversations.js'
 import { Describing } from './screens/describe/describe.js'
 import { GoingLive } from './screens/going-live/going-live.js'
+import { useKeeps } from './screens/keeps.js'
+import { NotOpen, NotOpenHere } from './screens/not-open.js'
 import { Overview } from './screens/overview/overview.js'
 import { Preview } from './screens/preview/preview.js'
 import { useApp } from './screens/preview/use-app.js'
@@ -58,9 +60,15 @@ export function App({
       ? route.slug
       : undefined
   const signedIn = session.state === 'signed-in' || session.state === 'expired'
+  // D7 (FE-39): someone who may not build keeps their apps, and starts nothing new; with none,
+  // the one screen that says so, and nothing is looked up for them.
+  const me =
+    session.state === 'signed-in' || session.state === 'expired' ? session.me : undefined
+  const keeps = useKeeps(platform, me, expire)
+  const builds = keeps.state === 'builds'
   const { lookup, retry: retryApp } = useApp(
     platform,
-    signedIn ? slug : undefined,
+    signedIn && (builds || keeps.state === 'some') ? slug : undefined,
     expire,
   )
   // A conversation's project, as its screen reports it: the rail names it once it exists.
@@ -94,16 +102,18 @@ export function App({
     document.title =
       session.state === 'signed-out'
         ? words.signIn.tab
-        : route.name === 'your-apps'
-          ? words.shell.yourApps
-          : route.name === 'profile'
-            ? words.profile.title
-            : route.name === 'new' || route.name === 'conversation'
-              ? words.describe.tab
-              : lookup.state === 'found'
-                ? lookup.project.name
-                : words.shell.manifest
-  }, [session.state, route.name, lookup])
+        : keeps.state === 'none'
+          ? words.shell.manifest
+          : route.name === 'your-apps'
+            ? words.shell.yourApps
+            : route.name === 'profile'
+              ? words.profile.title
+              : route.name === 'new' || route.name === 'conversation'
+                ? words.describe.tab
+                : lookup.state === 'found'
+                  ? lookup.project.name
+                  : words.shell.manifest
+  }, [session.state, keeps.state, route.name, lookup])
 
   // MOCK MODE SAYS SO (F5 Task 3): first on every page, signed in or not, in words. Rich met
   // a mock-mode server through the edge on 2026-09-29, and nothing on the page told him.
@@ -134,6 +144,29 @@ export function App({
         />
       </main>,
     )
+  if (keeps.state === 'loading')
+    // Their session ended while we looked (a 401): sign in again, never a blank page.
+    return framed(
+      session.state === 'expired' ? (
+        <main className="app-alone">
+          <div role="alert">
+            <Card tone="attention">
+              <p className="body-lead">{words.expired.body}</p>
+              <Button kind="primary" href={signInHref(here)}>
+                {words.expired.button}
+              </Button>
+            </Card>
+          </div>
+        </main>
+      ) : null,
+    )
+  if (keeps.state === 'trouble')
+    return framed(
+      <main className="app-alone">
+        <TroubleNotice trouble={keeps.trouble} onRetry={keeps.retry} />
+      </main>,
+    )
+  if (keeps.state === 'none') return framed(<NotOpen name={session.me.displayName} />)
 
   const leave = () => {
     setSignOutFailed(false)
@@ -233,6 +266,11 @@ export function App({
           timeZone={timeZone}
         />
       )
+  else if (
+    !builds &&
+    (route.name === 'new' || (route.name === 'conversation' && slug === undefined))
+  )
+    page = <NotOpenHere />
   else if (route.name === 'new' || route.name === 'conversation') {
     const from = new URLSearchParams(here.split('?')[1] ?? '').get('from') ?? undefined
     // One element for both, in one place: what a press began survives the id arriving.
@@ -312,7 +350,7 @@ export function App({
                 })),
               })}
           homeHref="/"
-          newLabel={words.shell.startNew}
+          newLabel={builds ? words.shell.startNew : null}
           newHref="/new"
           user={session.me.displayName}
           signOutHref="/signed-out"

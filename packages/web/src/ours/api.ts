@@ -4,6 +4,7 @@ import type {
   Conversation,
   DryRunEvidence,
 } from '@manifest-app/server/progress'
+import { noticeRefusal } from '../not-open.js'
 
 /**
  * OUR OWN API (`/api/*`), FROM THE PAGE: this file is its one caller, as src/platform/ is
@@ -116,6 +117,7 @@ async function call(
     // Our server down behind the edge: its empty 502 (F1 M7).
     if (code === undefined && [502, 503, 504].includes(response.status))
       throw new OurRefusal('UNREACHABLE', response.status)
+    noticeRefusal(code)
     throw new OurRefusal(typeof code === 'string' ? code : 'UNEXPECTED', response.status)
   }
   return json

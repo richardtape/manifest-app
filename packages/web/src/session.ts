@@ -1,5 +1,6 @@
 import type { Schemas } from '@manifest/contract'
 import { useCallback, useEffect, useState } from 'react'
+import { notOpen } from './not-open.js'
 import type { Platform } from './platform/api.js'
 import { refusalOf } from './platform/refusal.js'
 
@@ -46,6 +47,14 @@ export function useSession(platform: Platform): {
       live = false
     }
   }, [platform, attempt])
+
+  // D7 (FE-39): a refusal met part-way reads who they are again (not-open.ts). The page stays as
+  // it is until getMe answers: no `loading`, which would blank it.
+  useEffect(() => {
+    const again = () => setAttempt((n) => n + 1)
+    notOpen.addEventListener('refused', again)
+    return () => notOpen.removeEventListener('refused', again)
+  }, [])
 
   const retry = useCallback(() => {
     setSession({ state: 'loading' })

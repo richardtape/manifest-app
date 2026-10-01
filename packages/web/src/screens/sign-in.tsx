@@ -1,6 +1,7 @@
-import { Button, MARK, TICK } from '@manifest-app/ui'
+import { Button, TICK } from '@manifest-app/ui'
 import { signInHref } from '../auth.js'
 import { words } from '../words.js'
+import { Brand } from './brand.js'
 
 /**
  * MOMENT 1: the one screen with no rail. The prototype's Sign in, in the walk-through's
@@ -12,28 +13,7 @@ export function SignIn({ returnTo }: { returnTo: string }) {
   return (
     <div className="signin">
       <div className="signin__brand">
-        <div className="signin__mark">
-          <span className="signin__sq">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--brand)"
-              strokeWidth={2.3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              {MARK.map((d) => (
-                <path key={d} d={d} />
-              ))}
-            </svg>
-          </span>
-          <span className="signin__name">Manifest</span>
-          <span className="signin__bar" />
-          <span className="signin__org">UBC</span>
-        </div>
+        <Brand />
         <div className="signin__hero">
           <h1 className="hero">{w.hero}</h1>
           <p className="signin__lead">{w.lead}</p>

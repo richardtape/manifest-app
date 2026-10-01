@@ -90,6 +90,13 @@ export const words = {
     button: 'Sign out',
     failed: "We couldn't sign you out. Close the browser to be sure.",
   },
+  /** D7 (Rich, 2026-09-29): someone who may not build. */
+  notOpen: {
+    title: "Manifest isn't available to you at the moment.",
+    body: "It's open to UBC faculty for now.",
+    /** Ours: so someone signed in with the wrong account can tell. The screen alone. */
+    who: (name: string) => `You're signed in as ${name}.`,
+  },
   notFound: {
     body: "There's nothing here.",
     link: 'Your apps',
