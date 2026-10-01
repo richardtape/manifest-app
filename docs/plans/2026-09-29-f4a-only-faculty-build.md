@@ -143,6 +143,19 @@ packages/web/src/
   Run: `node -e 'const o=require("/Users/rich/Developer/manifest/packages/contract/openapi.json"); console.log(o.info.version, JSON.stringify(o.components.schemas.Me.properties.mayBuild))'`
   Expected: `{"type":"boolean",…}` (not `undefined`).
 
+**(S1) What landed** (manifest `8771272`, its fix wave `42cd8c5`, 5a closed at `003adf7`; contract **1.5.0**): every
+name as proposed. `Me.mayBuild: boolean`, **required**; `createProject` and `startIntakeSession` declare
+`BUILDING_NOT_OPEN` (`403`, checked first), `addMember` `MEMBER_MAY_NOT_BUILD` (`409`, only for someone not already a
+member). The mock: `MANIFEST_MOCK_MAY_BUILD=0` answers `getMe` as Instructor One with `mayBuild: false` (so its one
+project is theirs: *keeps apps*) and both refusals; `MANIFEST_MOCK_ROLE=admin` still builds. The laptop's IdP:
+`student` (`student`) may not build; `instructor` and `colleague` (`faculty`) may; `operator` (`staff`) only as an
+administrator; `MANIFEST_ADMIN_PUIDS` unset. **Corrections:** (1) *required* turned six web tests' `Me` red at
+typecheck, so Task 1 gives each `mayBuild: true` (Task 3 Step 7's *"give `ME` `mayBuild: true`"* is then done);
+(2) Task 4 Step 2's *"tell the platform session first"* is: ask the sitting 6 session (`manifest-92`) for a 7100
+window, no Vitest and no control-plane restart, and say when it is done; (3) `pnpm test` exited 1 on an unhandled
+error from F5 sitting 6's test of the lead's view (`2aac271`): it ended while its two rounds ran on, writing to stores
+its cleanup had closed. It now waits for both (Task 1, test only).
+
 - [ ] **Step 2: Correct Tasks 2–4 to what landed.** Each name that differs, replaced by the landed one, each correction
   marked **(S1)**. If the decision is not a boolean, rule on the smallest reading that keeps *"one decision, read,
   never re-derived"*, and ledger it.
