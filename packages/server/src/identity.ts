@@ -11,8 +11,9 @@ import {
  * one use we may make of it is to replay it to `GET /v1/me` to learn who we serve. It is
  * never logged, stored, or sent anywhere else, and it never rides out of here on an error.
  * Who we serve, and whether they may build: `mayBuild` is the platform's decision (FE-39), never ours.
+ * Their address (F6, design §3) is where *your work is waiting* goes: an address is not a credential.
  */
-export type Person = { id: string; displayName: string; mayBuild: boolean }
+export type Person = { id: string; displayName: string; email: string; mayBuild: boolean }
 
 /**
  * The value of `manifest_session` in a Cookie header, and nothing else from it. **Two are
@@ -44,7 +45,12 @@ export async function whoIs(
       'getMe',
     )
     // A platform from before FE-39 sends no decision: they build as today, as the page reads it.
-    return { id: me.id, displayName: me.displayName, mayBuild: me.mayBuild !== false }
+    return {
+      id: me.id,
+      displayName: me.displayName,
+      email: me.email,
+      mayBuild: me.mayBuild !== false,
+    }
   } catch (error) {
     if (error instanceof ManifestApiError && error.status === 401) return undefined
     // A NEW error, carrying the status and code alone: the platform's message, or a cause,

@@ -229,7 +229,11 @@ type Setup = ReturnType<typeof setUp>
 
 /** A conversation whose plan is ready, its project made and its token ours: moment 5's end. */
 function planReady(s: Setup, personId = ALICE.id): Conversation {
-  s.store.rememberPerson({ id: personId, displayName: 'Someone' })
+  s.store.rememberPerson({
+    id: personId,
+    displayName: 'Someone',
+    email: 'someone@example.test',
+  })
   const conversation = s.store.createConversation(personId, 'A page for readings.')
   s.store.addMessage(conversation.id, 'we', { kind: 'project', project: PROJECT })
   s.store.savePlan(conversation.id, PLAN)

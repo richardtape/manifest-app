@@ -3,3 +3,5 @@ node_modules/
 dist/
 # Our server's database (F2 Decision 2): data, never committed.
 packages/server/.data/
+# F6's D2: the key that seals the Keeping watch tokens. Never committed, never in .data/.
+packages/server/.keys/

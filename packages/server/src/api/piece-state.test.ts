@@ -8,7 +8,11 @@ import { pieceOf, type Asked } from './piece-state.js'
  * F4 DECISION 6: EACH CHANGE IS ONE `asked` MESSAGE, and a conversation's piece of work is their
  * fold, as F2 folds the intake: a reconnect or a restart rebuilds it from the store alone.
  */
-const ALICE = { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', displayName: 'Alice' }
+const ALICE = {
+  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  displayName: 'Alice',
+  email: 'alice@example.test',
+}
 const PROJECT = '22222222-2222-4222-8222-222222222222'
 
 const cleanups: (() => void)[] = []

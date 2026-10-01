@@ -27,8 +27,13 @@ function fresh(): { store: Store; file: string } {
 const ALICE = {
   id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   displayName: 'Alice Instructor',
+  email: 'alice@example.test',
 }
-const BOB = { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', displayName: 'Bob Instructor' }
+const BOB = {
+  id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  displayName: 'Bob Instructor',
+  email: 'bob@example.test',
+}
 const WORDS =
   "A page where students post a response to the week's reading. They shouldn't see anyone else's until they've posted their own."
 
@@ -537,11 +542,7 @@ describe('the migration (F4 Decision 14: the line)', () => {
     pragma user_version = 3;
   `
 
-  it('is version 4', () => {
-    expect(VERSION).toBe(4)
-  })
-
-  it("opens F3's file (version 3) at version 4: every row intact, and a conversation can wait and be set aside", () => {
+  it("opens F3's file (version 3) at the latest version: every row intact, and a conversation can wait and be set aside", () => {
     const { dir, remove } = scratchDir()
     cleanups.push(remove)
     const file = join(dir, 'app.sqlite')
@@ -550,7 +551,7 @@ describe('the migration (F4 Decision 14: the line)', () => {
 
     const store = openStore(file)
     cleanups.push(() => store.close())
-    expect(pragmaOf(file, 'user_version')).toBe(4)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     expect(store.getConversation('c-1', ALICE.id)).toEqual({
       id: 'c-1',
       personId: ALICE.id,
@@ -562,8 +563,17 @@ describe('the migration (F4 Decision 14: the line)', () => {
       updatedAt: '2026-09-28T01:00:00.000Z',
     })
     const after = dumpAll(file)
-    for (const table of ['persons', 'messages', 'plans', 'runs', 'questions'])
+    for (const table of ['messages', 'plans', 'runs', 'questions'])
       expect(after[table]).toBe(before[table])
+    // Version 5 (F6) adds three columns to persons, each null on a row it did not write.
+    expect(JSON.parse(after['persons']!)).toEqual([
+      {
+        ...JSON.parse(before['persons']!)[0],
+        email: null,
+        here_at: null,
+        last_here: null,
+      },
+    ])
     expect(JSON.parse(after['conversations']!)).toEqual([
       { ...JSON.parse(before['conversations']!)[0], waiting_since: null },
     ])
@@ -852,5 +862,140 @@ describe('a change that answers a refusal (F5 Task 8, the final review’s I1)',
     expect(store.changeForRefusal(PROJECT, 'approval-b', ALICE.id)).toBeUndefined()
     expect(store.changeForRefusal(PROJECT, 'approval-c', ALICE.id)).toBeUndefined()
     expect(store.changeForRefusal(PROJECT, 'approval-z', ALICE.id)).toBeUndefined()
+  })
+})
+
+describe('the migration (F6 Decision 3: what the keeper keeps)', () => {
+  /** What F4 and F5 left behind: version 4, a row in every table, persons without an address. */
+  const F4 = `
+    create table persons (id text primary key, display_name text not null, seen_at text not null);
+    create table conversations (
+      id text primary key,
+      person_id text not null references persons (id),
+      project_id text,
+      title text not null,
+      state text not null check (state in (
+        'describing', 'questions', 'naming', 'making', 'planning', 'plan-ready', 'agreed', 'building', 'built',
+        'paused', 'failed', 'waiting', 'set-aside'
+      )),
+      description text not null,
+      created_at text not null,
+      updated_at text not null,
+      waiting_since text
+    );
+    create index conversations_by_person on conversations (person_id);
+    create index conversations_by_project on conversations (project_id, state);
+    create table messages (
+      conversation_id text not null references conversations (id),
+      seq integer not null, sender text not null check (sender in ('person', 'we')),
+      body text not null, at text not null, primary key (conversation_id, seq)
+    );
+    create table plans (
+      conversation_id text not null references conversations (id),
+      version integer not null, body text not null, at text not null,
+      primary key (conversation_id, version)
+    );
+    create table problems (
+      reference text primary key, code text not null, at text not null,
+      place text not null check (place in ('server', 'browser')),
+      operation text, status integer, person_id text, conversation_id text, platform_request_id text
+    );
+    create table runs (
+      id text primary key, conversation_id text not null references conversations (id),
+      round integer not null, step text not null, moves integer not null, tries text not null,
+      status text not null, session_ids text not null, model text, last text, same_refusal text,
+      created_at text not null, updated_at text not null, detail text
+    );
+    create table trace (
+      run_id text not null, seq integer not null, at text not null, entry text not null,
+      primary key (run_id, seq)
+    );
+    create table questions (
+      id text primary key, run_id text not null,
+      conversation_id text not null references conversations (id),
+      ask text not null, fallback text, secret text, answer text, answered_at text, asked_at text not null
+    );
+    insert into persons values ('${ALICE.id}', 'Alice Instructor', '2026-09-30T00:00:00.000Z');
+    insert into conversations values ('c-1', '${ALICE.id}', 'p-1', 'First build', 'built', 'the words',
+      '2026-09-30T00:00:00.000Z', '2026-09-30T01:00:00.000Z', null);
+    insert into messages values ('c-1', 1, 'person', '{"words":"the words"}', '2026-09-30T00:00:00.000Z');
+    insert into plans values ('c-1', 1, '{"whoGetsIn":"Anyone with a CWL"}', '2026-09-30T00:00:00.000Z');
+    insert into problems values ('ABCD-1234', 'INTERNAL', '2026-09-30T00:00:00.000Z', 'server', 'deploy', 500,
+      '${ALICE.id}', 'c-1', null);
+    insert into runs values ('run-1', 'c-1', 1, 'answers', 0, '{}', 'done', '[]', null, null, null,
+      '2026-09-30T00:00:00.000Z', '2026-09-30T01:00:00.000Z', '{"instanceId":"i-1"}');
+    insert into trace values ('run-1', 1, '2026-09-30T00:10:00.000Z', '{"kind":"platform"}');
+    insert into questions values ('q-1', 'run-1', 'c-1', 'Who is my class?', null, null, 'CPSC 110',
+      '2026-09-30T00:30:00.000Z', '2026-09-30T00:20:00.000Z');
+    pragma user_version = 4;
+  `
+  const NEW_TABLES = ['apps', 'members', 'watch_tokens', 'history', 'emails']
+
+  function f4File(): string {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    execOn(file, F4)
+    return file
+  }
+
+  it('is version 5', () => {
+    expect(VERSION).toBe(5)
+  })
+
+  it("opens F4's file (version 4) at version 5: every row kept, persons with three null columns, and the five new tables", () => {
+    const file = f4File()
+    const before = dumpAll(file)
+    const store = openStore(file)
+    cleanups.push(() => store.close())
+    expect(pragmaOf(file, 'user_version')).toBe(5)
+    const after = dumpAll(file)
+    for (const table of [
+      'conversations',
+      'messages',
+      'plans',
+      'problems',
+      'runs',
+      'trace',
+      'questions',
+    ])
+      expect(after[table]).toBe(before[table])
+    expect(JSON.parse(after['persons']!)).toEqual([
+      {
+        ...JSON.parse(before['persons']!)[0],
+        email: null,
+        here_at: null,
+        last_here: null,
+      },
+    ])
+    for (const table of NEW_TABLES) expect(after[table]).toBe('[]')
+    // A person remembered again gains their address; one not yet remembered has none.
+    expect(store.personEmail(ALICE.id)).toBeUndefined()
+    store.rememberPerson(ALICE)
+    expect(store.personEmail(ALICE.id)).toBe(ALICE.email)
+  })
+
+  it('a new file is version 5, with the five new tables and persons holding an address', () => {
+    const { store, file } = fresh()
+    expect(pragmaOf(file, 'user_version')).toBe(5)
+    expect(Object.keys(dumpAll(file))).toEqual(expect.arrayContaining(NEW_TABLES))
+    store.rememberPerson(ALICE)
+    expect(JSON.parse(dumpAll(file)['persons']!)).toEqual([
+      expect.objectContaining({
+        id: ALICE.id,
+        email: ALICE.email,
+        here_at: null,
+        last_here: null,
+      }),
+    ])
+  })
+
+  it('opening the migrated file again changes nothing', () => {
+    const file = f4File()
+    openStore(file).close()
+    const once = dumpAll(file)
+    openStore(file).close()
+    expect(dumpAll(file)).toEqual(once)
+    expect(pragmaOf(file, 'user_version')).toBe(5)
   })
 })

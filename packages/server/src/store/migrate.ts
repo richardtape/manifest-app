@@ -10,11 +10,13 @@ import type { DatabaseSync } from 'node:sqlite'
  *   which `schema.sql` makes.
  * - 4: F4 Decision 14. `conversations` gains `waiting` and `set-aside`, and `waiting_since`, its
  *   place in the app's line. Rebuilt again, as for 2: one rebuild brings 0, 2 or 3 up to it.
+ * - 5: F6 Decision 3. `persons` gains `email`, `here_at` and `last_here`; `apps`, `members`,
+ *   `watch_tokens`, `history` and `emails` are new tables, which `schema.sql` makes.
  *
  * `schema.sql` runs first, and makes a new file's tables as they are now. Only an existing
  * table keeps the definition it was made with, which is what this corrects.
  */
-export const VERSION = 4
+export const VERSION = 5
 
 /**
  * The one definition of `conversations`, read out of `schema.sql` itself, so the rebuild can
@@ -41,6 +43,13 @@ export function migrate(db: DatabaseSync, schema: string): void {
     const columns = db.prepare('pragma table_info(runs)').all() as { name: string }[]
     if (!columns.some((column) => column.name === 'detail'))
       db.exec('alter table runs add column detail text')
+  }
+  if (version < 5) {
+    // A new file's persons already have them (schema.sql); F5's do not.
+    const columns = db.prepare('pragma table_info(persons)').all() as { name: string }[]
+    for (const column of ['email', 'here_at', 'last_here'])
+      if (!columns.some((has) => has.name === column))
+        db.exec(`alter table persons add column ${column} text`)
   }
   if (version < VERSION) db.exec(`pragma user_version = ${VERSION}`)
 }

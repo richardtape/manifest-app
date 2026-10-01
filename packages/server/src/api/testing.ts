@@ -8,20 +8,24 @@ import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 export const ALICE = {
   id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   displayName: 'Alice Instructor',
+  email: 'alice@example.test',
 }
 export const BOB = {
   id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   displayName: 'Bob Instructor',
+  email: 'bob@example.test',
 }
 /** Someone who may not build (D7, FE-39): the platform's decision, as `getMe` answers it. */
 export const CAROL = {
   id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
   displayName: 'Carol Student',
+  email: 'carol@example.test',
 }
 /** Answered as a platform from before FE-39 answers: no `mayBuild` at all. */
 export const DANA = {
   id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
   displayName: 'Dana Before',
+  email: 'dana@example.test',
 }
 const SESSIONS: Record<string, typeof ALICE> = {
   'alice-session': ALICE,
@@ -67,7 +71,6 @@ export async function fakeControlPlane(answer?: Answer): Promise<{
         JSON.stringify({
           ...person,
           puid: 'x',
-          email: 'x@example.test',
           role: 'member',
           ...(person === DANA ? {} : { mayBuild: person !== CAROL }),
         }),

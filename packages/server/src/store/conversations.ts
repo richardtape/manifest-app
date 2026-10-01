@@ -1,6 +1,7 @@
 import type { Person } from '../identity.js'
 import type { Conversation, ConversationState } from '../api/progress.js'
 import type { AskedQuestion, Run, RunStatus } from './runs.js'
+import type { KeepingStatements } from './keeping.js'
 
 /** The page's contract owns these (Decision 4); the store keeps them. */
 export type { Conversation, ConversationState } from '../api/progress.js'
@@ -25,12 +26,16 @@ export interface Problem {
 }
 
 /**
- * THE ONLY READER OF THE DATABASE (Decision 2). Nothing in it is a credential (Decision 1).
- * A plan is `unknown` here: Task 9's schema parses it on the way out.
+ * THE ONLY READER OF THE DATABASE (Decision 2). Nothing in it is a credential (Decision 1), but
+ * F6's sealed watch token (D2, `KeepingStatements`). A plan is `unknown` here: Task 9's schema
+ * parses it on the way out.
  */
-export interface Store {
-  /** Their name, never the decision (FE-39): that is read again with every request. */
-  rememberPerson(person: Pick<Person, 'id' | 'displayName'>): void
+export interface Store extends KeepingStatements {
+  /**
+   * Their name and address, never the decision (FE-39): that is read again with every request.
+   * Their visits are kept (F6 Decision 7).
+   */
+  rememberPerson(person: Pick<Person, 'id' | 'displayName' | 'email'>): void
   createConversation(personId: string, description: string): Conversation
   /** Another person's conversation is `undefined`, exactly as one that does not exist. */
   getConversation(id: string, personId: string): Conversation | undefined
@@ -89,6 +94,10 @@ export interface Store {
     rehearsalId: string,
     personId: string,
   ): string | undefined
+  /** F6 Decision 14: conversations on an app, any person's, untouched since `before`. */
+  idleConversations(before: string): Conversation[]
+  /** F6 Decision 15: anyone's fix for this incident, not set aside. */
+  fixUnderWay(projectId: string, incidentId: string): boolean
   /** `body` is our structured JSON. */
   addMessage(conversationId: string, from: Sender, body: unknown): void
   listMessages(conversationId: string): { from: Sender; body: unknown; at: string }[]

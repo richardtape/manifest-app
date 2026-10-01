@@ -105,6 +105,8 @@ describe('/api/me: who we serve (FE-2)', () => {
       {
         id: '11111111-1111-4111-8111-111111111111',
         displayName: 'Instructor One',
+        // F6: their own address, to their own session (design §3).
+        email: 'instructor@example.test',
         mayBuild: true,
       },
     ])

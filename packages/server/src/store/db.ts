@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
+import { keepingStatements } from './keeping.js'
 import { migrate } from './migrate.js'
 import { runStatements } from './runs.js'
 import type {
@@ -81,11 +82,13 @@ export function openStore(file: string): Store {
 
   return {
     ...runStatements(db, now),
+    ...keepingStatements(db, now),
     rememberPerson(person) {
       db.prepare(
-        `insert into persons (id, display_name, seen_at) values (?, ?, ?)
-         on conflict (id) do update set display_name = excluded.display_name, seen_at = excluded.seen_at`,
-      ).run(person.id, person.displayName, now())
+        `insert into persons (id, display_name, seen_at, email) values (?, ?, ?, ?)
+         on conflict (id) do update set
+           display_name = excluded.display_name, seen_at = excluded.seen_at, email = excluded.email`,
+      ).run(person.id, person.displayName, now(), person.email)
     },
 
     createConversation(personId, description) {
@@ -194,6 +197,29 @@ export function openStore(file: string): Store {
         )
         .get(projectId, personId, incidentId) as { id: string } | undefined
       return row?.id
+    },
+
+    idleConversations(before) {
+      const rows = db
+        .prepare(
+          `select * from conversations where project_id is not null and updated_at < ?
+           order by updated_at, rowid`,
+        )
+        .all(before) as unknown as ConversationRow[]
+      return rows.map(conversationOf)
+    },
+
+    fixUnderWay(projectId, incidentId) {
+      const row = db
+        .prepare(
+          `select 1 from messages join conversations on conversations.id = messages.conversation_id
+           where conversations.project_id = ? and conversations.state != 'set-aside'
+             and json_extract(messages.body, '$.kind') = 'asked'
+             and json_extract(messages.body, '$.fix.incidentId') = ?
+           limit 1`,
+        )
+        .get(projectId, incidentId)
+      return row !== undefined
     },
 
     changeForRefusal(projectId, approvalId, personId) {

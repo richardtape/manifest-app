@@ -42,6 +42,7 @@ const GATEWAY = 'http://127.0.0.1:7106/v1'
 const ALICE = {
   id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   displayName: 'Alice Instructor',
+  email: 'alice@example.test',
 }
 const PROJECT = {
   id: '22222222-2222-4222-8222-222222222222',

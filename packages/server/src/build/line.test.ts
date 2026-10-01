@@ -18,8 +18,16 @@ import { createLine, type Line } from './line.js'
  * first, and the next starts by itself when the app is freed. The holder is derived from the
  * store (and from work still in flight, M7-1); only the waiting order is kept.
  */
-const ALICE = { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', displayName: 'Alice' }
-const BOB = { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', displayName: 'Bob' }
+const ALICE = {
+  id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  displayName: 'Alice',
+  email: 'alice@example.test',
+}
+const BOB = {
+  id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  displayName: 'Bob',
+  email: 'bob@example.test',
+}
 const PROJECT = '22222222-2222-4222-8222-222222222222'
 const OTHER = '99999999-9999-4999-8999-999999999999'
 

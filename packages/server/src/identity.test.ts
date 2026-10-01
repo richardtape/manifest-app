@@ -90,12 +90,22 @@ describe('whoIs: the only reader of the session (FE-2)', () => {
     expect(ok.seen[0]?.method).toBe('GET')
     expect(ok.seen[0]?.url).toBe('/v1/me')
     expect(ok.seen[0]?.headers.cookie).toBe('manifest_session=S')
-    expect(person).toEqual({ id: ME.id, displayName: ME.displayName, mayBuild: true })
+    expect(person).toEqual({
+      id: ME.id,
+      displayName: ME.displayName,
+      email: ME.email,
+      mayBuild: true,
+    })
   })
 
-  it('only id, displayName and the decision leave it: never email or puid', async () => {
+  it('only id, displayName, their address and the decision leave it: never puid or role (F6: an address is not a credential)', async () => {
     const { person } = await everyCase('S')
-    expect(Object.keys(person ?? {}).sort()).toEqual(['displayName', 'id', 'mayBuild'])
+    expect(Object.keys(person ?? {}).sort()).toEqual([
+      'displayName',
+      'email',
+      'id',
+      'mayBuild',
+    ])
   })
 
   it('a getMe from before FE-39, with no decision in it, builds as today', async () => {
