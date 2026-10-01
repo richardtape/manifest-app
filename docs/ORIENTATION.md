@@ -10,7 +10,8 @@ says which plan is current. This file states where things stand and the rules. I
   `manifest-00`), while the platform runs its sittings 6–10. **Ask Rich first** whether to start it now; then
   superpowers:brainstorming on the walk-through's moments 16–20, then writing-plans. Its mail sink is live (below).
   - **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the platform's sittings 6–10
-    land (`manifest-60`). Sitting 6's contract commit is in (`b2c75e6`, below); 6 itself was still running at our close.
+    land (`manifest-60`). **Sitting 6 landed** (`d54e1e1`, below): its waits are counted in Vancouver days (a same-day
+    date is noon there), and nothing can be submitted until sitting 7's drafts.
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
     session starts with `pgrep -fl vitest`. **Restart `pnpm mock`** after a landing that moves the mock's fixtures.
 - **F4a, executed** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), its
@@ -43,10 +44,11 @@ says which plan is current. This file states where things stand and the rules. I
   - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
     `409 MEMBER_MAY_NOT_BUILD`, `MANIFEST_ADMIN_PUIDS`; the mock's `MANIFEST_MOCK_MAY_BUILD=0`; the laptop's `student` may
     not build, `instructor` and `colleague` may, `operator` only as an administrator). **Mailpit landed** (`8155bcf`).
-    **Sitting 6 running** (`manifest-92`, Task 9; its close guessed at 04:00–05:00 Vancouver): its **contract commit
-    `b2c75e6` adopted** (two operations, `submitIamRegistration` and `submitPrivacyAssessment`; five codes; `since`,
-    `stagingRegistration`, `submittedAt`/`submittedBy`: our test data only, `f8dcfbc`). Then 7–10 (10 merged with the
-    published-text pass) and 12. Then its **faculty-ready plan**: contract 1.6.0, `__Host-` cookies on https (its Task 5
+    **Sitting 6 CLOSED** (`manifest-92`, Task 9, `d54e1e1`; fix wave `db2ddbf`): two operations, `submitIamRegistration`
+    and `submitPrivacyAssessment`; five codes; `since`, `stagingRegistration`, `submittedAt`/`submittedBy` (adopted in our
+    test data, `f8dcfbc`; nothing else of ours moved). **Next: sitting 7** (Task 10: `draftIamRegistration`, the package),
+    then 8–10 (10 merged with the published-text pass) and 12. **Two questions for Rich** sit in manifest's ORIENTATION §8
+    *Open*: `change_requested`'s two meanings, and whether a re-submission waits for UBC's order too. Then its **faculty-ready plan**: contract 1.6.0, `__Host-` cookies on https (its Task 5
     messages us first). `api-findings.md` has each shape.
   - **The contract is 1.5.0, 68 operations.**
   - **Mailpit, for F6** (`manifest-60`): SMTP `127.0.0.1:7111` (no authentication, no TLS); the inbox
@@ -62,11 +64,11 @@ says which plan is current. This file states where things stand and the rules. I
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
 - **The machine** *(2026-10-01, 07:45Z)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102**, both
-    restarted at F4a's close for `b2c75e6`'s fixtures. **A fresh dev database**: F5's is kept as
+    restarted at F4a's close; **the mock again at sitting 6's close** (pid 3703), for `db2ddbf`'s fixtures. **A fresh dev database**: F5's is kept as
     `.data/app-before-f4a.sqlite`, F4a's acceptance runs as `.data/app-f4a-checks.sqlite`. Switch to edge mode before
     anyone clicks the real platform, and say so.
-  - **7100 is the platform's**: not answering at our close (`manifest-92`'s sitting 6, after our window; its new migration
-    0045 was held until then). **LiteLLM on 7106; Mailpit on 7111/7112.**
+  - **7100 is the platform's**: free at its sitting 6's close (control plane PID 96152 on `db2ddbf`, real GitHub, its
+    database empty). **LiteLLM on 7106; Mailpit on 7111/7112.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
 - **How to run it** is §6, below.
