@@ -690,6 +690,28 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(viewOf(h, id)?.line).toBe('The pages are written.')
   })
 
+  it('each file a read asks for is traced by its path, never its content: a loop of reads can be seen (sitting 6, the real walk)', async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          read('server.js', 'public/weeks.html'),
+          read('server.js'),
+          commit(),
+          done(),
+        ],
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    const entries = h.store.listTrace(h.store.latestRun(id)!.id).map((t) => t.entry)
+    const reads = entries
+      .map((e) => e as { kind: string; operation?: string; named?: string | null })
+      .filter((e) => e.kind === 'platform' && e.operation === 'getFile')
+      .map((e) => e.named)
+    expect(reads).toEqual(['server.js', 'public/weeks.html', 'server.js'])
+    expect(JSON.stringify(entries)).not.toContain('express')
+  })
+
   it('an answer that was not one of the moves costs a move and is told, and the round goes on', async () => {
     const { h, id } = await startedRound({
       script: {

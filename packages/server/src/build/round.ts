@@ -668,6 +668,19 @@ export function createRounds(deps: RoundDeps): Rounds {
   function tracedSource(live: Live): Source {
     return {
       ...source,
+      // Each file a read asks for, by its path and never its content (sitting 6: a lead that read in a
+      // loop until the move limit, and the trace could not say what it read).
+      async file(token, projectId, path, ref) {
+        let code: string | null = null
+        try {
+          return await source.file(token, projectId, path, ref)
+        } catch (error) {
+          code = codeOf(error)
+          throw error
+        } finally {
+          record(live, 'getFile', path, code)
+        }
+      },
       async commit(token, projectId, body, sent = []) {
         const calls: Sent[] = []
         let code: string | null = null
