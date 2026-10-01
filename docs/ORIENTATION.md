@@ -5,11 +5,12 @@ joining. **The next job is always in the current plan's sittings table**, and [`
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
 **Where things stand** *(2026-10-01, 18:25Z: **F6's sitting 2 is done** (our server keeps the watch); the platform's
-sitting 8 (`manifest-8d`) is running, its fix wave `4aaf0ef` adopted)*:
+sitting 8 (`manifest-8d`) **closed at `c5116e0`** (docs only after `4aaf0ef`, adopted); its sitting 9 is next)*:
 
 - **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6's sitting 3, natively** (superpowers:executing-plans).
-  1. **First, `ListAgents`, and message the platform's live sitting** (`manifest-8d` while its sitting 8 runs) with your
-     own session name: it reports to `manifest-app-28`, which has ended its work. Then `pgrep -fl vitest`, and Step 0
+  1. **First, `ListAgents`, and message the platform's live sitting** (its sitting 9, Task 12, once it runs: it messages us
+     before its contract commit) with your own session name: the platform knows us as `manifest-app-28`, which has ended
+     its work. Then `pgrep -fl vitest`, and Step 0
      (the plan's *Adopting what lands*).
   2. **Read** the design, [`plans/2026-10-01-f6-keeping-watch-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md),
      then the plan, [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md): its sittings table,
@@ -29,8 +30,9 @@ sitting 8 (`manifest-8d`) is running, its fix wave `4aaf0ef` adopted)*:
     four kinds of email; the keeper inside our server; nodemailer; our own live-address watch; only a never-live app
     deleted by its owner (FE-45, confirmed by Rich, for the rest).
   - **Sitting 1 is done** (`manifest-app-34`, 16:46–17:10Z on 7100): Tasks 3, 4, 6 and 11 corrected (S1). **`f6-watch` is
-    live on 7100**, a real repository on Manifest-local-dev: Rich removes it on github.com once the platform's sitting 8
-    has truncated its database.
+    gone from 7100** (the platform's sitting 8 truncated its database; `manifest-8d` removed its six containers, networks,
+    volumes and image): **its repository `Manifest-local-dev/f6-watch` is owned by no project, for Rich to delete on
+    github.com.**
   - **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the platform's sittings 6–10
     land (`manifest-60`). **Sitting 6 landed** (`d54e1e1`, below): its waits are counted in Vancouver days (a same-day
     date is noon there), and nothing can be submitted until sitting 7's drafts. **Sitting 7's contract commit landed**
@@ -61,7 +63,7 @@ sitting 8 (`manifest-8d`) is running, its fix wave `4aaf0ef` adopted)*:
   **F4a** (2026-10-01): Rich clicked each on the real platform. The walk-through is the design ([`walkthrough.md`](./walkthrough.md)).
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
   - **Who is who** *(names change at every handover: `ListAgents` first)*: `manifest-60` its planning session (Rich's
-    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); **`manifest-8d`**, its sitting 8 (Task 11; its contract commit `81892d4` and its fix wave `4aaf0ef` adopted; it keeps contract and mock typecheck-clean as one step, messages before any further contract commit and at its close; **it messages `manifest-app-28`**, so a new session of ours tells it its own name first; its Docker tier takes `default-chat-large` out of LiteLLM and restarts the edge until its close: mock mode is unaffected); `manifest-s5-b3` Rich's S5 spike,
+    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01; its contract commit `81892d4` and fix wave `4aaf0ef` adopted, nothing in the contract after them); **its sitting 9** (Task 12: `requestApproval`, `listQueue`, the fleet's name, state and `archivedAt`) is next, **a contract commit**, waiting first for Rich's answer on `change_requested`; that session messages us before its contract commit, and a new session of ours tells it its own name; `manifest-s5-b3` Rich's S5 spike,
     **finished** (2026-10-01, its findings at manifest `0bb544c`): nothing of it runs, and it no longer needs telling of
     our test runs.
   - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
@@ -94,10 +96,10 @@ sitting 8 (`manifest-8d`) is running, its fix wave `4aaf0ef` adopted)*:
     `building` there, holding the mock's app), F5's as `.data/app-before-f4a.sqlite`. **Its key file**,
     `packages/server/.keys/keeping.key`, seals nothing yet (no page mints until Task 8). Switch to edge mode before anyone
     clicks the real platform, and say so.
-  - **7100 is the platform's**: its sitting 7 closed (control plane PID 93832 on `06b5333`, real GitHub); F6's sitting 1
-    measured in its window (16:46–17:10Z) and handed it back. **`f6-watch` is live there** (6 `mf-f6-watch-*`
-    containers), until the platform's sitting 8 truncates at its first Vitest; `operator` is an administrator again
-    (granted by `manifest-8e` at Rich's word). **LiteLLM on 7106; Mailpit on 7111/7112.**
+  - **7100 is the platform's**: at its sitting 8's close the real control plane is up (PID 32498 on `4aaf0ef`, real
+    GitHub, the capable model registered) with an **empty database** (no projects, no users: `operator`'s admin grant
+    went with it, and is asked again after `operator` signs in). Nothing of ours is there. **LiteLLM on 7106; Mailpit on
+    7111/7112.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
 - **How to run it** is §6, below.
