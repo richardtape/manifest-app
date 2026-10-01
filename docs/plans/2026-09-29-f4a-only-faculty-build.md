@@ -69,12 +69,11 @@ in *What executing this plan found*; this table; ORIENTATION's *Where things sta
 | The button | **[Sign out]** (the shell's `words.signOut.button`); if it fails, the shell's *"We couldn't sign you out. Close the browser to be sure."* |
 | `/new` for someone who keeps apps | the heading and *"It's open to UBC faculty for now."*, in the page, beside the rail |
 
-**For Rich at Task 1 (the platform's 5a fix wave, manifest `42cd8c5`, relayed by `manifest-74`):** the platform reads the
-CWL affiliation **at sign-in**, so a faculty member signed in before 5a has none recorded, and `getMe` answers
-`mayBuild: false` until they sign in again; `BUILDING_NOT_OPEN`'s hint now leads with *sign out and sign in again*. As
-proposed above, our screen would tell that faculty member Manifest is not open to them. **Proposed:** a line above
-**[Sign out]**, *"If you're UBC faculty, sign out and sign in again."* (the words his). On the laptop the platform's
-test runs end every session, so a walk signs in afresh and rarely meets it; a real deployment meets it once, for everyone.
+**Decided by Rich, 2026-10-01: the words stay as they are.** The platform's 5a fix wave (manifest `42cd8c5`, relayed by
+`manifest-74`) reads the CWL affiliation **at sign-in**, so someone signed in before 5a reads `mayBuild: false` until
+they sign in again (`BUILDING_NOT_OPEN`'s hint leads with *sign out and sign in again*). We proposed a line above
+**[Sign out]** for that faculty member; Rich: *"It's never been anywhere near real servers, so there's no risk of anyone
+signing in beforehand. Let's keep the message as-is."* No line is added.
 
 ## Global Constraints
 
