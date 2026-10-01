@@ -18,14 +18,21 @@ export const CAROL = {
   id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
   displayName: 'Carol Student',
 }
+/** Answered as a platform from before FE-39 answers: no `mayBuild` at all. */
+export const DANA = {
+  id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  displayName: 'Dana Before',
+}
 const SESSIONS: Record<string, typeof ALICE> = {
   'alice-session': ALICE,
   'bob-session': BOB,
   'carol-session': CAROL,
+  'dana-session': DANA,
 }
 export const AS_ALICE = 'manifest_session=alice-session'
 export const AS_BOB = 'manifest_session=bob-session'
 export const AS_CAROL = 'manifest_session=carol-session'
+export const AS_DANA = 'manifest_session=dana-session'
 
 export interface Seen {
   method: string | undefined
@@ -62,7 +69,7 @@ export async function fakeControlPlane(answer?: Answer): Promise<{
           puid: 'x',
           email: 'x@example.test',
           role: 'member',
-          mayBuild: person !== CAROL,
+          ...(person === DANA ? {} : { mayBuild: person !== CAROL }),
         }),
       )
       return

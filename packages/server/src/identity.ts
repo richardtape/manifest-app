@@ -43,7 +43,8 @@ export async function whoIs(
       await createManifestClient({ origin: platformOrigin, session }).GET('/v1/me'),
       'getMe',
     )
-    return { id: me.id, displayName: me.displayName, mayBuild: me.mayBuild }
+    // A platform from before FE-39 sends no decision: they build as today, as the page reads it.
+    return { id: me.id, displayName: me.displayName, mayBuild: me.mayBuild !== false }
   } catch (error) {
     if (error instanceof ManifestApiError && error.status === 401) return undefined
     // A NEW error, carrying the status and code alone: the platform's message, or a cause,

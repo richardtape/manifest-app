@@ -922,6 +922,37 @@ describe('someone who stopped being faculty, and keeps apps (D7: they start noth
     expect(screen.queryByText(words.notOpen.title)).toBeNull()
   })
 
+  it('their app on Your apps, and its own page as before (Review Focus 2)', async () => {
+    const keeps = { ...fixtures.ME, mayBuild: false }
+    render(<App platform={mockPlatform({}, keeps)} />)
+    expect(await screen.findByText(fixtures.PROJECT.name)).toBeTruthy()
+    cleanup()
+    window.history.pushState({}, '', '/apps/mock-app')
+    render(<App platform={mockPlatform({}, keeps)} />)
+    expect(
+      await screen.findByRole('heading', { level: 1, name: fixtures.PROJECT.name }),
+    ).toBeTruthy()
+    expect(screen.queryByText(words.notOpen.title)).toBeNull()
+  })
+
+  it('/new: the tab says Manifest, not Describe what you need (a screen reader hears it first)', async () => {
+    window.history.pushState({}, '', '/new')
+    const mineToo = {
+      ...fixtures.PROJECT,
+      owner: { id: LAPSED.id, displayName: LAPSED.displayName },
+    }
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(LAPSED),
+          listProjects: () => Promise.resolve([mineToo]),
+        })}
+      />,
+    )
+    await screen.findByRole('heading', { level: 1, name: words.notOpen.title })
+    await waitFor(() => expect(document.title).toBe(words.shell.manifest))
+  })
+
   it('/new says the two sentences, in the page, beside the rail', async () => {
     window.history.pushState({}, '', '/new')
     const mineToo = {

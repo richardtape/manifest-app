@@ -475,6 +475,18 @@ describe('the follow-up questions (moment 3)', () => {
 })
 
 describe('the intake refused at the start (Rich’s words: whose limit, and when it resets)', () => {
+  it('BUILDING_NOT_OPEN (they may no longer build, D7): nothing said, reported or skipped here, as the shell follows', async () => {
+    const s = stage({ start: () => Promise.reject(refused(403, 'BUILDING_NOT_OPEN')) })
+    await describeAndCarryOn(s)
+    await waitFor(() => expect(s.called('startIntakeSession')).toHaveLength(1))
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    expect(s.called('intake')).toEqual([])
+    expect(reports).toEqual([])
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
   it.each([
     ['INTAKE_DAILY_LIMIT_REACHED', 409, words.describe.pausedToday('midnight')],
     [
@@ -915,6 +927,21 @@ describe('Name it (moment 4, before Make it)', () => {
   })
 })
 
+describe('Carry on refused by our server because they may no longer build (D7, FE-39)', () => {
+  it('no alert and no report: Carry on is theirs again, as the shell follows', async () => {
+    const s = stage()
+    s.ours.startConversation = () =>
+      Promise.reject(new OurRefusal('BUILDING_NOT_OPEN', 403))
+    await describeAndCarryOn(s)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    expect(reports).toEqual([])
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('button', { name: words.describe.carryOn })).toBeTruthy()
+  })
+})
+
 describe('Make it (moment 4’s end, F2 Task 8)', () => {
   const EIGHT = [
     'agent:session',
@@ -1064,6 +1091,19 @@ describe('Make it (moment 4’s end, F2 Task 8)', () => {
     expect(keys.size).toBe(1)
     expect(s.projects.size).toBe(1)
     expect(s.called('mintToken')).toHaveLength(1)
+  })
+
+  it('createProject refused BUILDING_NOT_OPEN (D7): nothing said or reported here, as the shell follows', async () => {
+    const s = stage({
+      create: () => ({ landed: false, error: refused(403, 'BUILDING_NOT_OPEN') }),
+    })
+    await press(await readyToMake(s))
+    await waitFor(() => expect(s.called('createProject')).toHaveLength(1))
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    expect(reports).toEqual([])
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('Review Focus 4: a create that landed but never answered is tried again with the same key, and answered, not repeated', async () => {

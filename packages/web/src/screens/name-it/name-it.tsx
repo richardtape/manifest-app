@@ -12,6 +12,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Step } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
+import { NOT_OPEN_CODE } from '../../not-open.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
@@ -477,6 +478,8 @@ export function NameIt({
           return said(words.making.couldntMake, 'make', { code: error.code, operation })
         const refusal = refusalOf(error)
         if (refusal.kind === 'signed-out') return expire()
+        // D7 (FE-39): they may no longer build; the shell follows (not-open.ts), and says so.
+        if (refusal.kind === 'refused' && refusal.code === NOT_OPEN_CODE) return
         const envelope = (
           error as { envelope?: { error?: { message?: string; hint?: string } } }
         ).envelope?.error

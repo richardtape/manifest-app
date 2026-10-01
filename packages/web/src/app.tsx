@@ -98,11 +98,18 @@ export function App({
 
   // Each page names its tab, so a person with several open, or a screen reader, can tell
   // them apart.
+  // Someone who may not build, at a new start: the page says it is not open to them (D7).
+  const notHere =
+    !builds &&
+    (route.name === 'new' || (route.name === 'conversation' && slug === undefined))
   useEffect(() => {
     document.title =
       session.state === 'signed-out'
         ? words.signIn.tab
-        : keeps.state === 'none'
+        : keeps.state === 'none' ||
+            keeps.state === 'loading' ||
+            keeps.state === 'trouble' ||
+            notHere
           ? words.shell.manifest
           : route.name === 'your-apps'
             ? words.shell.yourApps
@@ -113,7 +120,7 @@ export function App({
                 : lookup.state === 'found'
                   ? lookup.project.name
                   : words.shell.manifest
-  }, [session.state, keeps.state, route.name, lookup])
+  }, [session.state, keeps.state, notHere, route.name, lookup])
 
   // MOCK MODE SAYS SO (F5 Task 3): first on every page, signed in or not, in words. Rich met
   // a mock-mode server through the edge on 2026-09-29, and nothing on the page told him.
@@ -266,11 +273,7 @@ export function App({
           timeZone={timeZone}
         />
       )
-  else if (
-    !builds &&
-    (route.name === 'new' || (route.name === 'conversation' && slug === undefined))
-  )
-    page = <NotOpenHere />
+  else if (notHere) page = <NotOpenHere />
   else if (route.name === 'new' || route.name === 'conversation') {
     const from = new URLSearchParams(here.split('?')[1] ?? '').get('from') ?? undefined
     // One element for both, in one place: what a press began survives the id arriving.

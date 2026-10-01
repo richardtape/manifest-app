@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import { useConversation } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
+import { NOT_OPEN_CODE } from '../../not-open.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
@@ -156,7 +157,10 @@ export function Describing({
 
   /** Something outside the stream failed: ours, or the platform's. Answers where it goes on. */
   const failed = (error: unknown, operation: string): Notice['then'] | undefined => {
+    // D7 (FE-39): refused because they may no longer build. The shell follows the platform's
+    // decision (not-open.ts): nothing is said, reported or moved on here.
     if (error instanceof OurRefusal) {
+      if (error.code === NOT_OPEN_CODE) return void unpress()
       if (error.status === 401) return void expire()
       const unreachable = error.code === 'UNREACHABLE'
       show(
@@ -174,6 +178,8 @@ export function Describing({
     }
     const refusal = refusalOf(error)
     if (refusal.kind === 'signed-out') return void expire()
+    if (refusal.kind === 'refused' && refusal.code === NOT_OPEN_CODE)
+      return void unpress()
     const code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
     const said = intakeRefused(code, now(), timeZone)
     show(said, {

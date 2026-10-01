@@ -5,7 +5,14 @@ import { buildServer } from '../app.js'
 import type { Config } from '../config.js'
 import { openStore, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
-import { ALICE, AS_ALICE, AS_BOB, AS_CAROL, fakeControlPlane } from './testing.js'
+import {
+  ALICE,
+  AS_ALICE,
+  AS_BOB,
+  AS_CAROL,
+  AS_DANA,
+  fakeControlPlane,
+} from './testing.js'
 
 /**
  * A CONVERSATION BELONGS TO THE PERSON WHO STARTED IT (Decision 3). Driven over real HTTP,
@@ -73,6 +80,13 @@ const count = (file: string) =>
   (JSON.parse(dumpAll(file)['conversations'] ?? '[]') as unknown[]).length
 
 describe('POST /api/conversations', () => {
+  it('a getMe from before FE-39, with no decision in it, starts as today: 201 (FE-39)', async () => {
+    const { base, file } = await serve()
+    const response = await start(base, { description: WORDS }, { cookie: AS_DANA })
+    expect(response.status).toBe(201)
+    expect(count(file)).toBe(1)
+  })
+
   it('someone who may not build is 403 BUILDING_NOT_OPEN, and nothing is made (D7, FE-39)', async () => {
     const { base, file } = await serve()
     const response = await start(base, { description: WORDS }, { cookie: AS_CAROL })

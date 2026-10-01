@@ -98,6 +98,14 @@ describe('whoIs: the only reader of the session (FE-2)', () => {
     expect(Object.keys(person ?? {}).sort()).toEqual(['displayName', 'id', 'mayBuild'])
   })
 
+  it('a getMe from before FE-39, with no decision in it, builds as today', async () => {
+    const before = Object.fromEntries(
+      Object.entries(ME).filter(([key]) => key !== 'mayBuild'),
+    )
+    const { person } = await everyCase('S', before as typeof ME)
+    expect(person?.mayBuild).toBe(true)
+  })
+
   it('the decision is the platform’s, as it answered it (FE-39)', async () => {
     const { person } = await everyCase('S', { ...ME, mayBuild: false })
     expect(person?.mayBuild).toBe(false)
