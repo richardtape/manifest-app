@@ -38,6 +38,7 @@ const ME: Schemas['Me'] = {
   displayName: 'Instructor One',
   email: 'instructor@example.test',
   role: 'member',
+  mayBuild: true,
 }
 const PROJECT = {
   id: '22222222-2222-4222-8222-222222222222',

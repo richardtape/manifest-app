@@ -28,6 +28,7 @@ const ME: Schemas['Me'] = {
   displayName: 'Instructor One',
   email: 'instructor@example.test',
   role: 'member',
+  mayBuild: true,
 }
 
 const refused = (status: number, code: string) =>

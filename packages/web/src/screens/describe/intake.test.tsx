@@ -29,6 +29,7 @@ const ME: Schemas['Me'] = {
   displayName: 'Instructor One',
   email: 'instructor@example.test',
   role: 'member',
+  mayBuild: true,
 }
 const WORDS =
   "A page where students post a response to the week's reading. About 200 students."
