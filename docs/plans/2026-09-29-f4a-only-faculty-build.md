@@ -73,8 +73,8 @@ in *What executing this plan found*; this table; ORIENTATION's *Where things sta
 CWL affiliation **at sign-in**, so a faculty member signed in before 5a has none recorded, and `getMe` answers
 `mayBuild: false` until they sign in again; `BUILDING_NOT_OPEN`'s hint now leads with *sign out and sign in again*. As
 proposed above, our screen would tell that faculty member Manifest is not open to them. **Proposed:** a line above
-**[Sign out]**, *"If you're UBC faculty, sign out and sign in again."* (the words his). Rich's own session on 7100
-predates 5a: his click meets this first.
+**[Sign out]**, *"If you're UBC faculty, sign out and sign in again."* (the words his). On the laptop the platform's
+test runs end every session, so a walk signs in afresh and rarely meets it; a real deployment meets it once, for everyone.
 
 ## Global Constraints
 
