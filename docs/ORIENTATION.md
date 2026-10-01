@@ -8,12 +8,12 @@ says which plan is current. This file states where things stand and the rules. I
 
 - **YOUR JOB, IF YOU ARE THE NEXT SESSION: nothing is building.** Read [`plans/roadmap.md`](./plans/roadmap.md) and wait for
   the platform:
-  - **When the platform's launch-path 5a lands `Me.mayBuild`** (its session messages us before that contract commit),
+  - **When the platform's launch-path 5a lands `Me.mayBuild`** (its session, `manifest-74` at 04:20Z, messages us before that contract commit and at its close),
     **STOP AND ASK RICH** whether to switch to **F4a** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md),
     approved; one sitting, four tasks) and to confirm its method (native recommended).
   - **F6** (*Running it*, moments 16–20) is **written after F4a** (Rich, relayed by `manifest-00`), while the platform runs
     its sittings 6–10. **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the
-    platform's sittings 6–9 land.
+    platform's sittings 6–10 land (`manifest-60`).
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
     session starts with `pgrep -fl vitest`.
 - **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md), its sitting 6 entries are the
@@ -39,7 +39,8 @@ says which plan is current. This file states where things stand and the rules. I
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
   - **Its launch-path plan**: sittings 1–5, 4a and **5b CLOSED** (5b at `66ac53c`: a rehearsal needs a step-up and takes
     itself down; `REHEARSAL_RUNNING`; `REHEARSAL_TEARDOWN_FAILED` at 500; production's instance `gone`, or `failed` when the
-    candidate never started). **Next: 5a `mayBuild` (F4a)**, then Mailpit (7111 SMTP, 7112 inbox) at 5a's close, **6–9 FE-6 and
+    candidate never started). **Next: 5a `mayBuild` (F4a)**, then Mailpit (7111 SMTP, 7112 inbox; host `127.0.0.1` or `localhost` only, its API under `/api/v1/`) at 5a's close,
+    added by `manifest-60`, which messages us when it is live; its sitting 6 runs beside our F4a; **6–9 FE-6 and
     FE-25 (F5b)**, a merged 10–11 (the mock's launch, FE-40, and the guides, Rich's published-text rule), 12 its acceptance.
     Then its **faculty-ready plan** (approved by Rich): contract 1.6.0, request ids, `error.limit` and `error.session`,
     **`__Host-` cookies on https** (our `whoIs`, tests and jars change: its Task 5 messages us first), a real `422`, the
@@ -54,8 +55,8 @@ says which plan is current. This file states where things stand and the rules. I
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102** (pid 35047).
     Its dev database holds sitting 6's runs, mock and edge (the edge ones on real projects that a truncation will remove).
     Switch to edge mode before anyone clicks the real platform, and say so.
-  - **7100 is the platform's** (PID 21628 at our close; the 5a session not yet started: our handover reached `manifest-83`, a
-    research session, so **tell the 5a session 7100 is free if it asks**). It holds `my-answers` (FE-44) and
+  - **7100 is the platform's** (PID 21628 at our close). **The 5a session, `manifest-74`, was running its Vitest at 04:23Z**, which
+    truncates 7100's database, and at its close it removes the 7100 window's containers: nothing of ours there is in use. It holds `my-answers` (FE-44) and
     `class-check-ins` (launched); `operator` an administrator. **LiteLLM on 7106.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
@@ -532,7 +533,8 @@ enablement plan there, one sitting per session. We share the machine, the contro
   the live session named `manifest-…` (it was `manifest-de`, `manifest-b1`, `manifest-82`, then `manifest-7c`, which F3's sitting 7 found stopped by Rich
   and back at its close, then `manifest-c3` for its sitting 11a, `manifest-8b` for its sitting 12 and close, `manifest-63` for the next
   plan, the launch path, `manifest-13` for that plan's sitting 2, `manifest-c3` again for its sitting 3, `manifest-a1` for
-  its sitting 4, `manifest-73` waiting for its 4a, and `manifest-d4` where Rich decided Spec action 8 and for its sitting 5), or the one whose messages come
+  its sitting 4, `manifest-73` waiting for its 4a, and `manifest-d4` where Rich decided Spec action 8 and for its sitting 5; `manifest-74` for its sitting 5a; and its planning
+  session, which runs no sittings, `manifest-00` then `manifest-60`: Rich's decisions and anything cross-repo), or the one whose messages come
   from manifest. Send to the name exactly as `ListAgents` prints it. Our own session's name is printed at the top of
   that list: tell the platform session to reply to it.
 - **What it tells us, and what we answer:**
