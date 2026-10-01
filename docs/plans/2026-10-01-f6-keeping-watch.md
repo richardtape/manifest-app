@@ -49,7 +49,7 @@ went live. Walk-through moments **16, 19 and 20**. Moments 17 and 18, and the *A
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements**, on 7100 in the platform's window, at Rich's word: a watch token's reads and stream; the students' address through the edge; switch off, back on and the two deploys after; delete; a fall (stopping the container: **Rich's word first**); the mock's answers. **Alone.** It needs 7100 free (the platform's sitting 7 closes first), so **sittings 2–4 may run before it**: they need no platform | **done 2026-10-01** (`manifest-app-34`, 16:46–17:10Z on 7100, in `manifest-8e`'s window): M0, M2–M4, M6–M8 measured, M5 not (no failing production change without changing the platform); **Tasks 3, 4, 6 and 11 corrected (S1)**: the edge's catch-all answers `200` (an answer counts only with `x-manifest-instance`), a dry run's production instance is not a line, the last-served release is production's own `instance`. `f6-watch` left live. No code (the dated entry below) |
-| 2 | 2, 3 | Our server: the store's version 5; the seal and its key; the watch token handed over and kept; the keeper's streams, its history and its gaps | not started |
+| 2 | 2, 3 | Our server: the store's version 5; the seal and its key; the watch token handed over and kept; the keeper's streams, its history and its gaps | **done 2026-10-01** (`manifest-app-28`, mock mode only): `ecec79e` (Task 2), `361058d` (Task 3). **F3's stream gained each event's `at` and an optional `replayed` report** (a ruling: the keeper cannot see a reconnect's overlap otherwise); Tasks 4, 5, 7 and 8 noted (S2). 1771 tests twice; the five acceptance scripts pass; the platform's `4aaf0ef` adopted |
 | 3 | 4, 5 | The happenings and the lines; the emails, once each, through nodemailer | not started |
 | 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | not started |
 | 5 | 8, 9 | The page: the platform's new calls; the watch token minted; *Your apps* and the Overview (the band, *Since you were last here*, the card's states, *How we keep watch*); the history page | not started |
@@ -369,7 +369,7 @@ fixUnderWay(projectId: string, incidentId: string): boolean
 forgetApp(projectId: string): void
 ```
 
-- [ ] **Step 1: Tests, failing first.**
+- [x] **Step 1: Tests, failing first.**
   - **The seal** (`seal.test.ts`): a round trip; two seals of one secret differ (the nonce); `unseal` with another key,
     a flipped byte, `v2.…`, or `''` is `undefined` and throws nothing; `keyFrom` with the variable set uses it (and
     throws on 31 bytes); without it, makes the file once with mode `0600` in a `0700` directory and reads the same key
@@ -386,8 +386,8 @@ forgetApp(projectId: string): void
     minutes after the last answers the last's time; the next, five minutes later, answers the same.
   - **The no-credential scan** (`dumpAll`, as F2's): after a `putWatch` of `seal(key, 'mft_…')`, no table holds `mft_`.
   - `identity.test.ts`: `whoIs` carries `email` from `getMe`.
-- [ ] **Step 2: Red.**
-- [ ] **Step 3: Implement.** `schema.sql`:
+- [x] **Step 2: Red.**
+- [x] **Step 3: Implement.** `schema.sql`:
 
   ```sql
   create table if not exists apps (
@@ -446,9 +446,9 @@ forgetApp(projectId: string): void
   `conversations`, then `history`, `emails` whose happening names the app, `members`, `watch_tokens`, `apps`). **An
   email's `happening` starts with its project id** (`<projectId>:<what>`, Task 5), so the app's are found.
   `.gitignore` gains `packages/server/.keys/`.
-- [ ] **Step 4: Green; controls:** `unseal` returning the ciphertext on a bad tag (red); `version < 5` skipped (red);
+- [x] **Step 4: Green; controls:** `unseal` returning the ciphertext on a bad tag (red); `version < 5` skipped (red);
   `forgetApp` without the run's `trace` (the scan of a forgotten app red). Each restored.
-- [ ] **Step 5: Commit** `feat(server): the store's version 5 — the watch token sealed, what the keeper saw, emails once each; Person.email`.
+- [x] **Step 5: Commit** `feat(server): the store's version 5 — the watch token sealed, what the keeper saw, emails once each; Person.email`.
 
 ## Task 3: The watch token handed over, and the keeper's streams (sitting 2)
 
@@ -504,7 +504,7 @@ export function registerKeeping(app: FastifyInstance, deps: { config: Config; st
 //   POST /api/apps/:projectId/keeping  { token, tokenId, expiresAt } → 201 { watching: true, until } | 200 { kept: 'current', until }
 ```
 
-- [ ] **Step 1: Tests, failing first** (a recording fake `ProjectStream` whose test can push events, close `refused`,
+- [x] **Step 1: Tests, failing first** (a recording fake `ProjectStream` whose test can push events, close `refused`,
   or call `reconnected`; a fake `Watching`; an in-memory store; fake timers).
   - **`hand`**: a token whose `watching.app` answers another project's id, or is refused `401`/`403`/`404`, is
     `PlatformRefusal` and nothing is kept; a good one is sealed (`unseal` gives it back), its app and members kept, and
@@ -533,17 +533,17 @@ export function registerKeeping(app: FastifyInstance, deps: { config: Config; st
     whose kept members exclude the person `404`; for an app with none kept, `{ watching: false, … }`; `POST` from another
     `Origin` `403 ORIGIN_REFUSED`; a body with any other key, a token over 512 characters, a bad `tokenId` or `expiresAt`
     is `400 KEEPING_INVALID`; the keeper's refusal `400 TOKEN_NOT_FOR_PROJECT`; the platform unreachable `502`.
-- [ ] **Step 2: Red.**
-- [ ] **Step 3: Implement.** `platformWatching` with `tokenClient` (deadline, `refusalFrom`). The keeper holds a
+- [x] **Step 2: Red.**
+- [x] **Step 3: Implement.** `platformWatching` with `tokenClient` (deadline, `refusalFrom`). The keeper holds a
   `Map<projectId, Watch>` (from `platformStream.watch`) and nothing else in memory but Task 6's outages. `main.ts` reads
   the key with `keyFrom(process.env, fileURLToPath(new URL('../.keys/keeping.key', import.meta.url)))` **before**
   listening; builds the keeper (`platformStream(config.platformOrigin)`, `platformWatching(...)`); passes it to
   `buildServer`, which gains `keeper?: Keeper` (default `idleKeeper`), registers `registerKeeping`, and calls
   `keeper.start()` after `line.onBoot()`; `main.ts` calls `keeper.stop()` on `SIGTERM`/`SIGINT` with the server's close.
-- [ ] **Step 4: Green; controls:** `hand` keeping a token whose project is another (red); the gap recorded when one
+- [x] **Step 4: Green; controls:** `hand` keeping a token whose project is another (red); the gap recorded when one
   replayed id is held (red); the `refused` row left in place (red); a `/archive` path added to `watching.ts` (the scan
   red). Each restored.
-- [ ] **Step 5: Commit** `feat(server): the Keeping watch token, handed over and sealed; one stream per app, its history and its gaps`.
+- [x] **Step 5: Commit** `feat(server): the Keeping watch token, handed over and sealed; one stream per app, its history and its gaps`.
 
 ## Task 4: The happenings, and the lines a person reads (sitting 3)
 
@@ -598,6 +598,9 @@ export function fromOf(entries: HistoryEntry[]): string | null
     **same** release as the production instance before it is no line; `who` is the kept member's `displayName` for
     `by`, `null` for an unknown id; newest first.
   - `gapsOf` gives each `keeping.gap`; `fromOf` the first entry that is not ours (a platform event), else null.
+    **(S2)** As Task 3 built them: a platform event's `at` is its own `createdAt` (`ProjectEvent.at`); a `keeping.gap`
+    row is `keeping.gap:<oldest replayed id>`, its `at` its `from`, its `detail` `{ from, to }`; a refused token leaves
+    `keeping.stopped:<tokenId>` at the moment it stopped, `detail: {}` (no line in F6).
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** staging's healthy as a line (red); the launch's
   healthy kept (red). Each restored.
 - [ ] **Step 5: Commit** `feat(server): what happened, as a person reads it — the happenings and their lines`.
@@ -655,7 +658,10 @@ mailFrom: string    // MANIFEST_APP_MAIL_FROM ?? 'Manifest <manifest@app.manifes
     works is `sent` with `tries: 3`, at 1 and 2 minutes (fake timers); one that never works is `failed` after an hour;
     **`emailsUnfinished` at boot is delivered again** (Review Focus 1), and never twice.
   - **The keeper**: each new history entry's happening goes through `emailsFor` and `deliver`; **a replayed entry
-    (`addHistory` false) sends nothing**.
+    (`addHistory` false) sends nothing**. **(S2)** `keeper.ts`'s `onEvent` already returns at `addHistory`'s `false`
+    (the id goes to the replay's `held`), and every handler ignores a stream no longer current: the rules go after
+    that return. The app and members are re-read on `project.launched`, `archived`, `restored`, `renamed`, `member.*`,
+    at boot and at each reconnect, so an email's recipients are the kept members.
   - **Your work is waiting** (Decision 14): `workEnded` with nobody watching and the conversation `built` → *we've
     finished* to the person's email; waiting on them → *we need you*; with `hub.watched` true → nothing; once per run.
     The hourly scan: a conversation waiting on its person, untouched 25 hours → *still waiting for you*, once; at 23
@@ -772,6 +778,9 @@ export const OUTAGE_FIX_WORDS = "Your students couldn't reach it"
     `kind: 'fix'`, `environment: 'production'`, `outage`; the round's view carries `fix.outage` and reads no incident;
     **the lead's prompt says there is no record of why and nothing it wrote can be read**, and asks it to look in the code
     (`agents.test.ts`).
+  - **(S2)** `store.visit` writes nothing for a person never remembered (`persons` needs a name): `/api/needs` and
+    `/api/since` call `store.rememberPerson(who.person)` first. The stranger check is `api/keeping.ts`'s (kept members,
+    `404`): reuse it.
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** `/needs` without the membership check (Review Focus 5
   red); `DELETE` for a helper (red); the outage's fix reading an incident (red). Each restored.
 - [ ] **Step 5: Commit** `feat(server): what needs you, what happened since, an app's history, forgetting a deleted app; the outage's own fix`.
@@ -824,6 +833,10 @@ export function useRole(platform: Platform, projectId: string | undefined, me: S
   - The five platform calls send what the contract says (method, path, `Idempotency-Key`). **(S1: M8) Assert what was
     sent, never what the mock answers**: its `mintToken` answers its example's capabilities (`project:read`,
     `build:create`, `release:deploy`) and `expiresAt` whatever is asked (FE-27's way).
+  - **(S2)** `POST …/keeping` answers **`201 { watching: true, until }`** when kept and **`200 { kept: 'current', until
+    }`** when the app has a good one: `handWatch` reads the status (`201` is `'new'`). Both `GET` and `POST` are `404`
+    for a person outside the kept members, until the keeper re-reads them (at boot, a reconnect or `member.*`): an
+    app with no kept members is anyone's to mint for (the token must still read it).
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** minting for an archived app (red); the other
   person's token revoked (red). Each restored.
 - [ ] **Step 5: Commit** `feat(web): the Keeping watch token, minted when an app has none — never for one switched off`.
@@ -1145,3 +1158,42 @@ empty). The admin grant was run by `manifest-8e` at Rich's own word in its sessi
 - **M8, the mock**: the first part's entry, above.
 - **Timings for the page's deadlines:** a switch-off ~1 s, a restore ~30 ms, a delete ~1 s, a deploy 5–9 s: F5's
   `READ_TIMEOUT_MS` (15 s) for the first three, `DEPLOY_TIMEOUT_MS` (120 s) for the deploys, as Task 8 assumes.
+
+### 2026-10-01 — Sitting 2: our server keeps the watch (session `manifest-app-28`, mock mode only)
+
+- **Step 0:** contract 1.5.0, 70 operations (`81892d4`, adopted); `pgrep -fl vitest` empty of ours. Told `manifest-8d`
+  (the platform's sitting 8) our name; **its fix wave `4aaf0ef` landed mid-sitting** (examples and doc comments only,
+  types unchanged): adopted with no change of ours, our mock on 7102 restarted for its examples (`api-findings.md`).
+- **Task 2** (`ecec79e`): `keeping/seal.ts` (AES-256-GCM, `v1.<base64url(nonce ‖ ciphertext ‖ tag)>`; the key from
+  `MANIFEST_APP_KEEPING_KEY` or `packages/server/.keys/keeping.key`, base64, `0600` in `0700`, git-ignored, made with
+  `wx` so a racing start reads the first one's); the store's **version 5** (`apps`, `members`, `watch_tokens`,
+  `history`, `emails`; `persons.email`, `here_at`, `last_here`); `visit` (Decision 7); `forgetApp` (Decision 11);
+  **`Person.email`** from `getMe` (so `/api/me` answers the person's own address too: nothing on the page reads it).
+  Controls: `unseal` on a bad tag, `version < 5` skipped, `forgetApp` without the trace: each red, restored.
+- **Task 3** (`361058d`): `platform/watching.ts` (`getProject?expand=environments`, `listMembers`); `keeping/keeper.ts`
+  (hand, boot, events once at their own time, re-reads, `keeping.stopped`, `keeping.gap`, forget); `api/keeping.ts`
+  (`GET`/`POST /api/apps/:projectId/keeping`); `main.ts` reads the key before it listens and stops the keeper with the
+  server (a 1-s ceiling: `tsx watch` still restarts in about a second, one watcher, measured). The scan holds
+  `keeping/` and `watching.ts` to the project, its members and its stream, and refuses `archive`, `restore` and a
+  project's `DELETE` anywhere. Controls: six, each red, restored.
+- **The rulings** (the ledger has each, with its cost):
+  - **F3's stream is not unchanged**, as the plan said it would be: `ProjectEvent` gains `at` (the frame's `createdAt`),
+    and the handlers an optional **`replayed({ ids, overlapped })`**, after every replay and before `reconnected`. The
+    stream hands over only what a watch had not seen, so on a reconnect the keeper alone cannot tell a replay that
+    reached back to what it saw (no gap) from one that did not (a gap); and a history needs each event's own time. The
+    round passes neither; one of its fakes gained `at`.
+  - **The gap**: a replay holding nothing held before (the stream's `overlapped`, or an event `addHistory` already
+    had), with a platform event older than its oldest, is one `keeping.gap` row; our own `keeping.*` rows are never
+    *the last event we held*.
+  - The app is re-read on `project.launched` and `project.renamed` too, and app and members at boot and at every
+    reconnect (FE-7: the replay can miss what changed them).
+  - `POST …/keeping` is `404` for a stranger by the kept members, as `GET` is (Task 8, S2).
+  - `visit` writes nothing for a person never remembered (Task 7, S2).
+- **Gates:** 1771 tests (79 files), twice; lint, typecheck and format clean. **In mock mode, from a fresh dev database**
+  (the old one kept as `.data/app-before-f6s2.sqlite`; six of its conversations were still `building`, holding the
+  mock's app): `check-seeing.sh` 8/8, `check-going-live.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh` 18/18,
+  `check-building.sh` 12/12. Their no-credential scans read the new tables too.
+- **The machine at the close:** our server in mock mode on 7105 (`nohup pnpm dev:mock`, one watcher), its key file made;
+  our mock on 7102 (restarted for `4aaf0ef`). Nothing of ours on 7100.
+- **Next: sitting 3** (Tasks 4 and 5): the happenings and their lines; the emails through nodemailer, its first new
+  dependency (Step 0 of Task 5), to Mailpit on 7111.
