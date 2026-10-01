@@ -11,9 +11,8 @@ says which plan is current. This file states where things stand and the rules. I
   5b (Spec action 8's (b)+(c)) messages us at its close and hands 7100 over; its §7e records the window (no platform Vitest,
   no control-plane restart, `admin-grant.sh grant opr000001` once `operator` has signed in). Read the sittings table's row 6,
   the plan's sitting 6 entry, and the ledger's `Sitting 6` lines first. Then, in order:
-  1. **Step 0 for the platform's 5 and 5b** (the plan's *Adopting what lands*): `agent_session.narrowed` is **adopted
-     already** (`54cd767`, against `d061ad7`: a model narrowed away is FE-36's withdrawal, renewed once; re-check at 5's
-     close); `member_removed` (its Task 8: an end reason, `needs: token`); 5b's
+  1. **Step 0 for the platform's 5 and 5b** (the plan's *Adopting what lands*): sitting 5 **closed and adopted** (`424da79`;
+     `54cd767` a model narrowed away is FE-36's withdrawal, renewed once; `fc614bc` `member_removed` is `needs: token`); 5b's
      `runRehearsal` (its `STEP_UP_REQUIRED`, its take-down refusal's final code, which we match as `REHEARSAL_TEARDOWN_FAILED`,
      and whether `getEnvironment(production).instance` reads `gone` or `null` after a dry run). `pnpm typecheck`, `pnpm test`.
   2. **Walk the dry run's press against the mock** (headless Chrome, 1440 and 375): the mock's checklist has the dry run met
@@ -79,9 +78,10 @@ says which plan is current. This file states where things stand and the rules. I
 - **The platform** (the session in `/Users/rich/Developer/manifest`; how to work with it is §8):
   - **Its launch-path plan** (`docs/superpowers/plans/2026-09-29-launch-path.md`, read-only), one sitting per session.
     Sittings 1–4 and **4a** closed (4a at `09e3d7b`: FE-42 (a), the owner may run the dry run). **Spec action 8 decided by Rich,
-    (b)+(c)** (`manifest-d4`, 2026-09-30): built by **5b (Task 6c)**, after 5. **Its sitting 5 was running at our first half's
-    close** (Tasks 7 and 8: `agent_session.narrowed`, then `member_removed`; each a contract commit under 1.5.0, announced to
-    us first; `packages/mock` untouched). Then **5b**, **our window**, **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10
+    (b)+(c)** (`manifest-d4`, 2026-09-30): built by **5b (Task 6c)**, after 5. **Its sitting 5 CLOSED at `424da79`** (Tasks 7 and 8: `agent_session.narrowed`
+    and `member_removed`, **both adopted**, `54cd767` and `fc614bc`; contract 1.5.0; `packages/mock` untouched; 7100
+    restarted empty, PID 932). **Next on the platform: an API-docs agent (introduce ourselves to it), then 5b** (probably a new
+    session), which hands 7100 over. Then **5b**, **our window**, **5a `mayBuild` (F4a)**; **6–9 FE-6 and FE-25 (F5b)**; 10
     the console and the mock (FE-40); 11 the guides; 12 its acceptance. **When one lands, do F5's *Adopting what lands*.**
   - **The contract is 1.5.0, 66 operations** (`84d485a`), plus sitting 5's event `agent_session.narrowed` (`d061ad7`; our
     typecheck passes against it). **Rich also decided, with `manifest-00`: UBC's order is sequential** (the privacy assessment,
@@ -157,7 +157,7 @@ says which plan is current. This file states where things stand and the rules. I
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1638 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (1639 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
       (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**, **`scripts/check-going-live.sh` (F5's, 8)**: each in mock mode, `pnpm
