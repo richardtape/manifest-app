@@ -322,6 +322,19 @@ describe('chooseBlueprint (moment 4, D3)', () => {
 })
 
 describe('the prompts (walk-through D5; C3)', () => {
+  it('understanding gives each audience its meaning and its rough ceiling, as the platform’s spec §24 does, so "about 200 students" is one class (sitting 6’s real walk: it was guessed a large course, which cannot launch yet: FE-44)', () => {
+    for (const [scale, means] of [
+      ['solo', /solo \(just them, or them and a few colleagues: up to about 25\)/],
+      ['class', /class \(one course section: up to about 400\)/],
+      [
+        'large_course',
+        /large_course \(a large course, or several sections: up to about 5,000\)/,
+      ],
+      ['public', /public \(anyone with the link, people outside UBC included\)/],
+    ] as const)
+      expect(UNDERSTANDING_PROMPT, scale).toMatch(means)
+  })
+
   it.each([
     ['understanding', UNDERSTANDING_PROMPT],
     ['naming', NAMING_PROMPT],
