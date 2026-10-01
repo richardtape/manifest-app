@@ -4,10 +4,12 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-01, 15:55Z: **F6 is approved** (Rich, native; `manifest-app-34` in its sitting 1); the platform's sitting 7 is running, its contract commit `6cbb489` and fix wave `dec71d8` adopted)*:
+**Where things stand** *(2026-10-01, 15:55Z: **F6's sitting 1 is done** (`manifest-app-34`, the measurements on 7100); the platform's sitting 7 is running, its contract commit `6cbb489` and fix wave `dec71d8` adopted)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6, natively** (approved by Rich 2026-10-01, *"yes approved. native."*;
-  `manifest-app-34` started its sitting 1, holding for 7100 until the platform's sitting 7 says it is free):
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6, natively** (approved by Rich 2026-10-01, *"yes approved. native."*).
+  **Sitting 1 is done** (`manifest-app-34`, 17:10Z: the measurements on 7100; Tasks 3, 4, 6 and 11 corrected, S1).
+  **Next: sitting 2** (Tasks 2 and 3, our server; no platform). **`f6-watch` is live on 7100** (Manifest-local-dev,
+  a real repository: Rich removes it on github.com after the platform's sitting 8 truncates):
   the design, [`plans/2026-10-01-f6-keeping-watch-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md) (approved by
   Rich section by section, and reviewed: *"looks good"*), and the plan,
   [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md) (seven sittings, twelve tasks): its
@@ -80,9 +82,10 @@ says which plan is current. This file states where things stand and the rules. I
     restarted at F4a's close; **the mock again at sitting 7's fix wave** (pid 64522), for `dec71d8`'s examples. **A fresh dev database**: F5's is kept as
     `.data/app-before-f4a.sqlite`, F4a's acceptance runs as `.data/app-f4a-checks.sqlite`. Switch to edge mode before
     anyone clicks the real platform, and say so.
-  - **7100 is the platform's**: **its sitting 7's (`manifest-8e`) until that sitting closes**: its Vitest runs truncate
-    the database and stop the control plane, and its Docker tier restarts the edge and takes `default-chat-large` out of
-    LiteLLM for a while. We are mock-only meanwhile (agreed with it, 2026-10-01). **LiteLLM on 7106; Mailpit on 7111/7112.**
+  - **7100 is the platform's**: its sitting 7 closed (control plane PID 93832 on `06b5333`, real GitHub); F6's sitting 1
+    measured in its window (16:46–17:10Z) and handed it back. **`f6-watch` is live there** (6 `mf-f6-watch-*`
+    containers), until the platform's sitting 8 truncates at its first Vitest; `operator` is an administrator again
+    (granted by `manifest-8e` at Rich's word). **LiteLLM on 7106; Mailpit on 7111/7112.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
 - **How to run it** is §6, below.

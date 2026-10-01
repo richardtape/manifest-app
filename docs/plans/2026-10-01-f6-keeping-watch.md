@@ -48,7 +48,7 @@ went live. Walk-through moments **16, 19 and 20**. Moments 17 and 18, and the *A
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1 | **The measurements**, on 7100 in the platform's window, at Rich's word: a watch token's reads and stream; the students' address through the edge; switch off, back on and the two deploys after; delete; a fall (stopping the container: **Rich's word first**); the mock's answers. **Alone.** It needs 7100 free (the platform's sitting 7 closes first), so **sittings 2–4 may run before it**: they need no platform | not started |
+| 1 | 1 | **The measurements**, on 7100 in the platform's window, at Rich's word: a watch token's reads and stream; the students' address through the edge; switch off, back on and the two deploys after; delete; a fall (stopping the container: **Rich's word first**); the mock's answers. **Alone.** It needs 7100 free (the platform's sitting 7 closes first), so **sittings 2–4 may run before it**: they need no platform | **done 2026-10-01** (`manifest-app-34`, 16:46–17:10Z on 7100, in `manifest-8e`'s window): M0, M2–M4, M6–M8 measured, M5 not (no failing production change without changing the platform); **Tasks 3, 4, 6 and 11 corrected (S1)**: the edge's catch-all answers `200` (an answer counts only with `x-manifest-instance`), a dry run's production instance is not a line, the last-served release is production's own `instance`. `f6-watch` left live. No code (the dated entry below) |
 | 2 | 2, 3 | Our server: the store's version 5; the seal and its key; the watch token handed over and kept; the keeper's streams, its history and its gaps | not started |
 | 3 | 4, 5 | The happenings and the lines; the emails, once each, through nodemailer | not started |
 | 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | not started |
@@ -258,17 +258,17 @@ project made on 7100 is a real private repository on GitHub that nothing deletes
 (`f6-watch`), and a second only for M6 (a draft to delete). **Rich types every password**; the administrator's part is his,
 as `operator`.
 
-- [ ] **M0: a launched app on 7100.** Ask the platform session for the shortest honest way to one (its scripts, or a walk
+- [x] **M0: a launched app on 7100.** Ask the platform session for the shortest honest way to one (its scripts, or a walk
   as F5's acceptance did, now with sitting 7's drafts and submissions). Record which, and how long it took.
-- [ ] **M1: the contract, and what landed.** Re-read `openapi.json`; do Step 0 for any landing.
-- [ ] **M2: a watch token** (`project:read`, `output:read`, 365 days, minted in the session from Node): `getProject?expand=
+- [x] **M1: the contract, and what landed.** Re-read `openapi.json`; do Step 0 for any landing.
+- [x] **M2: a watch token** (`project:read`, `output:read`, 365 days, minted in the session from Node): `getProject?expand=
   environments` with it (production's `url`); `listMembers` with it (every field); its stream: the replay (how many, which
   types), `ready`, and an event while open. **Each event type F6 reads, its `machineDetail` as sent**:
   `project.launched`, `instance.healthy`, `incident.opened`, `release.approved`, `rehearsal.completed`,
   `iam_registration.recorded`, `member.added`, `project.archived`, `project.restored`, `project.renamed`.
-- [ ] **M3: the students' address through the edge**, from Node with `NODE_OPTIONS=--use-system-ca`, `redirect:
+- [x] **M3: the students' address through the edge**, from Node with `NODE_OPTIONS=--use-system-ca`, `redirect:
   'manual'`: the CWL app's status and `location`, and its time; the same while switched off (expected `410`).
-- [ ] **M4: switching off and back on** (the session):
+- [x] **M4: switching off and back on** (the session):
   - `archiveProject` without a recent step-up (`403 STEP_UP_REQUIRED`?), and with one: its time; what the watch token's
     open stream receives before it closes (`project.archived`, then `4401`?);
   - production after it: `getEnvironment` (`instance`?), `listInstances` (each `state`, `releaseId`, `createdAt`): **is
@@ -278,19 +278,19 @@ as `operator`.
   - **the two deploys**: staging with the last-served release, then production with the step-up: refused? Each code
     (`LAUNCH_NOT_READY`-like with the checklist, an approval bound to its digest, a lapsed registration), and the
     checklist's items after the restore.
-- [ ] **M5: a change that does not go live on production**, **only if one can be made without changing the platform** (a
+- [x] **M5: a change that does not go live on production**, **only if one can be made without changing the platform** (a
   version healthy on trying-out that fails on the live address): `incident.opened`'s time to the watch token's stream.
   Else recorded as not measured; the mock-side tests carry it.
-- [ ] **M6: the app falls over.** **Ask Rich first: this touches the platform's Docker.** At his word, stop the live
+- [x] **M6: the app falls over.** **Ask Rich first: this touches the platform's Docker.** At his word, stop the live
   app's container (`docker stop`, by the name the platform's runbook gives): what the edge answers (`502`?), at once and
   a minute on; what `getEnvironment` says (still `healthy`: FE-4); then *Start it again*'s deploy of the same release in
   the session (its step-up; its time; the address answering again). If Rich says no, the walk (Task 12) does it at his
   word instead, or not at all.
-- [ ] **M7: delete** (the second, never-launched project): `deleteProject` without and with a step-up; the watch token's
+- [x] **M7: delete** (the second, never-launched project): `deleteProject` without and with a step-up; the watch token's
   stream (`4401` or `4404`?); `getProject` after (`404`); the slug free (`checkSlug`).
-- [ ] **M8: the mock** (`pnpm mock`, 7102): what `mintToken`, `revokeToken`, `listMembers`, `archiveProject`,
+- [x] **M8: the mock** (`pnpm mock`, 7102): what `mintToken`, `revokeToken`, `listMembers`, `archiveProject`,
   `restoreProject` and `deleteProject` answer, with `MANIFEST_MOCK_LAUNCHED` unset and `=1` (FE-40: what the walks fake).
-- [ ] **Record** in this plan: each measurement, and **(S1)** corrections to Tasks 3–12. **Tell the platform session
+- [x] **Record** in this plan: each measurement, and **(S1)** corrections to Tasks 3–12. **Tell the platform session
   when 7100 is free again.**
 
 ## Task 2: The store's version 5, the seal, and the person's email (sitting 2)
@@ -517,6 +517,10 @@ export function registerKeeping(app: FastifyInstance, deps: { config: Config; st
     forgets the app.
   - **A restore's replay** (Review Focus 4): a new token handed after a switch-off, its replay holding events already
     held and `project.archived` and `project.restored` not yet held: the two written once, **no gap**.
+  - **(S1: M4, M7) A switch-off or a delete closes the token's stream `4401` before `project.archived` or
+    `project.deleted` reaches it**: the keeper learns a switch-off from the replay after a restore (a new token's replay
+    carries both events), and a delete from the page alone (Decision 11). So a switched-off app's history gains *Switched
+    off* only when it is switched back on; its card says it meanwhile, from `archivedAt`.
   - **Refused** (the stream's `refused`): the token's row dropped (`dropWatch` with its id), a `keeping.stopped` row with
     the time, `status` `watching: false`.
   - **A gap** (Decision 1): on `reconnected`, or at boot, the first replayed events are checked with `heldOf`; **when
@@ -588,8 +592,9 @@ export function fromOf(entries: HistoryEntry[]): string | null
     `member.removed` with `by` from `userId`; `project.archived`/`restored`/`renamed`; `keeping.unreachable`/`answering`;
     **every other type, `iam_registration.drafted`, `sso.*`, `build.*`, `token.minted` and a type from a newer contract,
     → `null`** (never a crash on a detail missing a field).
-  - **`linesOf`** (Decision 2): a launch's `instance.healthy` and `project.launched` with one `instanceId` are one line,
-    *went live*; a later production `instance.healthy` with a **new** release is *reached students*; one with the
+  - **`linesOf`** (Decision 2): **(S1: M2) a production `instance.healthy` before the app's `project.launched` is no
+    line**: the dry run makes a production instance of the candidate, healthy then retired, minutes before a launch; a
+    launch's `instance.healthy` and `project.launched` with one `instanceId` are one line, *went live*; a later production `instance.healthy` with a **new** release is *reached students*; one with the
     **same** release as the production instance before it is no line; `who` is the kept member's `displayName` for
     `by`, `null` for an unknown id; newest first.
   - `gapsOf` gives each `keeping.gap`; `fromOf` the first entry that is not ours (a platform event), else null.
@@ -676,8 +681,12 @@ mailFrom: string    // MANIFEST_APP_MAIL_FROM ?? 'Manifest <manifest@app.manifes
 ```ts
 // keeping/outage.ts: pure
 export type Answer = 'answer' | 'off' | 'miss'
-/** Decision 8: 2xx, 3xx and 4xx but 410 answer; 410 is off; 502, 503, 504 and null (no answer) miss; any other 5xx answers. */
-export function answerOf(status: number | null): Answer
+/**
+ * Decision 8, (S1: M3, M6): 410 is off; otherwise an answer counts only when it is ROUTED (`x-manifest-instance`, the
+ * app's own instance): the edge's catch-all answers any host it has no route for `200` (`text/plain`, "manifest OK
+ * host=… listener=public"), with no such header, and that is a miss. 502, 503, 504 and null (no answer) miss.
+ */
+export function answerOf(status: number | null, routed: boolean): Answer
 export type Outage =
   | { state: 'answering'; recovered: { from: string; to: string } | null }   // the last recovery, for 30 minutes and the band's day
   | { state: 'missed'; at: string; recovered: { from: string; to: string } | null }
@@ -687,22 +696,26 @@ export type Change =
   | { kind: 'fell'; from: string; again: boolean }     // again: within 30 minutes of the last recovery (no email)
   | { kind: 'recovered'; from: string; to: string }
 export function observe(outage: Outage, answer: Answer, at: string): { outage: Outage; change: Change | null }
+// the keeper's probe dep becomes (url: string) => Promise<{ status: number | null; routed: boolean }> (S1)
 /** Decision 8: the open outage from history (a keeping.unreachable with no keeping.answering after it). */
 export function outageFrom(entries: HistoryEntry[]): Outage
-// keeping/probe.ts
-export function probeAddress(url: string, fetchFn?: typeof fetch, timeoutMs?: number): Promise<number | null>
+// keeping/probe.ts: (S1) the status, and whether the app's own instance answered
+export function probeAddress(
+  url: string, fetchFn?: typeof fetch, timeoutMs?: number,
+): Promise<{ status: number | null; routed: boolean }>
 ```
 
 - [ ] **Step 1: Tests, failing first.**
-  - **`answerOf`**: `200`, `302`, `404` answer; `410` off; `502`, `503`, `504`, `null` miss.
+  - **`answerOf`** (S1): `200`, `302`, `404` routed answer; **`200` not routed (the catch-all) misses**; `410` off
+    (routed or not); `502`, `503`, `504`, `null` miss.
   - **`observe`** as a sequence table: answer, miss, answer → never down; miss, miss → `fell` at the **first** miss's
     time; down, answer, answer → still down; a third answer → `recovered` with `from` and `to`; a fall 10 minutes after a
     recovery → `fell` with `again: true`; 40 minutes after → `again: false`; `off` from any state → `off`, and an answer
     after `off` → `answering` with no change (switched back on is not *answering again*).
   - **`outageFrom`**: an unreachable row with no answering after it → `down` from its `from`; with one after → answering
     with that recovery.
-  - **`probeAddress`** with a fake `fetch`: `redirect: 'manual'`; the status; a thrown `TypeError` or the deadline →
-    `null`; the body cancelled.
+  - **`probeAddress`** with a fake `fetch`: `redirect: 'manual'`; the status and `routed` (an `x-manifest-instance`
+    header, any value); a thrown `TypeError` or the deadline → `{ status: null, routed: false }`; the body cancelled.
   - **The keeper** (fake timers, a fake `probe`): every 60 s, one probe per kept app that is **launched, `active`, with a
     `studentsUrl` and a kept token**, none when `probing` is false (mock mode); `fell` (not `again`) → a
     `keeping.unreachable` row and the owners' *can't reach* email; `fell` with `again` → the row, no email; `recovered` →
@@ -936,9 +949,13 @@ export function StartForStudents(props: { platform: Platform; project: Schemas['
     owner; `restoreProject`, **no step-up**; then `ensureWatch` at once (Task 8); a launched app → *It's back, but not
     running yet.* and **[Start it for your students]**; never launched → *It's back. Your draft starts again the next
     time we work on it.*
-  - **[Start it for your students]**: the last-served release (S1's M4: production's newest instance by `createdAt`, its
-    `releaseId`) deployed to staging, its end awaited, then to production with the step-up (`then=students`); a refusal
-    with the checklist → F5's words and a link to *Going live*.
+  - **[Start it for your students]**: **(S1: M4) the last-served release is production's own `getEnvironment().instance`**
+    (still named after a switch-off, its `state` `gone`, its `releaseId` the version); deployed to staging, its end
+    awaited, then to production with the step-up (`then=students`; one taken for the switch-off minutes before may still
+    cover it: the press asks only when refused). **Right after a restore the checklist is not ready** (trying-out serves
+    nothing, so `scans` and `admin-approval` read unmet); the staging deploy of the same version makes it ready again (the
+    sign-off is bound to the build) — so the press never reads the checklist first. A refusal with the checklist → F5's
+    words and a link to *Going live*.
   - **[Delete it]** only when `launchedAt` is null: the confirming step's words, **[Delete it for good]**, the step-up
     (`then=delete`), `deleteProject`, then `ours.forget`, then *Your apps*; `409 PROJECT_LAUNCHED_NOT_DELETABLE` → its
     sentence. **A launched app** shows the FE-45 sentence where *Delete it* would be, and no button.
@@ -1063,3 +1080,68 @@ export function StartForStudents(props: { platform: Platform; project: Schemas['
   on github.com after the platform's sitting 8 truncates; the second project, a draft, is deleted by `deleteProject`);
   **yes, stop the live app's container in sitting 1** (M6: one `mf-…` container, never a `manifest-*` one; then the
   redeploy, and `dead-app-resources.sh` if anything is left).
+
+### 2026-10-01 — Sitting 1, on 7100: the measurements (session `manifest-app-34`, 16:46–17:10Z)
+
+In `manifest-8e`'s window (its sitting 7 closed; the control plane PID 93832 on `06b5333`, real GitHub, the database
+empty). The admin grant was run by `manifest-8e` at Rich's own word in its session. Scripts: F5's `lib.mjs` and
+`admin.mjs`, and this sitting's `make.mjs` and `f6.mts` (scratchpad `s1/`, throwaway); every record in `s1/out/`.
+
+- **M0, a launched app, in 18 minutes, most of them waiting for the grant:** `f6-watch` (proof-app starter, a class)
+  created in 8.8 s, built in 29 s, released, on trying-out in 8.6 s; the administrator's four records; the dry run as the
+  owner, stepped up, **passed in 9.5 s**; the preview and the approval; the owner's press, `403 STEP_UP_REQUIRED`
+  (*"'release:promote' needs a second authentication round trip"*), stepped up (`returnTo` kept its query), **live in
+  5.3 s, `launchedAt` 17:05:13Z**. A transient sign-in failure on the first administrator command after the grant;
+  the next worked. **`f6-watch` is left live** (Manifest-local-dev/f6-watch: to remove on github.com after the platform's
+  sitting 8 truncates). The second project, `f6-draft`, was deleted (M7).
+- **M2, a watch token** (`project:read`, `output:read`, 365 days): minted `201`, `rateLimit` 600, `expiresAt` a year on.
+  With it: `getProject?expand=environments` `200`, production's `url` `https://f6-watch.manifest.internal`;
+  `listMembers` `200` (`userId`, `puid`, `cwlLogin`, `displayName` *Test Instructor*, `email` `instructor@ubc.ca`,
+  `role`). Its stream replays everything there is (12 events, then 32: the replay is the newest 50). **Each
+  `machineDetail` F6 reads, as sent** (none carries who acted):
+  - `instance.healthy` `{ state, releaseId, instanceId, environment, environmentId }`;
+  - `project.launched` `{ releaseId, instanceId, imageDigest }`;
+  - `release.approved` `{ decision, releaseId, imageDigest }`;
+  - `rehearsal.completed` `{ passed, releaseId, rehearsalId, attributeCount }`;
+  - `iam_registration.recorded` `{ state, entityId, environment, attributeCount, externalTicketRef }`;
+  - `privacy_assessment.recorded` `{ state, externalTicketRef }`.
+  - **The dry run makes a production instance of the candidate** (`instance.healthy`, production, then
+    `instance.retiring`, `instance.retired`) before `project.launched`: **Task 4 corrected (S1)**, it is no line.
+  - Not seen (nothing made them): `incident.opened`, `member.*`, `project.renamed`; Task 4 reads the contract's shapes
+    for those.
+- **M3, the addresses through the edge** (`redirect: 'manual'`): **the edge's catch-all answers any host it has no
+  route for `200`**, `text/plain`, *"manifest OK host=<host> scheme=https remote=… listener=public"*, `server: Caddy`, **no
+  `x-manifest-instance`** (the live address before launch, and a made-up `no-such-app.manifest.internal`, alike). A routed
+  answer carries `x-manifest-instance: <the instance's id>` (`200` `text/html` at `/`; the proof app's `/login` a `302` to
+  the IdP, with it too). The proof app's `/` is public: a CWL app need not answer its sign-in redirect at `/`. **Task 6
+  and Decision 8 corrected (S1)**: an answer counts only when routed; otherwise it is a miss. Answers in 8–21 ms.
+- **M4, switching off and back on:**
+  - `archiveProject` **asks a step-up** (`403 STEP_UP_REQUIRED`; its message names `project:delete`), then `200` in
+    1.1 s, `archived`;
+  - **the watch token's stream closes `4401` (*"the token was revoked"*) 0.2 s in, before `project.archived` reaches it**
+    (Task 3 noted, S1);
+  - production after: **`getEnvironment().instance` still names the instance, `state: 'gone'`, its `releaseId` the
+    version served**; `listInstances` the same (Task 11 corrected, S1);
+  - the address: **`410`**;
+  - `mintToken` while switched off: **`409 PROJECT_ARCHIVED`** (Review Focus 4 holds);
+  - `restoreProject`: `200` in 31 ms, **no step-up**; a new token's replay carries `project.archived` and
+    `project.restored` (41 events);
+  - **the checklist right after the restore: not ready** (`scans` and `admin-approval` unmet: trying-out serves nothing);
+    staging deployed with the last-served release `200` in 7.2 s; then **ready again** (the approval is bound to the
+    digest; the registration still active); production `200` in 7.2 s, **no second step-up asked** (the switch-off's,
+    16 s before, covered it); the address `200` again.
+- **M5, a change that fails on the live address: not measured.** A version healthy on trying-out and failing on the live
+  address cannot be made without changing the platform. The mock-side tests carry `incident.opened` (Tasks 4, 5, 7).
+- **M6, the fall, at Rich's word:** the production app container `mf-f6-watch-production-f5cb63f8-5fdd0396-app` (never a
+  `manifest-*` one) stopped at 17:07:39Z: **the edge answered `502` within 3 s**, and every 10 s for 93 s (14–58 ms);
+  **the platform still said `healthy`** at +104 s (FE-4, as written); the stream carried nothing. *Start it again*: the
+  same release deployed to production, `403 STEP_UP_REQUIRED`, stepped up (`then=start-again`), **`200 healthy` in 5.4 s,
+  the address `200` at once**; the stream then carried `instance.provisioning`, `sso.registered`, `instance.starting`,
+  `instance.healthy` (production, the **same** release: Task 4's rule, no line), `ai.key_rotated`, `instance.retiring`,
+  `instance.retired` (the stopped one). Nothing was left over (`docker ps -a`): `dead-app-resources.sh` was not needed.
+- **M7, delete** (`f6-draft`, never launched): `403 STEP_UP_REQUIRED` (*"'project:delete' needs…"*), then `200` in
+  0.8 s, `DeletedProject` `{ id, slug, state: 'deleted', deletedAt }`; **the watch token's stream closed `4401`**, never
+  `4404`, before the delete answered; `getProject` `404`; `checkSlug` *available*.
+- **M8, the mock**: the first part's entry, above.
+- **Timings for the page's deadlines:** a switch-off ~1 s, a restore ~30 ms, a delete ~1 s, a deploy 5–9 s: F5's
+  `READ_TIMEOUT_MS` (15 s) for the first three, `DEPLOY_TIMEOUT_MS` (120 s) for the deploys, as Task 8 assumes.
