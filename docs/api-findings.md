@@ -53,6 +53,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Landed, the platform's launch-path sitting 5a, closed 2026-10-01 at `003adf7`** (`8771272`, its fix wave `42cd8c5`; reported by `manifest-74`) | **FE-39** | — | **Built, ours too (F4a, executed 2026-10-01):** `Me.mayBuild` (required) read and never re-derived; our `POST /api/conversations` refuses a new start `403 BUILDING_NOT_OPEN` (a `getMe` without the decision builds); the page's screen, and the shell for someone who keeps apps; a `BUILDING_NOT_OPEN` met part-way, from the platform or from us, reads `getMe` again. **Rich's click** as `student` and `instructor` on 7100. `409 MEMBER_MAY_NOT_BUILD` is F6's (*People*). Contract 1.5.0, 66 operations at 5a |
 | **Landed beside it, 2026-10-01** (`manifest-60`; `manifest-92`) | F6's mail sink; FE-6, FE-25 (F5b) | — | **Mailpit** (`8155bcf`): SMTP `127.0.0.1:7111`, the inbox `http://127.0.0.1:7112` (API `/api/v1/`), host `127.0.0.1` or `localhost` only, in memory, shared. **The launch path's sitting 6 contract commit** (`b2c75e6`, 1.5.0 additive, **68 operations**): `submitIamRegistration` (`…/launch-records/iam-registration/{environment}/submission`) and `submitPrivacyAssessment` (`…/privacy-assessment/submission`), person-only `launch:submit`, body `{ sentAt?, reference? }`; `409 LAUNCH_DRAFT_REQUIRED`, `400 LAUNCH_SENT_AT_INVALID`, `409 LAUNCH_PIA_NOT_APPROVED`, `409 LAUNCH_STAGING_NOT_REGISTERED`; `IamRegistration.environment`, `submittedAt`, `submittedBy`, `createdAt`; `PrivacyAssessment.submittedAt`, `submittedBy`, `createdAt`; `LaunchRecords.stagingRegistration`; `LaunchReadinessItem.since` (*waiting since* / *met since*, IAM and PIA only for now). **Adopted in our test data** (`f8dcfbc`); read by F5b. **Sitting 6 CLOSED 2026-10-01 at `d54e1e1`** (fix wave `db2ddbf`, relayed by `manifest-92`): `sentAt` is `format: date` (an impossible day `400 REQUEST_INVALID`); `409 LAUNCH_PIA_NOT_APPROVED` refuses **either** registration's submission until the assessment is approved with its reference, checked first; an administrator's record that omits `externalTicketRef` keeps the owner's; a submission and what it reads are one locked decision; the mock's records follow UBC's order (the PIA re-sent 09-18, `since` `2026-09-18T19:00:00.000Z`). **For F5b: a same-day `submittedAt`/`since` is NOON in Vancouver**, up to ~12 h ahead of now: count waits in Vancouver days, never `now − since`. Every real submission answers `409 LAUNCH_DRAFT_REQUIRED` until sitting 7's `draftIamRegistration` (`launch:draft`, mintable) and `IamRegistration.package`. Our typecheck and 1671 tests pass against it; the mock restarted; `check-going-live.sh` 8/8 |
 | **The launch path's sitting 7 contract commit, 2026-10-01** (`6cbb489`, Task 10, Spec action 4; announced before and after by `manifest-8e`; the sitting still running, 7100 its own) | FE-6 (F5b) | — | **Contract 1.5.0, additive, 69 operations.** **`draftIamRegistration`** (`POST …/launch-records/iam-registration/{environment}/draft`, no body, `staging` or `production`, answers `IamRegistration`): capability **`launch:draft`**, new, **mintable** (owner, collaborator, administrator). **`IamRegistration.package`**, required, a `RegistrationPackage` or `null`: `environment`, `generatedAt`, `fromCommit`, `entityId`, `acsUrl`, `sloUrl`, `certificate { pem, fingerprint, expiresAt }` (never a private key), `attributes[] { name, oid, purpose, usedAt[] { path, line }, justification, unused }`, `usedAtTruncated`, `contacts { technical[], support[] }`, `privacyAssessmentReference`, `metadataXml`, `warnings[]`. Two new codes: **`409 LAUNCH_RECORD_SUBMITTED`** (a record UBC holds, submitted or active, is never re-drafted; again from `change_requested` or `expired`) and **`409 LAUNCH_NOT_CWL`** (the app signs nobody in, or asks for no attribute); `LAUNCH_DRAFT_REQUIRED`'s remedy names the draft. A new event, **`iam_registration.drafted`** (`environment`, `entityId`, `fromCommit`, `attributeCount`, `unusedCount`: no attribute names). A submission's earliest day is the newest draft's `generatedAt`. **The mock:** `getLaunchRecords` and `recordIamRegistration` answer from fixtures (`package: null`); **`submitIamRegistration` and `draftIamRegistration` from their document examples**, a real captured staging package (a ~4 KB PEM and metadata XML). **Adopted with no change of ours**: our registration test data spreads the fixtures. Our typecheck and 1671 tests pass against it; the mock restarted (pid 66212) and answers the draft; `check-seeing.sh` and `check-going-live.sh` 8/8 each. Read by F5b |
+| **Decided by Rich, 2026-10-01** (writing F6's design; carried to `manifest-8e` for the platform's record, `manifest-60` not running) | **FE-45** | An owner's *mark as removed* for a switched-off app that has been live: gone from every listing and route for its members, its data kept; an administrator alone restores it or deletes it for good under UBC's retention | **Build it, in the future** (*"so it gets built in the future"*): production data is never an owner's to delete; *never been live* stays the owner's delete line |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -1276,6 +1277,39 @@ as `manifest-d4` described it. Not carried: Rich's word carries it.*
   - **(c)** it stays, and we say so earlier (on the Overview's band, before the dry run), so nobody does the work first.
 - **When:** before faculty with a large course use it; F5's acceptance walked moments 14 and 15 in Rich's own click (a
   class-sized app), at his word.
+
+### FE-45 — An owner cannot put away an app that has been live: delete is refused, and nothing else takes it off their list
+
+*Found 2026-10-01 writing F6's design (moment 20), with Rich. **Rich's decision, the same day:** *"We can't allow folks to
+delete apps that have been actively used. i.e. production databases can't be deleted. We'll need some way to 'mark as
+deleted' which removes it from all paths, but we can't delete the data. That can only be an admin decision (due to data
+retention)"*; the line is **never been live** (an owner may still delete an app that never launched, as `deleteProject`
+allows today). Carried at his word ("make a record of this, so it gets built in the future"): `manifest-60` was not
+running, so it went to `manifest-8e` for the platform's record at its sitting 7's close.*
+
+- **Screen and moment:** moment 20, *End of term*: the Overview's *Switching it off*, and *Your apps*.
+- **What we would call:** an owner's *mark as removed* on a switched-off project.
+- **What is missing:**
+  - `deleteProject` refuses a launched project, `409 PROJECT_LAUNCHED_NOT_DELETABLE` ✓, rightly: its data is students'.
+  - `archiveProject` keeps it, and it stays in `listProjects` and every route for its members for ever ✓. An owner who is
+    done with a course's app has nowhere to put it but a switched-off card, every term after.
+  - Nothing lets an administrator delete a launched project's data once UBC's retention allows (the app's own
+    `data.retention_days`, if it declared one).
+- **Why it matters:** *Your apps* fills with switched-off apps nobody will open again, and the only way to tidy it would
+  delete what UBC's rules keep. Hiding them in our screens alone would be a workaround: the reference console and any
+  agent would still see them.
+- **Options:**
+  - **(a) Recommended:** a project state *removed*, after *archived*: the owner's `removeProject` (person-only, step-up, on
+    an archived project; `409` otherwise). A removed project drops out of `listProjects` and answers its members `404`;
+    its name stays taken; its code, data, secrets and records are kept. **An administrator alone** lists removed projects,
+    restores one to *archived*, or deletes it for good when retention allows (`deleteProject` for an administrator, on a
+    removed project, whatever `launchedAt` says). An event each: `project.removed`, and the administrator's own.
+  - (b) The same, without a new state: `archivedAt` plus a `removedAt` the listings filter on.
+- **Ours meanwhile (F6):** a live app's owner sees *Switch it off* only, and *"Apps that have been live are kept, because
+  UBC's rules decide when students' data is removed. Switch it off, and a Manifest administrator removes it when the rules
+  allow."* When it lands, **[Remove it from your apps]** follows, and our own rows for it are kept under the same
+  retention (what students and owners wrote to us is part of it).
+- **When:** Rich's word: *"so it gets built in the future"*; not before F6.
 
 ## Not a gap: decisions that are Rich's
 
