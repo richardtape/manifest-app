@@ -776,10 +776,10 @@ export const OUTAGE_FIX_WORDS = "Your students couldn't reach it"
 ```ts
 // platform/api.ts: Platform gains (each mutating one with an Idempotency-Key)
 listMembers(projectId: string): Promise<Schemas['MemberList']>
-revokeToken(tokenId: string): Promise<void>
+revokeToken(tokenId: string): Promise<Schemas['Token']>                                  // (S1: M8) it answers the token
 archiveProject(projectId: string, idempotencyKey: string): Promise<Schemas['Project']>
 restoreProject(projectId: string, idempotencyKey: string): Promise<Schemas['Project']>
-deleteProject(projectId: string, idempotencyKey: string): Promise<void>
+deleteProject(projectId: string, idempotencyKey: string): Promise<Schemas['DeletedProject']>  // (S1: M8) { id, slug, state: 'deleted', deletedAt }
 // ours/api.ts: Ours gains (call() gains 'DELETE')
 keeping(projectId: string): Promise<{ watching: boolean; until: string | null; tokenId: string | null; mine: boolean }>
 handWatch(projectId: string, handed: { token: string; tokenId: string; expiresAt: string }): Promise<{ kept: 'new' | 'current' }>
@@ -808,8 +808,9 @@ export function useRole(platform: Platform, projectId: string | undefined, me: S
     best-effort (a failure never stops Make it).
   - **`useRole`**: the member whose `userId` is `me.id`: `owner` → `owner`, `collaborator` → `helper`; not listed or a
     refusal → `unknown` (the page then shows no owner's button).
-  - The five platform calls send what the contract says (method, path, `Idempotency-Key`), and `deleteProject`'s `200`
-    with no body is `void`.
+  - The five platform calls send what the contract says (method, path, `Idempotency-Key`). **(S1: M8) Assert what was
+    sent, never what the mock answers**: its `mintToken` answers its example's capabilities (`project:read`,
+    `build:create`, `release:deploy`) and `expiresAt` whatever is asked (FE-27's way).
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** minting for an archived app (red); the other
   person's token revoked (red). Each restored.
 - [ ] **Step 5: Commit** `feat(web): the Keeping watch token, minted when an app has none — never for one switched off`.
@@ -1017,3 +1018,27 @@ export function StartForStudents(props: { platform: Platform; project: Schemas['
   streams).
 - **Not yet measured** (Task 1): every `machineDetail` F6 reads; a CWL app's students' address through the edge;
   archive's and restore's effects on production and on the deploys after.
+
+### 2026-10-01 — Sitting 1, its first part: what needs no 7100 (session `manifest-app-34`)
+
+- **Rich approved the plan** (*"yes approved. native."*) and asked for sitting 1 in this session, **holding for 7100
+  until the platform's sitting 7 (`manifest-8e`) says our work would not affect it**. Asked it (impact, when it closes,
+  the shortest way to a launched project, and whether stopping one app's container is safe for its state); **holding**.
+- **F5's measurement scripts survive** in session `dd912ad6`'s scratchpad (`s6/lib.mjs`: the three sign-in hops and the
+  step-up from Node; `s6/admin.mjs`: the administrator as `operator`, by script; `s6/step6-walk.mjs`: a launch walked).
+  Sitting 1 copies them into its own scratchpad rather than writing them again.
+- **M1: the contract.** 1.5.0, **69 operations**: the platform's sitting 7 contract commit (`6cbb489`) and fix wave
+  (`dec71d8`) adopted with no change of ours (`5f32f1e`, `03c5323`). Nothing F6 calls moved.
+- **M8: the mock** (7102, `MANIFEST_MOCK_LAUNCHED` unset), with any Bearer or the mock's session:
+  - `mintToken` → the example: id `77777777-…`, capabilities `project:read`, `build:create`, `release:deploy` **whatever
+    was asked**, `expiresAt` `2026-12-18T09:00:00.000Z`, a secret `mft_…`. **Tests assert what we sent** (Task 8,
+    corrected **(S1)**);
+  - `listMembers` → one owner, *Instructor One*, `instructor@example.test`, `cwlLogin` `instructor`;
+  - `getProject?expand=environments` → `active`, `launchedAt` null; production's `url`
+    `https://mock-app.manifest.internal`, its `instance` null;
+  - `archiveProject` → `200` the project `archived`, `archivedAt` now; `restoreProject` → `200` `active`, `archivedAt`
+    kept: **no step-up asked** of either (the mock asks none, FE-40);
+  - `revokeToken` → `200` for its own token's id, `404` for another (as the contract: only the minter's);
+  - `deleteProject` → **`200` `{ id, slug, state: 'deleted', deletedAt }`** (`DeletedProject`), not an empty body (Task 8,
+    corrected **(S1)**); the mock keeps nothing, so the project reads as before afterwards;
+  - the event stream's URL by `GET` with a Bearer → `426` (the token is good; it wants a WebSocket).
