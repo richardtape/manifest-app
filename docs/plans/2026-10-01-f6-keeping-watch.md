@@ -1058,3 +1058,8 @@ export function StartForStudents(props: { platform: Platform; project: Schemas['
   `healthy` (FE-4), the edge answers `502`, a redeploy retires it; `scripts/dead-app-resources.sh` after, if anything is
   left. **And:** the platform's sitting 8 truncates at its first Vitest, so `f6-watch` (launched, never deletable) will
   need removing on github.com afterwards. **FE-45 confirmed by Rich** in its session (*"Yes, confirmed."*).
+- **Rich's three answers** (2026-10-01, ~16:15Z): **the admin grant** is asked of the platform session once `operator`
+  has signed in (as F5's acceptance did); **yes, make `Manifest-local-dev/f6-watch`** (launched, so it will need removing
+  on github.com after the platform's sitting 8 truncates; the second project, a draft, is deleted by `deleteProject`);
+  **yes, stop the live app's container in sitting 1** (M6: one `mf-…` container, never a `manifest-*` one; then the
+  redeploy, and `dead-app-resources.sh` if anything is left).
