@@ -1091,6 +1091,18 @@ word the same day** to the platform session (`manifest-63`), for its launch-path
   administrators' list names them); **`Me.mayBuild: boolean`**; `createProject` and `startIntakeSession` **`403 BUILDING_NOT_OPEN`**;
   `addMember` with a target who may not build **`409 MEMBER_MAY_NOT_BUILD`**, naming them; the mock's
   **`MANIFEST_MOCK_MAY_BUILD=0`**; a second faculty test user, `colleague`. It messages us at the contract commit.
+- **As sitting 5a's session described it to us** (`manifest-74`, 2026-10-01 04:45Z, before its contract commit; F4a's Task 1
+  reads what actually lands): **`Me.mayBuild: boolean`, required**, true for exactly `faculty` at the last sign-in or a
+  platform administrator. `createProject` and `startIntakeSession` answer `403 BUILDING_NOT_OPEN` **first, before anything
+  else is checked**. `addMember` answers `409 MEMBER_MAY_NOT_BUILD` only when the person named may not build **and is not
+  already a member** (a member who stops being faculty keeps their place, and their role can still change); its message
+  names them, its hint *"Add a faculty colleague instead. Nobody was added."*; a token's confirmed retry reaches
+  `addMember`, so an agent can meet the `409` after a person confirms (F6's *People*). **The mock:** `mayBuild` true by
+  default; `MANIFEST_MOCK_MAY_BUILD=0`, or `createMockServer({ mayBuild: false })`, answers false and both refusals (an
+  administrator's role still builds); its `MEMBER` fixture may become a faculty colleague (we told it nothing of ours reads
+  it). **The laptop's IdP:** `student`/`student` may **not** build (affiliation `student`); `operator`/`operator` is `staff`,
+  building only as an administrator; `instructor` and a **new `colleague`/`colleague`** (`col000001`, faculty) build.
+  **`MANIFEST_ADMIN_PUIDS` is unset by default** (`scripts/admin-grant.sh` stays the procedure). Contract 1.5.0.
 - **Rich decided the platform's two differences, 2026-09-29, each its recommendation:** administrators **by PUID**
   (`MANIFEST_ADMIN_PUIDS`: UBC can reassign a CWL login, which would hand admin to a stranger; when set, authoritative
   and reconciled at every sign-in; when empty, `admin-grant.sh` stays the way in); and **someone who stops being faculty
