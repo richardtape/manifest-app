@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { cwl } from '../agents/cwl.js'
 import { explaining } from '../agents/explaining.js'
-import { lead, type LeadView } from '../agents/lead.js'
+import { CAPABLE_VIEW_CAP, lead, VIEW_CAP, type LeadView } from '../agents/lead.js'
 import { dayOf } from '../agents/change.js'
 import { HEADINGS, planMarkdown, readPlanMarkdown, type Plan } from '../agents/plan.js'
 import { publishRefusal, publishState, type Hub } from '../api/events.js'
@@ -842,6 +842,8 @@ export function createRounds(deps: RoundDeps): Rounds {
       pack: live.pack ?? '',
       paths: live.paths,
       files: live.files,
+      // The capable model sees more at once (Rich, sitting 6); any other keeps Decision 3's cap.
+      cap: live.run.model === 'default-chat-large' ? CAPABLE_VIEW_CAP : VIEW_CAP,
       step: 'pages',
       tries: {
         build: live.run.tries['build'] ?? 0,

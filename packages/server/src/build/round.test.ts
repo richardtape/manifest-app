@@ -690,6 +690,42 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(viewOf(h, id)?.line).toBe('The pages are written.')
   })
 
+  it('the lead’s view is the capable model’s, 120,000, when its session lists default-chat-large, and 48,000 on any other (Rich, sitting 6)', async () => {
+    const BIG = {
+      'routes/a.js': `// a\n${'a'.repeat(30_000)}\n`,
+      'routes/b.js': `// b\n${'b'.repeat(30_000)}\n`,
+      'routes/c.js': `// c\n${'c'.repeat(30_000)}\n`,
+    }
+    const script = {
+      lead: [
+        read('routes/a.js', 'routes/b.js', 'routes/c.js'),
+        read('server.js'),
+        commit(),
+        done(),
+      ],
+    }
+    const { h } = await startedRound({ script, files: BIG, autoBuild: true })
+    await until(
+      () => leadPrompts(h).length >= 2,
+      () => h.did,
+    )
+    for (const content of Object.values(BIG)) expect(leadPrompts(h)[1]).toContain(content)
+    const { h: onprem } = await startedRound({
+      script,
+      files: BIG,
+      autoBuild: true,
+      models: ['default-chat-onprem', 'default-embed'],
+    })
+    await until(
+      () => leadPrompts(onprem).length >= 2,
+      () => onprem.did,
+    )
+    expect(leadPrompts(onprem)[1]).toMatch(/Read, and not shown for want of room: /)
+    expect(
+      Object.values(BIG).filter((c) => leadPrompts(onprem)[1]!.includes(c)).length,
+    ).toBeLessThan(3)
+  })
+
   it('each file a read asks for is traced by its path, never its content: a loop of reads can be seen (sitting 6, the real walk)', async () => {
     const { h, id } = await startedRound({
       script: {

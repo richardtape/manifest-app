@@ -17,6 +17,11 @@ export interface LeadView {
   paths: string[]
   /** The files it last read, NEWEST FIRST: they fill what is left of the cap. */
   files: { path: string; content: string }[]
+  /**
+   * Everything the lead is sent, for the model it is sent to: CAPABLE_VIEW_CAP for the capable
+   * model, VIEW_CAP for any other (Rich, sitting 6).
+   */
+  cap: number
   step: BuildStep
   tries: Record<'build' | 'draft' | 'conflict', number>
   last: { kind: string; report: string } | null
@@ -76,11 +81,18 @@ export type LeadMove =
   | { kind: 'done'; line: string; cannot: string | null; account: string }
 
 /**
- * DECISION 3's CAP: everything the lead is sent, instructions included, whatever model is
- * listed. F3 M1: the fallback's context is 16k tokens and cuts a longer prompt without a word;
+ * DECISION 3's CAP: everything the lead is sent, instructions included, on any model but the
+ * capable one. F3 M1: the fallback's context was 16k tokens and cut a longer prompt without a word;
  * at 3.7 characters a token, 48,000 is about 13,000, with room to answer (Rich: carry on).
  */
 export const VIEW_CAP = 48_000
+/**
+ * THE CAPABLE MODEL'S CAP (Rich, F5 sitting 6): the real walk's first round read in a loop to the
+ * move limit, its app's files (~65,000 characters) never fitting beside the plan and the pack at
+ * once. ~32,000 tokens: F3 M1 measured the capable model answering 108,000 in 16 s. Its fallback,
+ * when the provider fails, gets a cut prompt and may stop the round (Rich accepted).
+ */
+export const CAPABLE_VIEW_CAP = 120_000
 /** A move's report, cut: the specialist's proposal must reach the lead whole enough to commit. */
 const LAST_CAP = 12_000
 /** The specialist's proposal, whole: its four sign-in files come to about 22,000 at most (M6). */
@@ -268,17 +280,26 @@ function brief(view: LeadView): { role: 'user'; content: string }[] {
     '',
     'Files you have read, newest first:',
   ].join('\n')
-  let left = VIEW_CAP - LEAD_PROMPT.length - head.length - 1
+  // Room for the line that names each file left out (sitting 6: never dropped without a word, and
+  // never "read it alone", which sent the lead round its files in a loop).
+  const leftOutRoom = 200 + view.files.reduce((n, file) => n + file.path.length + 2, 0)
+  let left = view.cap - LEAD_PROMPT.length - head.length - 1 - leftOutRoom
   const shown: string[] = []
+  const notShown: string[] = []
   for (const file of view.files) {
     const whole = `--- ${file.path}\n${file.content}`
-    const cut = `${file.path}: too large to show beside the rest: read it alone`
-    const chosen = whole.length + 1 <= left ? whole : cut.length + 1 <= left ? cut : null
-    if (chosen === null) break
-    shown.push(chosen)
-    left -= chosen.length + 1
+    if (whole.length + 1 <= left) {
+      shown.push(whole)
+      left -= whole.length + 1
+    } else notShown.push(file.path)
   }
-  return [{ role: 'user', content: `${head}\n${shown.join('\n')}` }]
+  const leftOut =
+    notShown.length === 0
+      ? []
+      : [
+          `Read, and not shown for want of room: ${notShown.join(', ')}. The files above are the newest you read; one you read again comes to the front, and the oldest give way.`,
+        ]
+  return [{ role: 'user', content: [head, ...shown, ...leftOut].join('\n') }]
 }
 
 export const lead = defineAgent({

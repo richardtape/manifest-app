@@ -15,7 +15,14 @@ import { storeTrace } from '../runtime/trace.js'
 import { openStore } from '../store/db.js'
 import { cwl, type CwlBrief } from './cwl.js'
 import { explaining } from './explaining.js'
-import { CHANGE_PARAGRAPH, LEAD_PROMPT, VIEW_CAP, lead, type LeadView } from './lead.js'
+import {
+  CAPABLE_VIEW_CAP,
+  CHANGE_PARAGRAPH,
+  LEAD_PROMPT,
+  VIEW_CAP,
+  lead,
+  type LeadView,
+} from './lead.js'
 
 /**
  * F3 TASK 7: THE LEAD, THE CWL SPECIALIST AND THE EXPLAINING AGENT, and the lead's five moves
@@ -604,6 +611,7 @@ describe("the lead's view (Decision 3)", () => {
     pack: `# node-ts-mongo@1 — knowledge pack\n${'The stack is fixed. '.repeat(575)}`,
     paths: ['server.js', 'routes/a.js', 'routes/b.js', 'routes/c.js'],
     files,
+    cap: VIEW_CAP,
     step: 'pages',
     tries: { build: 0, draft: 0, conflict: 0 },
     last: { kind: 'commit', report: 'Committed 23ed148: added routes/posts.js.' },
@@ -680,9 +688,7 @@ describe("the lead's view (Decision 3)", () => {
     expect(user).toMatch(/proposal, not yet committed/i)
     expect(user).toContain(proposal.summary)
     for (const change of proposal.changes) expect(user).toContain(change.content)
-    expect(user).toMatch(
-      /routes\/b\.js: too large to show beside the rest: read it alone/,
-    )
+    expect(user).toContain('Read, and not shown for want of room: routes/b.js.')
     const none = lead
       .brief(view(files))
       .map((m) => m.content)
@@ -710,11 +716,48 @@ describe("the lead's view (Decision 3)", () => {
     expect(user).toContain(input.plan)
     expect(user).toContain(input.pack)
     expect(user).toContain(files[0]!.content)
-    expect(user).toMatch(
-      /routes\/a\.js: too large to show beside the rest: read it alone/,
-    )
+    expect(user).toContain('Read, and not shown for want of room: routes/a.js.')
+    expect(user).not.toMatch(/read it alone/)
     expect(user).toContain('Can a late post still count?')
     expect(user).toContain('Committed 23ed148')
+  })
+
+  it('the capable model’s view holds an app’s working set whole (sitting 6’s real walk: ~65,000 characters of files); 48,000 names what it leaves out, every one (Rich)', () => {
+    const files = [
+      'server.js',
+      'auth/ubcshib.js',
+      'public/index.html',
+      'public/app.js',
+      'ai/llm.js',
+    ].map((path, i) => ({ path, content: `// ${path}\n${String(i).repeat(13_000)}\n` }))
+    const sent = (input: LeadView) =>
+      [{ role: 'system', content: lead.instructions }, ...lead.brief(input)].reduce(
+        (n, m) => n + m.content.length,
+        0,
+      )
+    const capable = { ...view(files), cap: CAPABLE_VIEW_CAP }
+    const whole = lead
+      .brief(capable)
+      .map((m) => m.content)
+      .join('\n')
+    expect(CAPABLE_VIEW_CAP).toBe(120_000)
+    for (const file of files) expect(whole).toContain(file.content)
+    expect(whole).not.toMatch(/not shown for want of room/)
+    expect(sent(capable)).toBeLessThanOrEqual(CAPABLE_VIEW_CAP)
+    const small = lead
+      .brief(view(files))
+      .map((m) => m.content)
+      .join('\n')
+    expect(sent(view(files))).toBeLessThanOrEqual(VIEW_CAP)
+    const left =
+      /Read, and not shown for want of room: ([^.]+(?:\.[a-z]+)?(?:, [^,.]+\.[a-z]+)*)\./.exec(
+        small,
+      )?.[1]
+    const shownWhole = files.filter((f) => small.includes(f.content)).map((f) => f.path)
+    expect(shownWhole.length).toBeGreaterThan(0)
+    expect(left?.split(', ')).toEqual(
+      files.map((f) => f.path).filter((p) => !shownWhole.includes(p)),
+    )
   })
 
   const INCIDENT = {
@@ -1012,6 +1055,7 @@ describe('mock mode: the walk-through answers the three (F2 Decision 7)', () => 
         pack: '# pack\n',
         paths: r.context.paths(),
         files: r.kept,
+        cap: VIEW_CAP,
         step: 'pages' as const,
         tries: { build: 0, draft: 0, conflict: 0 },
         last: state.last,
@@ -1060,6 +1104,7 @@ describe('mock mode: the walk-through answers the three (F2 Decision 7)', () => 
         pack: '# pack\n',
         paths: r.context.paths(),
         files: kept,
+        cap: VIEW_CAP,
         step: 'pages' as const,
         tries: { build: 0, draft: 0, conflict: 0 },
         last: state.last,
