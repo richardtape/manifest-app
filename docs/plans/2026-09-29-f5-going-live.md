@@ -17,7 +17,7 @@ rail, *Going live* (Tasks 4–6); its final review changed Decision 5 at Rich's 
 its checklist item as well as its record, and a change on file is with UBC. **Sitting 4 is done** (2026-09-30,
 `manifest-app-6d`, overnight, Rich asleep and decisions delegated): the dry run's row in its own component (Task 7, S1's),
 the sign-off from the approval with *[Talk it through]* (Task 8), the hand-over (Task 9); its final review changed
-Decisions 9 and 12, marked **(S4)**, **decided overnight for Rich's review**. **Sitting 5 is done** (2026-09-30, `manifest-app-6b`, overnight, decisions delegated): *[Let your students in]* with its step-up, the stations and every failure, M1, M2 and M4 on *Trying out* too, and our server's fix for a live start (Task 10); its final review changed Decision 10, marked **(S5)**, **decided overnight for Rich's review**: the press sends only the version the button named. **Sitting 6's first half is done** (2026-09-30, `manifest-app-f1`, Rich awake): Rich decided the platform's Spec action 8, (b)+(c), and said *"Build it now"*: **Task 7's press is built**, with its second sign-in; Step 0 (FE-34's `null`, 5b's `gone` ahead of it); the whole-branch review and its two re-graded Importants fixed; `check-going-live.sh` 8/8 on a fresh database. **The next is its second half, row 6's `← next`: the 7100 window after the platform's 5 → 5b.**
+Decisions 9 and 12, marked **(S4)**, **decided overnight for Rich's review**. **Sitting 5 is done** (2026-09-30, `manifest-app-6b`, overnight, decisions delegated): *[Let your students in]* with its step-up, the stations and every failure, M1, M2 and M4 on *Trying out* too, and our server's fix for a live start (Task 10); its final review changed Decision 10, marked **(S5)**, **decided overnight for Rich's review**: the press sends only the version the button named. **Sitting 6's first half is done** (2026-09-30, `manifest-app-f1`, Rich awake): Rich decided the platform's Spec action 8, (b)+(c), and said *"Build it now"*: **Task 7's press is built**, with its second sign-in; Step 0 (FE-34's `null`, 5b's `gone` ahead of it); the whole-branch review and its two re-graded Importants fixed; `check-going-live.sh` 8/8 on a fresh database. **Sitting 6's second half is done** (2026-09-30/10-01): the walk on 7100 and **Rich's click, *Class check-ins* live** (*"it all seems to work well!"*). **F5 is EXECUTED.**
 
 **Goal:** A faculty member sees what stands between their app and their students from the day the draft is built, runs
 the dry run, sees the sign-off when it is given, lets their students in with one press (and a second sign-in), and is
@@ -67,7 +67,7 @@ launch-path sittings 6–10 land (*What waits on the platform*, below). Around t
 | 3 | 4, 5, 6 | `ClockItem` and `ProgressBar`'s clock, ported with parity; the app's pages (the Overview, the rail, the Preview's new address, *Your apps*' line, [Open it] hidden); *Going live*: the page, the two clocks, the short jobs | **done 2026-09-30** (`manifest-app-58`, no platform): `6505ea7` (the two components, `state` ours), `f113e5b` (the Overview, the rail, the Preview at `/preview`, *Your apps*' line), `b8a533e` (*Going live*), `518c05e` (the final review's fixes; **Decision 5 (S3)**, Rich). 1414 tests (the dated entry below) |
 | 4 | 7, 8, 9 | The dry run (moment 12); the sign-off (moment 13) with *[Talk it through]*; the hand-over (moment 15) | **done 2026-09-30** (`manifest-app-6d`, overnight, no platform): `11377c8` (the dry run's row in `dry-run.tsx`, an administrator's, nothing pressable), `2bd6d94` (the sign-off from `getApproval`, *[Talk it through]*), `2788bde` (the hand-over; our `/api/apps/:projectId/plan`), `154a227` (*Going live* hears a launch from the checklist), `7f28d1d` (the final review: *[Talk it through]* opens the change under way, the hand-over speaks for the version live: **Decisions 9 and 12 (S4)**, decided overnight for Rich's review). 1505 tests; the four acceptance scripts pass in mock mode (the dated entry below) |
 | 5 | 10 | Putting it live (moment 14): the step-up, the deploy, the stations, every failure; M1, M2 and M4, on *Trying out* too | **done 2026-09-30** (`manifest-app-6b`, overnight, no platform): `2e3108f` (trying-out's parts shared), `6f7b713` (our server's fix for a live start; the launch-action guard), `2ed58c9` (M1, M2, M4 on *Trying out*), `74c8a85` (*[Let your students in]*, the step-up and `?then=live`, the stations, every failure), `ac1a0d1` (Step 0: a create waits 90 s, adopting the platform's sitting 4), `39ed744` (the final review: **Decision 10 (S5)**, the press sends only the version the button named, decided overnight for Rich's review; the card held exactly while needed). 1568 tests; the four acceptance scripts pass in mock mode, **not from a fresh database** (the dated entry) |
-| 6 | 11 | **The acceptance:** `scripts/check-going-live.sh` against the mock; the whole-branch review; a first launch walked end to end on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **in progress** (`manifest-app-f1`, 2026-09-30, Rich awake; the dated entry): **the mock side is done**. Step 0: **Spec action 8 decided by Rich, (b)+(c)** (a step-up before a dry run; it takes itself down), built by the platform's **5b**, which runs after its sitting 5; **Task 7's press built** at Rich's *"Build it now"* (`71fceba`), against 5b as `manifest-d4` described it; FE-34's `null` `200` adopted (`1ae7189`); the live address before a launch read as nothing there when a dry run leaves it `gone` (`14f5749`). The whole-branch review: no Critical, no Important as graded, two Minors re-graded Important and fixed (`14f5749`). `check-going-live.sh` 8/8 on a **fresh dev database**, its four controls red. Then: the platform's `agent_session.narrowed` adopted (`54cd767`); a review of the half's own work, its four Importants fixed (`30c4227`, `f677845`), **FE-43** written; the live address's wrap, Rich's (`ef1dd6b`). 1638 tests twice. **← next: the 7100 window, AFTER the platform's 5 → 5b and BEFORE its 5a's first Vitest** (recorded in its §7e; 5b messages us and hands 7100 over): Step 0 for 5 and 5b, the walks against the mock (the dry run's press at 1440 and 375), Step 2 on 7100 at Rich's word, Step 3 Rich's click |
+| 6 | 11 | **The acceptance:** `scripts/check-going-live.sh` against the mock; the whole-branch review; a first launch walked end to end on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **done 2026-09-30/10-01** (`manifest-app-f1`, Rich awake): the mock side, the whole-branch review and two of its own, Task 7's press (`71fceba`), Step 0 for the platform's 5, 5b and the descriptions; **the walk on 7100** (four runs: the capable model's view, `2aac271`, at Rich's word; FE-44; the dry run with its second sign-in, Done in 10 s); **Rich's click** (*Class check-ins*, live at 03:45:04Z: *"it all seems to work well! The wording is all good for now"*). 1644 tests twice; the five acceptance scripts in mock mode. **F5 EXECUTED** (the dated entries) |
 
 **Every sitting starts** with `pgrep -fl vitest` (a stray worker loads the machine the platform times its tiers
 against) and **Step 0: the platform's landings** (*Adopting what lands*, below). **Every sitting ends as F4's did:**
@@ -1494,3 +1494,62 @@ the ledger's `Sitting 6` lines are the record of each ruling.*
 - **Next: sitting 6's second half, in the 7100 window** (after the platform's 5 → 5b, before 5a): Step 0 for 5 and 5b; the
   dry run walked against the mock; Step 2 on 7100 at Rich's word, the dry run pressed as the owner; **Rich's click**. F5 is
   executed only then.
+
+### 2026-09-30/10-01 — Sitting 6, its second half: the 7100 window, the walk and Rich's click (session `manifest-app-f1`) — F5 EXECUTED
+
+*Rich: "Wait for the platform's 5b, then do the walk". The platform's sitting 5 closed (`424da79`), `manifest-00` rewrote the
+operation descriptions (`5246d4d`), and 5b (`manifest-e2`) closed at `66ac53c` and handed 7100 over (PID 21628, real GitHub,
+an empty database). Rich answered four questions this half: the walk types the laptop IdP's test passwords; the capable
+model's view; moments 14 and 15 left to his click; FE-44 written and not carried.*
+
+- **Step 0, each landing adopted the day it came:** sitting 5's `agent_session.narrowed` (`54cd767`) and `member_removed`
+  (`fc614bc`); 5b's answers to our seven points, then its contract (`3333acc`, text-only `fff8a7f`): `REHEARSAL_RUNNING`
+  said and read on, `REHEARSAL_TEARDOWN_FAILED` at 500, and before a launch any production instance but an answering one
+  is nothing there (`1c1be77`, the review's M2 after all); the descriptions moved nothing. Contract **1.5.0, 66
+  operations** throughout. 5b measured the dry run with its take-down at 5.6–8.8 s: our 150 s stands.
+- **Walked against the mock first** (`walk11.mjs`, 39/39 at 1440 and 375): the dry run's press, its second sign-in, a
+  failure, a start that never started, leaving and coming back; Rich's address rule with a 39-character slug (red with its
+  `nowrap` removed).
+- **The window.** Our server to EDGE mode (said so); `operator` signed in, granted by `manifest-e2`; the walk
+  (`step6-walk.mjs`: F4's preamble, moments 3–6, then 10–15, the administrator by Node, `admin.mjs`), four runs:
+  1. **Moments 3–6 made a real app** (*"My answers"*, `Manifest-local-dev/my-answers`); **its first round READ IN A LOOP
+     to the move limit.** Systematic debugging: the trace named no read, so reads were traced first (`9dc622d`); resumed,
+     the lead read the same files three times a minute: its working set (~55k characters) never fitted the ~30k Decision
+     3's 48,000 left beside the plan and the pack, and a file left out said *"read it alone"*. **Rich chose the capable
+     model's view of 120,000** (`2aac271`; every other model keeps 48,000; every file left out named).
+  2. A walk bug (it read the page before *Carry on* took).
+  3. **The round built** (about two minutes), trying-out in 8.4 s, Your apps' line and the Overview's band, *Going live*
+     from nothing with each row beside its `why`, the administrator's records and sign-off (*"Signed off by Test Operator,
+     30 September."*); then a walk bug took the dry run's second sign-in for its end.
+  4. **The dry run on 7100:** 5b's `403 STEP_UP_REQUIRED`, our card, *[Sign in again]*, back with *"You're signed in
+     again."*, pressed: **"Done." in 10.0 s**, production's instance then `gone`. **And `ready` stayed false**: the app is
+     *a large course* (its intake, from *"About 200 students"*), and the platform's load rehearsal is blocking and not
+     built. **FE-44 written** (`abb743c`); ours fixed: a blocking item not built reads *waiting on the Manifest team*
+     (`2f83f62`). **`manifest-00`'s catch:** by the spec's §24 200 students is a *class*; our intake named the scales
+     without their ceilings: fixed (`4bfc57e`), and FE-44 corrected to real large courses and public apps.
+  From the trace of every walk conversation: **one deploy, the sandbox's; no launch action; 82 model calls streamed, no
+  fallback, no stall**; the longest answer 17,588 characters in 42 s, the latest first word 23 s. No overflow at 375.
+- **Step 3, Rich's click:** his own app, **Class check-ins** (`class-check-ins`, a class), described and built through
+  our page, put on trying-out; the administrator's records and sign-off by script; his dry run with its second sign-in;
+  ***[Let your students in]***, the stations, *"Class check-ins is live."* at **03:45:04Z**, the hand-over. **Rich: *"it all
+  seems to work well! The wording is all good for now, the app is available at the right URL. This is nice!"*** Its round:
+  7 moves, 8 model calls, no fallback; one deploy, the sandbox's; no launch action.
+- **Gates at the close:** `pnpm test` **1644** twice, lint, typecheck, format clean; in mock mode (back to mock at the
+  close) `check-seeing.sh` 8/8, `check-going-live.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh` 18/18,
+  `check-building.sh` 12/12. `pgrep -fl vitest`: none of ours.
+- **The machine at the close:** our server on 7105 back in **mock mode** (`nohup pnpm dev:mock`, one watcher); our mock
+  on 7102 (pid 35047); 7100 the platform's (PID 21628), holding `my-answers` (not launchable: FE-44) and `class-check-ins`
+  (launched), both real private repositories (removing them is Rich's), and `operator` an administrator. **The 5a session
+  was not yet started**: our handover reached `manifest-83`, a research session; `manifest-00` and Rich know 7100 is free.
+
+**Decided this half, for Rich's review** (the ledger has each one's cost):
+1. **The capable model's view is 120,000** (Rich's choice); every file left out is named, never *"read it alone"*.
+2. **A blocking item Manifest can't do yet holds the launch in words**: *waiting on the Manifest team*, *"Manifest can't do
+   this one yet, and your app can't go live until it can. It comes in a later Manifest release."* (S6, ours).
+3. **The intake guesses an audience by the spec's ceilings**, and what the real model guesses is seen at the next intake.
+4. **Before a launch, only an answering production instance is the live address's**: F1's *never answered needs them*
+   moved to a launched app.
+5. **`REHEARSAL_RUNNING`**: *"A dry run is already running for this app. This row updates when it ends."* (S6, ours).
+
+- **F5 is EXECUTED.** **Next:** the platform's 5a (`Me.mayBuild`): **stop and ask Rich** whether to switch to F4a; F5b
+  when the platform's sittings 6–9 land; F6 after F4a (Rich, relayed); FE-44 his to carry or not.
