@@ -13,12 +13,19 @@ export const BOB = {
   id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   displayName: 'Bob Instructor',
 }
+/** Someone who may not build (D7, FE-39): the platform's decision, as `getMe` answers it. */
+export const CAROL = {
+  id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  displayName: 'Carol Student',
+}
 const SESSIONS: Record<string, typeof ALICE> = {
   'alice-session': ALICE,
   'bob-session': BOB,
+  'carol-session': CAROL,
 }
 export const AS_ALICE = 'manifest_session=alice-session'
 export const AS_BOB = 'manifest_session=bob-session'
+export const AS_CAROL = 'manifest_session=carol-session'
 
 export interface Seen {
   method: string | undefined
@@ -50,7 +57,13 @@ export async function fakeControlPlane(answer?: Answer): Promise<{
     if (request.url === '/v1/me' && person !== undefined) {
       response.writeHead(200)
       response.end(
-        JSON.stringify({ ...person, puid: 'x', email: 'x@example.test', role: 'member' }),
+        JSON.stringify({
+          ...person,
+          puid: 'x',
+          email: 'x@example.test',
+          role: 'member',
+          mayBuild: person !== CAROL,
+        }),
       )
       return
     }

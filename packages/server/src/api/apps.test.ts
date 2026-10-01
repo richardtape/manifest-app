@@ -10,7 +10,15 @@ import { DRY_RUN_FIX_WORDS, FIX_WORDS } from './apps.js'
 import { createHub, publishState, type Hub } from './events.js'
 import { pieceOf } from './piece-state.js'
 import { LIMITS, type AppConversation, type Progress } from './progress.js'
-import { ALICE, AS_ALICE, AS_BOB, BOB, fakeControlPlane, type Seen } from './testing.js'
+import {
+  ALICE,
+  AS_ALICE,
+  AS_BOB,
+  AS_CAROL,
+  BOB,
+  fakeControlPlane,
+  type Seen,
+} from './testing.js'
 
 /**
  * F4 TASK 6: CONVERSATIONS ON AN APP, AND THE LINE (Decision 5, Review Focus 1). *Ask for a
@@ -190,6 +198,18 @@ const frameOf = (s: Setup, id: string) => {
 }
 
 describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
+  it('someone who may not build, on an app they keep, is not refused by it: the token is checked as for anyone (D7)', async () => {
+    const s = setUp()
+    const response = await s.ask(
+      { words: 'Show the date on each response', token: 'mft_not_for_this' },
+      { cookie: AS_CAROL },
+    )
+    expect([response.statusCode, response.json()]).toEqual([
+      400,
+      { error: { code: 'TOKEN_NOT_FOR_PROJECT' } },
+    ])
+  })
+
   it('on a free app, checks the token first, keeps it in memory, and the change starts: planning', async () => {
     const s = setUp()
     first(s, 'built', 'done')

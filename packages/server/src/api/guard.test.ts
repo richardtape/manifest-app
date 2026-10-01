@@ -90,7 +90,10 @@ describe('who (FE-2)', () => {
       url: '/api/thing',
       headers: { cookie: AS_ALICE },
     })
-    expect([response.statusCode, response.json()]).toEqual([200, { person: ALICE }])
+    expect([response.statusCode, response.json()]).toEqual([
+      200,
+      { person: { ...ALICE, mayBuild: true } },
+    ])
   })
 })
 
@@ -211,6 +214,6 @@ describe('person optional (a problem report, Decision 11)', () => {
       url: '/api/thing',
       headers: { cookie: AS_ALICE },
     })
-    expect(response.json()).toEqual({ person: ALICE })
+    expect(response.json()).toEqual({ person: { ...ALICE, mayBuild: true } })
   })
 })

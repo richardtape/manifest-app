@@ -19,10 +19,12 @@ const ME = {
   displayName: 'Instructor One',
   email: 'instructor@example.test',
   role: 'member',
+  mayBuild: true,
 }
 
 async function fakeControlPlane(
   status: number,
+  me: typeof ME = ME,
 ): Promise<{ origin: string; seen: Seen[]; server: Server }> {
   const seen: Seen[] = []
   const server = createServer((request, response) => {
@@ -33,7 +35,7 @@ async function fakeControlPlane(
     response.end(
       JSON.stringify(
         status === 200
-          ? ME
+          ? me
           : {
               error: {
                 code: status === 401 ? 'UNAUTHENTICATED' : 'INTERNAL',
@@ -53,17 +55,17 @@ afterEach(async () => {
   await Promise.all(servers.splice(0).map((s) => new Promise((r) => s.close(r))))
   vi.restoreAllMocks()
 })
-async function fake(status: number) {
-  const f = await fakeControlPlane(status)
+async function fake(status: number, me: typeof ME = ME) {
+  const f = await fakeControlPlane(status, me)
   servers.push(f.server)
   return f
 }
 
 /** Every case, with a given session value. */
-async function everyCase(session: string) {
+async function everyCase(session: string, me: typeof ME = ME) {
   const around = `theme=dark; manifest_session=${session}; other=1`
 
-  const ok = await fake(200)
+  const ok = await fake(200, me)
   const person = await whoIs(around, ok.origin)
 
   const none = await fake(200)
@@ -88,12 +90,17 @@ describe('whoIs: the only reader of the session (FE-2)', () => {
     expect(ok.seen[0]?.method).toBe('GET')
     expect(ok.seen[0]?.url).toBe('/v1/me')
     expect(ok.seen[0]?.headers.cookie).toBe('manifest_session=S')
-    expect(person).toEqual({ id: ME.id, displayName: ME.displayName })
+    expect(person).toEqual({ id: ME.id, displayName: ME.displayName, mayBuild: true })
   })
 
-  it('only id and displayName leave it: never email or puid', async () => {
+  it('only id, displayName and the decision leave it: never email or puid', async () => {
     const { person } = await everyCase('S')
-    expect(Object.keys(person ?? {}).sort()).toEqual(['displayName', 'id'])
+    expect(Object.keys(person ?? {}).sort()).toEqual(['displayName', 'id', 'mayBuild'])
+  })
+
+  it('the decision is the platform’s, as it answered it (FE-39)', async () => {
+    const { person } = await everyCase('S', { ...ME, mayBuild: false })
+    expect(person?.mayBuild).toBe(false)
   })
 
   it('with no header it answers undefined, and asks nobody', async () => {

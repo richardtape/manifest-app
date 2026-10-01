@@ -10,8 +10,9 @@ import {
  * origin carries the person's `manifest_session` to us whether we want it or not, and the
  * one use we may make of it is to replay it to `GET /v1/me` to learn who we serve. It is
  * never logged, stored, or sent anywhere else, and it never rides out of here on an error.
+ * Who we serve, and whether they may build: `mayBuild` is the platform's decision (FE-39), never ours.
  */
-export type Person = { id: string; displayName: string }
+export type Person = { id: string; displayName: string; mayBuild: boolean }
 
 /**
  * The value of `manifest_session` in a Cookie header, and nothing else from it. **Two are
@@ -42,7 +43,7 @@ export async function whoIs(
       await createManifestClient({ origin: platformOrigin, session }).GET('/v1/me'),
       'getMe',
     )
-    return { id: me.id, displayName: me.displayName }
+    return { id: me.id, displayName: me.displayName, mayBuild: me.mayBuild }
   } catch (error) {
     if (error instanceof ManifestApiError && error.status === 401) return undefined
     // A NEW error, carrying the status and code alone: the platform's message, or a cause,

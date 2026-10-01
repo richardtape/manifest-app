@@ -36,6 +36,10 @@ export function registerConversations(
     async (request, reply) => {
       const who = await check(request, reply)
       if (who === undefined) return reply
+      // D7 (FE-39): someone who may not build starts nothing new here, before the platform
+      // would refuse their intake. An app they keep goes on as before (Rich).
+      if (!who.person.mayBuild)
+        return reply.code(403).send({ error: { code: 'BUILDING_NOT_OPEN' } })
       const description = descriptionOf(request.body)
       if (description === undefined) return reply.code(400).send(INVALID)
       store.rememberPerson(who.person)

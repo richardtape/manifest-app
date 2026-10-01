@@ -102,7 +102,11 @@ describe('/api/me: who we serve (FE-2)', () => {
     const { base } = await serve(mock(await mockPlatform()))
     expect(await json(await fetch(`${base}/api/me`, { headers: SESSION }))).toEqual([
       200,
-      { id: '11111111-1111-4111-8111-111111111111', displayName: 'Instructor One' },
+      {
+        id: '11111111-1111-4111-8111-111111111111',
+        displayName: 'Instructor One',
+        mayBuild: true,
+      },
     ])
   })
 

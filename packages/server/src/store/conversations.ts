@@ -29,7 +29,8 @@ export interface Problem {
  * A plan is `unknown` here: Task 9's schema parses it on the way out.
  */
 export interface Store {
-  rememberPerson(person: Person): void
+  /** Their name, never the decision (FE-39): that is read again with every request. */
+  rememberPerson(person: Pick<Person, 'id' | 'displayName'>): void
   createConversation(personId: string, description: string): Conversation
   /** Another person's conversation is `undefined`, exactly as one that does not exist. */
   getConversation(id: string, personId: string): Conversation | undefined
