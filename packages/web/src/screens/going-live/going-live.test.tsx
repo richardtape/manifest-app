@@ -32,6 +32,7 @@ const NOTHING_RECORDED: Schemas['LaunchRecords'] = {
   projectId: PROJECT.id,
   iamRegistration: null,
   privacyAssessment: null,
+  stagingRegistration: null,
 }
 /** The checklist that goes with nothing recorded: both clocks unmet. */
 const CLOCKS_UNMET: Schemas['LaunchReadiness'] = {

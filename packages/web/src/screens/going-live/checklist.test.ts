@@ -78,6 +78,7 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
     blocking: id !== 'code-review',
     state,
     why: 'Nothing is serving in staging yet, so there is no release to approve (§13).',
+    since: null,
   })
   const checklist = (
     items: Schemas['LaunchReadinessItem'][],

@@ -225,6 +225,7 @@ function stage(start: Partial<World> = {}) {
       projectId: PROJECT.id,
       iamRegistration: fixtures.IAM_REGISTRATION,
       privacyAssessment: { ...fixtures.PRIVACY_ASSESSMENT, state: 'approved' as const },
+      stagingRegistration: null,
     })),
     getApproval: record('getApproval', () => fixtures.APPROVAL),
     getEnvironment: record('getEnvironment', (id: string) =>

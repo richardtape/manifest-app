@@ -60,6 +60,7 @@ const item = (
   blocking: true,
   state,
   why: 'An administrator approves the exact image digest, with step-up re-authentication (§13, §20).',
+  since: null,
 })
 
 describe('the sign-off’s row, from the checklist item and the approval (Decision 9)', () => {
