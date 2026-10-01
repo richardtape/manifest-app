@@ -4,14 +4,21 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-01, 07:45Z: **F4a is EXECUTED**: only faculty build; Rich clicked it on 7100 as `student` and `instructor`)*:
+**Where things stand** *(2026-10-01, 15:15Z: **F6 is being written** (`manifest-app-34`, brainstorming with Rich); the platform's sitting 7 is running, its contract commit `6cbb489` adopted)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: write F6** (*Running it*, moments 16–20): **written after F4a** (Rich, relayed by
-  `manifest-00`), while the platform runs its sittings 6–10. **Ask Rich first** whether to start it now; then
-  superpowers:brainstorming on the walk-through's moments 16–20, then writing-plans. Its mail sink is live (below).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: write F6** (*Running it*, moments 16–20). **Rich said start, 2026-10-01**;
+  superpowers:brainstorming is under way (`manifest-app-34`), then the written design, then writing-plans. Its mail sink
+  is live (below). **Rich's decisions so far (2026-10-01):** **two plans**: **F6, *Keeping watch*** (moments 16, 19, 20:
+  the watch token, the history and *Since you were last here*, the needs-you band, emails, the live-address watch and
+  *Start it again*, switch off, back on, delete) and **F6b, *Working on it together*** (moments 17, 18 and the *Agents*
+  screen), written after F6; **the watch token is kept on disk, encrypted** (AES-256-GCM, its key apart from `.data/`:
+  F2's Decision 1 amended for it alone); **four kinds of email** (it's in trouble; your work is waiting; a long wait is
+  over; who's on it changed); **the keeper runs inside our server** (one stream per app through F3's `platformStream`,
+  a `history` table, pure rules, a once-a-minute check of each live address), not a second process and not polling.
   - **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the platform's sittings 6–10
     land (`manifest-60`). **Sitting 6 landed** (`d54e1e1`, below): its waits are counted in Vancouver days (a same-day
-    date is noon there), and nothing can be submitted until sitting 7's drafts.
+    date is noon there), and nothing can be submitted until sitting 7's drafts. **Sitting 7's contract commit landed**
+    (`6cbb489`, below): `draftIamRegistration` and `IamRegistration.package`.
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
     session starts with `pgrep -fl vitest`. **Restart `pnpm mock`** after a landing that moves the mock's fixtures.
 - **F4a, executed** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), its
@@ -38,19 +45,21 @@ says which plan is current. This file states where things stand and the rules. I
   **F4a** (2026-10-01): Rich clicked each on the real platform. The walk-through is the design ([`walkthrough.md`](./walkthrough.md)).
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
   - **Who is who** *(names change at every handover: `ListAgents` first)*: `manifest-60` its planning session (Rich's
-    decisions, anything cross-repo); `manifest-92` its sitting 6; `manifest-s5-b3` Rich's overnight S5 spike in
-    `~/Developer/manifest-s5`, which reads our repository only and **holds its on-prem model leg while we run tests** (it
-    loads the machine past Vitest's timeouts): message it before and after a long test run.
+    decisions, anything cross-repo); `manifest-8e` its sitting 7 (7100 its own until its close, which it messages us); `manifest-s5-b3` Rich's S5 spike,
+    **finished** (2026-10-01, its findings at manifest `0bb544c`): nothing of it runs, and it no longer needs telling of
+    our test runs.
   - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
     `409 MEMBER_MAY_NOT_BUILD`, `MANIFEST_ADMIN_PUIDS`; the mock's `MANIFEST_MOCK_MAY_BUILD=0`; the laptop's `student` may
     not build, `instructor` and `colleague` may, `operator` only as an administrator). **Mailpit landed** (`8155bcf`).
     **Sitting 6 CLOSED** (`manifest-92`, Task 9, `d54e1e1`; fix wave `db2ddbf`): two operations, `submitIamRegistration`
     and `submitPrivacyAssessment`; five codes; `since`, `stagingRegistration`, `submittedAt`/`submittedBy` (adopted in our
-    test data, `f8dcfbc`; nothing else of ours moved). **Next: sitting 7** (Task 10: `draftIamRegistration`, the package),
-    then 8–10 (10 merged with the published-text pass) and 12. **Two questions for Rich** sit in manifest's ORIENTATION §8
+    test data, `f8dcfbc`; nothing else of ours moved). **Sitting 7 RUNNING** (`manifest-8e`, Task 10): its contract commit
+    `6cbb489` landed (`draftIamRegistration`, mintable `launch:draft`, `IamRegistration.package`, `409 LAUNCH_RECORD_SUBMITTED`,
+    `409 LAUNCH_NOT_CWL`, `iam_registration.drafted`), adopted with no change of ours; it messages us before any further
+    contract commit and at its close. Then 8–10 (10 merged with the published-text pass) and 12. **Two questions for Rich** sit in manifest's ORIENTATION §8
     *Open*: `change_requested`'s two meanings, and whether a re-submission waits for UBC's order too. Then its **faculty-ready plan**: contract 1.6.0, `__Host-` cookies on https (its Task 5
     messages us first). `api-findings.md` has each shape.
-  - **The contract is 1.5.0, 68 operations.**
+  - **The contract is 1.5.0, 69 operations.**
   - **Mailpit, for F6** (`manifest-60`): SMTP `127.0.0.1:7111` (no authentication, no TLS); the inbox
     `http://127.0.0.1:7112`, its API under `/api/v1/` (`GET /api/v1/messages`, `GET /api/v1/search?query=…`, `DELETE
     /api/v1/messages` with `{"IDs":[…]}`). **Host `127.0.0.1` or `localhost` only** (any other is `403`). In memory, at most
@@ -62,13 +71,14 @@ says which plan is current. This file states where things stand and the rules. I
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-01, 07:45Z)*:
+- **The machine** *(2026-10-01, 15:15Z)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102**, both
-    restarted at F4a's close; **the mock again at sitting 6's close** (pid 3703), for `db2ddbf`'s fixtures. **A fresh dev database**: F5's is kept as
+    restarted at F4a's close; **the mock again at sitting 7's contract commit** (pid 66212), for `6cbb489`'s fixtures. **A fresh dev database**: F5's is kept as
     `.data/app-before-f4a.sqlite`, F4a's acceptance runs as `.data/app-f4a-checks.sqlite`. Switch to edge mode before
     anyone clicks the real platform, and say so.
-  - **7100 is the platform's**: free at its sitting 6's close (control plane PID 96152 on `db2ddbf`, real GitHub, its
-    database empty). **LiteLLM on 7106; Mailpit on 7111/7112.**
+  - **7100 is the platform's**: **its sitting 7's (`manifest-8e`) until that sitting closes**: its Vitest runs truncate
+    the database and stop the control plane, and its Docker tier restarts the edge and takes `default-chat-large` out of
+    LiteLLM for a while. We are mock-only meanwhile (agreed with it, 2026-10-01). **LiteLLM on 7106; Mailpit on 7111/7112.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
 - **How to run it** is §6, below.
