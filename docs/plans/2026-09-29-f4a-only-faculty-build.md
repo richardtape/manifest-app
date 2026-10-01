@@ -42,7 +42,7 @@ but starts nothing new. Faculty and administrators go on as today.
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1–4 | What landed, read; our server's refusal of a new start; the *not available* screen, and the shell for someone who keeps apps; walked against the mock and on the real platform at Rich's word; Rich's click | **waits on FE-39** (the platform's sitting 5a; it messages us at the contract commit that adds `mayBuild`) |
+| 1 | 1–4 | What landed, read; our server's refusal of a new start; the *not available* screen, and the shell for someone who keeps apps; walked against the mock and on the real platform at Rich's word; Rich's click | **done 2026-10-01** (`manifest-app-4d`, native, at Rich's word): FE-39 as it landed; Tasks 2–3; the whole-branch review (no Critical; its two Importants and two re-graded, fixed); walked against the mock (74/74) and on 7100 in `manifest-92`'s window (23/23); **Rich's click** as `student` and `instructor`. 1671 tests |
 
 The sitting ends as F4's did: the four gates, `pnpm test` twice; the four acceptance scripts in mock mode; a dated entry
 in *What executing this plan found*; this table; ORIENTATION's *Where things stand*, replaced; the roadmap.
@@ -792,4 +792,58 @@ git commit -m "feat(web): someone who may not build sees \"Manifest isn't availa
 
 ## What executing this plan found
 
-*The sitting adds a dated entry here: what landed, its rulings, its negative controls, and its gates.*
+### Sitting 1 — 2026-10-01 (`manifest-app-4d`, native; Rich's click)
+
+**Executed at Rich's word** (*"yes I approve, you can start work on that when you know the other agent is finished"*), from
+the platform's 5a close (`manifest-74`, `003adf7`), beside its sitting 6 (`manifest-92`). Commits `4bd5664..f8dcfbc`.
+
+**What landed** (S1, Task 1): every name as proposed; `Me.mayBuild` **required** (see the corrections above it).
+
+**Rulings** (each with its cost if wrong, in the ledger):
+- **Task 1:** six web tests' `Me` given `mayBuild: true` (required turned typecheck red); **F5 sitting 6's lead's-view test
+  waits for its two rounds** (it ended while they ran on, writing to closed stores: `pnpm test` exited 1 on an unhandled
+  error with every test green, 5 runs in 5; not 5a's); Task 4's window asked of the sitting 6 session.
+- **Task 2:** the store keeps the name, never the decision (`Pick<Person, 'id' | 'displayName'>`); the change-route guard
+  asserts the answer it gets (`400 TOKEN_NOT_FOR_PROJECT`), not *"not refused"*; three older exact-shape tests expect
+  `mayBuild: true`.
+- **Task 3:** `useKeeps`' answer is **keyed to the person it was read for** (the plan's `builds` start drew a builder's
+  page, its reads included, for one render: 4 of its own tests red); **a 401 while we look** shows the shell's own
+  *"You've been signed out…"* without the rail (the plan's code left a blank page for good; new test); the new branches
+  are `framed()` (the mock banner on every page); the plan's sign-out test found its button inside `act` (found first);
+  two samples built without an unused binding (lint).
+- **The review's re-grades:** the tab title at a new start (Minor → Important: a screen reader hears it first) and Review
+  Focus 2 on the page (Minor → Important: the plan said pinned).
+
+**The whole-branch review** (a fresh reviewer, opus): no Critical. **Fixed, each test red first:** (1) our server read a
+`getMe` with no `mayBuild` as *may not* (the page reads *may*): `whoIs` now `me.mayBuild !== false`; (2) **a
+`BUILDING_NOT_OPEN` met part-way** showed *"Something went wrong on our side"* with a reference, filed a problem report,
+and on the platform's path skipped the intake to naming, before the screen followed: Describing's `failed()` and Name
+it's create now say nothing of it, and the shell follows; (3) the tab says *Manifest* while we look, on trouble, and at a
+new start someone may not make; (4) an app's own page for someone who keeps apps, pinned (its control: the `useApp` gate
+without `|| keeps.state === 'some'` goes red). **Deferred minors:** `useKeeps` blanks the page when `getMe` is read again
+with the same answer (keyed on the object, not `me.id` and the decision; only after a signal); the expired card drawn
+twice in `app.tsx`; no *"other code raises nothing"* test for the platform fetch's signal; the platform fetch raises the
+signal for any operation, `getMe` included (a `403 BUILDING_NOT_OPEN` from `getMe`, which the contract rules out, would
+loop: raise on non-GET only). Its declined-to-judge lines are ruled in the ledger (moment 18's words are F6's; a lapsed
+person's own first-build conversation at `/new/:id` shows the sentences, as Task 3 designed).
+
+**Negative controls** (each red, each restored green): the route's refusal removed (Task 2); the refusal added to the
+change route (its guard); the shell's *none* branch (7 red); *Start something new* always drawn; the session's listener;
+`noticeRefusal` from `call()` and from the platform's fetch; `useKeeps` answering *none* on a failed read; the
+per-person key (3 red); the expired branch; a `getMe` without `mayBuild` read as *may not*; the `useApp` gate (review).
+
+**The walks:** against the mock with `MANIFEST_MOCK_MAY_BUILD=0`: our `POST /api/conversations` `403 BUILDING_NOT_OPEN`,
+`/api/me` carrying the decision; headless Chrome **74/74** at 1440 and 375 (*keeps apps*: *Your apps* without *Start
+something new*, `/new`'s sentences beside the rail, the Preview as before; *no apps*, by `listProjects` rewritten to `[]`:
+the screen at `/`, `/new`, `/apps/mock-app`, `/profile`, verbatim, no rail, the address kept, the tab *Manifest*, one
+`h1`, *Sign out* a real button reached by the keyboard with its ring). **On 7100**, in `manifest-92`'s window (no Vitest,
+no restart, its migration held), our server in edge mode, **23/23**: `student` (*Test Student*, `mayBuild: false`) sees
+the screen verbatim everywhere, our server refuses its start, *Sign out* ends the session; `instructor` sees *Your apps*
+and *Start something new*. Nothing created. **Rich's click** as both (~06:50Z): *"all works as expected, carry on"*.
+
+**Gates at the close:** `pnpm test` **1671** twice, lint, typecheck, format; the five acceptance scripts in mock mode
+(8, 8, 8, 18, 12) on a fresh dev database, the mock restarted for sitting 6's fixtures.
+
+**Beside it:** Mailpit landed (`8155bcf`, for F6); the platform's sitting 6 contract commit (`b2c75e6`: two operations,
+five codes, `since`, `stagingRegistration`) adopted in our test data (`f8dcfbc`). **Seen, not fixed:** at 375 the folded
+rail's *Sign out* takes the keyboard's focus with no visible ring (the rail's, before F4a).

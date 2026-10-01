@@ -4,62 +4,69 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-01, 04:00Z: **F5 is EXECUTED**: Rich clicked his own app live on 7100; the next plan waits on the platform)*:
+**Where things stand** *(2026-10-01, 07:45Z: **F4a is EXECUTED**: only faculty build; Rich clicked it on 7100 as `student` and `instructor`)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: nothing is building.** Read [`plans/roadmap.md`](./plans/roadmap.md) and wait for
-  the platform:
-  - **When the platform's launch-path 5a lands `Me.mayBuild`** (its session, `manifest-74` at 04:20Z, messages us before that contract commit and at its close),
-    **start F4a** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), one sitting,
-    four tasks): **Rich confirmed it, native, 2026-10-01** (04:40Z), to start *"when you know the other agent is finished"*:
-    at 5a's close, not its contract commit. The platform's sitting 6 runs beside it (`manifest-92`, told at Rich's word);
-    ask that session for a 7100 window before Task 4's walk, and say when it is done.
-  - **F6** (*Running it*, moments 16–20) is **written after F4a** (Rich, relayed by `manifest-00`), while the platform runs
-    its sittings 6–10. **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the
-    platform's sittings 6–10 land (`manifest-60`).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: write F6** (*Running it*, moments 16–20): **written after F4a** (Rich, relayed by
+  `manifest-00`), while the platform runs its sittings 6–10. **Ask Rich first** whether to start it now; then
+  superpowers:brainstorming on the walk-through's moments 16–20, then writing-plans. Its mail sink is live (below).
+  - **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the platform's sittings 6–10
+    land (`manifest-60`). Sitting 6's contract commit is in (`b2c75e6`, below); 6 itself was still running at our close.
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
-    session starts with `pgrep -fl vitest`.
-- **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md), its sitting 6 entries are the
-  record): moments 10–15; **the dry run pressed by the owner** with its second sign-in (Spec action 8 (b)+(c), the platform's
-  5b); every model call streams; the mock-mode banner; the walk on 7100 and **Rich's click** (*Class check-ins*, live at
-  03:45:04Z: *"it all seems to work well! The wording is all good for now, the app is available at the right URL"*).
+    session starts with `pgrep -fl vitest`. **Restart `pnpm mock`** after a landing that moves the mock's fixtures.
+- **F4a, executed** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), its
+  sitting 1 entry is the record): the platform decides (`Me.mayBuild`, its 5a); our server refuses a new start
+  (`403 BUILDING_NOT_OPEN`, a `getMe` with no decision building as today); someone who may not build and keeps no app sees
+  *"Manifest isn't available to you at the moment."* wherever they arrive; someone who keeps apps has them, without
+  *Start something new*. **Rich's click** (2026-10-01, ~06:50Z, in `manifest-92`'s 7100 window): *"all works as expected"*.
+- **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)): moments 10–15, Rich's own
+  app live on 7100 (*Class check-ins*, 2026-10-01 03:45Z). The platform's truncations have since removed it from 7100.
 - **Open for Rich:**
   - **FE-44** (written, not carried): a large course's (several sections, ~5,000) or a public app can never launch on the
     platform today: its load rehearsal is blocking and not built. Options (a) build it first, (b) not-built stops blocking,
     (c) say so earlier.
   - **FE-43**'s read half (nothing reads a dry run back; the platform's half, `REHEARSAL_RUNNING`, landed).
   - **The platform's F8** (a provider's `422` as `200` `null`): its faculty-ready plan fixes it; ours reads both.
-  - **Sitting 6's decisions** (the plan's two sitting 6 entries): the capable model's view 120,000 (his choice); the
-    blocking-not-built row's words; the intake's audience ceilings; *"A dry run is already running…"*. The words of
-    sittings 3–6 are accepted *"for now"* (his click).
+  - **F5 sitting 6's decisions** (that plan's two sitting 6 entries): the capable model's view 120,000; the
+    blocking-not-built row's words; the intake's audience ceilings; *"A dry run is already running…"*.
   - **Removing the real repositories** `Manifest-local-dev/my-answers` and `class-check-ins` (and the older `f5-reading`,
     `lp-real-a` if they remain), when he wishes.
-  - **Deferred minors:** F5's in each sitting's dated entry (sitting 6's: an older failed dry run as the Preview's last
-    attempt; the press's endings never giving way; a `null` with a trailing newline; details carried unasked; the
-    script's check 2; one key per press unpinned; trying-out's never-answered fallback), and F4's, F3's and F2's.
-- **Done so far:** **F1** (2026-09-27), **F2** and **F3** (2026-09-28), **F4** (2026-09-29), **F5** (2026-09-30/10-01): Rich
-  clicked each on the real platform. The walk-through is the design, approved by Rich ([`walkthrough.md`](./walkthrough.md)).
+  - **Seen, not ours to fix in F4a:** at 375 the folded rail's *Sign out* takes the keyboard's focus with no visible
+    ring (F4a's walk). Accessibility is a legal requirement (§3): a small fix of its own.
+  - **Deferred minors:** F4a's four (its sitting 1 entry), F5's, F4's, F3's and F2's in their dated entries.
+- **Done so far:** **F1** (2026-09-27), **F2** and **F3** (2026-09-28), **F4** (2026-09-29), **F5** (2026-09-30/10-01),
+  **F4a** (2026-10-01): Rich clicked each on the real platform. The walk-through is the design ([`walkthrough.md`](./walkthrough.md)).
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
-  - **Its launch-path plan**: sittings 1–5, 4a and **5b CLOSED** (5b at `66ac53c`: a rehearsal needs a step-up and takes
-    itself down; `REHEARSAL_RUNNING`; `REHEARSAL_TEARDOWN_FAILED` at 500; production's instance `gone`, or `failed` when the
-    candidate never started). **Next: 5a `mayBuild` (F4a)**, then Mailpit (7111 SMTP, 7112 inbox; host `127.0.0.1` or `localhost` only, its API under `/api/v1/`) at 5a's close,
-    added by `manifest-60`, which messages us when it is live; its sitting 6 runs beside our F4a; **6–9 FE-6 and
-    FE-25 (F5b)**, a merged 10–11 (the mock's launch, FE-40, and the guides, Rich's published-text rule), 12 its acceptance.
-    Then its **faculty-ready plan** (approved by Rich): contract 1.6.0, request ids, `error.limit` and `error.session`,
-    **`__Host-` cookies on https** (our `whoIs`, tests and jars change: its Task 5 messages us first), a real `422`, the
-    administrator's reason. `api-findings.md` has each shape.
-  - **The contract is 1.5.0, 66 operations** (descriptions in the present tense since `5246d4d`).
+  - **Who is who** *(names change at every handover: `ListAgents` first)*: `manifest-60` its planning session (Rich's
+    decisions, anything cross-repo); `manifest-92` its sitting 6; `manifest-s5-b3` Rich's overnight S5 spike in
+    `~/Developer/manifest-s5`, which reads our repository only and **holds its on-prem model leg while we run tests** (it
+    loads the machine past Vitest's timeouts): message it before and after a long test run.
+  - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
+    `409 MEMBER_MAY_NOT_BUILD`, `MANIFEST_ADMIN_PUIDS`; the mock's `MANIFEST_MOCK_MAY_BUILD=0`; the laptop's `student` may
+    not build, `instructor` and `colleague` may, `operator` only as an administrator). **Mailpit landed** (`8155bcf`).
+    **Sitting 6 running** (`manifest-92`, Task 9; its close guessed at 04:00–05:00 Vancouver): its **contract commit
+    `b2c75e6` adopted** (two operations, `submitIamRegistration` and `submitPrivacyAssessment`; five codes; `since`,
+    `stagingRegistration`, `submittedAt`/`submittedBy`: our test data only, `f8dcfbc`). Then 7–10 (10 merged with the
+    published-text pass) and 12. Then its **faculty-ready plan**: contract 1.6.0, `__Host-` cookies on https (its Task 5
+    messages us first). `api-findings.md` has each shape.
+  - **The contract is 1.5.0, 68 operations.**
+  - **Mailpit, for F6** (`manifest-60`): SMTP `127.0.0.1:7111` (no authentication, no TLS); the inbox
+    `http://127.0.0.1:7112`, its API under `/api/v1/` (`GET /api/v1/messages`, `GET /api/v1/search?query=…`, `DELETE
+    /api/v1/messages` with `{"IDs":[…]}`). **Host `127.0.0.1` or `localhost` only** (any other is `403`). In memory, at most
+    500, gone at a restart; nothing leaves the laptop. The inbox is shared (`make verify` sends a probe): filter by your
+    own subject or recipient. manifest's RUNBOOK *Mailpit* has the rest.
   - **7100 runs on real GitHub** (`Manifest-local-dev`): anything created there is a real private repository nothing
-    deletes; a real-platform walk is Rich's word, every time. Never restart the control plane yourself. Every platform
-    sitting's first test run truncates its database, the admin grant included.
+    deletes; a real-platform walk is Rich's word, every time, **in a window the running platform sitting gives** (F4a's
+    pattern: no Vitest, no Docker tier, no `make verify`, no restart; it keeps writing code). Never restart the control
+    plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-01, 04:00Z)*:
-  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102** (pid 35047).
-    Its dev database holds sitting 6's runs, mock and edge (the edge ones on real projects that a truncation will remove).
-    Switch to edge mode before anyone clicks the real platform, and say so.
-  - **7100 is the platform's** (PID 21628 at our close). **The 5a session, `manifest-74`, was running its Vitest at 04:23Z**, which
-    truncates 7100's database, and at its close it removes the 7100 window's containers: nothing of ours there is in use. It holds `my-answers` (FE-44) and
-    `class-check-ins` (launched); `operator` an administrator. **LiteLLM on 7106.**
+- **The machine** *(2026-10-01, 07:45Z)*:
+  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102**, both
+    restarted at F4a's close for `b2c75e6`'s fixtures. **A fresh dev database**: F5's is kept as
+    `.data/app-before-f4a.sqlite`, F4a's acceptance runs as `.data/app-f4a-checks.sqlite`. Switch to edge mode before
+    anyone clicks the real platform, and say so.
+  - **7100 is the platform's**: not answering at our close (`manifest-92`'s sitting 6, after our window; its new migration
+    0045 was held until then). **LiteLLM on 7106; Mailpit on 7111/7112.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
 - **How to run it** is §6, below.
@@ -86,7 +93,14 @@ says which plan is current. This file states where things stand and the rules. I
     M2's `incidentOf`),
     and `ours/pretend-people.ts` the pretend people (FE-3). **Only `src/auth.ts` names an `/auth/` path** (sign in, sign
     out, step-up).
-  - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2).
+    **Who may build (F4a)** is the platform's `Me.mayBuild`, read and never re-derived: `screens/keeps.ts`'s `useKeeps`
+    (someone who may not build is asked `listProjects` once; its answer keyed to the person), `screens/not-open.tsx`
+    (the screen, and `/new`'s two sentences), and `not-open.ts`, the signal a `BUILDING_NOT_OPEN` met part-way raises
+    (from the platform's fetch or our `call()`), on which `session.ts` reads `getMe` again; Describing and Name it say
+    nothing of it.
+  - `packages/server` is 7105. `/api/me` replays the session to `GET /v1/me` and nothing else (FE-2); `Person` carries the
+    platform's `mayBuild` (a `getMe` without it builds), never stored, and `POST /api/conversations` refuses a new start
+    `403 BUILDING_NOT_OPEN` (F4a).
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
       the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`, its
@@ -108,7 +122,7 @@ says which plan is current. This file states where things stand and the rules. I
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1639 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (1671 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
       (F3's, 12), **`scripts/check-seeing.sh` (F4's, 8)**, **`scripts/check-going-live.sh` (F5's, 8)**: each in mock mode, `pnpm
@@ -525,6 +539,15 @@ bash scripts/check-seeing.sh                                    # F4's acceptanc
 - **An app's audience decides its launch**: on the platform today a *large course* or *public* app can never be `ready`
   (its load rehearsal is blocking and not built: FE-44). A walk that needs a launch describes a class (one course section,
   up to ~400) (F5 sitting 6).
+
+- **A test that stops waiting before its round ends leaves the round writing to a store its cleanup closed**: every test
+  passes, and Vitest still exits 1 on the unhandled *"database is not open"* / *"statement has been finalized"*. Wait
+  for each round's end (`untilStatus(…, 'done')`); F4a found F5 sitting 6's lead's-view test doing it, 5 runs in 5.
+- **A `findBy…` inside `act(async () => …)` never sees the page arrive**: `act` holds React's updates until it ends, so the
+  body stays empty and the query times out. Find the element first, then click it inside `act` (F4a sitting 1).
+- **We read the platform's working tree, not its commits** (`link:`): a platform session's contract edits reach our
+  typecheck before it commits them, so *"wait for the commit"* changes nothing we see. Say OK, and adopt it (F4a: sitting
+  6's `since` reached five of our test literals mid-review).
 
 ## 8. Working with the platform session, and other agents
 
