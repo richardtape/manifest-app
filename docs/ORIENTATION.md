@@ -4,23 +4,26 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-01, 15:55Z: **F6's sitting 1 is done** (`manifest-app-34`, the measurements on 7100); the platform's sitting 7 is running, its contract commit `6cbb489` and fix wave `dec71d8` adopted)*:
+**Where things stand** *(2026-10-01, 17:40Z: **F6 is approved and its sitting 1 is done**; the platform's sitting 8
+(`manifest-8d`) is running, its contract commit `81892d4` adopted)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6, natively** (approved by Rich 2026-10-01, *"yes approved. native."*).
-  **Sitting 1 is done** (`manifest-app-34`, 17:10Z: the measurements on 7100; Tasks 3, 4, 6 and 11 corrected, S1).
-  **Next: sitting 2** (Tasks 2 and 3, our server; no platform). **`f6-watch` is live on 7100** (Manifest-local-dev,
-  a real repository: Rich removes it on github.com after the platform's sitting 8 truncates):
-  the design, [`plans/2026-10-01-f6-keeping-watch-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md) (approved by
-  Rich section by section, and reviewed: *"looks good"*), and the plan,
-  [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md) (seven sittings, twelve tasks): its
-  sittings table says where it is. Sitting 1 measures on 7100 in the platform's window, at Rich's word; sittings 2–4 need
-  no platform, and may run first. Its mail sink is live (below). **Rich's decisions so far (2026-10-01):** **two plans**: **F6, *Keeping watch*** (moments 16, 19, 20:
-  the watch token, the history and *Since you were last here*, the needs-you band, emails, the live-address watch and
-  *Start it again*, switch off, back on, delete) and **F6b, *Working on it together*** (moments 17, 18 and the *Agents*
-  screen), written after F6; **the watch token is kept on disk, encrypted** (AES-256-GCM, its key apart from `.data/`:
-  F2's Decision 1 amended for it alone); **four kinds of email** (it's in trouble; your work is waiting; a long wait is
-  over; who's on it changed); **the keeper runs inside our server** (one stream per app through F3's `platformStream`,
-  a `history` table, pure rules, a once-a-minute check of each live address), not a second process and not polling.
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6's sitting 2, natively** (superpowers:executing-plans).
+  1. **First, message `manifest-8d`** (`ListAgents`; the platform's sitting 8) with your own session name: it reports to
+     `manifest-app-34`, which has ended its work. Then `pgrep -fl vitest`, and Step 0 (the plan's *Adopting what lands*).
+  2. **Read** the design, [`plans/2026-10-01-f6-keeping-watch-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md),
+     then the plan, [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md): its sittings table,
+     its decisions, and **Tasks 2 and 3** (our server: the store's version 5, the seal, the watch token handed over, the
+     keeper's streams, history and gaps), **with sitting 1's (S1) corrections**, which are in the tasks.
+  3. **Sitting 2 needs no platform** (mock mode only). End it as the plan says: the gates twice, the five acceptance
+     scripts in mock mode, the dated entry, the sittings table, this section, the roadmap.
+  - **The plan was approved by Rich, 2026-10-01** (*"yes approved. native."*); the design section by section (*"looks
+    good"*). **Rich's decisions:** two plans, **F6 *Keeping watch*** (moments 16, 19, 20) now and **F6b *Working on it
+    together*** (17, 18, *Agents*) after; the watch token kept on disk, sealed (F2's Decision 1 amended for it alone);
+    four kinds of email; the keeper inside our server; nodemailer; our own live-address watch; only a never-live app
+    deleted by its owner (FE-45, confirmed by Rich, for the rest).
+  - **Sitting 1 is done** (`manifest-app-34`, 16:46–17:10Z on 7100): Tasks 3, 4, 6 and 11 corrected (S1). **`f6-watch` is
+    live on 7100**, a real repository on Manifest-local-dev: Rich removes it on github.com once the platform's sitting 8
+    has truncated its database.
   - **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the platform's sittings 6–10
     land (`manifest-60`). **Sitting 6 landed** (`d54e1e1`, below): its waits are counted in Vancouver days (a same-day
     date is noon there), and nothing can be submitted until sitting 7's drafts. **Sitting 7's contract commit landed**
