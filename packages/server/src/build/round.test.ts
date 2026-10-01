@@ -704,13 +704,13 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
         done(),
       ],
     }
-    const { h } = await startedRound({ script, files: BIG, autoBuild: true })
+    const { h, id } = await startedRound({ script, files: BIG, autoBuild: true })
     await until(
       () => leadPrompts(h).length >= 2,
       () => h.did,
     )
     for (const content of Object.values(BIG)) expect(leadPrompts(h)[1]).toContain(content)
-    const { h: onprem } = await startedRound({
+    const { h: onprem, id: onpremId } = await startedRound({
       script,
       files: BIG,
       autoBuild: true,
@@ -724,6 +724,9 @@ describe('the five steps, each on its own signal (Decision 5)', () => {
     expect(
       Object.values(BIG).filter((c) => leadPrompts(onprem)[1]!.includes(c)).length,
     ).toBeLessThan(3)
+    // Both rounds end before the test does: a round left running writes to a store its cleanup closed.
+    await untilStatus(h, id, 'done')
+    await untilStatus(onprem, onpremId, 'done')
   })
 
   it('each file a read asks for is traced by its path, never its content: a loop of reads can be seen (sitting 6, the real walk)', async () => {
