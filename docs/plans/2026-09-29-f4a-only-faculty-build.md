@@ -4,9 +4,11 @@
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 > **Read [`../ORIENTATION.md`](../ORIENTATION.md) first.**
 
-**Status: approved by Rich, 2026-09-29** (*"yes plan is good"*). Its execution method is his to confirm when it is
-built: native (superpowers:executing-plans, one agent, then one fresh whole-branch reviewer) is recommended, as for F3
-and F4. It waits on the platform: **FE-39**, carried by Rich the same day,
+**Status: approved by Rich, 2026-09-29** (*"yes plan is good"*). **Its start and method confirmed by Rich, 2026-10-01
+(04:40Z)**, to `manifest-app-4d`: native (superpowers:executing-plans, one agent, then one fresh whole-branch reviewer),
+as recommended, *"you can start work on that when you know the other agent is finished"*: **it starts when the
+platform's 5a session (`manifest-74`) says 5a has closed**, beside the platform's sitting 6 (`manifest-92`, at Rich's
+word). Task 4's walk on 7100 asks the sitting 6 session for a window first (no Vitest, no control-plane restart). It waits on the platform: **FE-39**, carried by Rich the same day,
 and in the platform's launch-path plan as its Task 8a (sitting 5a, Spec action 7; manifest `3f20f83`), confirmed by
 Rich there (`e46df38`: builders are exactly the `faculty` affiliation, or an administrator's PUID). **Nothing here is built before the platform's contract answers
 `Me.mayBuild`.** The names this plan uses are the ones the platform proposed; Task 1 reads what actually landed and

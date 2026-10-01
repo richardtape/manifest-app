@@ -9,8 +9,10 @@ says which plan is current. This file states where things stand and the rules. I
 - **YOUR JOB, IF YOU ARE THE NEXT SESSION: nothing is building.** Read [`plans/roadmap.md`](./plans/roadmap.md) and wait for
   the platform:
   - **When the platform's launch-path 5a lands `Me.mayBuild`** (its session, `manifest-74` at 04:20Z, messages us before that contract commit and at its close),
-    **STOP AND ASK RICH** whether to switch to **F4a** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md),
-    approved; one sitting, four tasks) and to confirm its method (native recommended).
+    **start F4a** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), one sitting,
+    four tasks): **Rich confirmed it, native, 2026-10-01** (04:40Z), to start *"when you know the other agent is finished"*:
+    at 5a's close, not its contract commit. The platform's sitting 6 runs beside it (`manifest-92`, told at Rich's word);
+    ask that session for a 7100 window before Task 4's walk, and say when it is done.
   - **F6** (*Running it*, moments 16–20) is **written after F4a** (Rich, relayed by `manifest-00`), while the platform runs
     its sittings 6–10. **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the
     platform's sittings 6–10 land (`manifest-60`).
