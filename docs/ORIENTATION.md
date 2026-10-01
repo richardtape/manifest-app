@@ -55,7 +55,7 @@ says which plan is current. This file states where things stand and the rules. I
     and `submitPrivacyAssessment`; five codes; `since`, `stagingRegistration`, `submittedAt`/`submittedBy` (adopted in our
     test data, `f8dcfbc`; nothing else of ours moved). **Sitting 7 RUNNING** (`manifest-8e`, Task 10): its contract commit
     `6cbb489` landed (`draftIamRegistration`, mintable `launch:draft`, `IamRegistration.package`, `409 LAUNCH_RECORD_SUBMITTED`,
-    `409 LAUNCH_NOT_CWL`, `iam_registration.drafted`), adopted with no change of ours; it messages us before any further
+    `409 LAUNCH_NOT_CWL`, `iam_registration.drafted`), and its fix wave `dec71d8` (`draftGeneratedAt`, `409 LAUNCH_DRAFT_CHANGED`, `409 LAUNCH_DRAFT_STALE`: the sitting's last contract change), adopted with no change of ours; it messages us before any further
     contract commit and at its close. Then 8–10 (10 merged with the published-text pass) and 12. **Two questions for Rich** sit in manifest's ORIENTATION §8
     *Open*: `change_requested`'s two meanings, and whether a re-submission waits for UBC's order too. Then its **faculty-ready plan**: contract 1.6.0, `__Host-` cookies on https (its Task 5
     messages us first). `api-findings.md` has each shape.
@@ -73,7 +73,7 @@ says which plan is current. This file states where things stand and the rules. I
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
 - **The machine** *(2026-10-01, 15:15Z)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102**, both
-    restarted at F4a's close; **the mock again at sitting 7's contract commit** (pid 66212), for `6cbb489`'s fixtures. **A fresh dev database**: F5's is kept as
+    restarted at F4a's close; **the mock again at sitting 7's fix wave** (pid 64522), for `dec71d8`'s examples. **A fresh dev database**: F5's is kept as
     `.data/app-before-f4a.sqlite`, F4a's acceptance runs as `.data/app-f4a-checks.sqlite`. Switch to edge mode before
     anyone clicks the real platform, and say so.
   - **7100 is the platform's**: **its sitting 7's (`manifest-8e`) until that sitting closes**: its Vitest runs truncate
