@@ -69,6 +69,13 @@ in *What executing this plan found*; this table; ORIENTATION's *Where things sta
 | The button | **[Sign out]** (the shell's `words.signOut.button`); if it fails, the shell's *"We couldn't sign you out. Close the browser to be sure."* |
 | `/new` for someone who keeps apps | the heading and *"It's open to UBC faculty for now."*, in the page, beside the rail |
 
+**For Rich at Task 1 (the platform's 5a fix wave, manifest `42cd8c5`, relayed by `manifest-74`):** the platform reads the
+CWL affiliation **at sign-in**, so a faculty member signed in before 5a has none recorded, and `getMe` answers
+`mayBuild: false` until they sign in again; `BUILDING_NOT_OPEN`'s hint now leads with *sign out and sign in again*. As
+proposed above, our screen would tell that faculty member Manifest is not open to them. **Proposed:** a line above
+**[Sign out]**, *"If you're UBC faculty, sign out and sign in again."* (the words his). Rich's own session on 7100
+predates 5a: his click meets this first.
+
 ## Global Constraints
 
 - Everything in F1–F4's *Global Constraints* stands.
