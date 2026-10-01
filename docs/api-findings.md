@@ -1233,6 +1233,29 @@ as `manifest-d4` described it. Not carried: Rich's word carries it.*
   leave it, and say less than *"You can leave: it carries on."* (Rich's words).
 - **When:** before faculty run it for real; F5 works meanwhile in one tab.
 
+### FE-44 — A large course's app can never launch: its load rehearsal blocks, and is not built
+
+*Found 2026-10-01 by F5's sitting 6, walking the real platform (7100, `66ac53c`), and read in the control plane's
+`launch/readiness.ts`. Written at Rich's word ("write it, you decide later"); not carried.*
+
+- **Screen and moment:** *Going live* (moments 11 and 14): the checklist, and *[Let your students in]*, offered only when
+  every blocking item is met.
+- **What happened:** the walk's app, *"My answers"*, was made from *"About 200 students"*, so the intake set its audience
+  to *a large course*. Every item reached `met` (the address, the registration, the assessment, the dry run, the scans,
+  the sign-off), but **`ready` stays `false` for good**: `load-rehearsal` is listed for a `large_course` or `public`
+  audience, `blocking: true`, `state: 'not_built'` (*"a later Manifest release (§24's load rehearsal)"*), and `readyOf`
+  needs every blocking item `met`.
+- **Why it matters:** a typical lecture course (a few hundred students) cannot go live on the platform as it stands, and
+  nothing tells its owner so but a row; a faculty member reaches *"Done"* on every job they can do and never sees the
+  button. **Ours, fixed meanwhile** (`2f83f62`): a blocking item that is not built reads *waiting on the Manifest team*,
+  *"Manifest can't do this one yet, and your app can't go live until it can. It comes in a later Manifest release."*
+- **Options:**
+  - **(a)** the platform builds the load rehearsal (§24) before faculty use it for real;
+  - **(b)** an item that is `not_built` does not block until it is built (the gate reads it as a person does: *not yet*);
+  - **(c)** it stays, and we say so earlier (on the Overview's band, before the dry run), so nobody does the work first.
+- **When:** before faculty with a large course use it; F5's acceptance walked moments 14 and 15 in Rich's own click (a
+  class-sized app), at his word.
+
 ## Not a gap: decisions that are Rich's
 
 - **The building agent's model on the laptop is `qwen3.5:4b`**, a 4B-parameter model ✓ (`infra/models.txt`;
