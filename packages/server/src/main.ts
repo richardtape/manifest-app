@@ -2,7 +2,11 @@ import { fileURLToPath } from 'node:url'
 import { createServer as createVite } from 'vite'
 import { buildServer } from './app.js'
 import { readConfig } from './config.js'
+import { createKeeper } from './keeping/keeper.js'
+import { KEY_FILE, keyFrom } from './keeping/seal.js'
 import { createIntakeKeys, intakeModelFor } from './platform/intake.js'
+import { platformStream } from './platform/stream.js'
+import { platformWatching } from './platform/watching.js'
 import { openStore } from './store/db.js'
 
 /**
@@ -16,6 +20,17 @@ const config = readConfig(process.env)
 const store = openStore(fileURLToPath(new URL('../.data/app.sqlite', import.meta.url)))
 // The intake keys the browser hands over, in memory only; each mode's model uses them (Task 6).
 const intakeKeys = createIntakeKeys()
+// F6 D2: THE KEY THAT SEALS THE WATCH TOKENS, read (or made) before we listen. Never in .data/,
+// so a copy of the database carries no usable token.
+const key = keyFrom(process.env, KEY_FILE)
+// F6 D4: the keeper, in both modes, reading only with each app's watch token.
+const keeper = createKeeper({
+  store,
+  key,
+  stream: platformStream(config.platformOrigin),
+  watching: platformWatching(config.platformOrigin),
+  now: () => new Date(),
+})
 
 // The app is asked for only once we listen, which is after Vite exists: the closure reads
 // `vite` then, and Vite needs our HTTP server first, for its HMR socket (`server.ws`, which
@@ -23,7 +38,7 @@ const intakeKeys = createIntakeKeys()
 const app = buildServer(
   config,
   (request, response) => vite.middlewares(request, response),
-  { store, intakeKeys, intakeModel: intakeModelFor(config, intakeKeys) },
+  { store, intakeKeys, intakeModel: intakeModelFor(config, intakeKeys), keeper },
 )
 const vite = await createVite({
   root: WEB,
@@ -43,3 +58,15 @@ try {
 console.log(
   `manifest-app (${config.mode}) on http://127.0.0.1:${config.port}, asking ${config.platformOrigin}`,
 )
+
+// The keeper's streams closed with the server. A ceiling, so an open EventSource never holds a
+// restart (tsx watch's, or a stop).
+for (const signal of ['SIGTERM', 'SIGINT'] as const)
+  process.once(signal, () => {
+    keeper.stop()
+    setTimeout(() => process.exit(0), 1_000).unref()
+    void app.close().then(
+      () => process.exit(0),
+      () => process.exit(1),
+    )
+  })

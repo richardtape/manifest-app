@@ -457,7 +457,13 @@ function harness(options: Options, file?: string, store0?: Store) {
   /** A platform event on the round's open stream. */
   const emit = (type: string, detail: Record<string, unknown>) => {
     const open = watches.filter((w) => !w.closed).at(-1)
-    open?.handlers.event({ id: `event-${++events}`, type, subject: 'project:x', detail })
+    open?.handlers.event({
+      id: `event-${++events}`,
+      type,
+      subject: 'project:x',
+      detail,
+      at: new Date().toISOString(),
+    })
   }
 
   const rounds: Rounds = createRounds({

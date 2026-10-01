@@ -1,9 +1,10 @@
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, relative, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { randomBytes } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { scratchDir } from '../store/testing.js'
-import { KEY_BYTES, keyFrom, seal, unseal } from './seal.js'
+import { KEY_BYTES, KEY_FILE, keyFrom, seal, unseal } from './seal.js'
 
 /**
  * D2 (RICH): THE WATCH TOKEN IS KEPT ON DISK, SEALED. The one credential our server keeps at
@@ -102,5 +103,28 @@ describe('keyFrom: the key (Decision 4)', () => {
     const file = join(keys, 'keeping.key')
     writeFileSync(file, randomBytes(16).toString('base64'), { mode: 0o600 })
     expect(() => keyFrom({}, file)).toThrow()
+  })
+})
+
+describe('the key file main.ts reads (Decision 4)', () => {
+  const SERVER = fileURLToPath(new URL('../../', import.meta.url))
+  const REPO = fileURLToPath(new URL('../../../../', import.meta.url))
+
+  it('is packages/server/.keys/keeping.key: never under .data/, where the database and its copies live', () => {
+    expect(relative(SERVER, KEY_FILE)).toBe(join('.keys', 'keeping.key'))
+    expect(relative(join(SERVER, '.data'), KEY_FILE).startsWith('..' + sep)).toBe(true)
+  })
+
+  it('is git-ignored', () => {
+    expect(readFileSync(join(REPO, '.gitignore'), 'utf8').split('\n')).toContain(
+      'packages/server/.keys/',
+    )
+  })
+
+  it('is the one main.ts passes, and main.ts reads it before it listens', () => {
+    const main = readFileSync(join(SERVER, 'src', 'main.ts'), 'utf8')
+    const read = main.indexOf('keyFrom(process.env, KEY_FILE)')
+    expect(read).toBeGreaterThan(-1)
+    expect(read).toBeLessThan(main.indexOf('app.listen('))
   })
 })

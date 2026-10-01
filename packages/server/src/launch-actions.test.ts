@@ -80,3 +80,40 @@ describe('our server calls no launch action (F5 Task 10)', () => {
     ])
   })
 })
+
+/** The paths the watch token may read with (F6 Global Constraints): the app, its members, its stream. */
+const WATCH_READS = [
+  '/v1/projects/{}',
+  '/v1/projects/{}/members',
+  '/v1/projects/{}/events',
+]
+
+/** What changes what students reach: the person's alone, in the browser (F6 Global Constraints). */
+const SWITCHING = [
+  '/v1/projects/{projectId}/archive',
+  '/v1/projects/{projectId}/restore',
+].map(shape)
+
+describe('the watch token only reads, and nothing switches an app off (F6 Task 3)', () => {
+  const keeping = (file: string) =>
+    file.startsWith(`keeping${'/'}`) || file === join('platform', 'watching.ts')
+
+  it('keeping/ and platform/watching.ts name only the project, its members and its stream', () => {
+    const found = named().filter((n) => keeping(n.file))
+    expect(found.map((n) => n.path)).toContain('/v1/projects/{}/members')
+    expect(found.filter((n) => !WATCH_READS.includes(n.path))).toEqual([])
+  })
+
+  it('no source names archive or restore', () => {
+    expect(named().filter((n) => SWITCHING.includes(n.path))).toEqual([])
+  })
+
+  it('no source deletes a project (deleteProject is the page’s, after its step-up)', () => {
+    const deletes = sources(SRC).filter((file) =>
+      /DELETE\(\s*['"`]\/v1\/projects\/\{projectId\}['"`]/.test(
+        readFileSync(file, 'utf8'),
+      ),
+    )
+    expect(deletes).toEqual([])
+  })
+})

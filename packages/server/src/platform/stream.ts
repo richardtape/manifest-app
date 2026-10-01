@@ -14,8 +14,23 @@ import { PLATFORM_TIMEOUT_MS } from './refusal.js'
  *
  * **A token revoked or expired while its stream is open closes it `4401`** (FE-33, contract 1.5.0):
  * refused, like `4403` and `4404`, so the round pauses for a new token and nothing reopens it.
+ *
+ * **F6's keeper reads two things more**, which the round ignores: each event's own time (`at`, the
+ * platform's `createdAt`, so a replay keeps when things happened), and **each replay, reported once
+ * handed over**: the ids it carried and whether this watch had handed any of them over already. A
+ * replay that reaches back to what was seen leaves no gap; one that does not may (FE-7).
  */
-export type ProjectEvent = { id: string; type: string; subject: string; detail: unknown }
+export type ProjectEvent = {
+  id: string
+  type: string
+  subject: string
+  detail: unknown
+  /** When the platform recorded it. */
+  at: string
+}
+
+/** One replay, as it was sent: every event it carried, in order, seen before or not. */
+export type Replay = { ids: string[]; overlapped: boolean }
 
 export interface Watch {
   /** The first replay is handed over. Rejects if the stream is refused, or closed, first. */
@@ -34,6 +49,8 @@ export interface ProjectStream {
       reconnected: () => void
       /** The token was refused: the round pauses for a new one. Called once, and nothing follows. */
       refused: () => void
+      /** F6: each replay, the first included, once handed over; before `reconnected`. */
+      replayed?: (replay: Replay) => void
     },
   ): Watch
 }
@@ -100,12 +117,21 @@ export function platformStream(
       }
 
       const connect = (reconnecting: boolean) => {
+        // This connection's replay: every event before its ready frame, and whether any was seen.
+        const replay: Replay = { ids: [], overlapped: false }
+        let replaying = true
         const subscription = open({
           origin,
           token,
           projectId,
           onFrame(frame) {
-            if (over || frame.kind !== 'event' || seen.has(frame.id)) return
+            if (frame.kind === 'control') replaying = false
+            if (over || frame.kind !== 'event') return
+            if (replaying) {
+              replay.ids.push(frame.id)
+              if (seen.has(frame.id)) replay.overlapped = true
+            }
+            if (seen.has(frame.id)) return
             seen.add(frame.id)
             if (seen.size > REMEMBERED) seen.delete(seen.values().next().value as string)
             handlers.event({
@@ -113,6 +139,7 @@ export function platformStream(
               type: frame.type,
               subject: frame.subject,
               detail: frame.machineDetail,
+              at: frame.createdAt,
             })
           },
         })
@@ -121,6 +148,8 @@ export function platformStream(
           () => {
             if (over || current !== subscription) return
             failures = 0
+            replaying = false
+            handlers.replayed?.(replay)
             markReady()
             if (reconnecting) handlers.reconnected()
           },

@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 /**
  * D2 (RICH): THE WATCH TOKEN IS KEPT ON DISK, SEALED, the one credential our server keeps at
@@ -12,6 +13,11 @@ import { dirname } from 'node:path'
  * usable token. A key that cannot open a row makes it *no token*, and the next visit mints.
  */
 export const KEY_BYTES = 32
+/**
+ * The laptop's key file, beside our server, git-ignored, and never in `.data/` (Decision 4). The
+ * one `main.ts` passes; production sets `MANIFEST_APP_KEEPING_KEY` instead.
+ */
+export const KEY_FILE = fileURLToPath(new URL('../../.keys/keeping.key', import.meta.url))
 const NONCE_BYTES = 12
 const TAG_BYTES = 16
 const VERSION = 'v1.'

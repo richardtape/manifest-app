@@ -3,7 +3,7 @@ import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { StreamFrame, subscribe } from '@manifest/contract'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { platformStream, type ProjectEvent } from './stream.js'
+import { platformStream, type ProjectEvent, type Replay } from './stream.js'
 
 /**
  * F3 TASK 5: THE PROJECT'S EVENT STREAM ON OUR SERVER (Decision 15), over the contract's own
@@ -92,6 +92,9 @@ function watching(probeStatus: number | (() => number) = 426) {
     return typeof probeStatus === 'number' ? probeStatus : probeStatus()
   }
   const events: ProjectEvent[] = []
+  const replays: Replay[] = []
+  /** What the handlers were told, in order. */
+  const told: string[] = []
   let reconnected = 0
   let refused = 0
   const watch = platformStream('http://127.0.0.1:7100', open, probe).watch(
@@ -99,8 +102,15 @@ function watching(probeStatus: number | (() => number) = 426) {
     PROJECT,
     {
       event: (e) => events.push(e),
-      reconnected: () => reconnected++,
+      reconnected: () => {
+        reconnected++
+        told.push('reconnected')
+      },
       refused: () => refused++,
+      replayed: (replay) => {
+        replays.push(replay)
+        told.push('replayed')
+      },
     },
   )
   return {
@@ -108,6 +118,8 @@ function watching(probeStatus: number | (() => number) = 426) {
     connections,
     probes,
     events,
+    replays,
+    told,
     counts: () => ({ reconnected, refused, connections: connections.length }),
   }
 }
@@ -135,8 +147,50 @@ describe('each event once (Decision 15)', () => {
       type: 'agent_session.started',
       subject: 'agent_session:1',
       detail: { n: 1 },
+      // F6: when the platform recorded it, so a replay's history keeps its own times.
+      at: '2026-09-28T20:24:21.643Z',
     })
     expect(w.counts().reconnected).toBe(1)
+  })
+
+  it('each replay is reported once handed over (F6): every event it carried, in order, and whether this watch had handed any over already', async () => {
+    vi.useFakeTimers()
+    const w = watching()
+    const id = (n: number) => (event(n) as { id: string }).id
+    w.connections[0]!.replay([event(1), event(2), event(3), READY])
+    await w.watch.ready
+    expect(w.replays).toEqual([{ ids: [id(1), id(2), id(3)], overlapped: false }])
+    // Live, after the replay: no replay of its own.
+    w.connections[0]!.options.onFrame(event(4))
+    expect(w.replays).toHaveLength(1)
+    // A reconnect whose replay reaches back to what it saw.
+    w.connections[0]!.drop(1001)
+    await vi.advanceTimersByTimeAsync(200)
+    w.connections[1]!.replay([event(3), event(4), event(5), READY])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(w.replays[1]).toEqual({ ids: [id(3), id(4), id(5)], overlapped: true })
+    // One that does not: everything in it is newer than what this watch saw.
+    w.connections[1]!.drop(1001)
+    await vi.advanceTimersByTimeAsync(200)
+    w.connections[2]!.replay([event(9), event(10), READY])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(w.replays[2]).toEqual({ ids: [id(9), id(10)], overlapped: false })
+    expect(w.events.map((e) => e.id)).toEqual([1, 2, 3, 4, 5, 9, 10].map(id))
+    // Told the replay first, then that it reconnected: what was missed is known before the re-read.
+    expect(w.told).toEqual([
+      'replayed',
+      'replayed',
+      'reconnected',
+      'replayed',
+      'reconnected',
+    ])
+  })
+
+  it('an empty replay is reported empty', async () => {
+    const w = watching()
+    w.connections[0]!.replay([READY])
+    await w.watch.ready
+    expect(w.replays).toEqual([{ ids: [], overlapped: false }])
   })
 
   it('log and control frames are never events', async () => {

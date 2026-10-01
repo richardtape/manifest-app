@@ -6,6 +6,7 @@ import { registerBuild } from './api/build.js'
 import { registerConversations } from './api/conversations.js'
 import { createHub, registerEvents, type Hub } from './api/events.js'
 import { registerIntake } from './api/intake.js'
+import { registerKeeping } from './api/keeping.js'
 import { registerPlan } from './api/plan.js'
 import { registerProblems } from './api/problems.js'
 import { registerProject } from './api/project.js'
@@ -14,6 +15,7 @@ import { beginPiece, createLine, type Line } from './build/line.js'
 import { createRounds, type RoundDeps, type Rounds } from './build/round.js'
 import type { Config } from './config.js'
 import { whoIs } from './identity.js'
+import { idleKeeper, type Keeper } from './keeping/keeper.js'
 import {
   notAvailable,
   ASKING_DEADLINES,
@@ -92,6 +94,7 @@ export function buildServer(
     authoring = platformAuthoring(config.platformOrigin),
     planModel = planModelFor(config),
     rounds: roundsOf,
+    keeper = idleKeeper,
   }: {
     store: Store
     hub?: Hub
@@ -112,6 +115,8 @@ export function buildServer(
     planModel?: (key: string) => Model
     /** F3: the rounds of work; by default over the platform, on each mode's model. */
     rounds?: RoundsOf
+    /** F6: the keeper (D4); by default one that keeps nothing. Started once the line is. */
+    keeper?: Keeper
   },
 ): FastifyInstance {
   const app = Fastify({
@@ -198,6 +203,10 @@ export function buildServer(
   // app with a conversation waiting, and none holding it, starts its next (Review Focus 5).
   rounds.interruptedOnBoot()
   line.onBoot()
+  // F6 (D4): every kept watch token's stream opened; closed with the server.
+  keeper.start()
+  app.addHook('onClose', async () => keeper.stop())
+  registerKeeping(app, { config, store, keeper })
   registerIntake(app, { config, store, work, intakeModel, intakeKeys })
   registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
   registerBuild(app, { config, store, hub, work, tokens, rounds, line })
