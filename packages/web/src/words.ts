@@ -823,7 +823,10 @@ export const words = {
         'We stopped waiting, but it may still finish. This row updates when it does.',
       /** (S6) Ours: our deadline, and five minutes of reads without the row moving. */
       unsureLong: 'We couldn’t see how it ended. You can run it again.',
-      /** (S6) Ours: the platform's 5b take-down refused (REHEARSAL_TEARDOWN_FAILED, proposed). */
+      /** (S6) Ours: one already running for this app (the platform's 5b: 409 REHEARSAL_RUNNING). */
+      elsewhere:
+        'A dry run is already running for this app. This row updates when it ends.',
+      /** (S6) Ours: the platform's 5b take-down refused (REHEARSAL_TEARDOWN_FAILED, 500). */
       teardown: 'It ran, but didn’t finish taking itself down. Run it again.',
       /** ✓ The fix conversation's title (our server's DRY_RUN_FIX_WORDS). */
       fixTitle: "The dry run didn't sign anyone in",

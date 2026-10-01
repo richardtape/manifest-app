@@ -47,17 +47,21 @@ export function studentsFact(
 }
 
 /**
- * THE LIVE ADDRESS BEFORE A FIRST LAUNCH (Spec action 8 (c), the platform's 5b): a dry run takes
- * itself down once its sign-in is recorded, and the platform still names its instance, `gone`, as
- * the environment's. Before a launch that is nothing there, never "Switched off"; nobody was ever
- * given the address. After a launch, `gone` is what switching an app off leaves, and is said so.
- * Every reader of an address's instance takes the environment through this first.
+ * THE LIVE ADDRESS BEFORE A FIRST LAUNCH (Spec action 8 (c), the platform's 5b): the platform names
+ * the newest instance as the environment's when no route serves one: a dry run's, taken down
+ * (`gone`), or a start that failed inside it (`failed`, which the take-down leaves). Before a
+ * launch, anything there but an answering one is nothing there: never "Switched off" or "It never
+ * answered"; nobody was ever given the address. After a launch, each is said as it is. Every reader
+ * of an address's instance takes the environment through this first.
  */
 export function asServed(
   env: Schemas['Environment'],
   launched: boolean,
 ): Schemas['Environment'] {
-  return env.kind === 'production' && !launched && env.instance?.state === 'gone'
+  return env.kind === 'production' &&
+    !launched &&
+    env.instance !== null &&
+    env.instance.state !== 'healthy'
     ? { ...env, instance: null }
     : env
 }

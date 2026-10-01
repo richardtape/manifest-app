@@ -212,16 +212,24 @@ describe('the live address before a first launch (Spec action 8 (c), the platfor
       words: 'Not live yet',
     }))
 
+  it('a dry run whose app never started leaves its instance failed: before a launch, not live yet, never "It never answered" (the platform’s 5b)', () =>
+    expect(appCard(withProduction(inst('failed')), new Map(), V).students).toEqual({
+      state: 'notyet',
+      words: 'Not live yet',
+    }))
+
   it('after a launch, gone is what switching it off leaves, and is said so', () =>
     expect(
       appCard(withProduction(inst('gone'), LAUNCHED), new Map(), V).students.words,
     ).toBe('Switched off'))
 
-  it('asServed: only the live address, only before a launch, only gone, reads as nothing there', () => {
+  it('asServed: only the live address, only before a launch, and only what does not answer, reads as nothing there', () => {
     expect(asServed(env('production', 'gone'), false).instance).toBeNull()
     expect(asServed(env('production', 'gone'), true).instance?.state).toBe('gone')
     expect(asServed(env('production', 'healthy'), false).instance?.state).toBe('healthy')
-    expect(asServed(env('production', 'failed'), false).instance?.state).toBe('failed')
+    // A start that failed inside a dry run stays failed, and the platform names it (its 5b).
+    expect(asServed(env('production', 'failed'), false).instance).toBeNull()
+    expect(asServed(env('production', 'failed'), true).instance?.state).toBe('failed')
     expect(asServed(env('staging', 'gone'), false).instance?.state).toBe('gone')
     expect(asServed(env('sandbox', 'gone'), false).instance?.state).toBe('gone')
   })

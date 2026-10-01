@@ -488,13 +488,33 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
   it('it ran, and was not taken down again (the platform’s 5b): run it again', async () => {
     const s = stage()
     const li = await press(s)
-    await s.refuse(refused(409, 'REHEARSAL_TEARDOWN_FAILED'))
+    await s.refuse(refused(500, 'REHEARSAL_TEARDOWN_FAILED'))
     expect(
       await within(li).findByText(
         'It ran, but didn’t finish taking itself down. Run it again.',
       ),
     ).toBeTruthy()
     expect(runButton(li)).toBeTruthy()
+  })
+
+  it('one already running for this app (409 REHEARSAL_RUNNING, the platform’s 5b; another tab, or before a reload): said so, nothing sent again, and the checklist read until it moves', async () => {
+    const s = stage()
+    const li = await press(s)
+    await s.refuse(refused(409, 'REHEARSAL_RUNNING'))
+    expect(within(li).getByRole('status').textContent).toBe(
+      'A dry run is already running for this app. This row updates when it ends.',
+    )
+    expect(within(li).queryByRole('button', { name: 'Run the dry run' })).toBeNull()
+    s.world.readiness = MET
+    await act(async () => {
+      vi.advanceTimersByTime(DRY_RUN_POLL_MS)
+    })
+    expect(
+      await within(await row()).findByText(
+        'Done. It answered and signed someone in on the live setup.',
+      ),
+    ).toBeTruthy()
+    expect(s.called('runRehearsal')).toHaveLength(1)
   })
 
   it('a refusal we did not foresee: we couldn’t, with a reference, and the button again', async () => {
@@ -611,7 +631,7 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
     await through((s) => s.answer(FAILED))
     await through((s) => s.refuse(ourDeadline()))
     await through((s) => s.refuse(refused(409, 'REHEARSAL_DEPLOY_FAILED')))
-    await through((s) => s.refuse(refused(409, 'REHEARSAL_TEARDOWN_FAILED')))
+    await through((s) => s.refuse(refused(500, 'REHEARSAL_TEARDOWN_FAILED')))
     for (const said of seen) {
       expect(machineryIn(said), said).toEqual([])
       expect(said, said).not.toMatch(/rehears|staging|production|release|SENTINEL/i)

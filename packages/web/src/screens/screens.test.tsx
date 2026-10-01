@@ -366,11 +366,17 @@ describe('Your apps, with an app (moment 16’s card)', () => {
     expect(screen.queryByText('Not theirs')).toBeNull()
   })
 
-  it('an address that never answered needs them, in words (Review Focus 4)', async () => {
+  it('an address that never answered needs them, in words, once students can reach it (Review Focus 4)', async () => {
     const environments = fixtures.PROJECT_EXPANDED.environments!.map((e) =>
       e.kind === 'production' ? { ...e, instance: fixtures.FAILED_INSTANCE } : e,
     )
-    render(<App platform={mockPlatform({ environments })} />)
+    // Launched: before a launch the live address is nobody's yet, and a failed instance there is a
+    // dry run's or a launch's attempt, said on Going live (the platform's 5b; asServed).
+    render(
+      <App
+        platform={mockPlatform({ environments, launchedAt: '2026-10-03T17:00:00.000Z' })}
+      />,
+    )
     const students = (await screen.findByText(words.facts.neverAnswered)).closest(
       '.app-card__students',
     )

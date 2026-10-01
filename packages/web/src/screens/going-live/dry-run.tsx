@@ -73,8 +73,11 @@ type Phase =
   /** The row as the page read it; `said`, a line of ours about the last press. */
   | { at: 'offer'; said: string | null }
   | { at: 'running' }
-  /** Our deadline cut the wait (Review Focus 3): the checklist read until the row moves. */
-  | { at: 'unsure' }
+  /**
+   * Our deadline cut the wait (Review Focus 3), or one was already running (REHEARSAL_RUNNING): the
+   * checklist read until the row moves, and `said` why.
+   */
+  | { at: 'unsure'; said: string }
   | { at: 'passed' }
   /** It signed nobody in: what it saw, for *[Fix it]*. */
   | { at: 'failed'; rehearsal: Schemas['Rehearsal'] }
@@ -211,7 +214,7 @@ export function DryRun({
     try {
       ran = await platform.runRehearsal(project.id, crypto.randomUUID())
     } catch (error) {
-      if (cutByOurDeadline(error)) return readOn()
+      if (cutByOurDeadline(error)) return readOn(d.unsure)
       return refused(error, listed)
     }
     if (ran.passed) {
@@ -241,6 +244,8 @@ export function DryRun({
     const refusal = refusalOf(error)
     const code = refusal.kind === 'refused' ? refusal.code : null
     if (code === 'STEP_UP_REQUIRED') return set({ at: 'step-up' })
+    // The platform's 5b: one is already running for this app (another tab, or before a reload: FE-43).
+    if (code === 'REHEARSAL_RUNNING') return readOn(d.elsewhere)
     if (code !== null && READ_AGAIN.has(code)) {
       set(OFFER)
       return onRan()
@@ -283,8 +288,8 @@ export function DryRun({
    * the page reads again. Still unmet by then, we say we could not see how it ended, and offer it
    * again.
    */
-  const readOn = () => {
-    set({ at: 'unsure' })
+  const readOn = (said: string) => {
+    set({ at: 'unsure', said })
     const h = heldFor(project.id)
     let reads = 0
     let ended = false
@@ -382,7 +387,7 @@ export function DryRun({
       return (
         <RowView row={as('working', d.running)}>
           <p className="body-small" role="status">
-            {d.unsure}
+            {phase.said}
           </p>
         </RowView>
       )
