@@ -65,7 +65,7 @@ says which plan is current. This file states where things stand and the rules. I
     contract commit and at its close. Then 8–10 (10 merged with the published-text pass) and 12. **Two questions for Rich** sit in manifest's ORIENTATION §8
     *Open*: `change_requested`'s two meanings, and whether a re-submission waits for UBC's order too. Then its **faculty-ready plan**: contract 1.6.0, `__Host-` cookies on https (its Task 5
     messages us first). `api-findings.md` has each shape.
-  - **The contract is 1.5.0, 69 operations.**
+  - **The contract is 1.5.0, 70 operations** (the platform's sitting 8, `81892d4`: `draftPrivacyAssessment`, `PrivacyAssessment.draft`, adopted with no change of ours).
   - **Mailpit, for F6** (`manifest-60`): SMTP `127.0.0.1:7111` (no authentication, no TLS); the inbox
     `http://127.0.0.1:7112`, its API under `/api/v1/` (`GET /api/v1/messages`, `GET /api/v1/search?query=…`, `DELETE
     /api/v1/messages` with `{"IDs":[…]}`). **Host `127.0.0.1` or `localhost` only** (any other is `403`). In memory, at most
@@ -79,7 +79,7 @@ says which plan is current. This file states where things stand and the rules. I
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
 - **The machine** *(2026-10-01, 15:15Z)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher), against **our mock on 7102**, both
-    restarted at F4a's close; **the mock again at sitting 7's fix wave** (pid 64522), for `dec71d8`'s examples. **A fresh dev database**: F5's is kept as
+    restarted at F4a's close; **the mock again at the platform's sitting 8 contract commit** (pid 64223), for `81892d4`'s `draft: null`. **A fresh dev database**: F5's is kept as
     `.data/app-before-f4a.sqlite`, F4a's acceptance runs as `.data/app-f4a-checks.sqlite`. Switch to edge mode before
     anyone clicks the real platform, and say so.
   - **7100 is the platform's**: its sitting 7 closed (control plane PID 93832 on `06b5333`, real GitHub); F6's sitting 1
