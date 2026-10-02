@@ -286,7 +286,12 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
     ).json() as AppConversation[]
     expect(rows.find((r) => r.id === waiting.id)?.line).toEqual({
       place: 1,
-      holder: { id: planning.id, title: planning.title, waitingForYou: false },
+      holder: {
+        id: planning.id,
+        title: planning.title,
+        waitingForYou: false,
+        by: ALICE.displayName,
+      },
     })
     // Each keeps its own token.
     expect([s.tokens.get(a.json().id), s.tokens.get(b.json().id)]).toEqual([GOOD, SECOND])
@@ -638,8 +643,14 @@ describe('GET /api/apps/:projectId/conversations: every piece of work on it', ()
       updatedAt: expect.any(String),
       line: {
         place: 1,
-        holder: { id: change.id, title: change.title, waitingForYou: false },
+        holder: {
+          id: change.id,
+          title: change.title,
+          waitingForYou: false,
+          by: ALICE.displayName,
+        },
       },
+      by: { id: ALICE.id, name: ALICE.displayName },
     })
     expect(rows[2]?.line).toBeNull()
     // Bob has none on it.

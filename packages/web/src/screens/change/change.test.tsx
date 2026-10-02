@@ -214,7 +214,7 @@ function stage(
   ) =>
     say({
       kind: 'state',
-      conversation: { ...CONVERSATION, ...conversation },
+      conversation: { ...CONVERSATION, ...conversation, byName: ME.displayName },
       intake: INTAKE,
       plan: extra.plan ?? null,
       round: null,
@@ -400,7 +400,12 @@ describe('Ask for a change (/apps/:slug/change)', () => {
 })
 
 describe('the line: a waiting conversation (Decision 5)', () => {
-  const HOLDER = { id: 'c-1', title: 'Word count', waitingForYou: false }
+  const HOLDER = {
+    id: 'c-1',
+    title: 'Word count',
+    waitingForYou: false,
+    by: ME.displayName,
+  }
 
   it("its top reads waiting on someone: the holder's title, a link to it, and its place; its message box takes words", async () => {
     const s = await conversation()
@@ -546,7 +551,7 @@ describe('a change set aside, and the box after built', () => {
     const s = await conversation()
     s.say({
       kind: 'state',
-      conversation: { ...CONVERSATION, state: 'built' },
+      conversation: { ...CONVERSATION, state: 'built', byName: ME.displayName },
       intake: INTAKE,
       plan: null,
       round: null,
@@ -573,8 +578,14 @@ describe("the app's conversations (/apps/:slug/conversations)", () => {
       updatedAt: '2026-09-28T20:04:00.000Z',
       line: {
         place: 2,
-        holder: { id: 'c-2', title: 'Word count', waitingForYou: false },
+        holder: {
+          id: 'c-2',
+          title: 'Word count',
+          waitingForYou: false,
+          by: ME.displayName,
+        },
       },
+      by: { id: ME.id, name: ME.displayName },
     },
     {
       id: 'c-2',
@@ -583,6 +594,7 @@ describe("the app's conversations (/apps/:slug/conversations)", () => {
       chip: 'attention',
       updatedAt: '2026-09-28T20:03:00.000Z',
       line: null,
+      by: { id: ME.id, name: ME.displayName },
     },
     {
       id: 'c-4',
@@ -591,6 +603,7 @@ describe("the app's conversations (/apps/:slug/conversations)", () => {
       chip: 'notyet',
       updatedAt: '2026-09-28T19:00:00.000Z',
       line: null,
+      by: { id: ME.id, name: ME.displayName },
     },
     {
       id: 'c-1',
@@ -599,6 +612,7 @@ describe("the app's conversations (/apps/:slug/conversations)", () => {
       chip: 'steady',
       updatedAt: '2026-09-27T20:00:00.000Z',
       line: null,
+      by: { id: ME.id, name: ME.displayName },
     },
   ]
 

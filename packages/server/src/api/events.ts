@@ -9,6 +9,7 @@ import { pieceOf } from './piece-state.js'
 import { problem } from './problems.js'
 import type { Allowance, Progress } from './progress.js'
 import { roundOf, threadOf } from './round-state.js'
+import { mayRead, reachable } from './sharing.js'
 
 /**
  * ONE PROGRESS STREAM PER CONVERSATION (F2 Decision 4): Server-Sent Events, the whole state
@@ -89,7 +90,7 @@ export function stateFrame(
   const piece = pieceOf(store, conversation.id)
   return {
     kind: 'state',
-    conversation,
+    conversation: { ...conversation, byName: store.personName(conversation.personId) },
     intake: intakeOf(store, conversation.id),
     plan: planOf(store, conversation.id),
     round: roundOf(store, conversation.id),
@@ -198,7 +199,8 @@ export function registerEvents(
     async (request, reply) => {
       const who = await check(request, reply)
       if (who === undefined) return reply
-      const conversation = store.getConversation(request.params.id, who.person.id)
+      // F6b D3: every member of its app watches it; one frame serves them all.
+      const conversation = reachable(store, request.params.id, who.person.id, mayRead)
       if (conversation === undefined) return reply.code(404).send(NOT_FOUND)
 
       reply.hijack()

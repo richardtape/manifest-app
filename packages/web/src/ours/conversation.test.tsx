@@ -77,7 +77,7 @@ const state = (
   plan: Extract<Progress, { kind: 'state' }>['plan'] = null,
 ): Progress => ({
   kind: 'state',
-  conversation: { ...CONVERSATION, ...patch },
+  conversation: { ...CONVERSATION, ...patch, byName: 'Instructor One' },
   intake,
   plan,
   round: null,
@@ -100,7 +100,7 @@ describe('useConversation', () => {
     expect(last().id).toBe('c-1')
     last().send(state())
     expect(result.current).toEqual({
-      conversation: CONVERSATION,
+      conversation: { ...CONVERSATION, byName: 'Instructor One' },
       intake: NOTHING_YET,
       plan: null,
       round: null,
@@ -153,6 +153,7 @@ describe('useConversation', () => {
       questions: [],
       draft: null,
       cost: { conversationUsd: 0.4, monthLeftUsd: 9.6, resetsAt: null },
+      stopped: null,
     }
     const thread: Said[] = [
       {
@@ -181,7 +182,7 @@ describe('useConversation', () => {
     last().send({ kind: 'refusal', code: 'MODEL_ANSWER_INVALID', reference: '7F3A-9C21' })
     last().send(state({ state: 'naming' }))
     expect(result.current).toEqual({
-      conversation: { ...CONVERSATION, state: 'naming' },
+      conversation: { ...CONVERSATION, state: 'naming', byName: 'Instructor One' },
       intake: NOTHING_YET,
       plan: null,
       round: null,

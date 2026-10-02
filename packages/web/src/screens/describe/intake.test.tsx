@@ -306,7 +306,7 @@ function stage(
   const state = (patch: Partial<Conversation>, intake: Partial<Intake> = {}) =>
     say({
       kind: 'state',
-      conversation: { ...CONVERSATION, ...patch },
+      conversation: { ...CONVERSATION, ...patch, byName: ME.displayName },
       intake: { ...NOTHING_YET, ...intake },
       plan: null,
       round: null,

@@ -89,6 +89,7 @@ export function lineOf(
         : {
             id: holder.id,
             title: holder.title,
+            by: store.personName(holder.personId),
             waitingForYou: waitsOnPerson(
               holder,
               store.latestRun(holder.id),

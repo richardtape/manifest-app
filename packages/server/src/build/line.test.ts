@@ -179,7 +179,12 @@ describe('the line (Review Focus 1)', () => {
     expect(s.begun).toEqual(['Word count'])
     expect(s.line.position(s.store.getConversation(b.id, ALICE.id)!)).toEqual({
       place: 1,
-      holder: { id: a.id, title: 'Word count', waitingForYou: false },
+      holder: {
+        id: a.id,
+        title: 'Word count',
+        waitingForYou: false,
+        by: ALICE.displayName,
+      },
     })
   })
 

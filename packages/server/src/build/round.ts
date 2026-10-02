@@ -60,8 +60,14 @@ export interface Rounds {
     questionId: string,
     words: string,
   ): 'taken' | 'unknown' | 'invalid' | 'token'
-  /** Idempotent. Stop wins over anything in flight (Review Focus 4). */
-  stop(conversation: Conversation): void
+  /**
+   * Idempotent. Stop wins over anything in flight (Review Focus 4). `stopped` says who and why
+   * (F6b Decision 6): the first stop's is kept.
+   */
+  stop(
+    conversation: Conversation,
+    stopped?: { by: string; why: 'stopped' | 'removed' },
+  ): void
   /** A restart: a working or paused run is interrupted (Review Focus 3). */
   interruptedOnBoot(): void
   /**
@@ -1699,7 +1705,7 @@ export function createRounds(deps: RoundDeps): Rounds {
       return 'taken'
     },
 
-    stop(conversation) {
+    stop(conversation, stopped) {
       const live = lives.get(conversation.id)
       if (live?.running) {
         // AT ONCE (Review Focus 4): the person sees it stopped, and its session spends no
@@ -1708,6 +1714,7 @@ export function createRounds(deps: RoundDeps): Rounds {
         if (live.stopped) return
         live.stopped = true
         live.run.status = 'stopped'
+        detail(live).stopped = stopped ?? null
         store.saveRun(live.run)
         publish(live)
         void endSession(live)
@@ -1721,6 +1728,10 @@ export function createRounds(deps: RoundDeps): Rounds {
         void endSession(live)
       }
       run.status = 'stopped'
+      run.detail = {
+        ...(run.detail ?? structuredClone(NO_DETAIL)),
+        stopped: stopped ?? null,
+      }
       store.saveRun(run)
       publishState(hub, store, store.setState(conversation.id, 'building'))
     },

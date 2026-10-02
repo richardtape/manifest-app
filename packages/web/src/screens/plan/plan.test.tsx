@@ -199,7 +199,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
   ) =>
     say({
       kind: 'state',
-      conversation: { ...CONVERSATION, ...conversation },
+      conversation: { ...CONVERSATION, ...conversation, byName: ME.displayName },
       intake: INTAKE,
       plan,
       round: null,

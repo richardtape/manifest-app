@@ -81,6 +81,12 @@ export interface RunDetail {
    * Absent on a run saved before F4.
    */
   noted?: number
+  /**
+   * F6b Decision 6: who stopped it (a person id) and why: a Stop, by its own person or an owner of
+   * the app; or its person taken off the app (`removed`). The first stop is kept: a second is
+   * none. Absent on a run saved before F6b.
+   */
+  stopped?: { by: string; why: 'stopped' | 'removed' } | null
 }
 
 /** One question a round asked (F3 Decision 10). A secret's answer is never here. */

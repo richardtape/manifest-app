@@ -3,11 +3,13 @@ import type { Config } from '../config.js'
 import type { Store } from '../store/db.js'
 import { guard } from './guard.js'
 import { LIMITS } from './progress.js'
+import { mayRead, reachable } from './sharing.js'
 
 /**
  * `/api/conversations`: a person's words, and what we make of them (moments 3–5). A
- * conversation belongs to the person who started it: another person's is `404`, exactly
+ * conversation belongs to the person who started it: a stranger's read is `404`, exactly
  * as one that does not exist, never `403`, as the platform answers a stranger (Decision 3).
+ * Since F6b (D3) every member of its app reads it too; only its own person changes it.
  */
 const INVALID = { error: { code: 'DESCRIPTION_INVALID' } }
 const NOT_FOUND = { error: { code: 'NOT_FOUND' } }
@@ -52,7 +54,8 @@ export function registerConversations(
     async (request, reply) => {
       const who = await check(request, reply)
       if (who === undefined) return reply
-      const conversation = store.getConversation(request.params.id, who.person.id)
+      // F6b D3: every member of its app reads it; a stranger meets none.
+      const conversation = reachable(store, request.params.id, who.person.id, mayRead)
       if (conversation === undefined) return reply.code(404).send(NOT_FOUND)
       return conversation
     },

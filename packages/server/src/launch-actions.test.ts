@@ -118,3 +118,32 @@ describe('the watch token only reads, and nothing switches an app off (F6 Task 3
     expect(deletes).toEqual([])
   })
 })
+
+/**
+ * WHO MAY WORK ON AN APP, AND WHAT AN AGENT MAY DO, ARE THE PERSON'S, IN THE BROWSER (F6b Global
+ * Constraints, D5): adding, changing and taking off a member, minting and revoking a token, and
+ * answering an agent's question. Our server reads the members with a token (F6's watch, F3's
+ * instructor) and names nothing else of these.
+ */
+const PEOPLE_AND_AGENTS = [
+  '/v1/projects/{projectId}/members/{userId}', // removeMember
+  '/v1/projects/{projectId}/tokens', // listTokens, mintToken
+  '/v1/tokens/{tokenId}', // revokeToken
+  '/v1/pending-actions/{pendingActionId}/confirm', // confirmPendingAction
+  '/v1/pending-actions/{pendingActionId}/reject', // rejectPendingAction
+].map(shape)
+
+describe('members, tokens and agents’ questions are the page’s alone (F6b Task 2)', () => {
+  it('no source names taking a member off, a token, or an answer to a pending action', () => {
+    expect(named().filter((n) => PEOPLE_AND_AGENTS.includes(n.path))).toEqual([])
+  })
+
+  it('the members path is only ever read: no source adds or changes a member (addMember)', () => {
+    const writes = sources(SRC).filter((file) =>
+      /\b(?:POST|PUT|PATCH|DELETE)\(\s*['"`]\/v1\/projects\/\{projectId\}\/members/.test(
+        readFileSync(file, 'utf8'),
+      ),
+    )
+    expect(writes).toEqual([])
+  })
+})

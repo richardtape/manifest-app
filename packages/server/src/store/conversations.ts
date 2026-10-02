@@ -40,6 +40,14 @@ export interface Store extends KeepingStatements {
   /** Another person's conversation is `undefined`, exactly as one that does not exist. */
   getConversation(id: string, personId: string): Conversation | undefined
   /**
+   * ANY PERSON'S CONVERSATION, for `api/sharing.ts` to judge (F6b D3): a route that reads one
+   * answers it only to someone whose standing may read it, and every change still asks
+   * `getConversation`.
+   */
+  conversationById(id: string): Conversation | undefined
+  /** Their name as we last heard it (`persons`), for the page to say who; else "Someone". */
+  personName(personId: string): string
+  /**
    * F4 Decision 5: a conversation moved to `waiting` takes `waitingSince` as its place in the
    * app's line, or keeps the one it has, or now; moved anywhere else, it leaves the line.
    */
@@ -57,8 +65,8 @@ export interface Store extends KeepingStatements {
     title: string,
     description: string,
   ): Conversation
-  /** The person's conversations on one app, newest first. */
-  listConversationsOn(projectId: string, personId: string): Conversation[]
+  /** The person's conversations on one app, newest first; with `null`, everyone's (F6b D3). */
+  listConversationsOn(projectId: string, personId: string | null): Conversation[]
   /** Every person's conversations on one app: the line is the app's, not a person's. */
   conversationsOn(projectId: string): Conversation[]
   /** The app's line: its waiting conversations, oldest wait first. */

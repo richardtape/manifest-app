@@ -8,6 +8,8 @@ import { publishState, type Hub } from './events.js'
 import { guard } from './guard.js'
 import { pieceOf, type Asked } from './piece-state.js'
 import { LIMITS } from './progress.js'
+import { mayStop, reachable } from './sharing.js'
+import { endWork } from './work-end.js'
 import type { Work } from './work.js'
 
 /**
@@ -64,6 +66,8 @@ function answerOf(body: unknown): { questionId: string; words: string } | undefi
 
 /** What a round that is not working may be carried on from (Task 8's statuses). */
 const CARRIED_ON = new Set(['interrupted', 'stopped', 'needs-you'])
+/** Where Stop reaches: a round, a wait in the line, a change planned or planning. */
+const STOPPED_FROM = ['building', 'paused', 'waiting', 'planning', 'plan-ready']
 
 export function registerBuild(
   app: FastifyInstance,
@@ -202,7 +206,11 @@ export function registerBuild(
     },
   )
 
-  /** Stop: whatever the draft address has, it keeps. Twice is once. */
+  /**
+   * Stop: whatever the draft address has, it keeps. Twice is once. Its own person's, **or an
+   * owner's of the app** (F6b D3), to free it: recorded as theirs (`work-end.ts`). Anyone else is
+   * `404`, as a conversation that does not exist.
+   */
   app.post<{ Params: { id: string } }>(
     '/api/conversations/:id/stop',
     { errorHandler: (_error, _request, reply) => refuse(reply, 400, 'STOP_INVALID') },
@@ -210,39 +218,20 @@ export function registerBuild(
       const who = await check(request, reply)
       if (who === undefined) return reply
       if (!empty(request.body)) return refuse(reply, 400, 'STOP_INVALID')
-      const conversation = reached(request.params.id, who.person.id, reply, [
-        'building',
-        'paused',
-        'waiting',
-        'planning',
-        'plan-ready',
-      ])
-      if (conversation === undefined) return reply
-      switch (conversation.state) {
-        case 'building':
-        case 'paused':
-          // Freed at once when nothing was running; else when what was in flight returns (M7-1).
-          rounds.stop(conversation)
-          line.released(conversation.projectId)
-          break
-        case 'waiting':
-          // Leave the line: a stopped round goes back to its Stop; a change is set aside.
-          publishState(
-            hub,
-            store,
-            store.setState(
-              conversation.id,
-              stopped(conversation) ? 'building' : 'set-aside',
-            ),
-          )
-          break
-        default:
-          // Not now: only a change is set aside; the first plan has nothing to go back to.
-          if (pieceOf(store, conversation.id).kind === 'first')
-            return refuse(reply, 409, 'CONVERSATION_STATE')
-          publishState(hub, store, store.setState(conversation.id, 'set-aside'))
-          line.released(conversation.projectId)
-      }
+      const conversation = reachable(store, request.params.id, who.person.id, mayStop)
+      if (conversation === undefined) return refuse(reply, 404, 'NOT_FOUND')
+      if (!STOPPED_FROM.includes(conversation.state))
+        return refuse(reply, 409, 'CONVERSATION_STATE')
+      // Not now: only a change is set aside; the first plan has nothing to go back to.
+      if (
+        (conversation.state === 'planning' || conversation.state === 'plan-ready') &&
+        pieceOf(store, conversation.id).kind === 'first'
+      )
+        return refuse(reply, 409, 'CONVERSATION_STATE')
+      endWork({ store, hub, rounds, line }, conversation, {
+        by: who.person.id,
+        why: 'stopped',
+      })
       return reply.code(202).send()
     },
   )

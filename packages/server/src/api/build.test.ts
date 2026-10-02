@@ -14,9 +14,17 @@ import { openStore, type Conversation, type Store } from '../store/db.js'
 import { scratchDir } from '../store/testing.js'
 import { createHub, type Hub } from './events.js'
 import { pieceOf } from './piece-state.js'
-import type { Progress } from './progress.js'
+import type { AppConversation, Progress } from './progress.js'
 import { roundOf } from './round-state.js'
-import { ALICE, AS_ALICE, AS_BOB, fakeControlPlane } from './testing.js'
+import {
+  ALICE,
+  AS_ALICE,
+  AS_BOB,
+  AS_DANA,
+  BOB,
+  DANA,
+  fakeControlPlane,
+} from './testing.js'
 
 /**
  * F3 TASK 9: OUR API'S BUILDING ROUTES. Carry on, a message, an answer, Stop; the round starts
@@ -798,5 +806,333 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
       status: 409,
       body: { error: { code: 'CONVERSATION_STATE' } },
     })
+  })
+})
+
+/**
+ * F6b D3, SEE ALL, ACT ON YOUR OWN (Task 2): Alice owns the app, Bob helps on it, and Dana is on
+ * nothing. Each reads by her standing to the conversation (`api/sharing.ts`); every change stays
+ * its own person's; an owner may also stop anyone's, to free the app.
+ */
+describe('working on it together (F6b D3, Task 2)', () => {
+  /** The app's kept members (F6), as the keeper keeps them, and everyone's name. */
+  function together(s: Setup) {
+    for (const person of [ALICE, BOB, DANA]) s.store.rememberPerson(person)
+    s.store.putMembers(PROJECT.id, [
+      {
+        userId: ALICE.id,
+        role: 'owner',
+        displayName: ALICE.displayName,
+        email: ALICE.email,
+      },
+      {
+        userId: BOB.id,
+        role: 'collaborator',
+        displayName: BOB.displayName,
+        email: BOB.email,
+      },
+    ])
+  }
+
+  /** A change of `person`'s on the app, in `state`. */
+  function changeOf(
+    s: Setup,
+    person: { id: string },
+    state: Conversation['state'],
+    words = 'Also show a word count.',
+  ) {
+    const made = s.store.createChange(
+      person.id,
+      PROJECT.id,
+      words.replace(/\.$/, ''),
+      words,
+    )
+    s.store.addMessage(made.id, 'we', { kind: 'project', project: PROJECT })
+    s.store.addMessage(made.id, 'person', { kind: 'asked', change: 1, words, fix: null })
+    s.tokens.put(made.id, TOKEN)
+    return s.store.setState(made.id, state)
+  }
+
+  /** Bob's first round under way, its lead at the build. */
+  async function bobsRound(s: Setup): Promise<Conversation> {
+    const conversation = planReady(s, BOB.id)
+    s.store.rememberPerson(BOB)
+    s.rounds().start(conversation, TOKEN)
+    await until(
+      () =>
+        roundOf(s.store, conversation.id)?.steps.find((step) => step.key === 'build')
+          ?.state === 'now',
+    )
+    return conversation
+  }
+
+  const get = async (s: Setup, url: string, cookie: string) => {
+    const response = await s.app.inject({ method: 'GET', url, headers: { cookie } })
+    return { status: response.statusCode, body: response.json() as unknown }
+  }
+
+  const as = (cookie: string) => ({ cookie })
+
+  /** The first frame of a conversation's stream, as `cookie` reads it. */
+  async function firstFrame(s: Setup, id: string, cookie: string): Promise<Progress> {
+    await s.app.listen({ host: '127.0.0.1', port: 0 })
+    const port = (s.app.server.address() as { port: number }).port
+    const controller = new AbortController()
+    const response = await fetch(
+      `http://127.0.0.1:${port}/api/conversations/${id}/events`,
+      { headers: { cookie }, signal: controller.signal },
+    )
+    expect(response.status).toBe(200)
+    const reader = response.body!.getReader()
+    let text = ''
+    while (!text.includes('\n\n'))
+      text += new TextDecoder().decode((await reader.read()).value)
+    controller.abort()
+    return JSON.parse(text.slice('data: '.length, text.indexOf('\n\n'))) as Progress
+  }
+
+  it("a member reads another's conversation; someone on nothing reads 404", async () => {
+    const s = setUp()
+    together(s)
+    const bobs = changeOf(s, BOB, 'plan-ready')
+    const url = `/api/conversations/${bobs.id}`
+    expect(await get(s, url, AS_ALICE)).toEqual({ status: 200, body: bobs })
+    expect(await get(s, url, AS_BOB)).toEqual({ status: 200, body: bobs })
+    expect(await get(s, url, AS_DANA)).toEqual({
+      status: 404,
+      body: { error: { code: 'NOT_FOUND' } },
+    })
+    expect(await get(s, `${url}/events`, AS_DANA)).toEqual({
+      status: 404,
+      body: { error: { code: 'NOT_FOUND' } },
+    })
+  })
+
+  it("a member's stream of another's conversation opens on its state, which names whose it is", async () => {
+    const s = setUp()
+    together(s)
+    const bobs = changeOf(s, BOB, 'plan-ready')
+    const first = await firstFrame(s, bobs.id, AS_ALICE)
+    expect(first).toMatchObject({
+      kind: 'state',
+      conversation: { ...bobs, byName: BOB.displayName },
+    })
+  })
+
+  it('an intake conversation (no app yet) stays its own person’s alone (design §3)', async () => {
+    const s = setUp()
+    together(s)
+    const intake = s.store.createConversation(BOB.id, 'A page for readings.')
+    expect((await get(s, `/api/conversations/${intake.id}`, AS_ALICE)).status).toBe(404)
+    expect((await get(s, `/api/conversations/${intake.id}`, AS_BOB)).status).toBe(200)
+  })
+
+  it('an app’s conversations: a member sees everyone’s, newest first, each with who started it; someone on nothing sees none', async () => {
+    const s = setUp()
+    together(s)
+    const alices = changeOf(s, ALICE, 'set-aside', 'Bigger title.')
+    const bobs = changeOf(s, BOB, 'plan-ready')
+    const url = `/api/apps/${PROJECT.id}/conversations`
+    const listed = (await get(s, url, AS_BOB)).body as AppConversation[]
+    expect(listed.map((c) => [c.id, c.by])).toEqual([
+      [bobs.id, { id: BOB.id, name: BOB.displayName }],
+      [alices.id, { id: ALICE.id, name: ALICE.displayName }],
+    ])
+    expect(await get(s, url, AS_DANA)).toEqual({ status: 200, body: [] })
+  })
+
+  it('with no kept members, as today: a person sees their own alone', async () => {
+    const s = setUp()
+    for (const person of [ALICE, BOB]) s.store.rememberPerson(person)
+    changeOf(s, ALICE, 'set-aside', 'Bigger title.')
+    const bobs = changeOf(s, BOB, 'plan-ready')
+    const url = `/api/apps/${PROJECT.id}/conversations`
+    const listed = (await get(s, url, AS_BOB)).body as AppConversation[]
+    expect(listed.map((c) => c.id)).toEqual([bobs.id])
+    expect((await get(s, `/api/conversations/${bobs.id}`, AS_ALICE)).status).toBe(404)
+  })
+
+  it('the line names who holds the app, by their name', async () => {
+    const s = setUp()
+    together(s)
+    changeOf(s, BOB, 'plan-ready')
+    const waiting = changeOf(s, ALICE, 'waiting', 'Bigger title.')
+    const listed = (await get(s, `/api/apps/${PROJECT.id}/conversations`, AS_ALICE))
+      .body as AppConversation[]
+    expect(listed.find((c) => c.id === waiting.id)?.line?.holder?.by).toBe(
+      BOB.displayName,
+    )
+  })
+
+  /** Every change route, the state its own person may press it in, and a body it would take. */
+  const CHANGES: [string, Conversation['state'], unknown][] = [
+    ['intake-key', 'describing', {}],
+    ['intake', 'describing', {}],
+    ['names', 'naming', { taken: [] }],
+    ['blueprint', 'naming', { blueprints: [{ ref: 'node-ts-mongo@1', starters: [] }] }],
+    ['project', 'naming', { projectId: PROJECT.id, token: TOKEN }],
+    ['plan', 'planning', {}],
+    ['plan/correction', 'plan-ready', { correction: 'Bigger, please.' }],
+    ['plan/agree', 'plan-ready', { version: 1, answers: {} }],
+    ['build', 'building', {}],
+    ['messages', 'built', { words: 'Make the title bigger, please.' }],
+    ['answers', 'building', { questionId: 'q-1', words: 'It closes at the deadline.' }],
+  ]
+
+  it.each(CHANGES)(
+    "/%s on a helper's conversation, pressed by an owner, is 404 NOT_FOUND, and nothing changes (Review Focus 2)",
+    async (route, state, body) => {
+      const s = setUp()
+      together(s)
+      const bobs = changeOf(s, BOB, state)
+      const messages = s.store.listMessages(bobs.id).length
+      expect(await post(s, bobs.id, route, body)).toEqual({
+        status: 404,
+        body: { error: { code: 'NOT_FOUND' } },
+      })
+      expect(s.store.getConversation(bobs.id, BOB.id)?.state).toBe(state)
+      expect(s.store.listMessages(bobs.id)).toHaveLength(messages)
+    },
+  )
+
+  it("an owner stops a helper's round: 202, stopped, by her; the app is freed and the next starts", async () => {
+    const s = setUp(AT_BUILD)
+    together(s)
+    const bobs = await bobsRound(s)
+    const next = changeOf(s, ALICE, 'waiting', 'Next.')
+    expect(await post(s, bobs.id, 'stop')).toEqual({ status: 202, body: undefined })
+    await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
+    expect(s.store.latestRun(bobs.id)?.detail?.stopped).toEqual({
+      by: ALICE.id,
+      why: 'stopped',
+    })
+    await until(() => s.store.getConversation(next.id, ALICE.id)?.state === 'plan-ready')
+  })
+
+  it('the round says who stopped it, to whoever reads it; its own person’s Stop names nobody', async () => {
+    const s = setUp(AT_BUILD)
+    together(s)
+    const bobs = await bobsRound(s)
+    await post(s, bobs.id, 'stop')
+    await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
+    expect(roundOf(s.store, bobs.id)?.stopped).toEqual({
+      name: ALICE.displayName,
+      why: 'stopped',
+    })
+
+    const t = setUp(AT_BUILD)
+    together(t)
+    const own = await bobsRound(t)
+    await post(t, own.id, 'stop', {}, as(AS_BOB))
+    await until(() => roundOf(t.store, own.id)?.status === 'stopped')
+    expect(roundOf(t.store, own.id)?.stopped).toBeNull()
+  })
+
+  it("a helper's Stop on another's conversation is 404, and the round works on", async () => {
+    const s = setUp(AT_BUILD)
+    together(s)
+    const alices = await atBuild(s)
+    expect(await post(s, alices.id, 'stop', {}, as(AS_BOB))).toEqual({
+      status: 404,
+      body: { error: { code: 'NOT_FOUND' } },
+    })
+    expect(roundOf(s.store, alices.id)?.status).toBe('working')
+  })
+
+  it('someone on nothing stops nothing: 404', async () => {
+    const s = setUp(AT_BUILD)
+    together(s)
+    const bobs = await bobsRound(s)
+    expect((await post(s, bobs.id, 'stop', {}, as(AS_DANA))).status).toBe(404)
+    expect(roundOf(s.store, bobs.id)?.status).toBe('working')
+  })
+
+  it('pressed twice, and by its own person after: one stop, still hers, one session ended (Review Focus 3)', async () => {
+    const s = setUp(AT_BUILD)
+    together(s)
+    const bobs = await bobsRound(s)
+    await until(() => s.sessionsStarted() === 1)
+    const [one, two] = await Promise.all([
+      post(s, bobs.id, 'stop'),
+      post(s, bobs.id, 'stop'),
+    ])
+    expect([one.status, two.status]).toEqual([202, 202])
+    await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
+    expect((await post(s, bobs.id, 'stop', {}, as(AS_BOB))).status).toBe(202)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(s.store.latestRun(bobs.id)?.detail?.stopped).toEqual({
+      by: ALICE.id,
+      why: 'stopped',
+    })
+    expect(s.ended).toEqual(['session-1'])
+  })
+
+  it("its own person carries on after an owner's Stop: 202, theirs", async () => {
+    const s = setUp(AT_BUILD)
+    together(s)
+    const bobs = await bobsRound(s)
+    await post(s, bobs.id, 'stop')
+    await until(() => !s.hub.busy(bobs.id))
+    expect(await post(s, bobs.id, 'build', {}, as(AS_BOB))).toEqual({
+      status: 202,
+      body: undefined,
+    })
+    await until(() => roundOf(s.store, bobs.id)?.status === 'working')
+    expect(roundOf(s.store, bobs.id)?.stopped).toBeNull()
+  })
+
+  it.each(['waiting', 'planning', 'plan-ready'] as const)(
+    "an owner's Stop on a helper's change %s sets it aside and frees the app, as its own person's would",
+    async (state) => {
+      const s = setUp()
+      together(s)
+      const holder = changeOf(s, BOB, state === 'waiting' ? 'plan-ready' : state)
+      const bobs = state === 'waiting' ? changeOf(s, BOB, 'waiting', 'B.') : holder
+      expect((await post(s, bobs.id, 'stop')).status).toBe(202)
+      expect(s.store.getConversation(bobs.id, BOB.id)?.state).toBe('set-aside')
+    },
+  )
+
+  it("an owner's GET /api/needs holds no question of a helper's (design §3: the band stays its own person's)", async () => {
+    const s = setUp()
+    together(s)
+    s.store.putApp({
+      projectId: PROJECT.id,
+      name: PROJECT.name,
+      slug: PROJECT.slug,
+      state: 'active',
+      launchedAt: null,
+      studentsUrl: null,
+    })
+    const bobs = changeOf(s, BOB, 'building')
+    s.store.saveRun({
+      id: `run-${bobs.id}`,
+      conversationId: bobs.id,
+      round: 1,
+      step: 'pages',
+      moves: 0,
+      tries: {},
+      status: 'paused',
+      sessionIds: [],
+      model: null,
+      last: null,
+      sameRefusal: null,
+      detail: null,
+    })
+    s.store.addQuestion({
+      id: 'q-1',
+      runId: `run-${bobs.id}`,
+      conversationId: bobs.id,
+      ask: 'When does it close?',
+      fallback: null,
+      secret: null,
+    })
+    s.store.setState(bobs.id, 'paused')
+    const questions = async (cookie: string) =>
+      (
+        (await get(s, '/api/needs', cookie)).body as { needs: { kind: string }[] }
+      ).needs.filter((n) => n.kind === 'question')
+    expect(await questions(AS_ALICE)).toEqual([])
+    expect(await questions(AS_BOB)).toHaveLength(1)
   })
 })

@@ -261,8 +261,11 @@ export function registerApps(
     async (request, reply) => {
       const who = await check(request, reply)
       if (who === undefined) return reply
+      const { projectId } = request.params
+      // F6b D3: a kept member of the app reads everyone's; anyone else their own (none, mostly).
+      const member = store.members(projectId).some((m) => m.userId === who.person.id)
       return store
-        .listConversationsOn(request.params.projectId, who.person.id)
+        .listConversationsOn(projectId, member ? null : who.person.id)
         .map((conversation): AppConversation => {
           const busy = hub.busy(conversation.id)
           return {
@@ -272,6 +275,10 @@ export function registerApps(
             chip: chipOf(conversation, store.latestRun(conversation.id), busy),
             updatedAt: conversation.updatedAt,
             line: lineOf(store, conversation, hub.busy),
+            by: {
+              id: conversation.personId,
+              name: store.personName(conversation.personId),
+            },
           }
         })
     },

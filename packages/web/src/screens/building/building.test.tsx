@@ -94,6 +94,7 @@ function round(
     questions: [],
     draft: null,
     cost: { conversationUsd: null, monthLeftUsd: null, resetsAt: null },
+    stopped: null,
     ...patch,
   }
 }
@@ -215,7 +216,7 @@ function stage(refusals: Refusals = {}) {
   ) =>
     say({
       kind: 'state',
-      conversation: { ...CONVERSATION, ...conversation },
+      conversation: { ...CONVERSATION, ...conversation, byName: ME.displayName },
       intake: INTAKE,
       plan: null,
       round: view,
@@ -1561,7 +1562,12 @@ describe("the rail's project section, on a conversation", () => {
     await open(s)
     s.say({
       kind: 'state',
-      conversation: { ...CONVERSATION, projectId: null, state: 'naming' },
+      conversation: {
+        ...CONVERSATION,
+        projectId: null,
+        state: 'naming',
+        byName: ME.displayName,
+      },
       intake: { ...INTAKE, project: null },
       plan: null,
       round: null,

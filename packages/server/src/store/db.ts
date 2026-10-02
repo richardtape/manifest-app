@@ -107,6 +107,15 @@ export function openStore(file: string): Store {
       return found?.personId === personId ? found : undefined
     },
 
+    conversationById: (id) => conversation(id),
+
+    personName(personId) {
+      const row = db
+        .prepare('select display_name from persons where id = ?')
+        .get(personId) as { display_name: string } | undefined
+      return row?.display_name ?? 'Someone'
+    },
+
     setState(id, state, patch = {}) {
       const before = readConversation.get(id) as ConversationRow | undefined
       if (before === undefined) throw new Error(`no conversation ${id}`)
@@ -137,12 +146,19 @@ export function openStore(file: string): Store {
     },
 
     listConversationsOn(projectId, personId) {
-      const rows = db
-        .prepare(
-          `select * from conversations where project_id = ? and person_id = ?
-           order by created_at desc, rowid desc`,
-        )
-        .all(projectId, personId) as unknown as ConversationRow[]
+      const rows = (personId === null
+        ? db
+            .prepare(
+              `select * from conversations where project_id = ?
+                 order by created_at desc, rowid desc`,
+            )
+            .all(projectId)
+        : db
+            .prepare(
+              `select * from conversations where project_id = ? and person_id = ?
+                 order by created_at desc, rowid desc`,
+            )
+            .all(projectId, personId)) as unknown as ConversationRow[]
       return rows.map(conversationOf)
     },
 

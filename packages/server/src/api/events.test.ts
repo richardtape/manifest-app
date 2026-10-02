@@ -187,7 +187,7 @@ describe('GET /api/conversations/:id/events', () => {
     await stream.until(() => stream.frames.length >= 1)
     expect(stream.frames[0]).toEqual({
       kind: 'state',
-      conversation: made,
+      conversation: { ...made, byName: ALICE.displayName },
       intake: NOTHING_YET,
       plan: null,
       round: null,

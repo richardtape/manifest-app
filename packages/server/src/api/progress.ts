@@ -66,8 +66,11 @@ export interface PieceView {
 export interface LineView {
   /** 1 is next. */
   place: number
-  /** The conversation holding the app: null only between one ending and the next starting. */
-  holder: { id: string; title: string; waitingForYou: boolean } | null
+  /**
+   * The conversation holding the app: null only between one ending and the next starting. `by`
+   * is its person's name (F6b D3): *"Sam is working on it"*.
+   */
+  holder: { id: string; title: string; waitingForYou: boolean; by: string } | null
 }
 
 /** One row of an app's conversations (F4 Task 6): where each piece of work left it. */
@@ -79,6 +82,11 @@ export interface AppConversation {
   updatedAt: string
   /** Its place, when it waits. */
   line: LineView | null
+  /**
+   * Who started it (F6b D3): every member reads every conversation on the app. Whether it is the
+   * reader's, the page works out from `me.id`.
+   */
+  by: { id: string; name: string }
 }
 
 /** One follow-up question (moment 3): `choices` when the answers are few, else null. */
@@ -221,6 +229,12 @@ export interface RoundView {
     monthLeftUsd: number | null
     resetsAt: string | null
   }
+  /**
+   * F6b Decision 6: a stopped round says who stopped it when it was not its own person (an owner
+   * freeing the app, *"Stopped by Alex."*), or that its person was taken off the app (`removed`,
+   * named as its person). Null otherwise: its own person's Stop says nothing new.
+   */
+  stopped: { name: string; why: 'stopped' | 'removed' } | null
 }
 
 /**
@@ -272,7 +286,8 @@ export type Progress =
   /** The whole state: first on every connection, and again on every change. */
   | {
       kind: 'state'
-      conversation: Conversation
+      /** `byName`: its person's name (F6b D3), for whoever watches it. */
+      conversation: Conversation & { byName: string }
       intake: Intake
       /** The latest plan and its version: null until one is written (Task 9). */
       plan: { version: number; plan: PlanView } | null
