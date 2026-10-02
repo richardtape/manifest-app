@@ -306,3 +306,44 @@ export interface DryRunEvidence {
   attributesReleased: string[]
   attributesAsked: string[]
 }
+
+/**
+ * F6 DECISION 1: WHAT HAPPENED, read from what the platform sent (`keeping/happenings.ts`), and
+ * our own watch's outages. Words are made at reading: the page words a happening (`words.ts`), and
+ * our server words an email (`keeping/words.ts`). `by` is who acted, where the event says (Decision
+ * 13); a member's `userId` is the member.
+ */
+export type Happening =
+  | { kind: 'went-live'; instanceId: string }
+  | { kind: 'reached-students'; instanceId: string; releaseId: string }
+  | { kind: 'change-failed'; incidentId: string; releaseId: string }
+  | { kind: 'signed-off'; releaseId: string }
+  | { kind: 'turned-down'; releaseId: string }
+  | { kind: 'dry-run'; passed: boolean }
+  | { kind: 'sent'; to: 'identity' | 'privacy' }
+  | { kind: 'answered'; by: 'identity' | 'privacy'; state: string }
+  | {
+      kind: 'member-added'
+      userId: string
+      role: 'owner' | 'collaborator'
+      previousRole: 'owner' | 'collaborator' | null
+      by: string | null
+    }
+  | { kind: 'member-removed'; userId: string; by: string | null }
+  | { kind: 'switched-off'; by: string | null }
+  | { kind: 'switched-on'; by: string | null }
+  | { kind: 'renamed'; from: string; to: string; by: string | null }
+  | { kind: 'unreachable'; from: string }
+  | { kind: 'answering-again'; from: string; to: string }
+
+/**
+ * A line: a happening, when, who did it (`by`) and, for a member's line, whom it was about
+ * (`userId`), each by name from the kept members, else null (*"someone"*).
+ */
+export type Line = {
+  id: string
+  at: string
+  happening: Happening
+  who: string | null
+  whom: string | null
+}
