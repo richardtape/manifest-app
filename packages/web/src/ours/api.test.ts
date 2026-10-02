@@ -431,3 +431,117 @@ describe('conversationEvents', () => {
     expect(opened).toEqual(['/api/conversations/a%2Fb/events'])
   })
 })
+
+describe('keeping watch (F6 Task 8): our routes, from the page', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const TOKEN_ID = 'a0000000-0000-4000-8000-000000000001'
+  const answering = (status: number, body?: unknown) => {
+    const fetch = vi.fn(
+      async () =>
+        new Response(body === undefined ? null : JSON.stringify(body), { status }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    return fetch
+  }
+  const sent = (fetch: ReturnType<typeof answering>, n = 0) => {
+    const [url, init] = fetch.mock.calls[n] as unknown as [string, RequestInit]
+    return {
+      url,
+      method: init.method,
+      body: init.body === undefined ? undefined : JSON.parse(String(init.body)),
+      headers: init.headers,
+    }
+  }
+
+  it('keeping reads whether we watch the app, and sends nothing', async () => {
+    const status = {
+      watching: true,
+      until: '2027-10-01T00:00:00.000Z',
+      tokenId: TOKEN_ID,
+      mine: true,
+    }
+    const fetch = answering(200, status)
+    expect(await createOurs().keeping(PROJECT)).toEqual(status)
+    expect(sent(fetch)).toMatchObject({
+      url: `/api/apps/${PROJECT}/keeping`,
+      method: 'GET',
+      body: undefined,
+    })
+  })
+
+  it('handWatch posts the secret, its id and when it expires, and nothing else: 201 is new, 200 current (S2)', async () => {
+    const handed = {
+      token: 'mft_x_y',
+      tokenId: TOKEN_ID,
+      expiresAt: '2027-10-01T00:00:00.000Z',
+    }
+    let fetch = answering(201, { watching: true, until: handed.expiresAt })
+    expect(await createOurs().handWatch(PROJECT, handed)).toEqual({ kept: 'new' })
+    expect(sent(fetch)).toMatchObject({
+      url: `/api/apps/${PROJECT}/keeping`,
+      method: 'POST',
+      body: handed,
+    })
+    fetch = answering(200, { kept: 'current', until: handed.expiresAt })
+    expect(await createOurs().handWatch(PROJECT, handed)).toEqual({ kept: 'current' })
+  })
+
+  it('needs answers the list, across apps or for one', async () => {
+    const need = {
+      kind: 'down',
+      app: { projectId: PROJECT, name: 'A', slug: 'a' },
+      from: 'x',
+      owner: true,
+    }
+    let fetch = answering(200, { needs: [need] })
+    expect(await createOurs().needs()).toEqual([need])
+    expect(sent(fetch).url).toBe('/api/needs')
+    fetch = answering(200, { needs: [] })
+    expect(await createOurs().needs(PROJECT)).toEqual([])
+    expect(sent(fetch).url).toBe(`/api/needs?projectId=${PROJECT}`)
+  })
+
+  it('since answers when they were last here and the lines, across apps or for one', async () => {
+    const answer = { lastHere: '2026-10-01T00:00:00.000Z', lines: [] }
+    let fetch = answering(200, answer)
+    expect(await createOurs().since()).toEqual(answer)
+    expect(sent(fetch).url).toBe('/api/since')
+    fetch = answering(200, answer)
+    await createOurs().since(PROJECT)
+    expect(sent(fetch).url).toBe(`/api/since?projectId=${PROJECT}`)
+  })
+
+  it('history answers from, the gaps and every line; a 404 is thrown with its status', async () => {
+    const answer = { from: '2026-09-18T16:00:00.000Z', gaps: [], lines: [] }
+    const fetch = answering(200, answer)
+    expect(await createOurs().history(PROJECT)).toEqual(answer)
+    expect(sent(fetch).url).toBe(`/api/apps/${PROJECT}/history`)
+    answering(404, { error: { code: 'NOT_FOUND' } })
+    await expect(createOurs().history(PROJECT)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      status: 404,
+    })
+  })
+
+  it('forget sends DELETE with no body and no content-type (a DELETE with JSON and no body is 400, §7)', async () => {
+    const fetch = answering(204)
+    await createOurs().forget(PROJECT)
+    const call = sent(fetch)
+    expect(call).toMatchObject({
+      url: `/api/apps/${PROJECT}`,
+      method: 'DELETE',
+      body: undefined,
+    })
+    expect(call.headers).toBeUndefined()
+  })
+
+  it("startChange sends an outage's two moments, and the token, in one request (Decision 9)", async () => {
+    const fetch = answering(201, { id: 'c-1' })
+    const outage = { from: '2026-10-01T17:03:00.000Z', to: '2026-10-01T17:07:00.000Z' }
+    await createOurs().startChange(PROJECT, { fix: { outage }, token: 'mft_x' })
+    expect(sent(fetch)).toMatchObject({
+      url: `/api/apps/${PROJECT}/conversations`,
+      body: { fix: { outage }, token: 'mft_x' },
+    })
+  })
+})

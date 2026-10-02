@@ -162,6 +162,11 @@ function stage(start: Partial<World> = {}) {
       () =>
         ({ token: { id: 't-fix' }, secret: 'mft_test_fix' }) as Schemas['MintedToken'],
     ),
+    listMembers: never,
+    revokeToken: never,
+    archiveProject: never,
+    restoreProject: never,
+    deleteProject: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
     deploy: never,
     runRehearsal: (projectId, key) => {
@@ -203,6 +208,12 @@ function stage(start: Partial<World> = {}) {
     },
     agreedRows: () => Promise.resolve(null),
     changeForRefusal: () => Promise.resolve(null),
+    keeping: never,
+    handWatch: never,
+    needs: never,
+    since: never,
+    history: never,
+    forget: never,
     events: () => new FakeSource(),
   }
   const called = (name: string) =>

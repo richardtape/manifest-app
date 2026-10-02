@@ -14,6 +14,7 @@ import { NotOpen, NotOpenHere } from './screens/not-open.js'
 import { Overview } from './screens/overview/overview.js'
 import { Preview } from './screens/preview/preview.js'
 import { useApp } from './screens/preview/use-app.js'
+import { useWatch } from './screens/keeping/watch.js'
 import { Profile } from './screens/profile.js'
 import { SignIn } from './screens/sign-in.js'
 import { TroubleNotice } from './screens/trouble.js'
@@ -71,6 +72,9 @@ export function App({
     signedIn && (builds || keeps.state === 'some') ? slug : undefined,
     expire,
   )
+  // F6 TASK 8: ON EVERY APP PAGE, our server's Keeping watch for the app, minted when it has
+  // none that works (never for one switched off). Once per app; it never throws or shows.
+  useWatch(platform, ours, lookup.state === 'found' ? lookup.project : undefined)
   // A conversation's project, as its screen reports it: the rail names it once it exists.
   const [talking, setTalking] = useState<{ name: string; slug: string } | null>(null)
   const conversationId = route.name === 'conversation' ? route.id : undefined
@@ -206,7 +210,7 @@ export function App({
 
   let page: ReactNode
   if (route.name === 'your-apps')
-    page = <YourApps platform={platform} me={session.me} expire={expire} />
+    page = <YourApps platform={platform} ours={ours} me={session.me} expire={expire} />
   else if (route.name === 'profile')
     page = <Profile me={session.me} onSignOut={() => void leave()} />
   else if (

@@ -167,6 +167,11 @@ function stage(
     getLaunchRecords: never,
     getApproval: never,
     getEnvironment: never,
+    listMembers: never,
+    revokeToken: never,
+    archiveProject: never,
+    restoreProject: never,
+    deleteProject: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const called = (name: string) =>

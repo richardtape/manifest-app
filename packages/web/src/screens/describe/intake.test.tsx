@@ -16,6 +16,7 @@ import { OurRefusal, type Ours, type StreamSource } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
+import { WATCH_NAME } from '../keeping/watch.js'
 import { rememberMadeProject } from './memory.js'
 
 /**
@@ -214,6 +215,14 @@ function stage(
     getLaunchRecords: () => new Promise(() => undefined),
     getApproval: () => new Promise(() => undefined),
     getEnvironment: () => new Promise(() => undefined),
+    listMembers: () => new Promise(() => undefined),
+    revokeToken: (tokenId) => {
+      calls.push(['revokeToken', tokenId])
+      return new Promise(() => undefined)
+    },
+    archiveProject: () => new Promise(() => undefined),
+    restoreProject: () => new Promise(() => undefined),
+    deleteProject: () => new Promise(() => undefined),
     watchProject: (projectId, onEvent) => {
       calls.push(['watchProject', projectId])
       let ready!: () => void
@@ -266,6 +275,19 @@ function stage(
     agreedRows: () => new Promise(() => undefined),
     fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: () => new Promise(() => undefined),
+    // F6 Task 8: the Keeping watch is asked about after Make it; it never answers unless a test says.
+    keeping: (projectId) => {
+      calls.push(['keeping', projectId])
+      return new Promise(() => undefined)
+    },
+    handWatch: (projectId, handed) => {
+      calls.push(['handWatch', projectId, handed])
+      return Promise.resolve({ kept: 'new' as const })
+    },
+    needs: () => new Promise(() => undefined),
+    since: () => new Promise(() => undefined),
+    history: () => new Promise(() => undefined),
+    forget: () => new Promise(() => undefined),
     events: () => {
       const source = new FakeSource()
       sources.push(source)
@@ -292,7 +314,7 @@ function stage(
     })
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))
-  return { platform, ours, say, state, called, sources, projects, watches }
+  return { platform, ours, say, state, called, calls, sources, projects, watches }
 }
 
 const reports: Record<string, unknown>[] = []
@@ -1015,6 +1037,43 @@ describe('Make it (moment 4’s end, F2 Task 8)', () => {
       ['c-1', { projectId: project.id, token: 'mft_test_1' }],
     ])
     expect(s.called('endIntakeSession')).toEqual([[STARTED.session.id]])
+  })
+
+  it('F6 Task 8: once the conversation’s token is handed over, the app’s Keeping watch is minted and handed over too', async () => {
+    const s = stage()
+    s.ours.keeping = (projectId) => {
+      s.calls.push(['keeping', projectId])
+      return Promise.resolve({ watching: false, until: null, tokenId: null, mine: false })
+    }
+    const make = await readyToMake(s)
+    await press(make)
+    await waitFor(() => expect(s.called('handWatch')).toHaveLength(1))
+    const project = [...s.projects.values()][0]!
+    expect(s.called('keeping')).toEqual([[project.id]])
+    const mints = s.called('mintToken') as [string, Schemas['MintTokenRequest'], string][]
+    expect(mints.map(([, body]) => body.name)).toEqual([
+      'Building — First build',
+      WATCH_NAME,
+    ])
+    expect(s.called('handWatch')).toEqual([
+      [project.id, { token: 'mft_test_2', tokenId: 't-2', expiresAt: undefined }],
+    ])
+    // The conversation's own handover came first, and was never held for the watch.
+    const order = s.calls.map((c) => c[0])
+    expect(order.indexOf('handProject')).toBeLessThan(order.indexOf('keeping'))
+  })
+
+  it('F6 Task 8: a watch that cannot be minted never stops Make it, and says nothing', async () => {
+    const s = stage()
+    s.ours.keeping = () => Promise.reject(new Error('UNREACHABLE'))
+    const make = await readyToMake(s)
+    await press(make)
+    await waitFor(() => expect(s.called('handProject')).toHaveLength(1))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(s.called('handWatch')).toEqual([])
+    expect(
+      screen.queryByText(words.making.madeNotStarted('Reading responses')),
+    ).toBeNull()
   })
 
   it('D3, found on the real platform: Make it waits for the blueprint agent, and makes the project with its choice, never the list’s first', async () => {

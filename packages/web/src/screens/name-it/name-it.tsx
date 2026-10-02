@@ -34,6 +34,7 @@ import {
   type Offer,
   type Reason,
 } from './model.js'
+import { ensureWatch } from '../keeping/watch.js'
 
 /** "Something else": not an address, so it can never be one. */
 const ELSE = '(something else)'
@@ -393,6 +394,8 @@ export function NameIt({
         await ours.handProject(id, { projectId: project.id, token: minted.secret })
         // Ours now: the conversation's state moves on, on the stream.
         forgetMadeProject(id)
+        // F6 TASK 8: the app's Keeping watch, from its first minute; best-effort, never waited on.
+        void ensureWatch(platform, ours, { id: project.id, state: 'active' }, new Date())
         return
       } catch (error) {
         const ourRefusal =

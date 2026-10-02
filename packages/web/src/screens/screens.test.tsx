@@ -15,7 +15,9 @@ import { App } from '../app.js'
 import { signInHref } from '../auth.js'
 import { notOpen } from '../not-open.js'
 import { machineryIn } from './machinery.js'
+import { createOurs, type Ours } from '../ours/api.js'
 import type { Platform } from '../platform/api.js'
+import { WATCH_NAME } from './keeping/watch.js'
 import { words } from '../words.js'
 
 /**
@@ -66,6 +68,11 @@ function platform(
     getApproval: (answers.getApproval ??
       (() => Promise.resolve(null))) as Platform['getApproval'],
     getEnvironment: (answers.getEnvironment ?? never) as Platform['getEnvironment'],
+    listMembers: (answers.listMembers ?? never) as Platform['listMembers'],
+    revokeToken: (answers.revokeToken ?? never) as Platform['revokeToken'],
+    archiveProject: never,
+    restoreProject: never,
+    deleteProject: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
 }
@@ -1012,5 +1019,108 @@ describe('the decision, as it arrives (FE-39)', () => {
     expect(await screen.findByText(words.notOpen.title)).toBeTruthy()
     expect(screen.queryByRole('alert')).toBeNull()
     expect(asked).toBe(2)
+  })
+})
+
+describe('the Keeping watch, minted where it runs (F6 Task 8, design §1)', () => {
+  const NOT_WATCHING = { watching: false, until: null, tokenId: null, mine: false }
+  /** Ours as the page has it, but the watch's two routes recorded and answered as told. */
+  function watched(
+    keeping: (projectId: string) => Promise<Awaited<ReturnType<Ours['keeping']>>>,
+  ) {
+    const asked: string[] = []
+    const handed: string[] = []
+    const ours: Ours = {
+      ...createOurs(),
+      keeping: (projectId) => {
+        asked.push(projectId)
+        return keeping(projectId)
+      },
+      handWatch: async (projectId) => {
+        handed.push(projectId)
+        return { kept: 'new' }
+      },
+    }
+    return { ours, asked, handed }
+  }
+  const minting = (p: Platform) => {
+    const mints: [string, Schemas['MintTokenRequest']][] = []
+    p.mintToken = (projectId, body) => {
+      mints.push([projectId, body])
+      return Promise.resolve({
+        token: { id: `t-${mints.length}`, expiresAt: '2027-10-01T00:00:00.000Z' },
+        secret: `mft_t_${mints.length}`,
+      } as unknown as Schemas['MintedToken'])
+    }
+    return mints
+  }
+
+  it('an app’s own page asks once whether we watch it, and mints the watch when we do not', async () => {
+    window.history.pushState({}, '', '/apps/mock-app')
+    const p = mockPlatform()
+    const mints = minting(p)
+    const w = watched(async () => NOT_WATCHING)
+    render(<App platform={p} ours={w.ours} />)
+    await screen.findByRole('heading', { level: 1, name: fixtures.PROJECT.name })
+    await waitFor(() => expect(w.handed).toEqual([fixtures.PROJECT_ID]))
+    expect(w.asked).toEqual([fixtures.PROJECT_ID])
+    expect(mints.map(([id, body]) => [id, body.name])).toEqual([
+      [fixtures.PROJECT_ID, WATCH_NAME],
+    ])
+  })
+
+  it('Your apps asks for each app after its reads, one at a time', async () => {
+    const SECOND = '33333333-3333-4333-8333-333333333333'
+    const p = mockPlatform()
+    const second = {
+      ...fixtures.PROJECT,
+      id: SECOND,
+      slug: 'second-app',
+      name: 'Second app',
+    }
+    p.listProjects = () => Promise.resolve([fixtures.PROJECT, second])
+    p.getProject = (id) =>
+      Promise.resolve(
+        id === SECOND
+          ? {
+              ...fixtures.PROJECT_EXPANDED,
+              id: SECOND,
+              slug: 'second-app',
+              name: 'Second app',
+            }
+          : fixtures.PROJECT_EXPANDED,
+      )
+    const mints = minting(p)
+    let release: () => void = () => undefined
+    const first = new Promise<void>((resolve) => (release = resolve))
+    const w = watched(async (projectId) => {
+      if (projectId === fixtures.PROJECT_ID) await first
+      return NOT_WATCHING
+    })
+    render(<App platform={p} ours={w.ours} />)
+    await screen.findByRole('heading', { name: 'Second app' })
+    await waitFor(() => expect(w.asked).toEqual([fixtures.PROJECT_ID]))
+    // The second waits for the first.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(w.asked).toEqual([fixtures.PROJECT_ID])
+    release()
+    await waitFor(() => expect(w.handed).toEqual([fixtures.PROJECT_ID, SECOND]))
+    expect(w.asked).toEqual([fixtures.PROJECT_ID, SECOND])
+    expect(mints.map(([id]) => id)).toEqual([fixtures.PROJECT_ID, SECOND])
+  })
+
+  it('a switched-off app is never minted for, on its page or on Your apps (Review Focus 4)', async () => {
+    const p = mockPlatform({ state: 'archived', archivedAt: '2026-09-30T17:00:00.000Z' })
+    const mints = minting(p)
+    const w = watched(async () => NOT_WATCHING)
+    render(<App platform={p} ours={w.ours} />)
+    await screen.findByRole('heading', { name: fixtures.PROJECT.name })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    cleanup()
+    window.history.pushState({}, '', '/apps/mock-app')
+    render(<App platform={p} ours={w.ours} />)
+    await screen.findByRole('heading', { level: 1, name: fixtures.PROJECT.name })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect([w.asked, mints]).toEqual([[], []])
   })
 })

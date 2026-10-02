@@ -134,6 +134,31 @@ export interface Platform {
     value: string,
     idempotencyKey: string,
   ): Promise<void>
+  /**
+   * F6 TASK 8: WHO IS ON THE APP, in the person's session: each member and their role, read for
+   * the owner's buttons alone (Decision 6). The platform still decides every action.
+   */
+  listMembers(projectId: string): Promise<Schemas['MemberList']>
+  /**
+   * A token the person minted, revoked (only its minter may: anyone else's is `404`). It answers
+   * the token (S1: M8). One `Idempotency-Key` per call.
+   */
+  revokeToken(tokenId: string, idempotencyKey: string): Promise<Schemas['Token']>
+  /**
+   * SWITCH IT OFF (F6, moment 20), in the person's session: its addresses say so, nothing runs,
+   * and everything is kept. It may ask a second sign-in (S1: M4). One `Idempotency-Key` per press.
+   */
+  archiveProject(projectId: string, idempotencyKey: string): Promise<Schemas['Project']>
+  /** Switch it back on: no second sign-in (S1: M4). Its tokens stay revoked. */
+  restoreProject(projectId: string, idempotencyKey: string): Promise<Schemas['Project']>
+  /**
+   * DELETE A DRAFT THAT NEVER WENT LIVE (D7), in the person's session, with a second sign-in. It
+   * answers what remains of it (S1: M8); a launched app is `409 PROJECT_LAUNCHED_NOT_DELETABLE`.
+   */
+  deleteProject(
+    projectId: string,
+    idempotencyKey: string,
+  ): Promise<Schemas['DeletedProject']>
 }
 
 /** A read that has not answered by now is unreachable: never a page left blank (review #3). */
@@ -358,6 +383,50 @@ export function createPlatform(options: {
           body: { value },
         }),
         'setAppSecret',
+      )
+    },
+    async listMembers(projectId) {
+      return unwrap(
+        await client.GET('/v1/projects/{projectId}/members', {
+          params: { path: { projectId } },
+        }),
+        'listMembers',
+      )
+    },
+    async revokeToken(tokenId, idempotencyKey) {
+      return unwrap(
+        await client.DELETE('/v1/tokens/{tokenId}', {
+          params: { path: { tokenId }, header: { 'Idempotency-Key': idempotencyKey } },
+        }),
+        'revokeToken',
+      )
+    },
+    async archiveProject(projectId, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/projects/{projectId}/archive', {
+          params: { path: { projectId }, header: { 'Idempotency-Key': idempotencyKey } },
+          // The contract's EmptyRequest: required, and nothing in it.
+          body: {},
+        }),
+        'archiveProject',
+      )
+    },
+    async restoreProject(projectId, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/projects/{projectId}/restore', {
+          params: { path: { projectId }, header: { 'Idempotency-Key': idempotencyKey } },
+          // The contract's EmptyRequest: required, and nothing in it.
+          body: {},
+        }),
+        'restoreProject',
+      )
+    },
+    async deleteProject(projectId, idempotencyKey) {
+      return unwrap(
+        await client.DELETE('/v1/projects/{projectId}', {
+          params: { path: { projectId }, header: { 'Idempotency-Key': idempotencyKey } },
+        }),
+        'deleteProject',
       )
     },
     watchProject(projectId, onEvent) {

@@ -148,6 +148,11 @@ function stage(refusals: Refusals = {}) {
     getLaunchRecords: never,
     getApproval: never,
     getEnvironment: never,
+    listMembers: never,
+    revokeToken: never,
+    archiveProject: never,
+    restoreProject: never,
+    deleteProject: never,
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
   const record =
@@ -181,6 +186,12 @@ function stage(refusals: Refusals = {}) {
     agreedRows: never,
     fixForDryRun: () => Promise.resolve(null),
     changeForRefusal: never,
+    keeping: never,
+    handWatch: never,
+    needs: never,
+    since: never,
+    history: never,
+    forget: never,
     events: () => {
       const source = new FakeSource()
       sources.push(source)

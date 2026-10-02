@@ -641,3 +641,88 @@ describe('refusalOf: by kind and code, never by message', () => {
     })
   })
 })
+
+describe('keeping watch and switching (F6 Task 8), in the person’s session', () => {
+  const P = '11111111-1111-4111-8111-111111111111'
+  const T = 'a0000000-0000-4000-8000-000000000001'
+
+  it('listMembers reads the project’s members, with no key and no body', async () => {
+    const answer = [{ userId: 'u-1', role: 'owner' }]
+    const r = await recording(200, answer)
+    try {
+      expect(await createPlatform({ origin: r.origin }).listMembers(P)).toEqual(answer)
+      expect(r.seen).toEqual([
+        {
+          method: 'GET',
+          url: `/v1/projects/${P}/members`,
+          key: undefined,
+          body: undefined,
+        },
+      ])
+    } finally {
+      await r.close()
+    }
+  })
+
+  // Archive and restore take the contract's EmptyRequest, `{}` (required); the two DELETEs no body.
+  it.each([
+    [
+      'revokeToken',
+      'DELETE',
+      `/v1/tokens/${T}`,
+      undefined,
+      (p: ReturnType<typeof createPlatform>) => p.revokeToken(T, 'k-1'),
+    ],
+    [
+      'archiveProject',
+      'POST',
+      `/v1/projects/${P}/archive`,
+      {},
+      (p: ReturnType<typeof createPlatform>) => p.archiveProject(P, 'k-1'),
+    ],
+    [
+      'restoreProject',
+      'POST',
+      `/v1/projects/${P}/restore`,
+      {},
+      (p: ReturnType<typeof createPlatform>) => p.restoreProject(P, 'k-1'),
+    ],
+    [
+      'deleteProject',
+      'DELETE',
+      `/v1/projects/${P}`,
+      undefined,
+      (p: ReturnType<typeof createPlatform>) => p.deleteProject(P, 'k-1'),
+    ],
+  ] as const)(
+    '%s sends %s %s with the Idempotency-Key it is given and the body the contract asks, and answers what the platform said',
+    async (_name, method, url, body, press) => {
+      const answer = { id: 'answered' }
+      const r = await recording(200, answer)
+      try {
+        expect(await press(createPlatform({ origin: r.origin }))).toEqual(answer)
+        expect(r.seen).toEqual([{ method, url, key: 'k-1', body }])
+      } finally {
+        await r.close()
+      }
+    },
+  )
+
+  it('a refusal is thrown with its code, for the page to say (a step-up, a switch-off’s teardown)', async () => {
+    const r = await recording(403, {
+      error: { code: 'STEP_UP_REQUIRED', message: 'x' },
+    })
+    try {
+      const error = await thrown(() =>
+        createPlatform({ origin: r.origin }).archiveProject(P, 'k-2'),
+      )
+      expect(refusalOf(error)).toEqual({
+        kind: 'refused',
+        code: 'STEP_UP_REQUIRED',
+        status: 403,
+      })
+    } finally {
+      await r.close()
+    }
+  })
+})

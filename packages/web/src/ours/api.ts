@@ -3,6 +3,9 @@ import type {
   AppConversation,
   Conversation,
   DryRunEvidence,
+  Line,
+  Need,
+  SinceLine,
 } from '@manifest-app/server/progress'
 import { noticeRefusal } from '../not-open.js'
 
@@ -85,7 +88,7 @@ export class OurRefusal extends Error {
 const TIMEOUT_MS = 15_000
 
 async function call(
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'DELETE',
   path: string,
   body?: unknown,
 ): Promise<unknown> {
@@ -180,7 +183,9 @@ export interface Ours {
       /** A fix of ours: absent `environment` is trying-out's (F4); the live address's says so. */
       | { fix: { incidentId: string; environment?: 'production' }; token: string }
       /** F5 Task 7: a dry run that signed nobody in, and what it saw. */
-      | { fix: { dryRun: DryRunEvidence }; token: string },
+      | { fix: { dryRun: DryRunEvidence }; token: string }
+      /** F6 Decision 9: the live address stopped answering, between these two moments. */
+      | { fix: { outage: { from: string; to: string } }; token: string },
   ): Promise<Conversation>
   /** The person's conversations on the app, newest first, each where it left off. */
   conversationsOn(projectId: string): Promise<AppConversation[]>
@@ -217,7 +222,43 @@ export interface Ours {
     before: string,
   ): Promise<{ studentsSee: string; whoGetsIn: string } | null>
   events(id: string): StreamSource
+  /**
+   * F6 TASK 8, THE KEEPING WATCH (design §1): whether our server watches the app with a token
+   * that works, until when, which, and whether this person minted it (only its minter may revoke).
+   * Anyone outside the app's kept members is refused `404`.
+   */
+  keeping(projectId: string): Promise<{
+    watching: boolean
+    until: string | null
+    tokenId: string | null
+    mine: boolean
+  }>
+  /**
+   * The token the page has just minted, handed over (S2): `new` when our server keeps it (`201`),
+   * `current` when the app already has a good one (`200`), and the page then revokes its own.
+   */
+  handWatch(
+    projectId: string,
+    handed: { token: string; tokenId: string; expiresAt: string },
+  ): Promise<{ kept: 'new' | 'current' }>
+  /** F6 Task 9's band: what needs the person, across their apps or on one. Each load is a visit. */
+  needs(projectId?: string): Promise<Need[]>
+  /** *Since you were last here*: when, and at most five lines, newest first. */
+  since(projectId?: string): Promise<{ lastHere: string | null; lines: SinceLine[] }>
+  /** An app's history: from the first event held, each gap, every line. A member's alone. */
+  history(projectId: string): Promise<{
+    from: string | null
+    gaps: { from: string; to: string }[]
+    lines: Line[]
+  }>
+  /** Decision 11: a draft its owner deleted, forgotten by our server (after `deleteProject`). */
+  forget(projectId: string): Promise<void>
 }
+
+const app = (projectId: string, route = '') =>
+  `/api/apps/${encodeURIComponent(projectId)}${route}`
+const forOne = (path: string, projectId?: string) =>
+  projectId === undefined ? path : `${path}?projectId=${encodeURIComponent(projectId)}`
 
 export function createOurs(): Ours {
   return {
@@ -348,5 +389,31 @@ export function createOurs(): Ours {
       }
     },
     events: conversationEvents,
+    keeping: async (projectId) =>
+      (await call('GET', app(projectId, '/keeping'))) as Awaited<
+        ReturnType<Ours['keeping']>
+      >,
+    handWatch: async (projectId, handed) => {
+      const answer = (await call('POST', app(projectId, '/keeping'), {
+        token: handed.token,
+        tokenId: handed.tokenId,
+        expiresAt: handed.expiresAt,
+      })) as { kept?: unknown } | undefined
+      // `201 { watching, until }` is kept; `200 { kept: 'current', until }` is not (S2).
+      return { kept: answer?.kept === 'current' ? 'current' : 'new' }
+    },
+    needs: async (projectId) =>
+      ((await call('GET', forOne('/api/needs', projectId))) as { needs: Need[] }).needs,
+    since: async (projectId) =>
+      (await call('GET', forOne('/api/since', projectId))) as Awaited<
+        ReturnType<Ours['since']>
+      >,
+    history: async (projectId) =>
+      (await call('GET', app(projectId, '/history'))) as Awaited<
+        ReturnType<Ours['history']>
+      >,
+    forget: async (projectId) => {
+      await call('DELETE', app(projectId))
+    },
   }
 }

@@ -1,7 +1,9 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, Card, StateChip } from '@manifest-app/ui'
 import { Fragment, useCallback, useEffect, useState } from 'react'
+import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
+import { ensureEach } from '../keeping/watch.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
@@ -28,7 +30,10 @@ type Loaded =
  * accepted at pilot scale. No `listInstances`: the address's own `instance` is what reaches
  * students (FE-27).
  */
-async function read(platform: Platform, me: Schemas['Me']): Promise<AppCard[]> {
+async function read(
+  platform: Platform,
+  me: Schemas['Me'],
+): Promise<{ cards: AppCard[]; read: Schemas['Project'][] }> {
   const projects = mine(await platform.listProjects(), me)
   const read = await Promise.allSettled(projects.map((p) => platform.getProject(p.id)))
   const expanded = read.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
@@ -71,21 +76,24 @@ async function read(platform: Platform, me: Schemas['Me']): Promise<AppCard[]> {
       return r?.status === 'fulfilled' ? [[p.id, r.value] as const] : []
     }),
   )
-  return projects.map((project, i) => {
+  const cards = projects.map((project, i) => {
     const r = read[i]
     return r?.status === 'fulfilled'
       ? appCard(r.value, releaseById, undefined, checklists.get(r.value.id))
       : unreadableCard(project)
   })
+  return { cards, read: expanded }
 }
 
 /** *YOUR APPS* (moments 2 and 16). */
 export function YourApps({
   platform,
+  ours,
   me,
   expire,
 }: {
   platform: Platform
+  ours: Ours
   me: Schemas['Me']
   expire: () => void
 }) {
@@ -95,7 +103,12 @@ export function YourApps({
   useEffect(() => {
     let live = true
     read(platform, me).then(
-      (cards) => live && setLoaded({ state: 'ready', cards }),
+      ({ cards, read: apps }) => {
+        if (!live) return
+        setLoaded({ state: 'ready', cards })
+        // F6 TASK 8: each app's Keeping watch, after the page's own reads, one at a time.
+        void ensureEach(platform, ours, apps, () => live)
+      },
       (error: unknown) => {
         if (!live) return
         // A session that ended mid-page is the shell's to say (Review Focus 1). Anything else
@@ -108,7 +121,7 @@ export function YourApps({
     return () => {
       live = false
     }
-  }, [platform, me, expire, attempt])
+  }, [platform, ours, me, expire, attempt])
 
   const retry = useCallback(() => {
     setLoaded({ state: 'loading' })
