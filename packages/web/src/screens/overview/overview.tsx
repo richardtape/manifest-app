@@ -9,7 +9,7 @@ import { linkTo, remember, TABS, type Tab, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { clocksUnmet, rowsOf } from '../going-live/checklist.js'
 import { HowWeKeepWatch } from '../keeping/how.js'
-import { dayWords, type PageNeed } from '../keeping/lines.js'
+import { dayWords, needsStillTrue, type PageNeed } from '../keeping/lines.js'
 import { NeedsBand } from '../keeping/needs.js'
 import { Since } from '../keeping/since.js'
 import { useRole } from '../keeping/role.js'
@@ -282,7 +282,10 @@ export function Overview({
       {loaded.state === 'ready' ? (
         <>
           <NeedsBand
-            needs={[...(keeping?.needs ?? []), ...loaded.seen.goingLive]}
+            needs={needsStillTrue(
+              [...(keeping?.needs ?? []), ...loaded.seen.goingLive],
+              () => project.state === 'archived',
+            )}
             timeZone={timeZone}
             press={(need) =>
               // TASK 10: the band's presses are here, on the app's own page; a helper has none.

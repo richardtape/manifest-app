@@ -5,7 +5,7 @@ import { Fragment, useCallback, useEffect, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { rowsOf } from '../going-live/checklist.js'
-import type { PageNeed } from '../keeping/lines.js'
+import { needsStillTrue, type PageNeed } from '../keeping/lines.js'
 import { NeedsBand } from '../keeping/needs.js'
 import { useRole } from '../keeping/role.js'
 import { Since } from '../keeping/since.js'
@@ -36,6 +36,8 @@ type Loaded =
       cardsWith: (downs: ReadonlyMap<string, string>) => AppCard[]
       /** The page's own needs: a Going live row theirs to do. */
       goingLive: PageNeed[]
+      /** The apps the platform says are switched off: their needs are their questions alone. */
+      switchedOff: ReadonlySet<string>
     }
 
 /**
@@ -52,6 +54,7 @@ async function read(
   cardsWith: (downs: ReadonlyMap<string, string>) => AppCard[]
   read: Schemas['Project'][]
   goingLive: PageNeed[]
+  switchedOff: ReadonlySet<string>
 }> {
   const projects = mine(await platform.listProjects(), me)
   const read = await Promise.allSettled(projects.map((p) => platform.getProject(p.id)))
@@ -124,7 +127,13 @@ async function read(
         ]
       : []
   })
-  return { cardsWith, read: expanded, goingLive }
+  // Each app's state as last read: its own read, else the list's (the whole-branch review's I1).
+  const states = new Map(projects.map((p) => [p.id, p.state]))
+  for (const p of expanded) states.set(p.id, p.state)
+  const switchedOff = new Set(
+    [...states].flatMap(([id, state]) => (state === 'archived' ? [id] : [])),
+  )
+  return { cardsWith, read: expanded, goingLive, switchedOff }
 }
 
 /** Our server's two reads, each lost alone: no band, or no lines (Task 9). */
@@ -163,9 +172,9 @@ export function YourApps({
   useEffect(() => {
     let live = true
     read(platform, me).then(
-      ({ cardsWith, read: apps, goingLive }) => {
+      ({ cardsWith, read: apps, goingLive, switchedOff }) => {
         if (!live) return
-        setLoaded({ state: 'ready', cardsWith, goingLive })
+        setLoaded({ state: 'ready', cardsWith, goingLive, switchedOff })
         // F6 TASK 8: each app's Keeping watch, after the page's own reads, one at a time.
         void ensureEach(platform, ours, apps, () => live)
       },
@@ -232,7 +241,12 @@ export function YourApps({
       ) : null}
       {loaded.state === 'ready' ? (
         <>
-          <NeedsBand needs={[...(keeping?.needs ?? []), ...loaded.goingLive]} />
+          <NeedsBand
+            needs={needsStillTrue(
+              [...(keeping?.needs ?? []), ...loaded.goingLive],
+              (projectId) => loaded.switchedOff.has(projectId),
+            )}
+          />
           {keeping === null ? null : (
             <Since lastHere={keeping.since.lastHere} lines={keeping.since.lines} />
           )}

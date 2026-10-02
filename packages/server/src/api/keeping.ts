@@ -144,7 +144,10 @@ export function registerKeeping(
           since: conversation.updatedAt,
         })
     }
-    // Switched off, nothing is live: no fall, and nobody's students missing a change.
+    // Switched off, nothing is live: no fall, and nobody's students missing a change. Known here
+    // only when the kept app says so: a switch-off closes the watch `4401` before `project.archived`
+    // reaches it (S1, M4), so the page drops the rest by the platform's state (`needsStillTrue`,
+    // the whole-branch review's I1).
     if (kept.state !== 'active') return needs
     const owner = roleOf(kept.projectId, personId) === 'owner'
     const outage = keeper.outage(kept.projectId)

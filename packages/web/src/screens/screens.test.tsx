@@ -1198,6 +1198,32 @@ describe('F6 Task 9: coming back to Your apps (moment 16, design §2)', () => {
     expect(card.textContent).toContain(k.card.switchedOff('12 December'))
   })
 
+  it('a switched-off app in the band: its questions alone, never a fall or a change that didn’t go live (the whole-branch review’s I1)', async () => {
+    // Our server cannot see a switch-off (the watch closes 4401 first: S1, M4); the page can.
+    const ours = oursWith({
+      needs: async () => [
+        { kind: 'down', app, from: AT, owner: true },
+        { kind: 'change-failed', app, incidentId: 'inc-1', at: AT, owner: true },
+        { kind: 'question', app, conversationId: 'c-1', title: 'Word count', since: AT },
+      ],
+      since: async () => ({ lastHere: null, lines: [] }),
+    })
+    render(
+      <App
+        platform={mockPlatform({
+          state: 'archived',
+          archivedAt: '2026-12-12T20:00:00.000Z',
+        })}
+        ours={ours}
+      />,
+    )
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(k.band.question(fixtures.PROJECT.name))
+    expect(band.textContent).not.toContain('can’t reach it')
+    expect(band.textContent).not.toContain("can't reach it")
+    expect(band.textContent).not.toContain(k.band.changeFailed(fixtures.PROJECT.name))
+  })
+
   describe('F6 Task 11: switched off, on its card (moment 20)', () => {
     const s = k.switching
     const OFF = { state: 'archived' as const, archivedAt: '2026-12-12T20:00:00.000Z' }

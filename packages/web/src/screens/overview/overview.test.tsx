@@ -493,13 +493,13 @@ describe('F6 Task 11: end of term on the Overview (moment 20, design §5)', () =
    * Our own API answers nothing needing them; the plan as before (none agreed). `watching`: our
    * server already keeps the app's watch, so the shell mints nothing on its own (Task 8).
    */
-  function quiet(watching = false) {
+  function quiet(watching = false, needs: unknown[] = []) {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
         const json = (status: number, body: unknown) =>
           new Response(JSON.stringify(body), { status })
-        if (url.startsWith('/api/needs')) return json(200, { needs: [] })
+        if (url.startsWith('/api/needs')) return json(200, { needs })
         if (url.startsWith('/api/since')) return json(200, { lastHere: null, lines: [] })
         if (url.includes('/keeping'))
           return json(200, {
@@ -607,6 +607,27 @@ describe('F6 Task 11: end of term on the Overview (moment 20, design §5)', () =
     await press(within(area).getByRole('button', { name: s.off }))
     await screen.findByText(k.card.switchedOff('12 December'))
     await waitFor(() => expect(asked()).toBe(2))
+  })
+
+  it('switched off: the band keeps its questions alone, never a fall, answering again or a change that didn’t go live (the whole-branch review’s I1)', async () => {
+    // Our server cannot see a switch-off (the watch closes 4401 before project.archived: S1, M4),
+    // so it still says what it last knew; the page has the platform's state.
+    const app = { projectId: fixtures.PROJECT_ID, name: PROJECT.name, slug: SLUG }
+    const AT = '2026-10-01T17:03:00.000Z'
+    quiet(false, [
+      { kind: 'down', app, from: AT, owner: true },
+      { kind: 'answering-again', app, from: AT, to: '2026-10-01T17:07:00.000Z' },
+      { kind: 'change-failed', app, incidentId: 'inc-1', at: AT, owner: true },
+      { kind: 'question', app, conversationId: 'c-1', title: 'Word count', since: AT },
+    ])
+    await open(`/apps/${SLUG}`, owned(ARCHIVED))
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(k.band.question(PROJECT.name))
+    expect(band.textContent).not.toContain(k.band.down(PROJECT.name, '10:03am'))
+    expect(band.textContent).not.toContain('answering again')
+    expect(band.textContent).not.toContain(k.band.changeFailed(PROJECT.name))
+    expect(within(band).queryByRole('button', { name: k.band.startAgain })).toBeNull()
+    expect(within(band).queryByRole('button', { name: k.band.whatHappened })).toBeNull()
   })
 
   it('a draft switched off: its owner may still delete it (the review’s I2)', async () => {

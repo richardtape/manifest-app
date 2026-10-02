@@ -113,6 +113,22 @@ export function linesByDay(
 /** What the page itself knows needs them: a *Going live* row theirs to do (design §2, source 4). */
 export type PageNeed = Need | { kind: 'going-live'; app: AppRef }
 
+/**
+ * WHAT STILL NEEDS THEM, BY THE PLATFORM'S STATE (the whole-branch review's I1): an app switched
+ * off has nothing live, so its needs are its questions alone. Our server cannot see a switch-off
+ * (the watch's stream closes `4401` before `project.archived` reaches it: S1, M4), so it goes on
+ * saying the fall, the recovery or the change it last knew; the page, which reads the project in
+ * the person's session, keeps only what is still true.
+ */
+export function needsStillTrue(
+  needs: PageNeed[],
+  switchedOff: (projectId: string) => boolean,
+): PageNeed[] {
+  return needs.filter(
+    (need) => need.kind === 'question' || !switchedOff(need.app.projectId),
+  )
+}
+
 const appPath = (app: AppRef, page = '') => `/apps/${encodeURIComponent(app.slug)}${page}`
 
 /**

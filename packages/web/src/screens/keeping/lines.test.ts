@@ -9,6 +9,8 @@ import {
   lineWords,
   linesByDay,
   needWords,
+  needsStillTrue,
+  type PageNeed,
 } from './lines.js'
 
 /**
@@ -247,5 +249,29 @@ describe('needWords: each need, its sentence and its button', () => {
       says: b.goingLive('Reading responses'),
       button: { label: b.goingLiveButton, href: '/apps/reading-responses/going-live' },
     })
+  })
+})
+
+describe('needsStillTrue: a switched-off app’s needs are its questions alone (the whole-branch review’s I1)', () => {
+  const off = { projectId: 'off', name: 'Reading responses', slug: 'reading-responses' }
+  const on = { projectId: 'on', name: 'Class check-ins', slug: 'class-check-ins' }
+  const needs: PageNeed[] = [
+    { kind: 'down', app: off, from: AT, owner: true },
+    { kind: 'answering-again', app: off, from: AT, to: '2026-10-01T17:07:00.000Z' },
+    { kind: 'change-failed', app: off, incidentId: 'n', at: AT, owner: true },
+    { kind: 'going-live', app: off },
+    { kind: 'question', app: off, conversationId: 'c', title: 'Word count', since: AT },
+    { kind: 'down', app: on, from: AT, owner: true },
+  ]
+
+  it('switched off (the platform’s state, which our server cannot see: S1, M4): its questions alone; another app’s, all', () => {
+    expect(needsStillTrue(needs, (projectId) => projectId === 'off')).toEqual([
+      needs[4],
+      needs[5],
+    ])
+  })
+
+  it('nothing switched off: every need', () => {
+    expect(needsStillTrue(needs, () => false)).toEqual(needs)
   })
 })
