@@ -195,6 +195,8 @@ interface Options {
   deploy?: (releaseId: string, n: number) => Promise<Instance> | Instance
   commit?: (n: number, body: { baseCommit: string; changes: Change[] }) => void
   tree?: (n: number) => Promise<{ commitSha: string }> | { commitSha: string }
+  /** Each read of a file, before it answers (its nth read of that path): may throw (m19). */
+  fileRead?: (path: string, n: number) => void
   listInstances?: () => (Instance & { serving: boolean })[]
   /** Each build succeeds on the stream by itself, for a test that does not drive them. */
   autoBuild?: boolean
@@ -290,6 +292,7 @@ function harness(options: Options, file?: string, store0?: Store) {
   const attempts: { baseCommit: string; message: string; changes: Change[] }[] = []
   const commits: { baseCommit: string; message: string; changes: Change[] }[] = []
   let trees = 0
+  const fileReads = new Map<string, number>()
   const source: Source = {
     tree: async (token) => {
       trees++
@@ -306,6 +309,9 @@ function harness(options: Options, file?: string, store0?: Store) {
       }
     },
     file: async (_token, _project, path) => {
+      fileReads.set(path, (fileReads.get(path) ?? 0) + 1)
+      did.push(`getFile ${path}`)
+      options.fileRead?.(path, fileReads.get(path)!)
       const landed = commits
         .flatMap((c) => c.changes)
         .filter((c) => c.path === path)
@@ -1647,6 +1653,63 @@ describe('the stream (Decision 15; Review Focus 5)', () => {
     await untilStatus(h, id, 'needs-you')
     expect(viewOf(h, id)?.needs).toEqual({ kind: 'unreachable', what: 'platform' })
     expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+  })
+})
+
+describe('m19: the platform’s passing git failure (SOURCE_GIT_FAILED: “retry once”)', () => {
+  const GIT_FAILED = () => new PlatformRefusal('SOURCE_GIT_FAILED', 409)
+
+  it('a file read failing once is asked once more: the round carries on, no card', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      autoBuild: true,
+      fileRead: (path, n) => {
+        if (path === 'package.json' && n === 1) throw GIT_FAILED()
+      },
+    })
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.needs).toBeNull()
+    expect(
+      h.did.filter((d) => d === 'getFile package.json').length,
+    ).toBeGreaterThanOrEqual(2)
+  })
+
+  it('the tree failing once is asked once more: the round carries on, no card', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      autoBuild: true,
+      tree: (n) => {
+        if (n === 1) throw GIT_FAILED()
+        return { commitSha: BASE }
+      },
+    })
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.needs).toBeNull()
+  })
+
+  it('failing again is the platform’s: needs you, with a reference, after two reads and no third', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      tree: () => {
+        throw GIT_FAILED()
+      },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'refused', code: 'SOURCE_GIT_FAILED' })
+    expect(viewOf(h, id)?.reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(h.did.filter((d) => d.startsWith('getTree'))).toHaveLength(2)
+  })
+
+  it('a commit is never asked again (a write has its own dry run and key)', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      commit: (n) => {
+        if (n === 1) throw GIT_FAILED()
+      },
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'refused', code: 'SOURCE_GIT_FAILED' })
+    expect(h.attempts).toHaveLength(1)
   })
 })
 

@@ -203,8 +203,31 @@ const codeOf = (error: unknown): string =>
     ? error.code
     : 'INTERNAL'
 
+/**
+ * THE PLATFORM'S PASSING GIT FAILURE, ON A READ (m19): `SOURCE_GIT_FAILED`'s remedy is the
+ * platform's own, *"Retry once"*. The tree and a file are asked once more; a commit never (it has
+ * its own dry run and Idempotency-Key). Failing again is the round's refusal, as before.
+ */
+function gitRetried(source: Source): Source {
+  const once = async <T>(read: () => Promise<T>): Promise<T> => {
+    try {
+      return await read()
+    } catch (error) {
+      if (codeOf(error) !== 'SOURCE_GIT_FAILED') throw error
+      return read()
+    }
+  }
+  return {
+    ...source,
+    tree: (token, projectId) => once(() => source.tree(token, projectId)),
+    file: (token, projectId, path, ref) =>
+      once(() => source.file(token, projectId, path, ref)),
+  }
+}
+
 export function createRounds(deps: RoundDeps): Rounds {
-  const { store, hub, work, sessions, source, builds, releases, instances } = deps
+  const { store, hub, work, sessions, builds, releases, instances } = deps
+  const source = gitRetried(deps.source)
   const waits = deps.waits ?? WAITS
   const lives = new Map<string, Live>()
 
