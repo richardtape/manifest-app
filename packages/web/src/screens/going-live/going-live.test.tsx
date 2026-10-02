@@ -410,14 +410,17 @@ describe('an app already launched (Decision 2, Review Focus 5)', () => {
       launchedAt: null,
       readiness: { ...fixtures.LAUNCH_READINESS, launched: true },
     })
-    let answer: (value: Schemas['LaunchReadiness']) => void = () => undefined
+    let answer: ((value: Schemas['LaunchReadiness']) => void) | undefined
     s.platform.getLaunchReadiness = () =>
       new Promise((resolve) => {
         answer = resolve
       })
     await open(s)
     expect(screen.queryByText(g.lead)).toBeNull()
-    await act(async () => answer({ ...fixtures.LAUNCH_READINESS, launched: true }))
+    // Answered only once the page has asked: under the whole suite's load it may not have yet
+    // (F6 sitting 6's closing run: an answer given to nobody, and the wait timed out).
+    await waitFor(() => expect(answer).toBeDefined())
+    await act(async () => answer!({ ...fixtures.LAUNCH_READINESS, launched: true }))
     expect(await screen.findByText(g.live)).toBeTruthy()
     expect(screen.queryByText(g.lead)).toBeNull()
   })
