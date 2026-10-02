@@ -54,7 +54,7 @@ administrator to sign off the version on trying-out. Walk-through moments **10 a
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements** (M1–M8), on 7100 in the platform's window, at Rich's word. **Alone.** Sitting 2 may run before it (it needs no platform), but not Tasks 5–7 | not started |
-| 2 | 2, 3, 4 | **Part one.** The three steps (`steps.ts`) from today's records, *waiting since*, F5's admission kept on the current card; *Going live*, the band, *Your apps*' line, *Trying out*'s line and **[Open it]**; **the sign-off request, whole** | not started |
+| 2 | 2, 3, 4 | **Part one.** The three steps (`steps.ts`) from today's records, *waiting since*, F5's admission kept on the current card; *Going live*, the band, *Your apps*' line, *Trying out*'s line and **[Open it]**; **the sign-off request, whole** | **done on a branch, `f5b-s2`, not merged** (`manifest-app-80`, 2026-10-01, `6a55b9d`..`608521e`): Rich merges after his demo; **the walks at 1440 and 375 and the acceptance scripts are owed after the merge** |
 | 3 | 5, 6 | **Part two, when FE-46 lands.** The *Privacy answers* agent, our store's next version and its routes; the assessment's card: **[Start]**, the disclosure, the fields, **[Send it to the Manifest team]** | **waits for FE-46** |
 | 4 | 7 | The registrations' cards: the plain words, **[Take it out]**, stale drafts, every refusal; F5's admission gone for good | **waits for FE-46** |
 | 5 | 8 | **The acceptance:** `scripts/check-clocks.sh` in mock mode; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **waits for FE-46** (and FE-46's own mock half). **(S0)** The platform's sitting 10 has closed (`8ff925f`) |
@@ -951,3 +951,86 @@ who asked for the sign-off (nothing reads a request back: the row says *asked*).
   2. **The words for FE-46's two events** in *what happened* (sitting 3's Step 0): proposed above, for his review then.
   3. **A switched-off app draws no F5b button** (Decision 16): a routine reading of No stopgap, recorded so he can
      overrule it.
+
+### 2026-10-01 — Sitting 2, on a branch, `f5b-s2`, not merged (session `manifest-app-80`, overnight, while Rich sleeps)
+
+- **Why, and how:** Rich's overnight queue, coordinated by `manifest-app-3a` (his demo ~09:00 PDT, the freeze 07:00): sitting 2
+  executed natively (superpowers:executing-plans, TDD, a negative control per test) **in the sibling worktree
+  `/Users/rich/Developer/manifest-app-f5b` on the branch `f5b-s2`, cut from `main` at `3ae288c`, and kept off `main` until after
+  the demo**: nothing merged, rebased or checked out in the main checkout. Sitting 2 ran before sitting 1, as the table
+  allows: **M1 and M2 were read from the platform's code, not measured** (below). No server was started from the worktree, no
+  port touched; 7105 serves `main`. ORIENTATION and the roadmap are not edited here: `main`'s documents describe `main`.
+- **The commits:**
+  - **`6a55b9d` (Task 2)**: `screens/going-live/steps.ts`: `stepsOf`, `stepOf`, `vancouverDays`, `bandOf`, `phraseOf`; `dayWords`
+    moved from `clocks.ts`. 58 tests, one a property over every record × item × `sending` (2,940 combinations: one current
+    step, never *needs you* or an action in part one, no machinery, no *weeks*, no `NaN`).
+  - **`f8f1ef4` (Task 3)**: *Going live* draws the sequence (`step-card.tsx`'s `Steps`, an `<ol>`: the current step a
+    `ClockItem` card with F5's admission and no button, each other one line); `clocks.ts` and its test deleted; the Overview's
+    band and *Your apps*' line read the steps (`getLaunchRecords` beside `getLaunchReadiness`, under F6's gate, every asking
+    app at once); *Trying out*'s step-2 line with **[Going live]**, and **[Open it in a new tab]** once registered; on a
+    switched-off app no button on any step or row, and no band; `ClockItem`'s `state` gains `attention` (part two's card);
+    the walk-through's moments 10, 11 and 13 carry the design's departures.
+  - **`bb9362b` (Task 4)**: `requestApproval` in the person's session; `signOffRow` reads `since` (unasked: **needs you**
+    with **[Ask a Manifest administrator to sign this off]**; asked: *"asked 28 September · waiting 2 days"*); `Row.when`;
+    the note in place (`FieldCount` to 500, never `maxLength`), **[Ask them]** · **[Not now]**; each refusal by its code;
+    F6's needs band nudges for the unasked sign-off with no change to F6's code (Decision 15, Rich's default).
+  - **`608521e` (the review's fix pass)**, below.
+- **Negative controls, each red and restored:** Task 2: `current` on every step not done; `vancouverDays` by hours; part
+  one's nothing-on-file *needs you*. Task 3: a second card for a later step with a record; the admission dropped; **[Open
+  it]** with trying-out's registration not active; a switched-off app's buttons; its band. Task 4: the old candidate asked
+  after `RELEASE_NOT_STAGED`; one key across two presses; `maxLength` on the note; the note drawn back (green at first through
+  one test only: a test was added for a reading not moved yet); the unasked sign-off *waiting* (F6's band silent); our
+  server naming `approval-request`. The fix pass: one per finding.
+- **The plan's control that was wrong:** Task 2's *"the 23:30 Toronto row red"* under `Math.floor((now − since) / 86_400_000)`:
+  8.5 hours after noon floors to 0 too. The rows that go red are the next Vancouver day at 00:05 and 31 October → 2 November.
+- **Decisions taken here (routine, §5; each in the ledger with its cost):**
+  - **M1, read from the platform's `recordPrivacyAssessment`** (`records.ts`): a return to `draft` keeps `submittedAt`, so *sent
+    back* is `state: 'draft'` with `submittedAt` set. **M2, read from `readiness.ts`'s `NOT_CWL_ITEM`**: `iam-registration`
+    `met` with no production registration is an app that signs nobody in, both registrations *"Not needed"*. Both provisional
+    until sitting 1 measures them.
+  - `Step` gains `kind`, `days` and `note` beyond the plan's interface (the card's body, *Trying out*'s phrase and FE-46's *"They
+    send it on…"* need the record's meaning without parsing words); `state` excludes `working`.
+  - The assessment card's *"We fill in what Manifest knows; you answer the rest."* is said only once something can be sent
+    (part two): beside F5's admission it is untrue.
+  - A wait is counted from `submittedAt`, else the checklist's `since`; **a change on file from the day it was filed** (the
+    review's I2).
+  - **A switched-off app draws no button on *Going live* at all**, F5's **[Run the dry run]**, **[Talk it through]** and the
+    **[Let your students in]** offer included (the plan's test: *"no step or row has a button"*).
+  - *Trying out* reads the records and the checklist each in an effect of its own, so neither holds the page; an unread
+    record is *not registered*, its line without a state; the line only before launch.
+  - **Once trying-out is registered, its card drops F5's *"Waiting on UBC's identity team"*** (untrue then); Rich's sentence
+    stays.
+  - `RELEASE_NOT_STAGED` holds the press until the next reading arrives, so the next press names that reading's version.
+  - *"Signed off, then rebuilt"* is asked for as an undecided one is.
+- **The whole-branch review** (a fresh reviewer, read-only, `3ae288c..bb9362b`): no Critical; **four Important fixed in
+  `608521e`, each test-first with a control**: **I1** a later step's *"Next, once your trying-out address is registered."* under
+  *"Registered 8 September"* (out of order): a later step with nothing on file now waits for the nearest step before it not
+  done, and one on file says its own state; **I2** a change counted from `updatedAt`; **I3** the focus lost as the note opened
+  and closed (it now follows the note, as F6's switching does); **I4** *Trying out* ignoring an app that signs nobody in.
+  **Its fifth Important, the walks, is owed** (next bullet). Its minors are deferred, in the ledger: the day words in the
+  reader's zone beside counts in Vancouver days (Decision 2's split, **for Rich**); `vancouverDay` splitting a formatted
+  string; a Toronto row that tells the zones apart; the `RELEASE_NOT_STAGED` hold keyed on a row's identity; **[Ask…]**
+  shown again until the next reading lands; *Your apps*' line on a switched-off app; `bodyOf`'s *"you answer the rest"*
+  keyed on the admission, not the kind (sitting 3); the note's limit checked untrimmed.
+- **Owed after the merge:** **the walks at 1440 and 375** (Task 3 Step 5, Task 4 Step 5, with `scripts/walk/` and the mock's
+  stages, our mock restarted for each and said first) **and the acceptance scripts** (`check-seeing.sh`, `check-going-live.sh`,
+  `check-slice.sh`, `check-describing.sh`, `check-building.sh`, `check-keeping.sh` and its half two), from a fresh dev database.
+  **The branch is cut at `3ae288c` and needs a rebase onto `main`** (`fca7e49`'s `needsStillTrue` and `d3600be` touch
+  `overview.tsx`, `your-apps.tsx`, `overview.test.tsx` and `screens.test.tsx`; a dry `git merge-tree` showed no textual
+  conflict); after it, **a test that a switched-off app with an unasked sign-off raises no need** (the review's M9).
+- **For Rich:**
+  - the new words (each in `words.ts`, marked F5b): the steps' lines (*"Not needed: it doesn't sign anyone in."*, *"The Privacy
+    Office sent it back."*, *"UBC's identity team asked about it."*, *"The Manifest team has it."*), *Trying out*'s *"Registering
+    it is the second of three steps on Going live: with UBC's identity team, waiting 4 days."* and its undated form, the
+    sign-off's (the design's §3);
+  - **the walk-through and a comment say the Manifest team is emailed when someone asks**: D5's, which the platform does not
+    do yet (FE-46); until then *"A Manifest administrator looks at this next."* rests on the administrators' queue alone;
+  - **his *Trying out* sentence** (*"…registers it first. That takes some time… Meanwhile, your draft is ready to try now."*)
+    reads stale once the address is registered, and for an app that signs nobody in;
+  - **trying-out's registration with a change on file** (`change_requested` from `active`) hides **[Open it]**, as the design's
+    *"once active"* says, though the address is still registered;
+  - **M1, the day and its count in two zones** (Decision 2): a reader east of Vancouver can see *"waiting 1 day"* on the
+    morning after an ask made at 23:30 in Vancouver.
+- **The gates, twice, in the worktree** (`608521e`): `pnpm test` 2269/2269 and 2269/2269 (93 files; 2183 on `main` at
+  `3ae288c`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check` clean; `pgrep -fl vitest` empty at the start and the close.
+
