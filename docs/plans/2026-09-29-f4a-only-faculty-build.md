@@ -846,4 +846,10 @@ and *Start something new*. Nothing created. **Rich's click** as both (~06:50Z): 
 
 **Beside it:** Mailpit landed (`8155bcf`, for F6); the platform's sitting 6 contract commit (`b2c75e6`: two operations,
 five codes, `since`, `stagingRegistration`) adopted in our test data (`f8dcfbc`). **Seen, not fixed:** at 375 the folded
-rail's *Sign out* takes the keyboard's focus with no visible ring (the rail's, before F4a).
+rail's *Sign out* takes the keyboard's focus with no visible ring (the rail's, before F4a). **Corrected 2026-10-02
+(`manifest-app-3a`): there is no such defect.** Below 900px the rail's *Sign out* is `display: none` and never takes
+focus (Sign out is on the profile there). The walk's `tabTo` stopped when `document.activeElement.textContent` included
+*"Sign out"*, and the stop it matched was `<body>`: focus past the last control, whose text holds the hidden link's
+words. A walk at 375 (Your apps, and an app's Overview) found a 2px white ring on every stop of the rail, 8.25:1 or
+more against what lies behind it, and went red with the rail's ring removed. At 1440 *Sign out* is shown, with the same
+ring.
