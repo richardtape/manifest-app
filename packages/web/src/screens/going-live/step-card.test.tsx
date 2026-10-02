@@ -97,8 +97,8 @@ describe('Steps: one card at a time (D2)', () => {
     // "We fill in what Manifest knows; you answer the rest." is untrue until something can be sent.
     expect(card!.textContent).not.toContain(s.assessment.yours)
     const [, second, third] = items()
-    expect(second!.textContent).toContain(s.staging.next)
-    expect(third!.textContent).toContain(s.production.next)
+    expect(second!.textContent).toContain(s.waitsFor.assessment)
+    expect(third!.textContent).toContain(s.waitsFor.staging)
     expect(second!.textContent).not.toContain(s.nothingCounting)
   })
 
@@ -143,7 +143,8 @@ describe('Steps: one card at a time (D2)', () => {
     )
     expect(cards()).toHaveLength(1)
     const third = items()[2]!
-    expect(third.textContent).toContain(s.production.next)
+    // On file beyond a draft: its own state, nothing it waits for (the review's I1).
+    expect(third.textContent).not.toMatch(/Next, once/)
     expect(third.textContent).toContain('since 1 October · waiting 4 days')
     expect(third.querySelector('.mf-chip')?.textContent).toBe(s.production.with)
   })

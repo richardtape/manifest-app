@@ -257,13 +257,14 @@ describe('stepOf, part one (sending: false): nothing is theirs to press yet (Dec
       meta: 'The Manifest team renews it.',
     }))
 
-  it('a change on file with UBC (from active): F5’s words, with UBC’s identity team, in Vancouver days since it was recorded', () =>
+  it('a change on file with UBC (from active): F5’s words, with UBC’s identity team, in Vancouver days since it was filed', () =>
     expect(
       one('production', {
         records: records({
           iamRegistration: IAM({
             state: 'change_requested',
             changeRequestedFrom: 'active',
+            submittedAt: '2026-10-02T17:00:00.000Z',
             updatedAt: '2026-10-02T17:00:00.000Z',
           }),
         }),
@@ -277,6 +278,33 @@ describe('stepOf, part one (sending: false): nothing is theirs to press yet (Dec
       label: 'A change, recorded 2 October',
       meta: 'waiting 3 days',
     }))
+
+  it('a change on file is counted from the day it was filed (`submittedAt`), never reset by a later edit of the record (the review’s I2)', () => {
+    // Filed on 20 September; an administrator added its ticket number on 5 October.
+    const change = (submittedAt: string | null) =>
+      one('production', {
+        records: records({
+          iamRegistration: IAM({
+            state: 'change_requested',
+            changeRequestedFrom: 'active',
+            submittedAt,
+            updatedAt: '2026-10-05T16:00:00.000Z',
+          }),
+        }),
+        readiness: readiness(
+          item('iam-registration', { state: 'unmet', since: '2026-09-21T19:00:00.000Z' }),
+        ),
+      })
+    expect(change('2026-09-20T19:00:00.000Z')).toMatchObject({
+      label: 'A change, recorded 20 September',
+      meta: 'waiting 15 days',
+    })
+    // No day sent on the record: the checklist's `since`, then the record's last change.
+    expect(change(null)).toMatchObject({
+      label: 'A change, recorded 21 September',
+      meta: 'waiting 14 days',
+    })
+  })
 
   it('done, and the checklist agrees: steady, dated by its answer', () => {
     expect(
@@ -605,10 +633,51 @@ describe('stepsOf: one sequence, one current step (D2; Review Focus 3)', () => {
         readiness: readiness(UNMET_IAM),
       }),
     )
+    // On file beyond a draft: it says its own state, and nothing it waits for (the review's I1).
     expect(steps[2]).toMatchObject({
       current: false,
       state: 'waiting',
-      next: 'Next, once your trying-out address is registered.',
+      next: null,
+      label: 'since 1 October',
+      meta: 'waiting 4 days',
+    })
+  })
+
+  it('a later step waits for the nearest step before it not done, never one already done (the review’s I1)', () => {
+    // The assessment with UBC, trying-out's registered, the students' address nothing on file.
+    const steps = stepsOf(
+      input({
+        records: records({ iamRegistration: null }),
+        readiness: readiness(UNMET_IAM),
+      }),
+    )
+    expect(steps[1]).toMatchObject({ kind: 'done', label: 'Registered 8 September' })
+    expect(steps[2]).toMatchObject({
+      current: false,
+      next: 'Next, once the Privacy Office has approved the assessment.',
+    })
+    expect(steps[2].next).not.toMatch(/trying-out address is registered/)
+  })
+
+  it('the assessment sent back while trying-out’s is with UBC: trying-out’s line says its own state, not that it waits (the review’s I1)', () => {
+    const steps = stepsOf(
+      input({
+        records: records({
+          privacyAssessment: PIA({ state: 'draft', approvedAt: null }),
+          stagingRegistration: STAGING({
+            state: 'submitted',
+            registeredAt: null,
+            submittedAt: '2026-10-01T19:00:00.000Z',
+          }),
+        }),
+        readiness: readiness(UNMET_PIA),
+      }),
+    )
+    expect(steps[0]).toMatchObject({ current: true, kind: 'sent-back' })
+    expect(steps[1]).toMatchObject({
+      current: false,
+      next: null,
+      chip: 'With UBC’s identity team',
       label: 'since 1 October',
       meta: 'waiting 4 days',
     })

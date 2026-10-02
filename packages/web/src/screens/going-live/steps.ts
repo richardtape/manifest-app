@@ -83,12 +83,6 @@ export interface StepsInput {
 const g = words.goingLive
 const s = g.steps
 const ORDER: readonly StepId[] = ['assessment', 'staging', 'production']
-/** What a step to come waits for: the step before it. */
-const NEXT: Record<StepId, string | null> = {
-  assessment: null,
-  staging: s.staging.next,
-  production: s.production.next,
-}
 
 /** "18 September", in their own time zone: each moment by its own offset, never now's (F5's). */
 export function dayWords(at: string, timeZone?: string): string | null {
@@ -316,14 +310,15 @@ function own(
     case 'change_requested':
       if ('changeRequestedFrom' in record && record.changeRequestedFrom === 'submitted')
         return theirs('asked', s.asked, s.askedNote, s.teamHasIt)
-      // A change on file, with UBC, counted from when an administrator recorded it (F5's S3).
+      // A change on file, with UBC (F5's S3), counted from the day it was filed: the platform stamps
+      // `submittedAt` then, and a later edit of the record moves only `updatedAt` (the review's I2).
       return {
         ...base,
         kind: 'change',
         state: 'waiting',
         owner: words.whose,
         chip: words.with,
-        ...wait(record.updatedAt, s.changeAsked),
+        ...wait(record.submittedAt ?? item?.since ?? record.updatedAt, s.changeAsked),
       }
     case 'expired':
       return sending
@@ -390,9 +385,11 @@ function own(
 
 /**
  * THE SEQUENCE: each step alone, then the first one not done is current (one card at a time,
- * `ClockItem`'s *"Two at most"*). A step after the current one says what it waits for; one with
- * nothing on file says only that; and **only the current step is ever theirs** (the platform
- * refuses a step out of order), so a later one that would need them is not yet.
+ * `ClockItem`'s *"Two at most"*). A later step with nothing on file says only what it waits for:
+ * **the nearest step before it not done**, never one already done (the review's I1); one with
+ * something on file beyond a draft says its own state, and nothing it waits for (the design's §1).
+ * **Only the current step is ever theirs** (the platform refuses a step out of order), so a later
+ * one that would need them is not yet.
  */
 export function stepsOf(input: StepsInput): [Step, Step, Step] {
   const each = ORDER.map((id) =>
@@ -408,11 +405,15 @@ export function stepsOf(input: StepsInput): [Step, Step, Step] {
   const steps = each.map((step, i): Step => {
     if (at === -1 || i < at || step.state === 'steady') return step
     if (i === at) return { ...step, current: true }
-    const later: Step = { ...step, next: NEXT[step.id] }
-    // Nothing on file (or, in part one, a draft): its line says only what it waits for.
-    if (step.kind === 'nothing' || step.kind === 'drafted')
+    // Nothing on file (or a draft): its line says only what it waits for.
+    if (step.kind === 'nothing' || step.kind === 'drafted') {
+      const before = each
+        .slice(0, i)
+        .reverse()
+        .find((earlier) => earlier.state !== 'steady')!
       return {
-        ...later,
+        ...step,
+        next: s.waitsFor[before.id === 'assessment' ? 'assessment' : 'staging'],
         state: 'notyet',
         chip: s.notStarted,
         label: '',
@@ -421,9 +422,10 @@ export function stepsOf(input: StepsInput): [Step, Step, Step] {
         note: null,
         action: null,
       }
+    }
     return step.state === 'attention'
-      ? { ...later, state: 'notyet', chip: g.state.notyet, action: null }
-      : later
+      ? { ...step, state: 'notyet', chip: g.state.notyet, action: null }
+      : step
   })
   return [steps[0]!, steps[1]!, steps[2]!]
 }

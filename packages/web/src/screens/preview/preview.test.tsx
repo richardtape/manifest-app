@@ -111,6 +111,8 @@ type World = {
   named?: Partial<Record<Kind, Schemas['InstanceSummary']>>
   /** F5b: the three records, for trying-out's registration (the mock's own when not given). */
   records?: Schemas['LaunchRecords']
+  /** F5b: the checklist, for an app that signs nobody in (the mock's own when not given). */
+  readiness?: Schemas['LaunchReadiness'] | 'never'
 }
 const A_FAILED_ATTEMPT: World = {
   instances: { sandbox: [FAILED, SERVING], staging: [], production: [] },
@@ -165,7 +167,14 @@ function stage(
     listAppSecrets: never,
     setAppSecret: never,
     runRehearsal: () => new Promise<never>(() => undefined),
-    getLaunchReadiness: never,
+    getLaunchReadiness:
+      world.readiness === 'never'
+        ? never
+        : answer('getLaunchReadiness', () =>
+            world.readiness === undefined || world.readiness === 'never'
+              ? fixtures.LAUNCH_READINESS
+              : world.readiness,
+          ),
     getLaunchRecords: answer(
       'getLaunchRecords',
       () => world.records ?? fixtures.LAUNCH_RECORDS,
@@ -602,6 +611,49 @@ describe("Trying out: UBC's words, everywhere (Rich)", () => {
     )
     const going = within(line.closest('p')!).getByRole('link', { name: w.toGoingLive })
     expect(going.getAttribute('href')).toBe(`/apps/${SLUG}/going-live`)
+  })
+
+  it('an app that signs nobody in (the review’s I4): nothing to register, so Open it, no line, nothing waiting on UBC', async () => {
+    const records: Schemas['LaunchRecords'] = {
+      ...fixtures.LAUNCH_RECORDS,
+      stagingRegistration: null,
+      iamRegistration: null,
+    }
+    const readiness: Schemas['LaunchReadiness'] = {
+      ...fixtures.LAUNCH_READINESS,
+      items: fixtures.LAUNCH_READINESS.items.map((i) =>
+        i.id === 'iam-registration'
+          ? {
+              ...i,
+              owner: 'UBC IAM',
+              state: 'met' as const,
+              why: 'This app does not sign people in with CWL, so it needs no IAM registration.',
+              since: null,
+            }
+          : i,
+      ),
+    }
+    await open(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+      stage({ ...ON_TRYING_OUT, records, readiness }),
+    )
+    await ready()
+    expect(await within(panel()).findByRole('link', { name: w.open })).toBeTruthy()
+    expect(within(panel()).queryByText(/second of three steps on Going live/)).toBeNull()
+    expect(within(panel()).queryByText(w.waitingOn)).toBeNull()
+  })
+
+  it('a checklist that never answers holds nothing: the line says where the registration is from the records alone', async () => {
+    await open(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+      stage({ ...ON_TRYING_OUT, records: WITH_UBC, readiness: 'never' }),
+    )
+    await ready()
+    expect(
+      await within(panel()).findByText(
+        w.step('with UBC’s identity team, waiting 4 days'),
+      ),
+    ).toBeTruthy()
   })
 
   it('records that cannot be read: not registered: no Open it, and the line without a state', async () => {

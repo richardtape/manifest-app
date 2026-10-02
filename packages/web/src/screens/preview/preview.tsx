@@ -126,7 +126,12 @@ export function Preview({
   const [attempt, setAttempt] = useState(0)
   const panels = useId()
   const launched = (project.launchedAt ?? null) !== null
-  const [registration, setRegistration] = useState<Registration>({ state: 'reading' })
+  // F5b: trying-out's record as read, with the moment it was read (its wait is counted to it), and
+  // the checklist's items (an app that signs nobody in: the review's I4). Each read on its own.
+  const [recorded, setRecorded] = useState<
+    { records: Schemas['LaunchRecords']; at: Date } | 'unread' | undefined
+  >()
+  const [items, setItems] = useState<readonly Schemas['LaunchReadinessItem'][]>([])
 
   useEffect(() => {
     let live = true
@@ -147,36 +152,32 @@ export function Preview({
 
   // F5b (Decision 5): TRYING-OUT'S REGISTRATION, read on its own, so it never holds the page: a
   // failed read is *not registered*, said without a state; a session that ended is the shell's.
+  // The checklist is read beside it, on its own too: it only ever says that nothing needs
+  // registering (an app that signs nobody in, the review's I4), so a checklist that fails or never
+  // answers holds nothing.
   useEffect(() => {
     let live = true
+    const refused = (error: unknown) => {
+      const refusal = refusalOf(error)
+      if (refusal.kind === 'signed-out') expire()
+      else if (refusal.kind === 'refused')
+        console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+      return refusal.kind !== 'signed-out'
+    }
     platform.getLaunchRecords(project.id).then(
-      (records) => {
-        if (!live) return
-        if (records.stagingRegistration?.state === 'active')
-          return setRegistration({ state: 'registered' })
-        const step = stepOf('staging', {
-          records,
-          items: [],
-          now: now(),
-          timeZone,
-          sending: false,
-        })
-        setRegistration({ state: 'not', phrase: phraseOf(step) })
-      },
-      (error: unknown) => {
-        if (!live) return
-        const refusal = refusalOf(error)
-        if (refusal.kind === 'signed-out') return expire()
-        if (refusal.kind === 'refused')
-          console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
-        setRegistration({ state: 'not', phrase: null })
-      },
+      (records) => live && setRecorded({ records, at: now() }),
+      (error: unknown) => live && refused(error) && setRecorded('unread'),
+    )
+    platform.getLaunchReadiness(project.id).then(
+      (readiness) => live && setItems(readiness.items),
+      (error: unknown) => live && refused(error),
     )
     return () => {
       live = false
     }
     // `now` is a clock, read once per attempt: never a reason to read again.
-  }, [platform, project.id, timeZone, expire, attempt])
+  }, [platform, project.id, expire, attempt])
+  const registration = registrationOf(recorded, items, timeZone)
 
   // [WHAT WENT WRONG] (F4 Task 9): the draft's failed attempt, when one of our rounds put it
   // there, opens that conversation. None of ours did: no button.
@@ -307,6 +308,32 @@ export function Preview({
       ) : null}
     </div>
   )
+}
+
+/**
+ * TRYING-OUT'S REGISTRATION, IN A WORD (F5b, Decision 5): registered once UBC's identity team has
+ * (its record `active`), **or when nothing needs registering** (an app that signs nobody in, as the
+ * steps say: the review's I4); else the step's state for the line, or none when the records could
+ * not be read.
+ */
+function registrationOf(
+  recorded: { records: Schemas['LaunchRecords']; at: Date } | 'unread' | undefined,
+  items: readonly Schemas['LaunchReadinessItem'][],
+  timeZone: string | undefined,
+): Registration {
+  if (recorded === undefined) return { state: 'reading' }
+  if (recorded === 'unread') return { state: 'not', phrase: null }
+  const step = stepOf('staging', {
+    records: recorded.records,
+    items,
+    now: recorded.at,
+    timeZone,
+    sending: false,
+  })
+  return recorded.records.stagingRegistration?.state === 'active' ||
+    step.kind === 'not-needed'
+    ? { state: 'registered' }
+    : { state: 'not', phrase: phraseOf(step) }
 }
 
 /**

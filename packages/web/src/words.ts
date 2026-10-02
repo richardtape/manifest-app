@@ -769,7 +769,6 @@ export const words = {
         whose: 'UBC’s identity team',
         done: (day: string | null) => (day === null ? 'Registered' : `Registered ${day}`),
         onward: 'They send it on to UBC’s identity team.',
-        next: 'Next, once the Privacy Office has approved the assessment.',
       },
       production: {
         title: 'Registering your students’ address',
@@ -778,7 +777,14 @@ export const words = {
         whose: 'UBC’s identity team',
         done: (day: string | null) => (day === null ? 'Registered' : `Registered ${day}`),
         onward: 'They send it on to UBC’s identity team.',
-        next: 'Next, once your trying-out address is registered.',
+      },
+      /**
+       * A later step with nothing on file: what it waits for, the nearest step before it not done
+       * (the review's I1: never one already done).
+       */
+      waitsFor: {
+        assessment: 'Next, once the Privacy Office has approved the assessment.',
+        staging: 'Next, once your trying-out address is registered.',
       },
       /** Owners, in words (the plan's). */
       owners: {

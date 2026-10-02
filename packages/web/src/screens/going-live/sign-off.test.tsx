@@ -695,6 +695,45 @@ describe('asking a Manifest administrator to sign it off (F5b Task 4)', () => {
     expect(within(row).queryByRole('button', { name: a.askThem })).toBeNull()
   })
 
+  it('the focus follows the note: into it as it opens, back to Ask as Not now closes it (the review’s I3)', async () => {
+    await open(unasked())
+    await press(await askButton())
+    expect(document.activeElement).toBe(noteField())
+    await press(within(await signOff()).getByRole('button', { name: a.notNow }))
+    expect(document.activeElement).toBe(await askButton())
+  })
+
+  it('while it asks, the focus is on Asking; a press that did not go through gives it back to Ask them (the review’s I3)', async () => {
+    const s = unasked()
+    let fail: (reason: unknown) => void = () => undefined
+    s.platform.requestApproval = () =>
+      new Promise((_, reject) => {
+        fail = reject
+      })
+    await open(s)
+    await press(await askButton())
+    await press(within(await signOff()).getByRole('button', { name: a.askThem }))
+    expect(document.activeElement?.textContent).toBe(a.asking)
+    await act(async () => fail(refused(500, 'INTERNAL')))
+    expect(document.activeElement).toBe(
+      within(await signOff()).getByRole('button', { name: a.askThem }),
+    )
+  })
+
+  it('asked: the focus goes back to the row’s button while the page reads again, never to the page (the review’s I3)', async () => {
+    const s = unasked()
+    let answer: () => void = () => undefined
+    s.platform.requestApproval = (releaseId) =>
+      new Promise((resolve) => {
+        answer = () => resolve(request(releaseId))
+      })
+    await open(s)
+    await press(await askButton())
+    await press(within(await signOff()).getByRole('button', { name: a.askThem }))
+    await act(async () => answer())
+    expect(document.activeElement).not.toBe(document.body)
+  })
+
   it('Not now closes the note and sends nothing', async () => {
     const s = await open(unasked())
     await press(await askButton())

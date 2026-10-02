@@ -264,6 +264,24 @@ function Ask({
   }, [])
   const count = countOf(note, NOTE_LIMIT)
   const held = changedOn === row
+  // THE FOCUS FOLLOWS THE PRESS (the review's I3, F6's switching pattern): into the note as it
+  // opens; onto *Asking* while it asks; back to *[Ask them]* when a press did not go through; and,
+  // as the note closes, back to the row's button, or to what changed when the press is held.
+  const noteRef = useRef<HTMLTextAreaElement>(null)
+  const workingRef = useRef<HTMLSpanElement>(null)
+  const actionsRef = useRef<HTMLDivElement>(null)
+  const offerRef = useRef<HTMLDivElement>(null)
+  const changedRef = useRef<HTMLParagraphElement>(null)
+  const was = useRef({ open, sending })
+  useEffect(() => {
+    const before = was.current
+    was.current = { open, sending }
+    if (open && !before.open) noteRef.current?.focus()
+    else if (sending && !before.sending) workingRef.current?.focus()
+    else if (open && before.sending) actionsRef.current?.querySelector('button')?.focus()
+    else if (!open && before.open)
+      (offerRef.current?.querySelector('button') ?? changedRef.current)?.focus()
+  }, [open, sending])
 
   const ask = async () => {
     if (candidate === null || tooLong(note, NOTE_LIMIT)) return
@@ -305,7 +323,12 @@ function Ask({
   return (
     <RowView row={row} announce>
       {changedOn === null ? null : (
-        <p className="body-small going-live__changed" role="status">
+        <p
+          ref={changedRef}
+          tabIndex={-1}
+          className="body-small going-live__changed"
+          role="status"
+        >
           {a.changed}
         </p>
       )}
@@ -331,6 +354,7 @@ function Ask({
               {a.noteHint}
             </p>
             <textarea
+              ref={noteRef}
               id={`${id}-note`}
               className="mf-field__input going-live__note"
               value={note}
@@ -342,9 +366,14 @@ function Ask({
             />
             {count === undefined ? null : <FieldCount id={`${id}-count`} {...count} />}
           </div>
-          <div className="going-live__row-action going-live__ask-actions">
+          <div
+            ref={actionsRef}
+            className="going-live__row-action going-live__ask-actions"
+          >
             {sending ? (
-              <StateChip state="working" label={a.asking} />
+              <span ref={workingRef} tabIndex={-1} role="status">
+                <StateChip state="working" label={a.asking} />
+              </span>
             ) : (
               <>
                 <Button
@@ -363,7 +392,7 @@ function Ask({
           </div>
         </div>
       ) : held ? null : (
-        <div className="going-live__row-action">
+        <div ref={offerRef} className="going-live__row-action">
           <Button kind="secondary" size="sm" onClick={() => setOpen(true)}>
             {a.ask}
           </Button>

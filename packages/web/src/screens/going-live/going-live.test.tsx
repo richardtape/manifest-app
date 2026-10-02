@@ -294,8 +294,8 @@ describe('the page: letting your students in (moment 11)', () => {
     expect(c!.textContent).toContain(g.steps.admission.body)
     expect(c!.querySelector('.mf-pulse, .mf-bar__fill--working')).toBeNull()
     const steps = screen.getByRole('list', { name: g.steps.label })
-    expect(steps.textContent).toContain(g.steps.staging.next)
-    expect(steps.textContent).toContain(g.steps.production.next)
+    expect(steps.textContent).toContain(g.steps.waitsFor.assessment)
+    expect(steps.textContent).toContain(g.steps.waitsFor.staging)
   })
 
   it('no stopgap: no mailto anywhere, nothing to press on a step, and no step needs you (part one)', async () => {
