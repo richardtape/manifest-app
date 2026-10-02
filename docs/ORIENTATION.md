@@ -104,6 +104,9 @@ owed, at his word**: F6 is not executed until then. Rich's overnight queue, coor
     email edit `a7f5542`; **tonight's coordinator**).
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
     session starts with `pgrep -fl vitest`. **Restart `pnpm mock`** after a landing that moves the mock's fixtures.
+- **Minors m1–m4, m14, m19, m63 fixed at Rich's word** (`manifest-app-minors`, 2026-10-02 ~00:30 PDT, mock mode): `2b9c3e1`,
+  `7345e0c`, `c5bae5a`, `09c45da` and `92002fa`, `ba7e529`, `d4ea05b`, `ecbbec5` (and `13e6e17`, the read-only walk's
+  wait); 2211 tests twice; the decisions, the walk, the review and m72 (found) in [`minors.md`](./minors.md)'s dated entry.
 - **F4a, executed** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), its
   sitting 1 entry is the record): the platform decides (`Me.mayBuild`, its 5a); our server refuses a new start
   (`403 BUILDING_NOT_OPEN`, a `getMe` with no decision building as today); someone who may not build and keeps no app sees

@@ -1,7 +1,8 @@
 # Deferred minors — an inventory for Rich
 
 *Collected 2026-10-01 by manifest-app-3a from the dated entries of F2, F3, F4, F4a and F5, each checked against main at
-`238e6a0`. Nothing here is fixed: Rich chooses.*
+`238e6a0`. Nothing here is fixed: Rich chooses.* *Seven were fixed at his word (m1–m4, m14, m19, m63; 2026-10-02):
+see* Already fixed *and its dated entry.*
 
 **How to read it.** Each minor has an ID (`m1`, `m2`…) for this page only. **From** names the plan and the dated entry
 it was recorded in: F2 is [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md), F3
@@ -21,10 +22,6 @@ checked by reading the code it names, and the check is in the cell.
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m1 | F5 sitting 3, review (ledger 117) | The Overview's address list is named *"Its three addresses"* even when fewer rows are drawn. | `packages/web/src/screens/overview/overview.tsx:172` names the `<ul>` with `words.ts:546`; rows for a missing environment are dropped at `overview.tsx:89`. | S | accessibility |
-| m2 | F5 sitting 3, review (ledger 115) | *Going live*'s set-apart list (code review) has no name, and either list is drawn empty when it has no rows (*"list, 0 items"*). | `packages/web/src/screens/going-live/going-live.tsx:394-399`: two `<ul>`, the second unnamed, both always drawn. | S | accessibility |
-| m3 | F5 sitting 3, review (ledger 114) | Heading order on *Going live*: the `h1`, then the clocks' `h3`, then the short jobs' `h2`. | `going-live.tsx:367-385` draws the clocks straight under the `h1`; `packages/ui/src/ClockItem.tsx:57` is an `h3`; the `h2` is at `going-live.tsx:390`. | S | accessibility |
-| m4 | F5 sitting 4, review (ledger 187) | After a failed press the button comes back without the focus: it was swapped for a working chip, so the focus fell to the page. The alert is announced. | `going-live/sign-off.tsx:166-172` (*Talk it through*); the same pattern in `screens/change/ask.tsx:92-102` (*Ask for a change*). | S | accessibility |
 | m5 | F2, *After F2: the deferred Minors* (*"Two cosmetic things, left"*) | The window-behind notice (*"The plan changed in another window…"*) has space beneath its one line. | `packages/web/src/screens/plan/plan.tsx:360`: a bare `<p className="body-lead">` in a flex `Card`, keeping the browser's paragraph margins. | S | faculty-visible |
 | m6 | F2, the same entry | At 375 a support reference in a field's message breaks at its hyphen. | `screens/name-it/name-it.tsx:319` puts the reference in `FieldMessage.body`, a plain string (`packages/ui/src/FormField.tsx:12`), with nothing keeping it whole. | S | faculty-visible |
 | m7 | F5 sitting 3, review (ledger 118), *"for Rich's click"* | A held clock (someone has it) is filled lighter than the not-started hatch, so it can look emptier than one not started. | `packages/ui/src/components.css:201-203` (`--waiting-tint`). | S | faculty-visible |
@@ -34,12 +31,10 @@ checked by reading the code it names, and the check is in the cell.
 | m11 | F5 sitting 4, review (ledger 182) | A failed approval read says *"We can't tell right now whether it's been signed off."* with no support reference, only a `console.warn`. | `sign-off.tsx:72`; the read's failure is only warned at `going-live.tsx:44-50`, `:78-80`. | S | faculty-visible |
 | m12 | F4 sitting 7, M11 (ledger 719) | The *Interrupted* card files a `ROUND_INTERRUPTED` problem, with a reference, for a fix that reached the front after a restart and never started. | `screens/building/needs.tsx:57-58` reports on every *Interrupted* card; `withoutToken` (`build/round.ts`, near its end) saves such a fix as `interrupted`. | S | faculty-visible |
 | m13 | F4a sitting 1, deferred (ledger 91) | `useKeeps` draws the page as loading again when `getMe` is read again with the same answer, since it is keyed on the object. Only after a `BUILDING_NOT_OPEN` signal. | `packages/web/src/screens/keeps.ts:59` (the effect's `me`) and `:61` (`kept.me === me`). | S | faculty-visible |
-| m14 | F3 sitting 7, review (ledger 214) | A secret answered after the round stopped for a refused token is sent with that refused token: a `401`, said as a refusal with a reference, until *Carry on*. | `build/round.ts:1622`: `live?.token` comes before the token store, and `end()` drops only the store's (`round.ts:1379`). | S | faculty-visible |
 | m15 | F5 sitting 6 (first half), whole-branch review (ledger 302 only) | On *Trying out*, after a first deploy that never answered, *"Serving right now"* can name the failed attempt, which the platform names as the address's instance when no route serves one. *Going live* already sets it aside. | `screens/trying-out/put.tsx:389-395` takes `staging.instance` as it comes; compare `going-live/live.tsx:430`. | S | faculty-visible |
 | m16 | F5 sitting 4, review (ledger 181) | Two millisecond races in the sign-off row: a decision landing between the checklist's read and the approval's draws the wrong sentence until the next read. | `going-live.tsx:66-79`: the checklist first, the approval after. | S | faculty-visible |
 | m17 | F5 sitting 3, review (ledger 116) | A failed quiet re-read (the page shown again) replaces a good page with the trouble notice, and files a new report at every tab switch while Manifest is out of reach. | `going-live.tsx:198-203` (any failed read sets `trouble`) and `:216-223` (each `visibilitychange` reads again). | S | faculty-visible |
 | m18 | F3 sitting 7, review (ledger 213) | The cost line at *built* can be stale: the round's end never reads the cost again. | `build/round.ts:1379` (`end`) calls no `refreshCost` (`:384`); answers read it at most every 5 s. | S | faculty-visible |
-| m19 | F3 sitting 7, review (ledger 245) | `SOURCE_GIT_FAILED`, the platform's own passing git failure (its remedy: retry once), is a refusal with *Carry on*, never retried once. | No reader anywhere: `git grep SOURCE_GIT_FAILED -- packages` finds nothing, code or test; `round.ts:229-243` (`call`) retries nothing. | S | faculty-visible |
 | m20 | F4 sitting 7, M3 (ledger 711) | Several secrets set at once: one refused after another was set empties both fields, and both are typed again. | `screens/trying-out/parts.tsx:168-171` empties every field on send; the loops at `put.tsx:553-559` and `going-live/live.tsx:347-354`. | M | faculty-visible |
 | m21 | F5 sitting 5, review M10 (ledger 244) | A dropped connection on the live deploy (a `TypeError`) is said as *didn't go*, without one read of the live address. | `going-live/live.tsx:279-283`: only our deadline reads on; anything else ends at `:305` (`didNotGo(error, 'deploy')`). | M | faculty-visible |
 | m22 | F5 sitting 6 (first half), own review M1 (ledger 314) | Before a launch, the Preview can call an older failed dry run *"the last attempt"*, even after a newer one passed and was taken down. | `screens/preview/facts.ts:64-69`: with nothing served, `after()` counts every failed instance; `:98-99`. | M | faculty-visible |
@@ -83,10 +78,6 @@ checked by reading the code it names, and the check is in the cell.
 | m60 | F5 sitting 6 (first half), whole-branch review M4' (ledger 281) | *Stop* does not cut an answer that is streaming; a runaway answer after *Stop* is paid for up to its 15-minute ceiling. | `model/client.ts:194`: `complete` takes no outside signal; `round.ts:544-555`. | M | robustness |
 | m61 | F3 sitting 7, *"minor (for the record)"* (ledger 243) | After our server restarts, the round cannot end the old session with the page's new token (`FORBIDDEN`): the orphan runs out its 240 minutes, spending nothing. | `round.ts:484-489`; the refusal is swallowed. | L | robustness |
 
-**m4.** Both presses unmount the focused button and mount a chip. A fix gives each button a ref and focuses it when the
-press fails (the alert still announces). Test first: press, fail the mint, and assert `document.activeElement` is the
-button again. The same helper serves *Ask for a change* and *Talk it through*.
-
 **m6.** A non-breaking hyphen would stop a copied reference matching, as the entry says. Keep the real hyphen and hold
 the reference whole with `white-space: nowrap` on a span of its own. That needs `FieldMessage.body` to take a node, a
 design-system change with a parity case. `SupportReference` (`screens/reference.tsx`) can break the same way. Check it at
@@ -99,19 +90,12 @@ wording only. m7 is one colour token; m8 needs the row to draw a quotation as a 
 never-started case in the run's detail and draws it without a problem report. Test first: a fix saved by
 `withoutToken` draws the card and reports nothing.
 
-**m14.** One line: prefer the token store, or clear `live.token` when the token is dropped. Test first in
-`round.test.ts`: refuse a token, answer a secret, and assert `setAppSecret` was never called with the refused one.
-
 **m15.** The same rule *Going live* uses (`live.tsx:428-430`): the attempt itself, named for want of a route, is
 nothing there. Test first in `put.test.tsx` with a first staging deploy that fails.
 
 **m17.** The sitting 6 review declined the related *"a notice above a press under way"*. A fix keeps the good page on a
 failed quiet re-read, and says the trouble only on a read the person asked for. Test first: a ready page, then a failing
 `visibilitychange` read: the rows stay, and no report is filed.
-
-**m19.** The remedy is the platform's (*"retry once"*). A fix retries a read once in `call()` on this code alone, never a
-write (a commit has its own dry run and key). Test first: a fake that fails `getFile` once with `SOURCE_GIT_FAILED`; the
-round carries on without a card.
 
 **m20.** The fields were emptied on send by ruling (no secret kept on the page longer than needed). A safe fix re-reads
 `listAppSecrets` after a failure and asks again only for what is still not set. Test first: two secrets, the second
@@ -182,13 +166,11 @@ waits for F6 sitting 4 to close.
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m63 | `manifest-app-47`'s read-only walk control (`1b82119`), 2026-10-02 | An app's name holding a word that cannot break runs out of three places: the rail's overline (251 px past the rail at 1280, seen in the walk's screenshot), the Overview's `h1` (529 px wide at 375, the page 888 px), and *Your apps*' card link and heading at 375. Real names rarely do, because a hyphen breaks. | `packages/ui/src/components.css:954` (`.mf-rail__over`), `packages/ui/src/tokens.css:98` (`.page-title`; the Overview's at `screens/overview/overview.tsx:159`), `packages/web/src/app.css:226` and `:270` (`.app-card__name`, `.app-card__link`): none sets `overflow-wrap`. | S | faculty-visible |
+| m72 | `manifest-app-minors`' run of the read-only walk, 2026-10-02 | `scripts/walk/read-only.ts` fails *"the walk wrote nothing"* (its other 37 checks pass): on an app page the shell mints our watch token (`useWatch`, `ensureEach` on *Your apps*: F6 sitting 5) when our server keeps none for the app, as after `check-keeping.sh`'s `DELETE`, and the walk blocks the mint, as it should. | `scripts/walk/read-only.ts` (no answer for `GET /api/apps/:projectId/keeping`); `packages/web/src/screens/keeping/watch.ts:56`. | S | scripts |
 
-**m63.** `overflow-wrap: anywhere` on the three closes it. The overline and `.page-title` are the design system's, so
-they are fixed in `packages/ui` at source, with a `styles.test.ts` case each (CSS read as text: jsdom applies none). The
-card's two are `app.css`'s. The real witness is a walk at 375 and 1280 with the name rewritten in the browser to a word
-that cannot break, as 47's control did. Its layout check (`1b82119`) now measures every box with text, so it is the test
-that goes red without the fix.
+**m72.** Answer `GET /api/apps/:projectId/keeping` in the walk as kept (`page.rewrite`: `{ watching: true, until: <far>,
+tokenId: null, mine: false }`), as `manifest-app-minors`' walk did, so a read-only walk mints nothing and leaves no watch
+for `check-keeping.sh` to meet. Control: without the rewrite, the check goes red.
 
 **From F6's whole-branch review** (sitting 7's unattended half, `manifest-app-s7`, 2026-10-02; the plan's entry *Sitting
 7, part one*, its *Minors*). Each was read in the code at `d3600be`; none was fixed (the review's two Important were).
@@ -242,6 +224,87 @@ kept state, or the stream's `keeping.stopped` within a minute); test with a roun
 | F5 sitting 3, review (ledger 113) | `launchedAt` read once per slug, so a launch elsewhere went unheard | `2788bde`, `154a227` (m45 is its remaining edge) |
 | F5 sitting 5, *Seen at 375, not changed* | The landed address broke at the slug's hyphen | `ef1dd6b` (`LiveAddress`, at Rich's word) |
 | F5 sitting 6 (first half), own review M2 (ledger 315) | A failed dry run's instance read *"It never answered"* before a launch | `1c1be77` (`asServed`: before a launch only an answering instance is there) |
+| **m1**: F5 sitting 3, review (ledger 117) | The Overview's address list named *"Its three addresses"* whatever the rows drawn | `2b9c3e1` (*"Its addresses"*; no list when no row), `13e6e17` (`read-only.ts` waits for the Overview, not the list) |
+| **m2**: F5 sitting 3, review (ledger 115) | *Going live*'s set-apart list unnamed; either list drawn empty | `7345e0c` (one list, named by its heading; code review apart by its row) |
+| **m3**: F5 sitting 3, review (ledger 114) | *Going live*'s headings: the `h1`, the clocks' `h3`, then the short jobs' `h2` | `c5bae5a` (ClockItem's `level`, ours; the clocks at `h2`) |
+| **m4**: F5 sitting 4, review (ledger 187) | The focus lost after a failed press on *Talk it through* and *Ask for a change* | `09c45da` (`useFocusBack`, `change/press.ts`), `92002fa` (only when the focus was lost; the review's I1) |
+| **m14**: F3 sitting 7, review (ledger 214) | A secret answered after a refused token sent with that token | `ba7e529` (the token store's alone) |
+| **m19**: F3 sitting 7, review (ledger 245) | `SOURCE_GIT_FAILED` never retried | `d4ea05b` (a read asked once more, never a write) |
+| **m63**: `manifest-app-47`'s walk control (`1b82119`) | An app's name with a word that cannot break runs out of the rail, the title, the card | `ecbbec5` (`overflow-wrap: anywhere`, at source) |
+
+### 2026-10-02 — m1–m4, m14, m19 and m63 fixed at Rich's word (`manifest-app-minors`, overnight, mock mode only)
+
+**Rich's word** (2026-10-01, ~22:35 PDT, in `manifest-app-3a`'s session): *"m1–m4 accessibility, m14 + m19 (server),
+m63 long app names"*. Every other minor stays deferred. One commit per minor, each test-first (the new test watched red
+for the defect, then green) and landed on `main` by fast-forward from the worktree `manifest-app-minors`.
+
+**Decided, routine** (the option chosen; the options rejected; what changing course costs):
+
+- **m1**: the list's name is *"Its addresses"*, the walk-through's own phrase (moment 20's *Delete it*), and no `<ul>` is
+  drawn when no row is. Rejected: a name that counts (*"Its two addresses"*), since a screen reader already says the
+  count, and it is a word per count. Changing it is one string in `words.ts` (marked *Ours*).
+- **m2**: one list, named by the section's heading (`aria-labelledby`), with code review set apart by its own row
+  (`going-live__row--apart`: the same rule and space as before, measured in the walk's screenshot). Rejected: naming the
+  second list, which needs new words (Rich's). Changing it back to two lists costs a name for the second.
+- **m3**: ClockItem gains our `level` (2 or 3; absent, the reference's `h3`, so the parity test holds), and *Going live*
+  asks for 2: the page reads 1, 2, 2, 2. Its class sets every visible property, so nothing moved on screen. Rejected: a
+  heading over the clocks (new words). `ClockItem.test.tsx` holds it.
+- **m4**: one hook, `useFocusBack` (`screens/change/press.ts`, beside `pressFailed`): the failure owes the focus for the
+  render after it, and the button takes it **only if the focus was lost** (on the page, or nowhere: the review's I1, so
+  someone who went back to their words while a slow press failed keeps their place); the alert still announces. A
+  session that ended is the shell's to say, and owes nothing. Not looked at: the bigger presses that become a whole
+  phase (*Let your students in*, *Start it again*, the dry run, *Trying out*'s put): their focus after an ending is a
+  different question.
+- **m14**: the answer reads the conversation token store alone. It holds the newest token handed over (Carry on and the
+  line read theirs from it) and drops a refused one, while the round's own may be the refused one until *Carry on*.
+  With none, `409 TOKEN_MISSING`, and the page already hands a new token over and sends the answer again
+  (`building.tsx`'s `send`). Rejected: clearing `live.token` on a drop (a type change through the round for the same
+  effect).
+- **m19**: the sketch said *"in `call()`"*, but the round's git reads never pass through it: they go through its source
+  (and `tracedSource`, which spreads it). So `gitRetried` wraps the round's own source: `tree` and `file` asked once more
+  on `SOURCE_GIT_FAILED` alone, a commit never (its own dry run and Idempotency-Key). The retry is not traced (the trace
+  records the read once, by its answer). Not covered: the plan's reads outside the round (`api/plan.ts`, through
+  `platform/authoring.ts`); a passing git failure there is still said as a refusal.
+- **m63**: `overflow-wrap: anywhere` on `.mf-rail__over` and `.page-title` at source (a `styles.test.ts` case each,
+  `tokens.css` now read too), and on `.app-card__name`, `.app-card__link` (`app.css`).
+
+**Controls.** Each new unit test was red before its fix. m4's was red again with the hook's `focus()` removed; m19's
+commit guard went red with the commit retried too; each restored.
+
+**The review** (a fresh reviewer, `f8129e3..ecbbec5`, read-only): no Critical; m14 and m19 judged correct (every
+`start` and `carryOn` takes its token from the store, which drops one only after a `401`; the retry sits where every read
+of the round passes, traced once, the commit untouched). **One Important, fixed** (`92002fa`): m4's hook took the focus
+from wherever the person was when a press failed (a press can take some seconds; *Ask for a change*'s box stays
+editable), and its debt could outlive the failure; both test-first. **Its Minor 3, fixed** (`13e6e17`): `read-only.ts`
+waited for the address list, which m1 now leaves out when empty. **Not fixed, recorded:** a screen reader may cut the
+alert short as the focus lands on the button (jsdom cannot hear it; pointing the button's `aria-describedby` at the
+notice, or a VoiceOver check, would settle it); when code review is lit (`lightUp`), its left bar now runs up through
+the set-apart padding to the rule (cosmetic, rare: code review is *not built*); m19 leaves the plan's reads outside the
+round (above); m14 leaves the moment between the platform refusing a token and the round dropping it (older than this).
+
+**The walk** (headless Chrome, `scripts/walk/`, on 7105 in mock mode, at 1440 and 375; read-only, our watch answered as
+kept so no app page minted one; its script was in the session's scratchpad): m1 with two addresses and with none, m2
+and m3 on *Going live*, m4's two presses failed by a mint answered `503` and pressed from the keyboard's focus, m63 with
+the app's name rewritten in the browser to a word that cannot break. **Before m63 landed: 36/39, its three red** (at
+1440 the overline 239 px out of the rail and the `h1` 35 px; at 375 the card's link 180 px past its card, and the `h1`
+516 px, the page 875 px wide); **after: 39/39**, and again after the review's fix (*Talk it through*'s lookup of a change
+for the refusal answered as none: the acceptance below leaves one for the mock's approval, and the press rightly opens
+it). Every other check passed with a control that re-made its defect in the
+page and went red (the old name over two rows; an empty list; a second list; a clock's `h3`; `focus()` made a no-op
+before the press).
+
+**The acceptance**, against the running server, no fresh database (the server's API moved only for m14 and m19, both
+inside a round): `check-slice.sh` 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12, `check-seeing.sh` 8/8,
+`check-going-live.sh` 8/8. They leave their conversations on the mock's app in the dev database, as every run does.
+
+**The gates** (after the review's fixes, `13e6e17`): `pnpm test` 2211 twice (2193 before: 18 new), `pnpm lint`,
+`pnpm typecheck`, `pnpm format:check`, all clean. Our server on 7105 stays in mock mode (its `tsx watch` restarted
+itself on each server landing, pid 24890 throughout); nothing of ours is left running.
+
+**Found:** m72 (above, *Found since*): `read-only.ts` goes red on *"the walk wrote nothing"*.
+
+**For Rich:** nothing new to decide. m1's *"Its addresses"* is ours, and so is m2's choice of one list over a named
+second one: either is one line to change.
 
 ## No longer applies
 
