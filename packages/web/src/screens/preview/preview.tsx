@@ -6,6 +6,7 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, remember, TABS, type Tab } from '../../router.js'
 import { words } from '../../words.js'
+import { phraseOf, stepOf } from '../going-live/steps.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { asServed } from '../your-apps/model.js'
 import { Hostname } from '../your-apps/your-apps.js'
@@ -36,6 +37,13 @@ type Loaded =
   | { state: 'loading' }
   | { state: 'trouble'; trouble: Trouble }
   | { state: 'ready'; addresses: Partial<Record<Tab, Address>> }
+/**
+ * F5b: trying-out's registration, step 2 on *Going live*: `registered` once UBC's identity team has
+ * (its record `active`), else the step's state in words for the line, or null when the records
+ * could not be read (then it is *not registered*: nothing to open).
+ */
+type Registration =
+  { state: 'reading' } | { state: 'registered' } | { state: 'not'; phrase: string | null }
 
 /**
  * THE PREVIEW'S READS, IN THE PERSON'S SESSION (Decision 2): the app's addresses, then each
@@ -118,6 +126,7 @@ export function Preview({
   const [attempt, setAttempt] = useState(0)
   const panels = useId()
   const launched = (project.launchedAt ?? null) !== null
+  const [registration, setRegistration] = useState<Registration>({ state: 'reading' })
 
   useEffect(() => {
     let live = true
@@ -135,6 +144,39 @@ export function Preview({
     }
     // `now` is a clock, read once per attempt: never a reason to read again.
   }, [platform, project.id, launched, timeZone, expire, attempt])
+
+  // F5b (Decision 5): TRYING-OUT'S REGISTRATION, read on its own, so it never holds the page: a
+  // failed read is *not registered*, said without a state; a session that ended is the shell's.
+  useEffect(() => {
+    let live = true
+    platform.getLaunchRecords(project.id).then(
+      (records) => {
+        if (!live) return
+        if (records.stagingRegistration?.state === 'active')
+          return setRegistration({ state: 'registered' })
+        const step = stepOf('staging', {
+          records,
+          items: [],
+          now: now(),
+          timeZone,
+          sending: false,
+        })
+        setRegistration({ state: 'not', phrase: phraseOf(step) })
+      },
+      (error: unknown) => {
+        if (!live) return
+        const refusal = refusalOf(error)
+        if (refusal.kind === 'signed-out') return expire()
+        if (refusal.kind === 'refused')
+          console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+        setRegistration({ state: 'not', phrase: null })
+      },
+    )
+    return () => {
+      live = false
+    }
+    // `now` is a clock, read once per attempt: never a reason to read again.
+  }, [platform, project.id, timeZone, expire, attempt])
 
   // [WHAT WENT WRONG] (F4 Task 9): the draft's failed attempt, when one of our rounds put it
   // there, opens that conversation. None of ours did: no button.
@@ -211,6 +253,12 @@ export function Preview({
                 <Panel
                   tab={t}
                   address={loaded.addresses[t]}
+                  registration={registration}
+                  goingLive={
+                    launched
+                      ? null
+                      : `/apps/${encodeURIComponent(project.slug)}/going-live`
+                  }
                   wentWrong={
                     t === 'draft' && wentWrong !== null
                       ? `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(wentWrong)}`
@@ -268,12 +316,18 @@ export function Preview({
 function Panel({
   tab,
   address,
+  registration,
+  goingLive,
   wentWrong,
   put,
   fix,
 }: {
   tab: Tab
   address: Address
+  /** Trying-out's registration (F5b): *[Open it]* once registered, else the step's line. */
+  registration: Registration
+  /** Where *Going live* is, before a launch; null once launched (no line then). */
+  goingLive: string | null
   /** The conversation whose round put the failed attempt there (F4 Task 9). */
   wentWrong: string | null
   /** [Put this version on trying-out], beside the draft's facts. */
@@ -283,6 +337,7 @@ function Panel({
 }) {
   const { env, serving, attempt } = address
   const reaches = env.instance !== null
+  const registered = registration.state === 'registered'
   return (
     <div className="preview__columns">
       <div className="preview__world">
@@ -291,9 +346,9 @@ function Panel({
             <Hostname name={env.hostname} />
           </span>
           {/* Only where something is there to open; a tab of its own, never a frame. Never on
-              trying out until its registration is active (Rich: "Hide until registered"), and
-              nothing records one yet: F5b shows it. */}
-          {reaches && tab !== 'trying-out' ? (
+              trying out until its registration is active (Rich: "Hide until registered"), which
+              F5b reads (Decision 5). */}
+          {reaches && (tab !== 'trying-out' || registered) ? (
             <a
               className="mf-btn mf-btn--secondary mf-btn--sm"
               href={env.url}
@@ -311,10 +366,20 @@ function Panel({
           </>
         ) : null}
         {tab === 'trying-out' ? (
-          <Card className="preview__wait" tone="waiting">
-            <StateChip state="waiting" label={w.waitingOn} />
+          <Card
+            className="preview__wait"
+            {...(registered ? {} : { tone: 'waiting' as const })}
+          >
+            {/* Registered: nothing waits on UBC's identity team any more (F5b). */}
+            {registered ? null : <StateChip state="waiting" label={w.waitingOn} />}
             <p className="body-lead">{w.tryingOut}</p>
           </Card>
+        ) : null}
+        {tab === 'trying-out' && registration.state === 'not' && goingLive !== null ? (
+          <p className="body preview__step">
+            <span>{w.step(registration.phrase)}</span>{' '}
+            <a {...linkTo(goingLive)}>{w.toGoingLive}</a>
+          </p>
         ) : null}
         {tab === 'students' ? <p className="body-lead">{w.students}</p> : null}
       </div>

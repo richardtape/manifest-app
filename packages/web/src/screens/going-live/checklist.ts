@@ -11,16 +11,11 @@ import { signOffRow, type Decided } from './sign-off.js'
  */
 
 /**
- * The two production clocks (Decision 4): the registration with UBC's identity team and the
- * Privacy Office's assessment. They are cards of their own on *Going live*, never rows, and the
- * band shows while either is unmet (Decision 3).
+ * The two checklist items the steps read (F5b, `steps.ts`): the production registration with UBC's
+ * identity team and the Privacy Office's assessment. They are steps on *Going live*, never rows,
+ * and the band shows while any step is not done (`bandOf`).
  */
 export const CLOCK_IDS: readonly string[] = ['iam-registration', 'privacy-assessment']
-
-/** Whether a production clock is unmet: anything but `met`, an item not tracked yet included. */
-export function clocksUnmet(readiness: Schemas['LaunchReadiness']): boolean {
-  return readiness.items.some((i) => CLOCK_IDS.includes(i.id) && i.state !== 'met')
-}
 
 /** The five states (20-states.md): a row is one of these and no other. */
 export type Five = 'working' | 'waiting' | 'attention' | 'steady' | 'notyet'

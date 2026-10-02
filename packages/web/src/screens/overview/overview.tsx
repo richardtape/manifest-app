@@ -7,7 +7,8 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, remember, TABS, type Tab, type Then } from '../../router.js'
 import { words } from '../../words.js'
-import { clocksUnmet, rowsOf } from '../going-live/checklist.js'
+import { rowsOf, type Five } from '../going-live/checklist.js'
+import { bandOf, stepsOf } from '../going-live/steps.js'
 import { HowWeKeepWatch } from '../keeping/how.js'
 import { dayWords, needsStillTrue, type PageNeed } from '../keeping/lines.js'
 import { NeedsBand } from '../keeping/needs.js'
@@ -36,8 +37,8 @@ const STATE: Record<FactTone, State> = {
 type Seen = {
   /** One row per address: the Preview's tab, and F4's serving fact. */
   rows: { tab: Tab; serving: Said }[]
-  /** Moment 10's band (Decision 3). */
-  band: boolean
+  /** Moment 10's band (Decision 3), from F5b's steps; null when none is drawn. */
+  band: { button: 'start' | 'going-live'; state: Five } | null
   /** Moment 15, once the app has launched (Task 9): what leads the page. */
   handed: Handed | null
   /** F6 Task 9: the page's own need, a Going live row theirs to do, before a launch. */
@@ -87,7 +88,12 @@ async function read(
         platform.getRelease(id),
       ),
     ),
-    Promise.allSettled(asks ? [platform.getLaunchReadiness(project.id)] : []),
+    // F5b: the records beside the checklist, under the same gate (Decision 4).
+    Promise.allSettled(
+      asks
+        ? [platform.getLaunchReadiness(project.id), platform.getLaunchRecords(project.id)]
+        : [],
+    ),
   ])
   for (const r of [...releases, ...checklist])
     if (r.status === 'rejected') {
@@ -101,8 +107,15 @@ async function read(
       r.status === 'fulfilled' ? [[r.value.id, r.value] as const] : [],
     ),
   )
-  const answered = checklist[0]
-  const readiness = answered?.status === 'fulfilled' ? answered.value : undefined
+  const [answered, recorded] = checklist
+  const readiness =
+    answered?.status === 'fulfilled'
+      ? (answered.value as Schemas['LaunchReadiness'])
+      : undefined
+  const records =
+    recorded?.status === 'fulfilled'
+      ? (recorded.value as Schemas['LaunchRecords'])
+      : undefined
   const launched = (project.launchedAt ?? null) !== null || readiness?.launched === true
   const students = of('students')
   // F6 Task 11: switched off, or back and not started for them: the students' address shows the
@@ -134,7 +147,15 @@ async function read(
       const env = asServed(found, launched)
       return [{ tab, serving: servingFact(env, serving(env), timeZone) }]
     }),
-    band: !launched && readiness !== undefined && clocksUnmet(readiness),
+    // F5b: from the steps; none on a switched-off app (Decision 16), and none unless both were read.
+    band:
+      project.state === 'archived' || readiness === undefined || records === undefined
+        ? null
+        : bandOf(
+            stepsOf({ records, readiness, now, timeZone, sending: false }),
+            launched,
+            false,
+          ),
     handed:
       launched && running
         ? await handOver(
@@ -343,7 +364,9 @@ export function Overview({
           {loaded.seen.handed === null ? null : (
             <ForYourStudents name={project.name} handed={loaded.seen.handed} />
           )}
-          {loaded.seen.band ? <Band slug={project.slug} /> : null}
+          {loaded.seen.band === null ? null : (
+            <Band slug={project.slug} band={loaded.seen.band} />
+          )}
           {loaded.seen.rows.length === 0 ? null : (
             <ul className="overview__addresses" aria-label={w.addresses}>
               {loaded.seen.rows.map(({ tab, serving }) => (

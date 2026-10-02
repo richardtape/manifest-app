@@ -1,7 +1,7 @@
 import type { Schemas } from '@manifest/contract'
 import type { State } from '@manifest-app/ui'
 import { words } from '../../words.js'
-import { clocksUnmet } from '../going-live/checklist.js'
+import { bandOf, stepsOf } from '../going-live/steps.js'
 import { clockWords, dayWords } from '../keeping/lines.js'
 
 /**
@@ -115,7 +115,7 @@ export type AppCard = {
   students: Fact
   draft: Address
   tryingOut: Address
-  /** Built, not launched, and a production clock unmet: the line and [Going live] (Decision 3). */
+  /** Built, not launched, and a step not done (F5b): the line and [Going live] (Decision 3). */
   beforeStudents: boolean
   /** F6 (design §2): "Switched off, 12 December", for an app its owner switched off; else null. */
   switchedOff: string | null
@@ -140,13 +140,17 @@ export function beforeLaunch(
 /**
  * Moment 16's card, without its needs-you band and history (F6). `project` is as
  * `getProject?expand=environments` answers it; `releases` holds the release each answering
- * address reaches; `readiness` is its checklist, read only before launch (`beforeLaunch`).
+ * address reaches; `launch` is its checklist and its three records, read only before launch
+ * (`beforeLaunch`), and only when both were read (F5b: the steps read both).
  */
 export function appCard(
   project: Schemas['Project'],
   releases: ReadonlyMap<string, Schemas['Release']>,
   timeZone?: string,
-  readiness?: Schemas['LaunchReadiness'],
+  launch?: {
+    readiness: Schemas['LaunchReadiness']
+    records: Schemas['LaunchRecords']
+  },
   /** F6: since when our watch has found the students' address down (a `down` need's `from`). */
   downSince?: string,
 ): AppCard {
@@ -189,12 +193,17 @@ export function appCard(
     draft: address('sandbox'),
     tryingOut: address('staging'),
     beforeStudents:
-      readiness !== undefined &&
+      launch !== undefined &&
       beforeLaunch(
         project,
         project.environments?.find((e) => e.kind === 'sandbox'),
       ) &&
-      clocksUnmet(readiness),
+      // Only whether a step is not done, which no clock decides: its words are not read here.
+      bandOf(
+        stepsOf({ ...launch, now: new Date(0), timeZone, sending: false }),
+        false,
+        false,
+      ) !== null,
     switchedOff,
     unreachable,
     launchedAt: project.launchedAt ?? null,

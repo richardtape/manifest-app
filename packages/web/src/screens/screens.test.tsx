@@ -63,7 +63,9 @@ function platform(
     runRehearsal: never,
     getLaunchReadiness: (answers.getLaunchReadiness ??
       never) as Platform['getLaunchReadiness'],
-    getLaunchRecords: (answers.getLaunchRecords ?? never) as Platform['getLaunchRecords'],
+    // F5b: the mock's records, so no page that reads the steps waits on them (ORIENTATION §7).
+    getLaunchRecords: (answers.getLaunchRecords ??
+      (() => Promise.resolve(fixtures.LAUNCH_RECORDS))) as Platform['getLaunchRecords'],
     // Nobody has decided: the shared fake answers it, so no page waits on it (sitting 3's trap).
     getApproval: (answers.getApproval ??
       (() => Promise.resolve(null))) as Platform['getApproval'],
@@ -275,6 +277,8 @@ function mockPlatform(overrides: Partial<Schemas['Project']> = {}, me = fixtures
     listIncidents: (id: string) =>
       Promise.resolve({ environmentId: id, incidents: [] as Schemas['Incident'][] }),
     getLaunchReadiness: () => Promise.resolve(fixtures.LAUNCH_READINESS),
+    // F5b: the steps are read beside the checklist (ORIENTATION §7: a new read answered here).
+    getLaunchRecords: () => Promise.resolve(fixtures.LAUNCH_RECORDS),
   })
 }
 
@@ -471,8 +475,9 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
     ),
   })
 
-  it('a built app, not launched, with a clock unmet: the line, and Going live', async () => {
+  it('a built app, not launched, with a step not done: the line, one after another, and Going live', async () => {
     const asked: string[] = []
+    const records: string[] = []
     render(
       <App
         platform={{
@@ -481,6 +486,10 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
             asked.push(id),
             Promise.resolve(fixtures.LAUNCH_READINESS)
           ),
+          getLaunchRecords: (id: string) => (
+            records.push(id),
+            Promise.resolve(fixtures.LAUNCH_RECORDS)
+          ),
         }}
       />,
     )
@@ -488,15 +497,47 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
       await screen.findByRole('heading', { name: 'Mock course app' })
     ).closest('.mf-card') as HTMLElement
     expect(await within(card).findByText(words.yourApps.beforeStudents)).toBeTruthy()
-    expect(words.yourApps.beforeStudents).toMatch(/may take several days/)
+    expect(words.yourApps.beforeStudents).toBe(
+      'Before your students can use it: three things other people answer, one after another, and each may take several days.',
+    )
     expect(card.textContent).not.toMatch(/weeks/i)
     const going = within(card).getByRole('link', { name: words.yourApps.goingLive })
     expect(going.getAttribute('href')).toBe('/apps/mock-app/going-live')
     expect(asked).toEqual([fixtures.PROJECT_ID])
+    expect(records).toEqual([fixtures.PROJECT_ID])
     expect(machineryIn(wordsOnScreen())).toEqual([])
   })
 
-  it('launched, or not built: no line, and no checklist read', async () => {
+  it('every asking app’s records are asked at once, beside its checklist, not one after another (S0)', async () => {
+    const records: string[] = []
+    const other = {
+      ...fixtures.PROJECT,
+      id: '22222222-2222-4222-8222-000000000005',
+      slug: 'other-app',
+      name: 'Other app',
+    }
+    render(
+      <App
+        platform={platform({
+          getMe: () => Promise.resolve(ME),
+          listProjects: () => Promise.resolve([fixtures.PROJECT, other]),
+          getProject: (id: string) =>
+            Promise.resolve(expanded(id === other.id ? other : fixtures.PROJECT)),
+          getRelease: () => Promise.resolve(fixtures.RELEASE),
+          // Neither answers: both are asked all the same.
+          getLaunchReadiness: () => new Promise(() => undefined),
+          getLaunchRecords: (id: string) => (
+            records.push(id),
+            new Promise(() => undefined)
+          ),
+        })}
+      />,
+    )
+    await waitFor(() => expect(records).toHaveLength(2))
+    expect([...records].sort()).toEqual([fixtures.PROJECT_ID, other.id].sort())
+  })
+
+  it('launched, or not built: no line, and neither the checklist nor the records read', async () => {
     const asked: string[] = []
     render(
       <App
@@ -510,6 +551,10 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
             asked.push(id),
             Promise.resolve(fixtures.LAUNCH_READINESS)
           ),
+          getLaunchRecords: (id: string) => (
+            asked.push(id),
+            Promise.resolve(fixtures.LAUNCH_RECORDS)
+          ),
         })}
       />,
     )
@@ -519,7 +564,7 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
     expect(asked).toEqual([])
   })
 
-  it('both clocks met: no line', async () => {
+  it('every step done: no line', async () => {
     render(
       <App
         platform={{
@@ -532,10 +577,20 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
                 state: 'met' as const,
               })),
             }),
+          getLaunchRecords: () =>
+            Promise.resolve({
+              ...fixtures.LAUNCH_RECORDS,
+              privacyAssessment: {
+                ...fixtures.PRIVACY_ASSESSMENT,
+                state: 'approved' as const,
+                approvedAt: '2026-09-21T19:00:00.000Z',
+              },
+            }),
         }}
       />,
     )
     await screen.findByRole('heading', { name: 'Mock course app' })
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(screen.queryByText(words.yourApps.beforeStudents)).toBeNull()
   })
 
@@ -552,6 +607,25 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
     await screen.findByRole('heading', { name: 'Mock course app' })
     await waitFor(() => expect(warn).toHaveBeenCalled())
     expect(screen.queryByText(words.yourApps.beforeStudents)).toBeNull()
+    expect(screen.queryByText(words.refused.body)).toBeNull()
+    vi.restoreAllMocks()
+  })
+
+  it('records that cannot be read: the card as it is, without the line, never the card lost', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    render(
+      <App
+        platform={{
+          ...mockPlatform(),
+          getLaunchRecords: () => Promise.reject(refused(500, 'INTERNAL')),
+        }}
+      />,
+    )
+    const card = (
+      await screen.findByRole('heading', { name: 'Mock course app' })
+    ).closest('.mf-card') as HTMLElement
+    await waitFor(() => expect(warn).toHaveBeenCalled())
+    expect(within(card).queryByText(words.yourApps.beforeStudents)).toBeNull()
     expect(screen.queryByText(words.refused.body)).toBeNull()
     vi.restoreAllMocks()
   })
@@ -648,6 +722,7 @@ describe('one app that cannot be read does not hide the others (review, deferred
       getProject,
       getRelease: getRelease ?? (() => Promise.resolve(fixtures.RELEASE)),
       getLaunchReadiness: () => Promise.resolve(fixtures.LAUNCH_READINESS),
+      getLaunchRecords: () => Promise.resolve(fixtures.LAUNCH_RECORDS),
     })
 
   it('the one that failed says it cannot tell; the other is drawn in full', async () => {

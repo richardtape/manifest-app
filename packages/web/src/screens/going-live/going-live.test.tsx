@@ -34,7 +34,7 @@ const NOTHING_RECORDED: Schemas['LaunchRecords'] = {
   privacyAssessment: null,
   stagingRegistration: null,
 }
-/** The checklist that goes with nothing recorded: both clocks unmet. */
+/** The checklist that goes with nothing recorded: the assessment and production's registration unmet. */
 const CLOCKS_UNMET: Schemas['LaunchReadiness'] = {
   ...fixtures.LAUNCH_READINESS,
   items: fixtures.LAUNCH_READINESS.items.map((i) =>
@@ -157,7 +157,7 @@ describe('the page: letting your students in (moment 11)', () => {
     await open()
     expect(await screen.findByText(g.lead)).toBeTruthy()
     expect(g.lead).toBe(
-      'Going live isn’t a button. Most of it takes minutes, but three things are answered by other people, and each may take several days. That’s why this page exists from day one.',
+      'Going live isn’t a button. Most of it takes minutes, but three things are answered by other people, one after another, and each may take several days. That’s why this page exists from day one.',
     )
   })
 
@@ -203,29 +203,38 @@ describe('the page: letting your students in (moment 11)', () => {
     expect(s.called('getRelease')).toEqual([])
   })
 
-  it('two clocks, and the trying-out address’s registration in one line with its link', async () => {
+  it('one numbered list of three steps in UBC’s order, one card (the assessment’s), and F5’s staging line gone (D2)', async () => {
     await open()
     await jobs()
+    const steps = screen.getByRole('list', { name: g.steps.label })
+    expect(steps.tagName).toBe('OL')
+    // The card's title read by its class, not its tag: its level is the page's (m3).
     expect(
-      clocks().map((c) => c.querySelector('.mf-clockitem__title')?.textContent),
-    ).toEqual([g.clocks.registration.title, g.clocks.assessment.title])
-    expect(screen.getByText(g.staging)).toBeTruthy()
-    expect(screen.getByRole('link', { name: g.seeTryingOut }).getAttribute('href')).toBe(
-      `/apps/${SLUG}/preview?tab=trying-out`,
+      within(steps)
+        .getAllByRole('listitem')
+        .map(
+          (li) => li.querySelector('.mf-clockitem__title, .going-live__name')?.textContent,
+        ),
+    ).toEqual([g.steps.assessment.title, g.steps.staging.title, g.steps.production.title])
+    expect(clocks()).toHaveLength(1)
+    expect(clocks()[0]!.querySelector('.mf-clockitem__title')?.textContent).toBe(
+      g.steps.assessment.title,
     )
+    expect(document.body.textContent).not.toContain('a registration of its own')
   })
 
-  it('each clock says what its record says: the mock’s registration active, its assessment with the Privacy Office', async () => {
+  it('each step says what its record says: the assessment with the Privacy Office since the day it was sent, both registrations registered', async () => {
     await open()
     await jobs()
-    const [registration, assessment] = clocks()
-    expect(registration!.querySelector('.mf-chip')?.textContent).toBe(g.clocks.done)
-    expect(registration!.textContent).toContain('Registered 14 September')
+    const [assessment] = clocks()
     expect(assessment!.querySelector('.mf-chip')?.textContent).toBe(
-      g.clocks.assessment.with,
+      g.steps.assessment.with,
     )
-    expect(assessment!.textContent).toContain('recorded 19 September')
-    expect(assessment!.textContent).toContain('waiting 11 days')
+    expect(assessment!.textContent).toContain('since 18 September')
+    expect(assessment!.textContent).toContain('waiting 12 days')
+    const steps = screen.getByRole('list', { name: g.steps.label })
+    expect(steps.textContent).toContain('Registered 8 September')
+    expect(steps.textContent).toContain('Registered 14 September')
   })
 
   it('a registration the checklist counts unmet never says done: it is with the Manifest team (Rich, 2026-09-30)', async () => {
@@ -240,28 +249,114 @@ describe('the page: letting your students in (moment 11)', () => {
       }),
     )
     await jobs()
-    const [registration] = clocks()
-    expect(registration!.querySelector('.mf-chip')?.textContent).toBe(g.clocks.withTeam)
-    expect(registration!.textContent).toContain(g.clocks.needsChange)
+    const third = within(screen.getByRole('list', { name: g.steps.label })).getAllByRole(
+      'listitem',
+    )[2]!
+    expect(third.querySelector('.mf-chip')?.textContent).toBe(g.steps.withTeam)
+    expect(third.textContent).toContain(g.steps.needsChange)
   })
 
-  it('nothing recorded: both not started, still, with the honest admission', async () => {
+  it('every step done: three steady lines, and no card', async () => {
+    await open(
+      stage({
+        records: {
+          ...fixtures.LAUNCH_RECORDS,
+          privacyAssessment: {
+            ...fixtures.PRIVACY_ASSESSMENT,
+            state: 'approved',
+            approvedAt: '2026-09-21T19:00:00.000Z',
+          },
+        },
+        readiness: {
+          ...fixtures.LAUNCH_READINESS,
+          items: fixtures.LAUNCH_READINESS.items.map((i) => ({
+            ...i,
+            state: 'met' as const,
+          })),
+        },
+      }),
+    )
+    await jobs()
+    expect(clocks()).toHaveLength(0)
+    const steps = screen.getByRole('list', { name: g.steps.label })
+    expect(steps.querySelectorAll('.mf-is-steady')).toHaveLength(3)
+  })
+
+  it('nothing recorded: step 1 not started, still, with the honest admission (part one); the others say what they wait for', async () => {
     await open(stage({ records: NOTHING_RECORDED, readiness: CLOCKS_UNMET }))
     await jobs()
-    for (const c of clocks()) {
-      expect(c.querySelector('.mf-chip')?.textContent).toBe(g.clocks.notStarted)
-      expect(c.textContent).toContain(g.clocks.duration)
-      expect(c.textContent).toContain(g.clocks.admission.title)
-      expect(c.textContent).toContain(g.clocks.admission.body)
-      expect(c.querySelector('.mf-pulse, .mf-bar__fill--working')).toBeNull()
-    }
+    expect(clocks()).toHaveLength(1)
+    const [c] = clocks()
+    expect(c!.querySelector('.mf-chip')?.textContent).toBe(g.steps.notStarted)
+    expect(c!.textContent).toContain(g.steps.duration)
+    expect(c!.textContent).toContain(g.steps.admission.title)
+    expect(c!.textContent).toContain(g.steps.admission.body)
+    expect(c!.querySelector('.mf-pulse, .mf-bar__fill--working')).toBeNull()
+    const steps = screen.getByRole('list', { name: g.steps.label })
+    expect(steps.textContent).toContain(g.steps.staging.next)
+    expect(steps.textContent).toContain(g.steps.production.next)
   })
 
-  it('no stopgap: no mailto anywhere, and nothing to press on a clock', async () => {
+  it('no stopgap: no mailto anywhere, nothing to press on a step, and no step needs you (part one)', async () => {
     await open(stage({ records: NOTHING_RECORDED, readiness: CLOCKS_UNMET }))
     await jobs()
     expect(document.querySelector('a[href^="mailto:"]')).toBeNull()
-    for (const c of clocks()) expect(c.querySelector('a, button')).toBeNull()
+    const steps = screen.getByRole('list', { name: g.steps.label })
+    expect(steps.querySelector('a, button')).toBeNull()
+    expect(steps.querySelector('.mf-is-attention')).toBeNull()
+  })
+
+  it('switched off (Decision 16): every step and row says where it stands, and none has a button', async () => {
+    const s = stage({
+      readiness: {
+        ...fixtures.LAUNCH_READINESS,
+        // A dry run theirs to run, and a sign-off refused: each would draw its button.
+        items: fixtures.LAUNCH_READINESS.items.map((i) =>
+          i.id === 'rehearsal' || i.id === 'admin-approval'
+            ? { ...i, state: 'unmet' as const }
+            : i,
+        ),
+      },
+      approval: { ...fixtures.APPROVAL, decision: 'rejected', reason: 'Not this one.' },
+    })
+    s.platform.listProjects = () =>
+      Promise.resolve([
+        {
+          ...PROJECT,
+          state: 'archived',
+          archivedAt: '2026-09-29T17:00:00.000Z',
+        },
+      ])
+    await open(s)
+    const region = await jobs()
+    expect(within(region).getByText(g.rows.rehearsal.name)).toBeTruthy()
+    expect(within(region).getByText(g.rows.approval.name)).toBeTruthy()
+    expect(region.querySelector('button, a.mf-btn')).toBeNull()
+    expect(
+      screen.getByRole('list', { name: g.steps.label }).querySelector('button'),
+    ).toBeNull()
+    expect(clocks()).toHaveLength(1)
+  })
+
+  it('the same app switched on: the dry run and Talk it through are there (the control for the test above)', async () => {
+    await open(
+      stage({
+        readiness: {
+          ...fixtures.LAUNCH_READINESS,
+          items: fixtures.LAUNCH_READINESS.items.map((i) =>
+            i.id === 'rehearsal' || i.id === 'admin-approval'
+              ? { ...i, state: 'unmet' as const }
+              : i,
+          ),
+        },
+        approval: { ...fixtures.APPROVAL, decision: 'rejected', reason: 'Not this one.' },
+      }),
+    )
+    const region = await jobs()
+    expect(within(region).getByRole('button', { name: g.dryRun.button })).toBeTruthy()
+    expect(
+      within(region).getByRole('button', { name: g.rows.approval.talk }),
+    ).toBeTruthy()
   })
 
   it('the short jobs, for the end: the rows, and code review last, set apart', async () => {

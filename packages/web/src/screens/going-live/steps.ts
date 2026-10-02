@@ -48,7 +48,8 @@ export interface Step {
   /** The first step not done; exactly one while any is not done, none when all are. */
   current: boolean
   kind: StepKind
-  state: Five
+  /** Never working: nothing measured in days moves (20-states.md). */
+  state: Exclude<Five, 'working'>
   /** Who has it now, in words (Words proposed for Rich): "you", "the Manifest team", "UBC's Privacy Office"… */
   owner: string
   /** ClockItem's chip; a line's chip when not current. */

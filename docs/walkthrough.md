@@ -643,6 +643,21 @@ try it.
 - **a change on file is with UBC's identity team** (*"With UBC, counting days"*), as the platform's record means it:
   *"A change, recorded 18 September · waiting 3 days"*.
 
+*Changed 2026-10-01, with F5b's design and plan (Rich; the design's* Departures from the walk-through*):*
+- **three steps, one after another** (D2, UBC's order: *"app developed -> apply for PIA -> once a PIA is given -> provide
+  info to IAM team -> … staging … -> send production details to IAM team"*): *A privacy assessment*, then *Registering
+  your trying-out address*, then *Registering your students' address*, one numbered list on *Going live*; **only the
+  current step is a `ClockItem` card** (one on the page at a time), each other one line (*"Registered 3 October."*,
+  *"Next, once the Privacy Office has approved the assessment."*). The staging registration is step 2 on *Going live*,
+  and *Trying out* keeps one line: *"Registering it is the second of three steps on Going live: with UBC's identity team,
+  waiting 4 days."* **[Going live]**, and **[Open it in a new tab]** once it is registered (F5's Decision 4 replaced);
+- **each sent to the Manifest team**, not to UBC (D3: *"All three go via LTIC"*), who send it on: *Draft the request*
+  and *Fill in what we know* become one **[Start]** per step, and *"I've sent it"* becomes **[Send it to the Manifest
+  team]**, **when the platform's *sent to LTIC* step lands (FE-46)**. Until then (F5b part one) no step has an action,
+  and the current card keeps the honest admission;
+- **waits counted in Vancouver days** from the day it was sent (*"since 7 October · waiting 4 days"*), never animated;
+- the band and *Your apps*' line say *"one after another"*.
+
 **Trying to:** nothing. They did not know these existed. The design's job is that they never discover them on
 launch day (spec §13).
 
@@ -683,8 +698,8 @@ launch day (spec §13).
 **If it goes wrong:** nothing breaks. The band is **not yet**, then **waiting on someone**, and never **needs
 you** until the person is actually needed (a question from IAM, which reaches Manifest as nothing today).
 
-**They wait:** days, **waiting on someone**, completely still, with *"recorded 18 September · waiting 12 days"*
-once there is a date to count from (*"asked"* once F5b has the day it was sent).
+**They wait:** days, **waiting on someone**, completely still, with *"since 18 September · waiting 12 days"* once there
+is a date to count from (F5b: the day it was sent, counted in Vancouver days).
 
 ---
 
@@ -696,7 +711,8 @@ once there is a date to count from (*"asked"* once F5b has the day it was sent).
 
 **They see** *Going live* (rail), the prototype's *"Letting your students in"*, rebuilt on three clocks:
 - **Heading:** *"Letting your students in"*. *"Going live isn't a button. Most of it takes minutes, but three
-  things are answered by other people, and each may take several days. That's why this page exists from day one."*
+  things are answered by other people, one after another, and each may take several days. That's why this page exists
+  from day one."* (F5b: *"one after another"*.)
 - **The version that would go live**, stated once, at the top: *"What goes live is the version on your
   trying-out address: the one from 18 September, 3:12pm."* Production deploys only what staging serves
   (`RELEASE_NOT_STAGED`), so this is a fact, not a choice. Changing it is moment 9.
@@ -757,6 +773,13 @@ failure in a sentence with *[Fix it]*). FE-42 (a), the owner's own press, is car
 caller goes.
 
 ## 13. Waiting on an administrator
+
+*Changed 2026-10-01, with F5b's design and plan (Rich, D7; the design's* Departures from the walk-through*):* **FE-25
+landed** (the platform's `requestApproval`, `a1d4baa`), so *"There is nothing for asked"* is gone. Once a version is on
+trying-out and nobody has decided or asked, the row **needs you**: **[Ask a Manifest administrator to sign this off]**
+opens one optional note in place (*"Anything they should know?"*), then **[Ask them]**; asked, it is **waiting on
+someone**, *"asked 21 September · waiting 2 days"*, and the Manifest team is emailed (D5, the platform's). *"Manifest
+doesn't tell them yet that it's waiting"* goes.
 
 **Trying to:** get the sign-off, without knowing who gives it.
 

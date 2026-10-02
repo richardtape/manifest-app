@@ -118,7 +118,7 @@ export const words = {
      * words ("each may take several days", 2026-09-29), approved with the design.
      */
     beforeStudents:
-      'Before your students can use it: three things other people answer, and each may take several days.',
+      'Before your students can use it: three things other people answer, one after another, and each may take several days.',
     goingLive: 'Going live',
   },
   /**
@@ -507,8 +507,18 @@ export const words = {
     /** Rich (2026-09-28): UBC's words, everywhere, the laptop included. Never a date, never "We asked…". */
     tryingOut:
       "Trying out uses UBC's real staging sign-in, so UBC's identity team registers it first. That takes some time, as several teams at UBC help make sure the app and its data are kept safe and secure. Meanwhile, your draft is ready to try now.",
-    /** Waiting on someone, its owner named, still, with no number (Decision 4). */
+    /** Waiting on someone, its owner named, still, with no number (Decision 4); gone once registered (F5b). */
     waitingOn: "Waiting on UBC's identity team",
+    /**
+     * F5b (D2; the design's *Words for Rich*): trying-out's registration is step 2 on Going live. `state`
+     * is the step's, as part of the sentence ("with UBC's identity team, waiting 4 days"); null
+     * when the records could not be read.
+     */
+    step: (state: string | null) =>
+      state === null
+        ? 'Registering it is the second of three steps on Going live.'
+        : `Registering it is the second of three steps on Going live: ${state}.`,
+    toGoingLive: 'Going live',
     students: 'Not live yet. This is the address your students will use.',
     notRight: 'Not right? Tell us what to change.',
     askForChange: 'Ask for a change',
@@ -687,8 +697,11 @@ export const words = {
     addresses: 'Its addresses',
     band: {
       title: 'Before your students can use it.',
-      body: 'Three things other people answer, and each may take several days. Going live shows where each one is.',
+      /** F5b (D2): the design's *Words for Rich*. */
+      body: 'Three things other people answer, one after another, and each may take several days. Going live shows where each one is.',
       button: 'Going live',
+      /** F5b part two: while step 1 has nothing on file, and something can be sent. */
+      start: 'Start them',
     },
     /**
      * MOMENT 15, THE HAND-OVER (F5 Task 9, Decision 12): Rich's words, then the agreed plan's two
@@ -719,7 +732,8 @@ export const words = {
    */
   goingLive: {
     title: 'Letting your students in',
-    lead: 'Going live isn’t a button. Most of it takes minutes, but three things are answered by other people, and each may take several days. That’s why this page exists from day one.',
+    /** F5b (D2): the three are answered one after another (the design's *Words for Rich*). */
+    lead: 'Going live isn’t a button. Most of it takes minutes, but three things are answered by other people, one after another, and each may take several days. That’s why this page exists from day one.',
     /** ✓ `when` is "18 September, 3:12pm" or "today, 3:12pm"; null when its date cannot be read (ours). */
     version: (when: string | null) =>
       when === null
@@ -728,63 +742,6 @@ export const words = {
     noVersion:
       'Nothing is on your trying-out address yet. What goes live is what’s there.',
     toTryingOut: 'Trying out',
-    /** Decision 4: the staging registration's clock is on Trying out, named here in one line. */
-    staging:
-      'The trying-out address has a registration of its own, with UBC’s identity team.',
-    seeTryingOut: 'See Trying out',
-    clocks: {
-      registration: {
-        title: 'Registering with UBC’s identity team',
-        body: 'Your app needs its own entry in UBC’s identity register before real students can sign in. UBC’s identity team makes it.',
-        with: 'With UBC’s identity team',
-        done: (day: string | null) => (day === null ? 'Registered' : `Registered ${day}`),
-      },
-      assessment: {
-        title: 'A privacy assessment',
-        body: 'Your app keeps what students write, so the Privacy Office has to look at it. The most common reason a launch slips.',
-        with: 'With UBC’s Privacy Office',
-        done: (day: string | null) => (day === null ? 'Approved' : `Approved ${day}`),
-      },
-      notStarted: 'Not started',
-      nothingCounting: 'Nothing counting yet',
-      duration: 'May take several days',
-      admission: {
-        title: 'Manifest can’t start this one for you yet.',
-        body: 'For now the Manifest team does it by hand, and this card shows where it has got to.',
-      },
-      /** *Recorded*, not *asked*: it is when an administrator wrote it (Decision 5). */
-      recorded: (day: string) => `recorded ${day}`,
-      /** Ours for none and one; "waiting 12 days" ✓. */
-      waiting: (days: number) =>
-        days <= 0
-          ? 'waiting since today'
-          : days === 1
-            ? 'waiting 1 day'
-            : `waiting ${days} days`,
-      withTeam: 'With the Manifest team',
-      /**
-       * Rich, 2026-09-30 (the final review): `change_requested` is our change request, with UBC's
-       * identity team (the contract), counted as `submitted` is. It replaced "UBC asked for a
-       * change. The Manifest team has it.", which said the opposite.
-       */
-      changeAsked: (day: string | null) =>
-        day === null ? 'A change' : `A change, recorded ${day}`,
-      runOut: {
-        said: 'Its registration has run out.',
-        who: 'The Manifest team renews it.',
-      },
-      /**
-       * Rich, 2026-09-30: done on the record, unmet on the checklist (a sign-in attribute added
-       * since, or its addresses changed): with the Manifest team, never "Done" (ours).
-       */
-      needsChange: 'The newest version needs it changed.',
-      /** Ours: nothing recorded, and the checklist counts it met. */
-      nothingNeeded: 'Nothing more needed.',
-      /** Ours: a clock answered. */
-      done: 'Done',
-      /** A record in a state we do not know (Review Focus 5). */
-      cantTell: 'We can’t tell right now',
-    },
     /**
      * F5b, THE THREE STEPS IN UBC'S ORDER (D2; the design's §1 and *Words for Rich*, the plan's *Words
      * proposed for Rich*): the privacy assessment, then the trying-out address's registration, then

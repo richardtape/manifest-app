@@ -12,6 +12,7 @@ import {
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../../app.js'
+import { Band } from './band.js'
 import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
@@ -36,6 +37,15 @@ const BOTH_MET: Schemas['LaunchReadiness'] = {
   ...fixtures.LAUNCH_READINESS,
   items: fixtures.LAUNCH_READINESS.items.map((i) => ({ ...i, state: 'met' as const })),
 }
+/** Every step done: the assessment approved, both registrations active (the mock's `approved`). */
+const ALL_DONE: Schemas['LaunchRecords'] = {
+  ...fixtures.LAUNCH_RECORDS,
+  privacyAssessment: {
+    ...fixtures.PRIVACY_ASSESSMENT,
+    state: 'approved',
+    approvedAt: '2026-09-21T19:00:00.000Z',
+  },
+}
 
 const refused = (status: number, code: string) =>
   new ManifestApiError(status, { error: { code, message: 'x' } } as never, 'test')
@@ -46,15 +56,20 @@ type World = {
   built: boolean
   launchedAt: string | null
   readiness: Schemas['LaunchReadiness']
+  /** F5b: the three records the steps are read from. */
+  records: Schemas['LaunchRecords']
   /** The live address's instance, when not the fixture's (none). */
   production?: Schemas['Instance']
   /** The environments listed, when not all three (m1). */
   kinds?: Schemas['Environment']['kind'][]
+  /** F5b Decision 16: switched off. */
+  archived?: boolean
 }
 const BEFORE_LAUNCH: World = {
   built: true,
   launchedAt: null,
   readiness: fixtures.LAUNCH_READINESS,
+  records: fixtures.LAUNCH_RECORDS,
 }
 
 /** A platform that answers the world given, and records every read. */
@@ -62,7 +77,7 @@ function stage(
   world: Partial<World> = {},
   refuse: Partial<Record<string, () => unknown>> = {},
 ) {
-  const { built, launchedAt, readiness, production, kinds } = {
+  const { built, launchedAt, readiness, records, production, kinds, archived } = {
     ...BEFORE_LAUNCH,
     ...world,
   }
@@ -91,7 +106,13 @@ function stage(
     getMe: () => Promise.resolve(fixtures.ME),
     listProjects: answer('listProjects', () => [
       fixtures.PROJECT,
-      { ...PROJECT, launchedAt },
+      {
+        ...PROJECT,
+        launchedAt,
+        ...(archived === true
+          ? { state: 'archived' as const, archivedAt: '2026-09-29T17:00:00.000Z' }
+          : {}),
+      },
     ]),
     getProject: never,
     getRelease: answer('getRelease', () => fixtures.RELEASE),
@@ -107,7 +128,7 @@ function stage(
     })),
     runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: answer('getLaunchReadiness', () => readiness),
-    getLaunchRecords: answer('getLaunchRecords', () => fixtures.LAUNCH_RECORDS),
+    getLaunchRecords: answer('getLaunchRecords', () => records),
     getApproval: answer('getApproval', () => null),
     getEnvironment: answer('getEnvironment', (id: string) =>
       environments.find((e) => e.id === id)!,
@@ -243,36 +264,46 @@ describe('the Overview: the app’s landing page (Decision 1)', () => {
   })
 })
 
-describe('the band: before your students can use it (Decision 3, moment 10)', () => {
-  it('a built app, not launched, with a production clock unmet: the band, and Going live', async () => {
+describe('the band: before your students can use it (Decision 3, moment 10; F5b’s steps)', () => {
+  it('a built app, not launched, with a step not done: the band, one after another, and Going live (part one)', async () => {
     const s = await open(`/apps/${SLUG}`)
     await ready()
     const region = await screen.findByRole('region', { name: w.band.title })
     expect(region.textContent).toContain(w.band.body)
+    expect(w.band.body).toBe(
+      'Three things other people answer, one after another, and each may take several days. Going live shows where each one is.',
+    )
     const going = within(region).getByRole('link', { name: w.band.button })
     expect(going.getAttribute('href')).toBe(`/apps/${SLUG}/going-live`)
+    // Part one: nothing can be sent, so never Start them, and never needs you.
+    expect(within(region).queryByRole('link', { name: w.band.start })).toBeNull()
+    expect(region.querySelector('.mf-is-attention')).toBeNull()
+    // The records beside the checklist, under the same gate (Decision 4).
     expect(s.called('getLaunchReadiness')).toEqual([[PROJECT.id]])
+    expect(s.called('getLaunchRecords')).toEqual([[PROJECT.id]])
   })
 
-  it('says the clocks may take several days, never weeks (Rich)', async () => {
+  it('says the steps may take several days, never weeks (Rich)', async () => {
     await open(`/apps/${SLUG}`)
     const region = await screen.findByRole('region', { name: w.band.title })
     expect(region.textContent).toMatch(/may take several days/)
     expect(document.body.textContent).not.toMatch(/weeks/i)
   })
 
-  it('no draft built yet: no band, and the checklist is not read', async () => {
+  it('no draft built yet: no band, and neither the checklist nor the records is read', async () => {
     const s = await open(`/apps/${SLUG}`, stage({ built: false }))
     await ready()
     expect(band()).toBeNull()
     expect(s.called('getLaunchReadiness')).toEqual([])
+    expect(s.called('getLaunchRecords')).toEqual([])
   })
 
-  it('launched: no band, the checklist is not read, and For your students leads', async () => {
+  it('launched: no band, nothing of it read, and For your students leads', async () => {
     const s = await open(`/apps/${SLUG}`, stage({ launchedAt: LAUNCHED }))
     const list = await ready()
     expect(band()).toBeNull()
     expect(s.called('getLaunchReadiness')).toEqual([])
+    expect(s.called('getLaunchRecords')).toEqual([])
     const students = screen.getByRole('region', { name: words.preview.tabs.students })
     // It leads: before the addresses.
     expect(
@@ -280,10 +311,26 @@ describe('the band: before your students can use it (Decision 3, moment 10)', ()
     ).toBeTruthy()
   })
 
-  it('both production clocks met: no band', async () => {
-    const s = await open(`/apps/${SLUG}`, stage({ readiness: BOTH_MET }))
+  it('every step done: no band', async () => {
+    const s = await open(
+      `/apps/${SLUG}`,
+      stage({ readiness: BOTH_MET, records: ALL_DONE }),
+    )
     await ready()
-    await waitFor(() => expect(s.called('getLaunchReadiness')).toHaveLength(1))
+    await waitFor(() => expect(s.called('getLaunchRecords')).toHaveLength(1))
+    expect(band()).toBeNull()
+  })
+
+  it('both checklist items met while the assessment is still with the Privacy Office: the band stays (the steps read the records)', async () => {
+    await open(`/apps/${SLUG}`, stage({ readiness: BOTH_MET }))
+    await ready()
+    expect(await screen.findByRole('region', { name: w.band.title })).toBeTruthy()
+  })
+
+  it('switched off (Decision 16): no band', async () => {
+    const s = await open(`/apps/${SLUG}`, stage({ archived: true }))
+    await ready()
+    await waitFor(() => expect(s.called('getLaunchRecords')).toHaveLength(1))
     expect(band()).toBeNull()
   })
 
@@ -301,12 +348,38 @@ describe('the band: before your students can use it (Decision 3, moment 10)', ()
     vi.restoreAllMocks()
   })
 
+  it('records that cannot be read: no band, the rest of the page as it is', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    await open(
+      `/apps/${SLUG}`,
+      stage({}, { getLaunchRecords: () => refused(500, 'INTERNAL') }),
+    )
+    const list = await ready()
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3)
+    await waitFor(() => expect(warn).toHaveBeenCalled())
+    expect(band()).toBeNull()
+    expect(screen.queryByText(words.refused.body)).toBeNull()
+    vi.restoreAllMocks()
+  })
+
   it('a session that ends while it reads the checklist is the shell’s to say', async () => {
     await open(
       `/apps/${SLUG}`,
       stage({}, { getLaunchReadiness: () => refused(401, 'UNAUTHENTICATED') }),
     )
     expect(await screen.findByText(words.expired.body)).toBeTruthy()
+  })
+
+  it('the band’s button: Start them, to Going live, only when the steps say so (part two); its state drawn when it needs you', () => {
+    render(<Band slug={SLUG} band={{ button: 'start', state: 'attention' }} />)
+    const region = screen.getByRole('region', { name: w.band.title })
+    const start = within(region).getByRole('link', { name: w.band.start })
+    expect(start.getAttribute('href')).toBe(`/apps/${SLUG}/going-live`)
+    expect(within(region).queryByRole('link', { name: w.band.button })).toBeNull()
+    cleanup()
+    render(<Band slug={SLUG} band={{ button: 'going-live', state: 'waiting' }} />)
+    expect(screen.getByRole('link', { name: w.band.button })).toBeTruthy()
+    expect(screen.queryByRole('link', { name: w.band.start })).toBeNull()
   })
 })
 

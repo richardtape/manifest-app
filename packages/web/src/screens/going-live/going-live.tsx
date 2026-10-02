@@ -1,5 +1,4 @@
 import type { Schemas } from '@manifest/contract'
-import { ClockItem } from '@manifest-app/ui'
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
@@ -8,18 +7,20 @@ import { linkTo, remember, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { rowsOf, type Row } from './checklist.js'
-import { clockOf, type Clock } from './clocks.js'
 import { DryRun } from './dry-run.js'
 import { LetStudentsIn, whenOf } from './live.js'
 import { RowView } from './row.js'
 import { SignOff, type Decided } from './sign-off.js'
+import { Steps } from './step-card.js'
+import { stepsOf, type Step } from './steps.js'
 
 const g = words.goingLive
 
 type Seen = {
   /** "18 September, 3:12pm"; null when its date cannot be read; undefined when nothing is on trying-out. */
   version: string | null | undefined
-  clocks: [Clock, Clock]
+  /** F5b: the three steps in UBC's order, one current (D2). */
+  steps: [Step, Step, Step]
   rows: Row[]
   /** The candidate's sign-off, for *[Talk it through]*'s words (Task 8). */
   decided: Decided
@@ -51,7 +52,7 @@ function settle<T>(result: PromiseSettledResult<T>): T | undefined {
 }
 
 /**
- * GOING LIVE'S READS, IN THE PERSON'S SESSION (Decision 16): the checklist and the two records,
+ * GOING LIVE'S READS, IN THE PERSON'S SESSION (Decision 16): the checklist and the three records,
  * which the page cannot stand without; then the candidate's date, its sign-off (Task 8) and the
  * students' address, which date a sentence, decide one row, or fill one in. Each read again
  * names the candidate of that reading, so a version changed on trying-out reads its own sign-off.
@@ -86,26 +87,11 @@ async function read(
     version = release === undefined ? null : whenOf(release.createdAt, now, timeZone)
   }
   const production = settle(environments!)?.find((e) => e.kind === 'production')
-  const item = (id: string) => readiness.items.find((i) => i.id === id)
   return {
     version,
-    // Each card reads its record and its checklist item: never "Done" while the item is unmet.
-    clocks: [
-      clockOf(
-        'registration',
-        records.iamRegistration,
-        now,
-        timeZone,
-        item('iam-registration'),
-      ),
-      clockOf(
-        'assessment',
-        records.privacyAssessment,
-        now,
-        timeZone,
-        item('privacy-assessment'),
-      ),
-    ],
+    // F5b: each step reads its record and its checklist item, never "Done" while the item is unmet.
+    // Part one (Decision 3): nothing can be sent until FE-46 lands, so nothing is theirs to press.
+    steps: stepsOf({ records, readiness, now, timeZone, sending: false }),
     rows: rowsOf(readiness, {
       hostname: production?.hostname ?? null,
       approval: decided,
@@ -136,11 +122,12 @@ function lightUp(rows: Row[], before: Row[]): Row[] {
 }
 
 /**
- * GOING LIVE, MOMENTS 10, 11 AND 14 (F5 Tasks 6 and 10): what stands between the app and its
- * students, from the day the draft exists. The version that would go live; the two clocks; the
- * trying-out address's registration in one line; the short jobs, each in our words; and, once
- * every blocking item is met, *[Let your students in]*. Nothing else is a stopgap. Read again
- * whenever the page is shown again.
+ * GOING LIVE, MOMENTS 10, 11 AND 14 (F5 Tasks 6 and 10; F5b Task 3): what stands between the app
+ * and its students, from the day the draft exists. The version that would go live; the three steps
+ * in UBC's order, one card at a time (F5b, D2); the short jobs, each in our words; and, once every
+ * blocking item is met, *[Let your students in]*. Nothing else is a stopgap, and **on a switched-off
+ * app nothing is pressed** (F5b Decision 16): every step and row says where it stands, with no
+ * button. Read again whenever the page is shown again.
  */
 export function GoingLive({
   platform,
@@ -183,6 +170,8 @@ export function GoingLive({
   // in F5), and nothing more is read, so a later read that fails can never turn it back.
   const [heard, setHeard] = useState(false)
   const launched = (project.launchedAt ?? null) !== null || heard
+  // SWITCHED OFF (F5b Decision 16): the platform refuses every press, so none is drawn.
+  const off = project.state === 'archived'
 
   useEffect(() => {
     if (launched) return
@@ -265,7 +254,7 @@ export function GoingLive({
   const offer =
     production !== undefined &&
     basis !== undefined &&
-    (pressed || (seen !== undefined && !launched && seen.ready))
+    (pressed || (seen !== undefined && !launched && seen.ready && !off))
   return (
     <div className="going-live">
       <h1 className="page-title">{g.title}</h1>
@@ -309,7 +298,9 @@ export function GoingLive({
           seen={seen}
           tryingOut={tryingOut}
           job={(row) =>
-            row.id === 'rehearsal' ? (
+            off ? (
+              <RowView key={row.id} row={{ ...row, action: null }} />
+            ) : row.id === 'rehearsal' ? (
               <DryRun
                 key={row.id}
                 row={row}
@@ -342,8 +333,9 @@ export function GoingLive({
 }
 
 /**
- * What stands between the app and its students: the version, the clocks, the short jobs, each
- * drawn by its own component where it has one (the dry run's, Task 7; the sign-off's, Task 8).
+ * What stands between the app and its students: the version, the three steps (F5b), the short
+ * jobs, each drawn by its own component where it has one (the dry run's, Task 7; the sign-off's,
+ * Task 8).
  */
 function WhatStands({
   seen,
@@ -364,29 +356,7 @@ function WhatStands({
       ) : (
         <p className="body-lead">{g.version(seen.version)}</p>
       )}
-      <div className="going-live__clocks">
-        {seen.clocks.map((clock) => (
-          <ClockItem
-            key={clock.which}
-            level={2}
-            title={g.clocks[clock.which].title}
-            body={g.clocks[clock.which].body}
-            state={clock.state}
-            chip={clock.chip}
-            clockLabel={clock.label}
-            clockMeta={clock.meta}
-            {...(clock.admission
-              ? {
-                  admissionTitle: g.clocks.admission.title,
-                  admissionBody: g.clocks.admission.body,
-                }
-              : {})}
-          />
-        ))}
-      </div>
-      <p className="going-live__staging">
-        {g.staging} <a {...linkTo(tryingOut)}>{g.seeTryingOut}</a>
-      </p>
+      <Steps steps={seen.steps} />
       <section className="going-live__jobs" aria-labelledby={id}>
         <h2 id={id} className="heading">
           {g.shortJobs.title}

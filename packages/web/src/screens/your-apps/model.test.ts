@@ -176,18 +176,32 @@ describe('before your students can use it (Decision 3)', () => {
     expect(beforeLaunch(PROJECT, undefined)).toBe(false)
   })
 
-  it('its card carries the line while a production clock is unmet', () =>
-    expect(appCard(PROJECT, new Map(), V, fixtures.LAUNCH_READINESS).beforeStudents).toBe(
-      true,
-    ))
+  const launch = (
+    readiness: Schemas['LaunchReadiness'] = fixtures.LAUNCH_READINESS,
+    records: Schemas['LaunchRecords'] = fixtures.LAUNCH_RECORDS,
+  ) => ({ readiness, records })
+  const ALL_DONE: Schemas['LaunchRecords'] = {
+    ...fixtures.LAUNCH_RECORDS,
+    privacyAssessment: {
+      ...fixtures.PRIVACY_ASSESSMENT,
+      state: 'approved',
+      approvedAt: '2026-09-21T19:00:00.000Z',
+    },
+  }
+
+  it('its card carries the line while a step is not done (F5b: the steps, not the two clocks)', () =>
+    expect(appCard(PROJECT, new Map(), V, launch()).beforeStudents).toBe(true))
+
+  it('both checklist items met while the assessment is still with the Privacy Office: the line stays', () =>
+    expect(appCard(PROJECT, new Map(), V, launch(BOTH_MET)).beforeStudents).toBe(true))
 
   it.each([
-    ['not built', unbuilt, fixtures.LAUNCH_READINESS],
-    ['launched', launched, fixtures.LAUNCH_READINESS],
-    ['both clocks met', PROJECT, BOTH_MET],
-    ['its checklist not read', PROJECT, undefined],
-  ] as const)('%s: no line', (_, project, readiness) =>
-    expect(appCard(project, new Map(), V, readiness).beforeStudents).toBe(false),
+    ['not built', unbuilt, launch()],
+    ['launched', launched, launch()],
+    ['every step done', PROJECT, launch(BOTH_MET, ALL_DONE)],
+    ['its checklist or records not read', PROJECT, undefined],
+  ] as const)('%s: no line', (_, project, given) =>
+    expect(appCard(project, new Map(), V, given).beforeStudents).toBe(false),
   )
 })
 

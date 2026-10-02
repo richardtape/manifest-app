@@ -18,9 +18,10 @@ export interface ClockItemProps {
   /**
    * OURS (F5 Task 4, Decision 5): the clock's state, from the record an administrator keeps.
    * Absent, the reference's not-started card, byte for byte. `notyet` is that card with the
-   * not-yet chip; `waiting` and `steady` fill the bar, still, in their colour.
+   * not-yet chip; `waiting` and `steady` fill the bar, still, in their colour. `attention`
+   * (F5b, part two): a step that is theirs, its chip needs-you and its bar empty, still.
    */
-  state?: 'notyet' | 'waiting' | 'steady' | undefined
+  state?: 'notyet' | 'waiting' | 'steady' | 'attention' | undefined
   /**
    * OURS (m3): the title's heading level, so a page whose clocks sit straight under its `h1`
    * skips none. Absent, the reference's `h3`.

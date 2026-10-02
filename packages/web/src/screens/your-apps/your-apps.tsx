@@ -48,8 +48,8 @@ type Loaded =
 /**
  * THE READS BEHIND *YOUR APPS*. `listProjects`, then one `getProject?expand=environments`
  * per app, then one `getRelease` per release an answering address reaches, and one
- * `getLaunchReadiness` per app built and not launched (F5 Decision 3). That is FE-10's N+1,
- * accepted at pilot scale. No `listInstances`: the address's own `instance` is what reaches
+ * `getLaunchReadiness` and one `getLaunchRecords` per app built and not launched (F5 Decision 3;
+ * F5b Decision 4), every asking app's at once. That is FE-10's N+1, accepted at pilot scale. No `listInstances`: the address's own `instance` is what reaches
  * students (FE-27).
  */
 async function read(
@@ -72,16 +72,17 @@ async function read(
       p.environments?.find((e) => e.kind === 'sandbox'),
     ),
   )
-  const [releases, readiness] = await Promise.all([
+  const [releases, readiness, recorded] = await Promise.all([
     Promise.allSettled(releaseIds.map((id) => platform.getRelease(id))),
     Promise.allSettled(asking.map((p) => platform.getLaunchReadiness(p.id))),
+    Promise.allSettled(asking.map((p) => platform.getLaunchRecords(p.id))),
   ])
 
   // ONE APP THAT CANNOT BE READ DOES NOT HIDE THE OTHERS: its card says it cannot tell, and a
   // release that cannot be read is Answering without its date. But a 401 anywhere is the
   // session ending, and when nothing at all could be read, it is the page's own notice.
-  // A checklist that cannot be read loses its card's line, and nothing else.
-  const failures = [...read, ...releases, ...readiness].flatMap((r) =>
+  // A checklist (or its records) that cannot be read loses its card's line, and nothing else.
+  const failures = [...read, ...releases, ...readiness, ...recorded].flatMap((r) =>
     r.status === 'rejected' ? [r.reason as unknown] : [],
   )
   const ended = failures.find((reason) => refusalOf(reason).kind === 'signed-out')
@@ -104,6 +105,20 @@ async function read(
       return r?.status === 'fulfilled' ? [[p.id, r.value] as const] : []
     }),
   )
+  const records = new Map(
+    asking.flatMap((p, i) => {
+      const r = recorded[i]
+      return r?.status === 'fulfilled' ? [[p.id, r.value] as const] : []
+    }),
+  )
+  /** Both read, or nothing: the steps need the checklist and the records. */
+  const launchOf = (id: string) => {
+    const readiness = checklists.get(id)
+    const held = records.get(id)
+    return readiness === undefined || held === undefined
+      ? undefined
+      : { readiness, records: held }
+  }
   const cardsWith = (downs: ReadonlyMap<string, string>) =>
     projects.map((project, i) => {
       const r = read[i]
@@ -112,7 +127,7 @@ async function read(
             r.value,
             releaseById,
             undefined,
-            checklists.get(r.value.id),
+            launchOf(r.value.id),
             downs.get(r.value.id),
           )
         : unreadableCard(project)

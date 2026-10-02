@@ -45,6 +45,14 @@ describe('ClockItem, with a state of ours', () => {
     expect(chip(c).textContent).toBe('Approved')
   })
 
+  it('draws the needs-you chip, still, for a step that is theirs (F5b part two), its bar empty', () => {
+    const c = card({ state: 'attention', chip: 'Ready for you' })
+    expect(chip(c).classList.contains('mf-is-attention')).toBe(true)
+    expect(chip(c).querySelector('.mf-pulse')).toBeNull()
+    expect(c.querySelector('.mf-clockbar')).toBeNull()
+    expect(track(c)).not.toBeNull()
+  })
+
   it('hatches the bar only while nothing is counting', () => {
     const notyet = card({ state: 'notyet' })
     expect(notyet.querySelector('.mf-clockbar')).toBeNull()

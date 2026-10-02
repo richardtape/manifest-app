@@ -109,6 +109,8 @@ type World = {
    * `servingInstanceOf`), as a dry run taken down again leaves the live address (the platform's 5b).
    */
   named?: Partial<Record<Kind, Schemas['InstanceSummary']>>
+  /** F5b: the three records, for trying-out's registration (the mock's own when not given). */
+  records?: Schemas['LaunchRecords']
 }
 const A_FAILED_ATTEMPT: World = {
   instances: { sandbox: [FAILED, SERVING], staging: [], production: [] },
@@ -164,7 +166,10 @@ function stage(
     setAppSecret: never,
     runRehearsal: () => new Promise<never>(() => undefined),
     getLaunchReadiness: never,
-    getLaunchRecords: never,
+    getLaunchRecords: answer(
+      'getLaunchRecords',
+      () => world.records ?? fixtures.LAUNCH_RECORDS,
+    ),
     getApproval: never,
     getEnvironment: never,
     listMembers: never,
@@ -351,7 +356,7 @@ describe('the switcher: Your draft · Trying out · For your students', () => {
     expect(within(panel()).getByText(w.students)).toBeTruthy()
   })
 
-  it('each shows its address in mono; the draft, with something on it, opens in a new tab, never a frame', async () => {
+  it('each shows its address in mono; the draft and trying-out (registered, the mock’s), with something on them, open in a new tab, never a frame', async () => {
     const world: World = {
       instances: {
         sandbox: [SERVING],
@@ -372,10 +377,13 @@ describe('the switcher: Your draft · Trying out · For your students', () => {
           .getByText(`${SLUG}.${host}.manifest.internal`, { exact: false })
           .closest('.mono'),
       ).not.toBeNull()
-      const link = within(panel()).queryByRole('link', { name: w.open })
-      // Trying out's is hidden until its registration is active (Rich: "Hide until
-      // registered"), and nothing records one yet (F5b shows it).
-      if (kind !== 'draft') expect(link).toBeNull()
+      // Trying out's shows once its registration is active (Rich: "Hide until registered"), as the
+      // mock's is (F5b reads it, on its own: found, not got).
+      const link =
+        kind === 'trying-out'
+          ? await within(panel()).findByRole('link', { name: w.open })
+          : within(panel()).queryByRole('link', { name: w.open })
+      if (kind === 'students') expect(link).toBeNull()
       else {
         expect(link?.getAttribute('href')).toBe(
           `https://${SLUG}.${host}.manifest.internal`,
@@ -509,9 +517,31 @@ describe('Your draft: the pretend people (FE-3, ours)', () => {
   })
 })
 
+/** Trying-out's registration with UBC's identity team since 24 September (4 days before NOW). */
+const WITH_UBC: Schemas['LaunchRecords'] = {
+  ...fixtures.LAUNCH_RECORDS,
+  stagingRegistration: {
+    ...fixtures.STAGING_REGISTRATION,
+    state: 'submitted',
+    registeredAt: null,
+    submittedAt: '2026-09-24T19:00:00.000Z',
+  },
+}
+const ON_TRYING_OUT: World = {
+  instances: {
+    sandbox: [SERVING],
+    staging: [summary('i-s', 'staging', OLD.id, 'healthy', true)],
+    production: [],
+  },
+  incidents: { sandbox: [], staging: [], production: [] },
+}
+
 describe("Trying out: UBC's words, everywhere (Rich)", () => {
-  it("his sentence, exactly; waiting on UBC's identity team, still, with no number", async () => {
-    await open(`/apps/${SLUG}/preview?tab=trying-out`)
+  it("his sentence, exactly; waiting on UBC's identity team, still, with no number, while it is not registered", async () => {
+    await open(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+      stage({ ...A_FAILED_ATTEMPT, records: WITH_UBC }),
+    )
     await ready()
     const here = within(panel())
     expect(here.getByText(w.tryingOut)).toBeTruthy()
@@ -525,25 +555,74 @@ describe("Trying out: UBC's words, everywhere (Rich)", () => {
   })
 
   it('has no Open it in a new tab, even with something on it, until its registration is active (Rich: "Hide until registered")', async () => {
-    const world: World = {
-      instances: {
-        sandbox: [SERVING],
-        staging: [summary('i-s', 'staging', OLD.id, 'healthy', true)],
-        production: [],
-      },
-      incidents: { sandbox: [], staging: [], production: [] },
-    }
-    await open(`/apps/${SLUG}/preview?tab=trying-out`, stage(world))
+    await open(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+      stage({ ...ON_TRYING_OUT, records: WITH_UBC }),
+    )
     await ready()
     await within(panel()).findByText(w.facts.serving)
+    await within(panel()).findByText(/second of three steps on Going live/)
     expect(within(panel()).queryByRole('link', { name: w.open })).toBeNull()
     expect(panel().querySelector('a[target="_blank"]')).toBeNull()
     expect(within(panel()).getByText(w.tryingOut)).toBeTruthy()
   })
 
-  it('never "We asked", never "weeks", and the wait carries no date', async () => {
-    await open(`/apps/${SLUG}/preview?tab=trying-out`)
+  it('its other half (F5b): registered, and something on it: Open it in a new tab returns, and the line goes', async () => {
+    await open(`/apps/${SLUG}/preview?tab=trying-out`, stage(ON_TRYING_OUT))
     await ready()
+    const link = await within(panel()).findByRole('link', { name: w.open })
+    expect(link.getAttribute('href')).toBe(`https://${SLUG}.staging.manifest.internal`)
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('rel')).toBe('noopener')
+    expect(within(panel()).queryByText(/second of three steps on Going live/)).toBeNull()
+    // Registered: nothing waits on UBC's identity team, so the card no longer says so.
+    expect(within(panel()).queryByText(w.waitingOn)).toBeNull()
+    expect(within(panel()).getByText(w.tryingOut)).toBeTruthy()
+  })
+
+  it('registered, and nothing on it: nothing to open, and no line', async () => {
+    const s = stage({ ...A_FAILED_ATTEMPT })
+    await open(`/apps/${SLUG}/preview?tab=trying-out`, s)
+    await ready()
+    await waitFor(() => expect(s.called('getLaunchRecords')).toHaveLength(1))
+    await act(async () => undefined)
+    expect(within(panel()).queryByRole('link', { name: w.open })).toBeNull()
+    expect(within(panel()).queryByText(/second of three steps on Going live/)).toBeNull()
+  })
+
+  it('not registered: the second of three steps on Going live, its state from the steps, and Going live', async () => {
+    await open(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+      stage({ ...ON_TRYING_OUT, records: WITH_UBC }),
+    )
+    await ready()
+    const line = await within(panel()).findByText(
+      w.step('with UBC’s identity team, waiting 4 days'),
+    )
+    const going = within(line.closest('p')!).getByRole('link', { name: w.toGoingLive })
+    expect(going.getAttribute('href')).toBe(`/apps/${SLUG}/going-live`)
+  })
+
+  it('records that cannot be read: not registered: no Open it, and the line without a state', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    await open(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+      stage(ON_TRYING_OUT, { getLaunchRecords: () => refused(500, 'INTERNAL') }),
+    )
+    await ready()
+    expect(await within(panel()).findByText(w.step(null))).toBeTruthy()
+    expect(within(panel()).queryByRole('link', { name: w.open })).toBeNull()
+    expect(screen.queryByText(words.refused.body)).toBeNull()
+    vi.restoreAllMocks()
+  })
+
+  it('never "We asked", never "weeks", and the wait in the card carries no date', async () => {
+    await open(
+      `/apps/${SLUG}/preview?tab=trying-out`,
+      stage({ ...A_FAILED_ATTEMPT, records: WITH_UBC }),
+    )
+    await ready()
+    await within(panel()).findByText(w.step('with UBC’s identity team, waiting 4 days'))
     const here = panel()
     expect(here.textContent).not.toMatch(/we asked/i)
     // No word boundary: textContent runs one element's words into the next (F5 Task 6).
@@ -553,6 +632,9 @@ describe("Trying out: UBC's words, everywhere (Rich)", () => {
     expect(wait.textContent).not.toMatch(
       /\d|January|February|March|April|May|June|July|August|September|October|November|December|today|yesterday/i,
     )
+    const copy = here.cloneNode(true) as HTMLElement
+    copy.querySelectorAll('.mono').forEach((mono) => mono.remove())
+    expect(machineryIn((copy.textContent ?? '').replace(w.tryingOut, ''))).toEqual([])
   })
 })
 
