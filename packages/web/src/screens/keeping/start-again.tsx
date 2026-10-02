@@ -195,6 +195,7 @@ function Redeploy({
       }
       clearInterval(poll.current)
       poll.current = setInterval(() => {
+        if (!live.current) return end({ end: 'gave-up' })
         reads += 1
         const last = reads >= UNSURE_READS
         if (last) clearInterval(poll.current)
@@ -256,7 +257,9 @@ function Redeploy({
         : { end: 'healthy' }
     } catch (error) {
       clearInterval(poll.current)
-      if (cutByOurDeadline(error)) return readOn(environmentId, listed, where)
+      // The page left meanwhile: nothing more is read (F5's own guard; the review's I3).
+      if (cutByOurDeadline(error))
+        return live.current ? readOn(environmentId, listed, where) : { end: 'gave-up' }
       return { end: 'refused', error }
     }
   }

@@ -208,6 +208,11 @@ export function PlanScreen({
       code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
       status = refusal.kind === 'refused' ? refusal.status : null
     }
+    // F6 Task 11: the app switched off (a new token refused): said in words, never a problem.
+    if (code === 'PROJECT_ARCHIVED') {
+      setPressed(false)
+      return setNotice({ words: words.refused.archived(name), tone: 'attention' })
+    }
     const said =
       during === 'agree'
         ? COULDNT_SAVE

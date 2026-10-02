@@ -673,6 +673,9 @@ export const words = {
         "Everything goes: its code, its addresses, what anyone wrote in it. This can't be undone. Its name becomes free.", // ✓
       deleteForGood: 'Delete it for good', // ✓
       keepIt: 'Keep it', // ours: the confirming step's way back
+      /** Ours: a delete whose teardown did not finish, twice: archived, partly gone (the review's I2). */
+      deleteUnfinished:
+        "It's switched off, and we didn't finish deleting it. Delete it for good again to finish.",
       liveKept:
         "Apps that have been live are kept, because UBC's rules decide when students' data is removed.", // ✓
       liveKeptMore:

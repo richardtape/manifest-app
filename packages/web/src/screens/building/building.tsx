@@ -18,7 +18,8 @@ import { Work } from './work.js'
  * press again. CONVERSATION_BUSY (just after a Stop whose call is still in flight) failed
  * nothing, so it has none.
  */
-type Notice = { words: string; reference: string | null; retry: () => void }
+/** `retry` null: nothing to try again here (the app switched off: F6 Task 11). */
+type Notice = { words: string; reference: string | null; retry: (() => void) | null }
 
 /**
  * MOMENT 6, WATCHING IT GET BUILT (F3 Task 11), layout C: the conversation on the left, the
@@ -89,6 +90,14 @@ export function BuildingScreen({
       code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
       status = refusal.kind === 'refused' ? refusal.status : null
     }
+    // F6 Task 11: the app switched off (a new token refused): said in words, never a problem,
+    // and nothing to try again until it is switched back on.
+    if (code === 'PROJECT_ARCHIVED')
+      return setNotice({
+        words: words.refused.archived(name),
+        reference: null,
+        retry: null,
+      })
     setNotice({
       words: words.building.couldntPress,
       reference: reportProblem(
@@ -176,16 +185,22 @@ export function BuildingScreen({
   const noticeCard =
     notice === undefined ? null : (
       <div role="alert">
-        <Card tone={notice.reference === null ? 'waiting' : 'attention'}>
+        <Card
+          tone={
+            notice.reference === null && notice.retry !== null ? 'waiting' : 'attention'
+          }
+        >
           <p className="body-lead">{notice.words}</p>
           {notice.reference === null ? null : (
             <SupportReference reference={notice.reference} />
           )}
-          <div className="describe__actions">
-            <Button kind="secondary" onClick={notice.retry}>
-              {words.building.tryAgain}
-            </Button>
-          </div>
+          {notice.retry === null ? null : (
+            <div className="describe__actions">
+              <Button kind="secondary" onClick={notice.retry}>
+                {words.building.tryAgain}
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
     )

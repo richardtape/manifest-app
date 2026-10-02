@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { Schemas } from '@manifest/contract'
+import { ManifestApiError, type Schemas } from '@manifest/contract'
 import type {
   BuildStep,
   Conversation,
@@ -135,6 +135,8 @@ function stage(refusals: Refusals = {}) {
     mintToken: (projectId, body, key) => {
       calls.push(['mintToken', projectId, body, key])
       mints++
+      const trouble = refusals['mintToken']?.(mints)
+      if (trouble !== undefined) return Promise.reject(trouble)
       return Promise.resolve({
         token: { id: `t-${mints}` },
         secret: `mft_test_${mints}`,
@@ -852,6 +854,25 @@ describe('a token our server no longer holds (F2 handOverToken), without a word'
       ['c-1', { projectId: PROJECT.id, token: 'mft_test_1' }],
     ])
     expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('switched off meanwhile (F6 Task 11): the new token refused PROJECT_ARCHIVED is said in words, switch it back on first; no reference, no Try again', async () => {
+    const s = stage({
+      build: (n) => (n === 1 ? new OurRefusal('TOKEN_MISSING', 409) : undefined),
+      mintToken: () =>
+        new ManifestApiError(
+          409,
+          { error: { code: 'PROJECT_ARCHIVED', message: 'x' } } as never,
+          'test',
+        ),
+    })
+    await open(s)
+    s.state(round({ status: 'stopped' }, { pages: { state: 'next' } }))
+    await press(button(words.building.carryOn))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toBe(words.refused.archived(PROJECT.name))
+    expect(within(alert).queryByRole('button')).toBeNull()
+    expect(s.called('handProject')).toEqual([])
   })
 
   it('needs: token: minted, handed over, and carried on, with no card', async () => {

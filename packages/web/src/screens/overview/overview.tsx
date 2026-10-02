@@ -214,7 +214,8 @@ export function Overview({
     return () => {
       live = false
     }
-  }, [ours, project.id, attempt, keepingAttempt])
+    // Switched off or back on: a switched-off app's needs are its questions alone (the review's M1).
+  }, [ours, project.id, project.state, attempt, keepingAttempt])
 
   useEffect(() => {
     let live = true

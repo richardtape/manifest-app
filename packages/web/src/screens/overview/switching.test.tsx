@@ -230,9 +230,23 @@ describe('Switching it off: an owner’s alone (Review Focus 5)', () => {
     expect(machineryIn(text())).toEqual([])
   })
 
-  it('a switched-off app has no section (its Overview offers Switch it back on)', () => {
+  it('a switched-off app that has been live has no section (its Overview offers Switch it back on)', () => {
     const { container } = drawSwitching(stage(), { project: ARCHIVED })
     expect(container.innerHTML).toBe('')
+  })
+
+  it('the confirming step takes the focus, so a screen reader says it; Keep it running gives it back to the section (the review’s M5)', async () => {
+    drawSwitching(stage())
+    await press(w.off)
+    expect(document.activeElement?.textContent).toBe(w.confirmOff)
+    await press(w.keepRunning)
+    expect(document.activeElement).toBe(screen.getByRole('region', { name: w.title }))
+  })
+
+  it('back from signing in again, the confirming step has the focus (and so is in view)', async () => {
+    drawSwitching(stage(), { then: 'switch-off' })
+    await settle()
+    expect(document.activeElement?.textContent).toBe(w.confirmOff)
   })
 })
 
@@ -361,6 +375,40 @@ describe('[Delete it]: only an app that never went live (D7)', () => {
     await settle()
     expect(text()).toContain(words.goingLive.letIn.again)
     expect(text()).toContain(w.confirmDelete)
+  })
+
+  it('PROJECT_TEARDOWN_INCOMPLETE: the request once more by itself, and then gone as ever (the review’s I2)', async () => {
+    const st = stage({
+      deleteProject: [{ status: 500, code: 'PROJECT_TEARDOWN_INCOMPLETE' }, 'ok'],
+    })
+    window.history.pushState({}, '', `/apps/${SLUG}`)
+    drawSwitching(st, { project: DRAFT })
+    await press(w.delete)
+    await press(w.deleteForGood)
+    expect(st.called('deleteProject')).toHaveLength(2)
+    expect(st.oursCalls).toEqual([['forget', DRAFT.id]])
+    expect(window.location.pathname).toBe('/')
+  })
+
+  it('still incomplete after the repeat: said as it is (switched off, not finished), the page told; nothing of ours forgotten (the review’s I2)', async () => {
+    const st = stage({
+      deleteProject: [{ status: 500, code: 'PROJECT_TEARDOWN_INCOMPLETE' }],
+    })
+    const onChanged = vi.fn()
+    drawSwitching(st, { project: DRAFT, onChanged })
+    await press(w.delete)
+    await press(w.deleteForGood)
+    expect(st.called('deleteProject')).toHaveLength(2)
+    expect(text()).toContain(w.deleteUnfinished)
+    expect(text()).not.toContain(t.couldnt)
+    expect(onChanged).toHaveBeenCalled()
+    expect(st.oursCalls).toEqual([])
+  })
+
+  it('a draft switched off: Delete it is still there, and Switch it off is not (the review’s I2)', () => {
+    drawSwitching(stage(), { project: { ...ARCHIVED, launchedAt: null } })
+    expect(screen.getByRole('button', { name: w.delete })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: w.off })).toBeNull()
   })
 
   it('it went live meanwhile (PROJECT_LAUNCHED_NOT_DELETABLE): why it is kept; nothing of ours forgotten', async () => {

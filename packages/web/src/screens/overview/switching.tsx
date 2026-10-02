@@ -76,6 +76,8 @@ export function Switching({
   const [back] = useState(then === 'switch-off' || then === 'delete')
   const [pressed, setPressed] = useState(false)
   const [notice, setNotice] = useState<Notice>()
+  // A delete whose teardown did not finish, twice: switched off, partly gone (the review's I2).
+  const [unfinished, setUnfinished] = useState(false)
   const live = useRef(true)
   useEffect(() => {
     live.current = true
@@ -83,8 +85,29 @@ export function Switching({
       live.current = false
     }
   }, [])
+  // A DRAFT SWITCHED OFF can still be deleted (the review's I2); there is nothing to switch off.
+  const off = project.state === 'archived'
+  const shown: Step =
+    off && (step.at === 'confirm-off' || step.at === 'switching') ? { at: 'idle' } : step
+  // THE FOCUS FOLLOWS THE STEP (the review's M5): the confirming step's words take it, so a screen
+  // reader says them and the step is in view (back from signing in again, too); leaving it gives it
+  // back to the section, never to the page.
+  const confirmRef = useRef<HTMLParagraphElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+  const was = useRef(shown.at)
+  useEffect(() => {
+    const before = was.current
+    was.current = shown.at
+    if (shown.at === 'confirm-off' || shown.at === 'confirm-delete')
+      confirmRef.current?.focus()
+    else if (
+      shown.at === 'idle' &&
+      (before === 'confirm-off' || before === 'confirm-delete')
+    )
+      sectionRef.current?.focus()
+  }, [shown.at, role])
 
-  if (role !== 'owner' || project.state === 'archived') return null
+  if (role !== 'owner' || (off && !neverLive)) return null
 
   const slug = encodeURIComponent(project.slug)
 
@@ -140,6 +163,14 @@ export function Switching({
         return live.current && setStep({ at: 'step-up', then: 'delete' })
       if (code === 'PROJECT_LAUNCHED_NOT_DELETABLE')
         return live.current && setStep({ at: 'kept' })
+      // Still not finished after the repeat: it is switched off and partly gone. Said as it is,
+      // the page reads it again, and Delete it stays: pressing it again is the remedy.
+      if (code === 'PROJECT_TEARDOWN_INCOMPLETE') {
+        if (!live.current) return
+        setUnfinished(true)
+        setStep({ at: 'idle' })
+        return onChanged()
+      }
       return didNotGo(error, 'deleteProject')
     }
     // OURS TOO (Decision 11): what anyone wrote to us about it goes with it. A failure of ours is
@@ -156,12 +187,24 @@ export function Switching({
   /** Back from signing in again: said once, until they press. */
   const again =
     back && !pressed ? <p className="body">{words.goingLive.letIn.again}</p> : null
-  const busy = step.at === 'switching' || step.at === 'deleting'
+  const busy = shown.at === 'switching' || shown.at === 'deleting'
   return (
-    <section className="switching" aria-labelledby="switching-title">
-      <h2 className="heading" id="switching-title">
-        {w.title}
-      </h2>
+    <section
+      className="switching"
+      ref={sectionRef}
+      tabIndex={-1}
+      {...(off ? { 'aria-label': w.delete } : { 'aria-labelledby': 'switching-title' })}
+    >
+      {off ? null : (
+        <h2 className="heading" id="switching-title">
+          {w.title}
+        </h2>
+      )}
+      {unfinished ? (
+        <p className="body" role="status">
+          {w.deleteUnfinished}
+        </p>
+      ) : null}
       {notice === undefined ? null : (
         <div role="alert">
           <Card tone="attention">
@@ -169,14 +212,16 @@ export function Switching({
           </Card>
         </div>
       )}
-      {step.at === 'idle' || step.at === 'kept' ? (
+      {shown.at === 'idle' || shown.at === 'kept' ? (
         <>
-          <div className="describe__actions">
-            <Button kind="secondary" onClick={() => setStep({ at: 'confirm-off' })}>
-              {w.off}
-            </Button>
-          </div>
-          {step.at === 'kept' ? (
+          {off ? null : (
+            <div className="describe__actions">
+              <Button kind="secondary" onClick={() => setStep({ at: 'confirm-off' })}>
+                {w.off}
+              </Button>
+            </div>
+          )}
+          {shown.at === 'kept' ? (
             <p className="body" role="status">
               {w.liveKept}
             </p>
@@ -194,10 +239,12 @@ export function Switching({
           )}
         </>
       ) : null}
-      {step.at === 'confirm-off' || step.at === 'switching' ? (
+      {shown.at === 'confirm-off' || shown.at === 'switching' ? (
         <>
           {again}
-          <p className="body">{w.confirmOff}</p>
+          <p className="body" ref={confirmRef} tabIndex={-1}>
+            {w.confirmOff}
+          </p>
           <div className="describe__actions">
             <Button kind="primary" disabled={busy} onClick={() => void switchOff()}>
               {w.off}
@@ -212,10 +259,12 @@ export function Switching({
           </div>
         </>
       ) : null}
-      {step.at === 'confirm-delete' || step.at === 'deleting' ? (
+      {shown.at === 'confirm-delete' || shown.at === 'deleting' ? (
         <>
           {again}
-          <p className="body">{w.confirmDelete}</p>
+          <p className="body" ref={confirmRef} tabIndex={-1}>
+            {w.confirmDelete}
+          </p>
           <div className="describe__actions">
             <Button kind="danger" disabled={busy} onClick={() => void deleteIt()}>
               {w.deleteForGood}
@@ -230,8 +279,8 @@ export function Switching({
           </div>
         </>
       ) : null}
-      {step.at === 'step-up' ? (
-        <StepUpCard returnTo={`/apps/${slug}?then=${step.then}`} aboutStudents />
+      {shown.at === 'step-up' ? (
+        <StepUpCard returnTo={`/apps/${slug}?then=${shown.then}`} aboutStudents />
       ) : null}
     </section>
   )

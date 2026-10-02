@@ -82,8 +82,8 @@ const refused = (status: number, code: string) =>
   new ManifestApiError(status, { error: { code, message: 'x' } } as never, 'test')
 const never = () => new Promise<never>(() => undefined)
 
-/** How a deploy answers: its instance's end, a refusal, or nothing yet. */
-type Answer = 'healthy' | 'failed' | 'never' | { code: string; status: number }
+/** How a deploy answers: its instance's end, a refusal, nothing yet, or held for the test. */
+type Answer = 'healthy' | 'failed' | 'never' | 'held' | { code: string; status: number }
 
 type World = {
   production: string
@@ -92,6 +92,8 @@ type World = {
   deploys: Answer[]
   /** This attempt's incident, by its instance (listIncidents). */
   incident: Schemas['Incident'] | null
+  /** What production lists (listInstances), as the test moves it. */
+  instances: Schemas['InstanceSummary'][]
 }
 
 function stage(world: Partial<World> = {}) {
@@ -100,8 +102,11 @@ function stage(world: Partial<World> = {}) {
     staging: THEIRS.id,
     deploys: ['healthy'],
     incident: null,
+    instances: [],
     ...world,
   }
+  /** A held deploy's ending, the test's to call. */
+  const held: ((error: unknown) => void)[] = []
   const calls: [string, ...unknown[]][] = []
   const record =
     <A extends unknown[], T>(name: string, value: (...args: A) => T | Promise<T>) =>
@@ -130,7 +135,7 @@ function stage(world: Partial<World> = {}) {
     ),
     listInstances: record('listInstances', (environmentId: string) => ({
       environmentId,
-      instances: [],
+      instances: w.instances,
       truncated: false,
     })),
     listIncidents: record('listIncidents', (environmentId: string) => ({
@@ -142,6 +147,10 @@ function stage(world: Partial<World> = {}) {
       const answer = w.deploys[Math.min(deployed, w.deploys.length - 1)]!
       deployed += 1
       if (answer === 'never') return never()
+      if (answer === 'held')
+        return new Promise<never>((_, reject) => {
+          held.push(reject)
+        })
       if (typeof answer === 'object')
         return Promise.reject(refused(answer.status, answer.code))
       return Promise.resolve(
@@ -196,6 +205,7 @@ function stage(world: Partial<World> = {}) {
     oursCalls,
     called,
     calls,
+    held,
     underWay: (id: string) => {
       under = id
     },
@@ -347,6 +357,48 @@ describe('[Start it again] (F6 Task 10, design §4)', () => {
     expect(
       screen.getByRole('link', { name: b.goingLiveButton }).getAttribute('href'),
     ).toBe(`/apps/${SLUG}/going-live`)
+  })
+})
+
+describe('our deadline cut the wait (F5’s M1), and a page left meanwhile (the review’s I3)', () => {
+  const cut = () => new DOMException('our deadline', 'TimeoutError')
+  const healthy: Schemas['InstanceSummary'] = {
+    id: 'i-back',
+    environmentId: ID.production,
+    releaseId: THEIRS.id,
+    kind: 'web',
+    state: 'healthy',
+    lastSeenAt: '2026-10-01T19:01:00.000Z',
+    createdAt: '2026-10-01T19:00:00.000Z',
+    serving: true,
+  }
+
+  it('cut by our deadline: read on, every second, to the new instance’s own end', async () => {
+    const st = stage({ deploys: ['held'] })
+    draw(st)
+    await press()
+    await act(async () => st.held[0]!(cut()))
+    await settle()
+    expect(text()).toContain(t.unsure)
+    st.world.instances = [healthy]
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    await settle()
+    expect(text()).toContain(s.landed)
+  })
+
+  it('left before the deploy answered: nothing more is read once it is cut', async () => {
+    const st = stage({ deploys: ['held'] })
+    draw(st)
+    await press()
+    cleanup()
+    const before = st.called('listInstances').length
+    st.held[0]!(cut())
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    vi.advanceTimersByTime(10_000)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(st.called('listInstances').length).toBe(before)
   })
 })
 

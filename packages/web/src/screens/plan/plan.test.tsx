@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { Schemas } from '@manifest/contract'
+import { ManifestApiError, type Schemas } from '@manifest/contract'
 import type {
   Conversation,
   Intake,
@@ -327,6 +327,26 @@ describe('the plan being written (moment 5’s wait)', () => {
       ['c-1', { projectId: PROJECT.id, token: 'mft_test_1' }],
     ])
     expect(screen.queryByRole('alert')).toBeNull()
+  })
+})
+
+describe('switched off meanwhile (F6 Task 11)', () => {
+  it('a new token refused PROJECT_ARCHIVED: said in words, switch it back on first; no reference, no button', async () => {
+    const s = stage({
+      mint: () =>
+        new ManifestApiError(
+          409,
+          { error: { code: 'PROJECT_ARCHIVED', message: 'x' } } as never,
+          'test',
+        ),
+    })
+    s.ours.plan = () => Promise.reject(new OurRefusal('TOKEN_MISSING', 409))
+    await open(s)
+    s.state({ state: 'planning' })
+    await press(screen.getByRole('button', { name: words.describe.carryOn }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toBe(words.refused.archived(PROJECT.name))
+    expect(within(alert).queryByRole('button')).toBeNull()
   })
 })
 

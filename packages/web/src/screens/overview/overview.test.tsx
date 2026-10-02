@@ -593,6 +593,30 @@ describe('F6 Task 11: end of term on the Overview (moment 20, design §5)', () =
     expect(section()).toBeNull()
   })
 
+  it('switched off from here: our server’s needs and lines read again for the switched-off app (the review’s M1)', async () => {
+    quiet(true)
+    const st = owned({})
+    await open(`/apps/${SLUG}`, st)
+    await ready()
+    const asked = () =>
+      vi.mocked(fetch).mock.calls.filter(([url]) => String(url).startsWith('/api/needs'))
+        .length
+    await waitFor(() => expect(asked()).toBe(1))
+    const area = await screen.findByRole('region', { name: s.title })
+    await press(within(area).getByRole('button', { name: s.off }))
+    await press(within(area).getByRole('button', { name: s.off }))
+    await screen.findByText(k.card.switchedOff('12 December'))
+    await waitFor(() => expect(asked()).toBe(2))
+  })
+
+  it('a draft switched off: its owner may still delete it (the review’s I2)', async () => {
+    quiet()
+    await open(`/apps/${SLUG}`, owned(ARCHIVED))
+    expect(await screen.findByRole('button', { name: s.backOn })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: s.delete })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: s.off })).toBeNull()
+  })
+
   it('switched off: said to everyone; Switch it back on for an owner alone', async () => {
     quiet()
     await open(`/apps/${SLUG}`, owned(ARCHIVED, 'collaborator'))
