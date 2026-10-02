@@ -4,7 +4,7 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-02, ~00:15 PDT: **F6's sitting 7, part one (unattended) is done**: the acceptance in mock
+**Where things stand** *(2026-10-01, ~23:55 PDT: **F6's sitting 7, part one (unattended) is done**: the acceptance in mock
 mode, the whole-branch review with its two Important fixed, the morning staged; **the walk on 7100 and Rich's click are
 owed, at his word**: F6 is not executed until then. Rich's overnight queue, coordinated by `manifest-app-3a`; the freeze is
 07:00 PDT, his demo ~09:00)*:
@@ -179,7 +179,7 @@ owed, at his word**: F6 is not executed until then. Rich's overnight queue, coor
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-02, ~00:15 PDT)*:
+- **The machine** *(2026-10-01, ~23:55 PDT)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, restarted at F6 sitting
     6's close on a fresh dev database, and by itself on `d3600be`), against **our mock on 7102** (pid 24850, on the
     platform's `6d76459`). **Its dev database is at version 5**; sitting 7's acceptance ran on it, and the last
