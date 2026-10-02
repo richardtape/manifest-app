@@ -329,6 +329,72 @@ describe('the words: plain text in our words (C3)', () => {
     expect(removed.subject).toBe('Reading responses: someone was taken off it')
   })
 
+  // Rich's word, 2026-10-02: the bodies as written, with three tidy-ups (A, B and C).
+  it('A and B: never "<app>\'s", and every time carries its day, Vancouver’s', () => {
+    const body = (happening: Happening) =>
+      emailsFor(happening, context())[0]!.text.split('\n')[0]
+    expect(body({ kind: 'answered', by: 'identity', state: 'change_requested' })).toBe(
+      "UBC's identity team asked for a change to the request for Reading responses. Going live has the rest:",
+    )
+    expect(body({ kind: 'answered', by: 'privacy', state: 'approved' })).toBe(
+      "UBC's Privacy Office approved the privacy assessment for Reading responses. Going live has the rest:",
+    )
+    expect(body({ kind: 'answered', by: 'privacy', state: 'draft' })).toBe(
+      "UBC's Privacy Office answered about the privacy assessment for Reading responses. Going live has the rest:",
+    )
+    for (const [, one] of every) expect(one.text).not.toContain("Reading responses's")
+    expect(body({ kind: 'change-failed', incidentId: INC, releaseId: R1 })).toBe(
+      "A change to Reading responses didn't go live, at 10:03am on 1 October. Nobody has lost anything: your students still have the version from before. You can give it to your agent from its page:",
+    )
+    expect(body({ kind: 'unreachable', from: FROM })).toBe(
+      "Your students can't reach Reading responses, since 10:03am on 1 October. We can see that, not why. Starting it again usually fixes it, and you can do that from its page:",
+    )
+    expect(body({ kind: 'answering-again', from: FROM, to: TO })).toBe(
+      'Reading responses is answering again, since 10:07am on 1 October. It was down for 4 minutes. What happened is on its page:',
+    )
+    // The day is Vancouver's, as the clock is: 02:00Z on 2 October is 7:00pm on 1 October there.
+    expect(body({ kind: 'unreachable', from: '2026-10-02T02:00:00.000Z' })).toContain(
+      'since 7:00pm on 1 October.',
+    )
+  })
+
+  it('C: when we can name neither person, the body says what happened, never "someone … someone"', () => {
+    const body = (happening: Happening) =>
+      emailsFor(happening, context())[0]!.text.split('\n')[0]
+    expect(
+      body({
+        kind: 'member-added',
+        userId: STRANGER,
+        role: 'collaborator',
+        previousRole: null,
+        by: null,
+      }),
+    ).toBe(
+      "Someone was added to Reading responses, as a helper. Who's on it is on its page:",
+    )
+    expect(
+      body({
+        kind: 'member-added',
+        userId: STRANGER,
+        role: 'owner',
+        previousRole: 'collaborator',
+        by: null,
+      }),
+    ).toBe(
+      "Someone is now an owner of Reading responses. They were a helper. Who's on it is on its page:",
+    )
+    expect(body({ kind: 'member-removed', userId: STRANGER, by: null })).toBe(
+      "Someone was taken off Reading responses. Who's on it is on its page:",
+    )
+    // One of them named: as before.
+    expect(body({ kind: 'member-removed', userId: BOB, by: null })).toBe(
+      "Someone took Bob Helper off Reading responses. Who's on it is on its page:",
+    )
+    expect(body({ kind: 'member-removed', userId: STRANGER, by: CAROL })).toBe(
+      "Carol Owner took someone off Reading responses. Who's on it is on its page:",
+    )
+  })
+
   it('waitingEmail is the person’s, keyed as asked', () => {
     expect(waiting('needs-you').key).toEqual({
       kind: 'waiting',

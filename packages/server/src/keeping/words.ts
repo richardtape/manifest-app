@@ -55,17 +55,17 @@ export const mailWords = {
   changeFailed: {
     subject: (app: string) => `${app}: a change didn't go live`,
     body: (app: string, at: string) =>
-      `A change to ${app} didn't go live, at ${clockOf(at)}. Nobody has lost anything: your students still have the version from before. You can give it to your agent from its page:`,
+      `A change to ${app} didn't go live, at ${clockOf(at)} on ${dayOf(at)}. Nobody has lost anything: your students still have the version from before. You can give it to your agent from its page:`,
   },
   unreachable: {
     subject: (app: string) => `${app}: your students can't reach it`,
     body: (app: string, from: string) =>
-      `Your students can't reach ${app}, since ${clockOf(from)}. We can see that, not why. Starting it again usually fixes it, and you can do that from its page:`,
+      `Your students can't reach ${app}, since ${clockOf(from)} on ${dayOf(from)}. We can see that, not why. Starting it again usually fixes it, and you can do that from its page:`,
   },
   answering: {
     subject: (app: string) => `${app} is answering again`,
     body: (app: string, from: string, to: string) =>
-      `${app} is answering again, since ${clockOf(to)}. It was down for ${howLong(from, to)}. What happened is on its page:`,
+      `${app} is answering again, since ${clockOf(to)} on ${dayOf(to)}. It was down for ${howLong(from, to)}. What happened is on its page:`,
   },
   signedOff: {
     subject: (app: string) => `${app}: signed off`,
@@ -96,7 +96,7 @@ export const mailWords = {
         state === 'active'
           ? `UBC's identity team registered ${app}.`
           : state === 'change_requested'
-            ? `UBC's identity team asked for a change to ${app}'s request.`
+            ? `UBC's identity team asked for a change to the request for ${app}.`
             : `UBC's identity team answered about ${app}.`
       } Going live has the rest:`,
   },
@@ -105,8 +105,8 @@ export const mailWords = {
     body: (app: string, state: string) =>
       `${
         state === 'approved'
-          ? `UBC's Privacy Office approved ${app}'s privacy assessment.`
-          : `UBC's Privacy Office answered about ${app}'s privacy assessment.`
+          ? `UBC's Privacy Office approved the privacy assessment for ${app}.`
+          : `UBC's Privacy Office answered about the privacy assessment for ${app}.`
       } Going live has the rest:`,
   },
   added: {
@@ -118,7 +118,12 @@ export const mailWords = {
       whom: string | null,
       role: 'owner' | 'collaborator',
     ) =>
-      `${who ?? 'Someone'} added ${whom ?? 'someone'} to ${app}, as ${roleWords[role]}. Who's on it is on its page:`,
+      // Neither named (Rich, C): what happened, never "Someone added someone".
+      `${
+        who === null && whom === null
+          ? `Someone was added to ${app}`
+          : `${who ?? 'Someone'} added ${whom ?? 'someone'} to ${app}`
+      }, as ${roleWords[role]}. Who's on it is on its page:`,
   },
   roleChanged: {
     subject: (app: string, whom: string | null, role: 'owner' | 'collaborator') =>
@@ -130,13 +135,21 @@ export const mailWords = {
       role: 'owner' | 'collaborator',
       before: 'owner' | 'collaborator',
     ) =>
-      `${who ?? 'Someone'} made ${whom ?? 'someone'} ${roleWords[role]} of ${app}. They were ${roleWords[before]}. Who's on it is on its page:`,
+      `${
+        who === null && whom === null
+          ? `Someone is now ${roleWords[role]} of ${app}.`
+          : `${who ?? 'Someone'} made ${whom ?? 'someone'} ${roleWords[role]} of ${app}.`
+      } They were ${roleWords[before]}. Who's on it is on its page:`,
   },
   removed: {
     subject: (app: string, whom: string | null) =>
       `${app}: ${whom ?? 'someone'} was taken off it`,
     body: (app: string, who: string | null, whom: string | null) =>
-      `${who ?? 'Someone'} took ${whom ?? 'someone'} off ${app}. Who's on it is on its page:`,
+      `${
+        who === null && whom === null
+          ? `Someone was taken off ${app}.`
+          : `${who ?? 'Someone'} took ${whom ?? 'someone'} off ${app}.`
+      } Who's on it is on its page:`,
   },
   finished: {
     subject: (app: string) => `${app}: we've finished`,
