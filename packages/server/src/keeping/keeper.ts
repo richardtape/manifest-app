@@ -50,6 +50,11 @@ export interface KeeperDeps {
   probe: (url: string) => Promise<Probed>
   /** Decision 12: false in mock mode, where the mock's app has no live address on the laptop. */
   probing: boolean
+  /**
+   * How often each live address is looked at: a minute (D6) unless the keeper's caller says
+   * otherwise (Task 12's harness). Read from nothing else: never a setting of our server.
+   */
+  lookEveryMs?: number
 }
 
 export type Handed = { token: string; tokenId: string; expiresAt: string }
@@ -120,6 +125,7 @@ export function createKeeper({
   wait,
   probe,
   probing,
+  lookEveryMs = MINUTE_MS,
 }: KeeperDeps): Keeper {
   const open = new Map<string, Open>()
   let scanning: ReturnType<typeof setInterval> | undefined
@@ -379,7 +385,7 @@ export function createKeeper({
       scanning ??= setInterval(scan, HOUR_MS)
       scanning.unref?.()
       if (probing) {
-        looking ??= setInterval(look, MINUTE_MS)
+        looking ??= setInterval(look, lookEveryMs)
         looking.unref?.()
       }
       for (const kept of store.watches()) {

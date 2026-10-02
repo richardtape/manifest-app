@@ -154,7 +154,9 @@ afterEach(() => {
   for (const store of stores.splice(0)) store.close()
 })
 
-function setUp(options: { store?: Store; key?: Buffer; probing?: boolean } = {}) {
+function setUp(
+  options: { store?: Store; key?: Buffer; probing?: boolean; lookEveryMs?: number } = {},
+) {
   const store = options.store ?? openStore(':memory:')
   if (options.store === undefined) stores.push(store)
   const key = options.key ?? randomBytes(KEY_BYTES)
@@ -180,6 +182,7 @@ function setUp(options: { store?: Store; key?: Buffer; probing?: boolean } = {})
     wait: async () => undefined,
     probe: p.probe,
     probing: options.probing ?? true,
+    ...(options.lookEveryMs === undefined ? {} : { lookEveryMs: options.lookEveryMs }),
   })
   keepers.push(keeper)
   return {
@@ -914,6 +917,24 @@ describe('the live-address watch (Task 6: Decision 8, design §4)', () => {
     const t = await watchedLive({}, patch)
     await minutes(t, 2)
     expect(t.p.asked).toEqual([])
+  })
+
+  it('the look is every 60 s by default', async () => {
+    const t = await watchedLive()
+    await vi.advanceTimersByTimeAsync(MINUTE - 1)
+    expect(t.p.asked).toEqual([])
+    await vi.advanceTimersByTimeAsync(1)
+    expect(t.p.asked).toEqual([URL_A])
+  })
+
+  it('a look interval its caller gives is honoured (a dependency of the keeper, never a setting)', async () => {
+    const t = await watchedLive({ lookEveryMs: 5_000 })
+    await vi.advanceTimersByTimeAsync(4_999)
+    expect(t.p.asked).toEqual([])
+    await vi.advanceTimersByTimeAsync(1)
+    expect(t.p.asked).toEqual([URL_A])
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(t.p.asked).toEqual([URL_A, URL_A, URL_A])
   })
 
   it('an app we keep with no token (refused) is not looked at', async () => {
