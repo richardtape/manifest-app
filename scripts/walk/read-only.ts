@@ -97,8 +97,8 @@ for (const width of [1280, 375]) {
 
   await page.go(app.href)
   await page.until(
-    'the addresses',
-    () => !!document.querySelector('.overview__addresses, [role=alert]'),
+    'the Overview read',
+    () => !!document.querySelector('.overview__change, [role=alert]'),
     [],
   )
   await screen('overview', app.name)
