@@ -378,3 +378,52 @@ Then the five scripts in mock mode, as every sitting ends.
     We would ask the platform to keep it so.
 13. **Does the mock change?** Its cookie does not. Its envelopes, its limit facts, its examples and its knowledge pack do
     (Tasks 2, 3, 4, 7 and 10), so **restart `pnpm mock`** after each of those landings.
+
+## The platform's answers to questions 1–7
+
+*From `manifest-9f` (a platform session, read-only, documents only), 2026-10-01 ~23:30 PDT, at manifest `6c77c15`. The
+same answers are in manifest's faculty-ready plan, section "Asked by the faculty front-end before this plan runs", so the
+sitting that executes it inherits them. "Recommended" means the plan is silent: that sitting keeps or changes the
+recommendation and tells us at its Task 1's close.*
+
+1. **The cookie on a direct request to `127.0.0.1:7100`: the plan doesn't say, and as written client and server would
+   disagree.** The server's `originOf` falls back to the console's https origin (`api/origins.ts:6`, `:18-21`;
+   `config.ts:598`), so after Task 5 it reads only `__Host-manifest_session` there (Decision 8 ignores the plain name).
+   The client's `sessionCookieFor(baseUrl)` has no body yet (Task 5 *Interfaces*); if it follows Decision 7's scheme
+   rule it answers the plain name for `http://127.0.0.1:7100`, **so our `whoIs` replay would get `401`**. Today a direct
+   session-bearing *mutation* to 7100 is already refused by CSRF (the client sends `Origin http://127.0.0.1:7100`,
+   `contract/src/client.ts:46,58`; the server expects the console's, `api/server.ts:339`): only reads work direct.
+   **Recommended: our option (b), `whoIs` asks through the edge** (`https://app.manifest.internal/v1/me`, where `Host` and
+   scheme agree): spec §21 (*"Clients reach it through the edge … never on this port"*), and what manifest's own
+   `journey/src/frontend.ts:166,205` does (it needs `NODE_EXTRA_CA_CERTS`). Option (a) would need a new client option
+   (the fallback follows `origins[0]`, not the base URL); option (c) contradicts `origins.ts:8`.
+2. **`ManifestApiError`: partly said.** Today `(status, envelope, operation)` (`contract/src/errors.ts:18`); Task 3 adds
+   `requestId: string | null`, *"from the body, else the header"*, without saying how it arrives. **Recommended: an
+   optional fourth parameter defaulting to `null`**, so our 19 constructions keep compiling.
+3. **`Manifest-Admin-Reason`: the plan doesn't say how it is declared.** Today the only header parameter,
+   `Idempotency-Key`, is `required: true` on every mutation (`api/contract/document.ts:294-302`). **Recommended:
+   `required: false`** (it is required only of an administrator who is not a member; required would break every
+   mutation's call site, the console's too).
+4. **A streamed `422` after Task 6: left to `[M3]`'s measurement** (Decision 9). Today a streamed `400` answers as a
+   non-200 JSON body before any stream starts (`ai/fallback-guard.docker.test.ts:348-359`), and a `422` as `200` `null`
+   (`:372-381`). The sitting tells us `[M3]`'s answer at its Task 1's close. Our `stream.ts:41-42` (m62) matters only in
+   the mid-stream case.
+5. **`requestId` in the mock's envelope: the plan says only *"envelope() adds a UUID"*.** Today the mock writes
+   `{ error: { code, message, hint?, details?, launchReadiness? } }` (`mock/src/server.ts:993-1009`); the platform's own
+   sketch is `{ error: { ...error, requestId } }`, so **`requestId` comes last. Recommended: the mock appends it last too**,
+   keeping `"code":"UNAUTHENTICATED","message"` adjacent. Still: `check-slice.sh` should parse the body, not grep it.
+6. **Who holds 7105 at Task 11's clicked half: the plan doesn't say.** What Rich clicks there is the reference
+   console's (Tasks 3 and 10); sign-in goes through `/auth/*` to 7100. **Recommended: the reference console's preview on
+   7105, lent by us and returned after**, as the front-end enablement plan's clicked half did (its l.5405-5406;
+   `Caddyfile:117-121`). If Rich wants our own server in that walk, our steps 3–5 must land first.
+7. **A window between Task 5's commit and the restart: none named, and its order leaves none.** Step 1 tells us and
+   *"agree[s] when it adopts"*; Step 6 runs `demo-journey`, `demo-token` and `demo-frontend` through the edge on the new
+   names, which needs 7100 restarted on Task 5's code **before** the commit; Step 7 commits *"after the front-end's
+   reply"*. **So our edge-mode adoption must land before Step 6's restart.** Mock mode is untouched throughout. Every
+   restart signs everyone out (`cp-start.sh` makes a new `MANIFEST_SESSION_SECRET`). **Recommended:** Step 1's message
+   names that restart as the moment, and the sitting announces it.
+
+**What this changes in our test-first order:** step 4 (the name `whoIs` forwards) becomes *ask through the edge*, if the
+platform keeps recommendation 1: its failing test asserts the request goes to `https://app.manifest.internal/v1/me` with
+exactly `__Host-manifest_session=S`, and our server then needs to trust the platform's CA (`pnpm dev` already runs with `--use-system-ca`; check that
+the system store holds the platform's root, or set `NODE_EXTRA_CA_CERTS`). Steps 3–5 land before the platform's Task 5 Step 6 restart (answer 7).
