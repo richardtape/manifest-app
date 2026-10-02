@@ -6,10 +6,12 @@
 > from it, and from F5b's part one (sitting 2, merged).**
 
 **Status: WRITTEN 2026-10-02** by `manifest-app-c0`, after F6's execution (D1), from the design Rich approved as written,
-[`2026-10-01-f6b-working-together-design.md`](./2026-10-01-f6b-working-together-design.md): **read it first**. **For Rich's
-approval.** This plan says how to build it, and the decisions only an implementation needs. **The contract was read for it
+[`2026-10-01-f6b-working-together-design.md`](./2026-10-01-f6b-working-together-design.md): **read it first**. This plan says how to build it, and the decisions only an implementation needs. **The contract was read for it
 the same day** (manifest `6c77c15`, 1.5.0, 72 operations): most of the design's five measurements are now answered by
-reading, and two findings are written (**FE-49**, **FE-50**, below).
+reading, and two findings are written (**FE-49**, **FE-50**, below). **APPROVED BY RICH, 2026-10-02** (*"plan approved,
+we'll do it native"*, session `manifest-app-c0`), **to be executed natively** (superpowers:executing-plans, as F3 to F6
+ran). **Sitting 2 first**, while the platform's sitting 12 holds 7100 (sittings 2 and 3 need no platform); sitting 1 in
+the platform's window after it, at Rich's word.
 
 **Goal:** An app is live and its owner is no longer alone with it. They add a colleague, say what that lets them do, and
 take them off; every member sees every conversation on the app and acts on their own, and an owner can stop anyone's to
@@ -874,5 +876,6 @@ question), tested as Task 12's card is, with the object present and absent. The 
   - **removing our watch's minter closes the stream before `member.removed`** (FE-48): the re-read is a second signal
     (Decision 5);
   - **rejecting needs a reason** (Decision 13); a question waits **24 hours**; confirming asks a step-up, rejecting never.
-- **For Rich, with the plan:** the *Words proposed*; Decisions 2, 3, 5, 10, 11, 13 and 14 (each says what it rejected and
+- **Rich approved it the same day** (*"plan approved, we'll do it native"*), and a new session took sitting 2 at once
+  (7100 was the platform's sitting 12's). **Still for Rich, at each sitting:** the *Words proposed*; Decisions 2, 3, 5, 10, 11, 13 and 14 (each says what it rejected and
   what changing it costs); FE-49 and FE-50 (written, not carried); the execution method.

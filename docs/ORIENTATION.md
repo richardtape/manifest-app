@@ -9,11 +9,12 @@ says which plan is current. This file states where things stand and the rules. I
 12 (the launch path's acceptance, `manifest-5a`) runs at Rich's word)*:
 
 - **YOUR JOB, IF YOU ARE THE NEXT SESSION: ask Rich which comes next.** Each is his word:
-  1. **F6b's plan is WRITTEN, for Rich's approval** (2026-10-02, `manifest-app-c0`):
-     [`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md), from its approved design;
-     seven sittings (sitting 1 measures on 7100; 2–3 need no platform; 7 waits for FE-47 and FE-5 (a)); **FE-49** (a token
-     names no minter) and **FE-50** (who answers an agent's question: docs and code disagree) written with it. **Ask Rich
-     to approve it and choose the execution method**, then sitting 2 or 3 may start at once (no 7100).
+  1. **F6b, APPROVED BY RICH, native** (2026-10-02,
+     [`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md)): **start with its sitting 2**
+     (our server: sharing, the token ids, removals; mock mode, no 7100), then sitting 3. **Its sitting 1 measures on 7100
+     only after the platform's sitting 12 ends** (`manifest-5a` sends END), in a window it gives, at Rich's word. **Hold
+     every Vitest run of ours between the platform's TIER START/END and CLOSING TESTS START/END** (tell `manifest-5a` your
+     name first, so its holds reach you). FE-49 and FE-50 written with the plan.
   2. **F5b sitting 1, the measurements on 7100** (M1–M8 in its plan), in a window the running platform sitting gives. If
      Rich runs the platform's sitting 12 first, it truncates 7100 and restarts the control plane (the local driver, the fake
      GitHub, then back to real GitHub): ask `manifest-5a` (or its successor) what 7100 is on. Our server to edge mode first,
