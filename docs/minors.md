@@ -172,6 +172,14 @@ waits for F6 sitting 4 to close.
 tokenId: null, mine: false }`), as `manifest-app-minors`' walk did, so a read-only walk mints nothing and leaves no watch
 for `check-keeping.sh` to meet. Control: without the rewrite, the check goes red.
 
+**From the final verification pass** (`manifest-app-verify`, report only, on `main` at `4135da8`, 2026-10-02 00:42 PDT:
+green; nothing it found costs the demo).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m73 | `manifest-app-verify`'s walk | A gap inside one day reads *"We weren't watching between 29 September and 29 September."*, and the day's heading repeats after the gap. Only a reconnect whose replay holds none of what we have makes a gap, so a fresh app won't show one. | `packages/web/src/screens/keeping/history.tsx:33` passes dates alone (`dayWords`) for both ends. m65 (the gap's position) is a different defect. | S | faculty-visible |
+| m74 | `manifest-app-verify`'s run of `scripts/walk/self-test.ts` | Under `FORCE_COLOR` the self-test's control *"Chrome outlives the walk that threw"* fails (52/53): the child prints Chrome's pid through `console.log`, coloured, `Number()` reads `NaN`, and the bare Chrome is left running (three were stopped by hand). Print the pid with `process.stdout.write`. | `scripts/walk/self-test.ts` and its child script | S | scripts |
+
 **From F6's whole-branch review** (sitting 7's unattended half, `manifest-app-s7`, 2026-10-02; the plan's entry *Sitting
 7, part one*, its *Minors*). Each was read in the code at `d3600be`; none was fixed (the review's two Important were).
 
