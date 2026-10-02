@@ -52,7 +52,7 @@ went live. Walk-through moments **16, 19 and 20**. Moments 17 and 18, and the *A
 | 2 | 2, 3 | Our server: the store's version 5; the seal and its key; the watch token handed over and kept; the keeper's streams, its history and its gaps | **done 2026-10-01** (`manifest-app-28`, mock mode only): `ecec79e` (Task 2), `361058d` (Task 3). **F3's stream gained each event's `at` and an optional `replayed` report** (a ruling: the keeper cannot see a reconnect's overlap otherwise); Tasks 4, 5, 7 and 8 noted (S2). 1771 tests twice; the five acceptance scripts pass; the platform's `4aaf0ef` adopted |
 | 3 | 4, 5 | The happenings and the lines; the emails, once each, through nodemailer | **done 2026-10-01** (`manifest-app-fc`, mock mode only): `b4cfb9f` (Task 4), `bacf85c` (Task 5: nodemailer 10.0.13, its types its own). **`linesOf` takes the kept app's `launchedAt`; `Line` gains `whom`; the first replay of an app never watched emails nobody**; Tasks 4–7 and 9 noted (S3). 1905 tests twice; the five acceptance scripts pass; the platform's `a1d4baa` (72 operations) adopted. **The email bodies wait for Rich's word** |
 | 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | **done 2026-10-01** (`manifest-app-00`, mock mode only, beside the platform's sitting 9 and its holds): `238e6a0` (Task 6), `5d95181` (Task 7). **The recovery is declared at the third answer and dated from the first; a fall within 30 minutes of a recovery, and its recovery, are told to nobody; a restored app is watched again from its first answer; `/history` is a member's alone; a switched-off app's needs are its questions**; Tasks 9, 10 and 12 noted (S4). 1992 tests twice; the five acceptance scripts pass; the platform's `a230c1a` adopted. **The email bodies approved by Rich with A, B and C** (`manifest-app-3a`'s edit, after this sitting). FE-46, FE-47, FE-5 (a) written |
-| 5 | 8, 9 | The page: the platform's new calls; the watch token minted; *Your apps* and the Overview (the band, *Since you were last here*, the card's states, *How we keep watch*); the history page | not started |
+| 5 | 8, 9 | The page: the platform's new calls; the watch token minted; *Your apps* and the Overview (the band, *Since you were last here*, the card's states, *How we keep watch*); the history page | **done 2026-10-01** (`manifest-app-00`, the same session as sitting 4, mock mode, beside the platform's sitting 10 and its mock edit): `ed8c6af` (Task 8), `c20cfff` (Task 9). **The watch minted on every app page, on *Your apps* one at a time, and after Make it, never for an app switched off; the band, *Since*, *How we keep watch*, the history page, the card's two new states; our server's reads never hold the page**; walked at 1440 and 375 with `scripts/walk/` (one defect found and fixed). 2094 tests twice; the five acceptance scripts pass; `check-keeping.sh` half one 8/8; the platform's `0969d45` adopted. **Words marked "ours" for Rich** |
 | 6 | 10, 11 | The page: *Start it again* and *What happened?*; switching off, back on, *Start it for your students*, and delete | not started |
 | 7 | 12 | **The acceptance:** `scripts/check-keeping.sh` against the mock and Mailpit; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | not started |
 
@@ -1373,3 +1373,59 @@ empty). The admin grant was run by `manifest-8e` at Rich's own word in its sessi
   back on 7100 (PID 68983, `a230c1a`, real GitHub, an empty database). Nothing of ours on 7100.
 - **Next: sitting 5** (Tasks 8 and 9): the page's calls and the watch token minted; *Your apps* and the Overview (the
   band, *Since you were last here*, the card's states, *How we keep watch*); the history page.
+
+### 2026-10-01 — Sitting 5: the page's calls, the watch token minted, and coming back (session `manifest-app-00`, mock mode only)
+
+- **The same session as sitting 4**, at Rich's word (*"if it's safe please start f6 sitting 5"*): the ledger carried it.
+  **Step 0:** contract 1.5.0, 72 operations, manifest clean at `ddc76d7`; typecheck clean; 1996 tests (with
+  `manifest-app-3a`'s email edit `a7f5542` and `manifest-app-47`'s `cfc194f`). **The platform's sitting 10 (`manifest-3d`)
+  ran beside us**: its Task 13 edited `packages/mock` (real packages and a draft in the records' fixtures, the ACS path
+  `/auth/ubcshib/callback`, the launch-path operations refusing as the platform would with no option set, and FE-40's
+  opt-in switches); between its *"before my first edit"* and *"mock committed"* we held every test that reads its
+  fixtures and never restarted our mock. Nothing of ours relied on what moved.
+- **Task 8** (`ed8c6af`): the page's five calls (`listMembers`, `revokeToken`, `archiveProject` and `restoreProject` with
+  the contract's `EmptyRequest`, `deleteProject`), each in the person's session with an `Idempotency-Key`; `Ours` gains
+  `keeping`, `handWatch`, `needs`, `since`, `history`, `forget` and the outage's fix. **`screens/keeping/watch.ts`**:
+  `ensureWatch` mints exactly a *Keeping watch* token when our server has none that works or one with under 30 days left,
+  revokes its own when the app already had a good one and the person's old one when it was theirs, never for an app
+  switched off, never throws; it runs in the shell for every app page, on *Your apps* one app at a time after its reads,
+  and after Make it's handover. **`role.ts`**: `useRole`. **The rulings:** `revokeToken` takes a key (the contract's; the
+  plan named none); archive and restore send `{}` (typecheck showed it; corrected test-first); every fake `Platform` and
+  `Ours` in the tests gained the new methods as never-answering stubs, so nothing old changed behaviour. Controls, two,
+  red and restored: minting for an archived app; the other person's token revoked.
+- **Task 9** (`c20cfff`): `screens/keeping/{lines.ts, needs.tsx, since.tsx, how.tsx}` and `screens/history/history.tsx`;
+  `/apps/:slug/history`; the card's `switchedOff` and `unreachable`; *Your apps* and the Overview read our server's needs
+  and lines **in an effect of their own** (a slow or failed answer of ours never holds or loses the page). **The
+  rulings:**
+  - *Start it again* and *What happened?* open the app's Overview, where Task 10's presses go; *Give this to your agent*
+    opens the Preview's students' tab (F5's *What went wrong*).
+  - The page's own need is a *Going live* row drawn attention, read without the approval (so not a refused sign-off).
+  - Our client refuses an answer without its list (`needs`, `since`, `history`).
+  - **Words not in the approved table, marked "ours" in `words.ts`, for Rich** (below).
+  - Controls, three, red and restored: a helper shown the button; *Since* drawn with `lastHere` null; a line leaking a
+    machinery word.
+- **The walk** (`scripts/walk/`, its first use by a sitting; our `/api` answers rewritten in the browser, `…/keeping` as
+  *watching* so a read-only walk mints nothing): *Your apps* with every kind of need, the Overview as a helper, the
+  history page, at 1440 and 375. **It found one defect no unit test could**: the card's students' row kept its label and
+  the new long attention chip on one line, 44 px past the card at 375 (the row now wraps). 31/31 after.
+- **For Rich: the words marked "ours"**: who did it (*"Alice added Dan New"*, *"Alice made Dan a helper"*, *"Alice took Bob
+  off it"*, *"Alice switched it off"*, *"Alice switched it back on"*, *"Alice renamed it from …"*); *"What needs you"* (the
+  band's name, for a screen reader); the history's *"Nothing has happened yet."* and *"Try again"*.
+- **Notes carried (S5)** into Tasks 10 and 11: the band's *Start it again* and *What happened?* are links to the Overview
+  until Task 10 puts their presses there; `useRole` and `ensureWatch` are ready for Task 11 (switching back on mints at
+  once); the outage's lookup route is still Task 10's (S4).
+- **The platform's mock, committed** (`0969d45`, *"mock committed"*): our mock restarted on it (pid 28170); typecheck
+  clean; three tests of ours moved (an unreadable card's whole shape; the two sign-out tests now count only non-`/api`
+  requests; the history route waits for its lines). Nothing of our code.
+- **Gates:** 2094 tests (89 files), twice; lint, typecheck and format clean; `pgrep -fl vitest` empty of ours. **In mock
+  mode, from a fresh dev database, on the new mock** (the old one kept as `.data/app-before-f6s5.sqlite`):
+  `check-seeing.sh` 8/8, `check-going-live.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh` 18/18,
+  `check-building.sh` 12/12. **Then `manifest-app-47`'s `scripts/check-keeping.sh` half one, in its window: 8/8**
+  (`95216ca`; its control, a leaked `mft_` row, red alone). It ends with the owner's `DELETE`, so **the dev database holds
+  no mock-app conversation or keeping row** at our close. Half two (`check-keeping.ts`, `cf2d2b2`): 12/12 earlier.
+- **The machine at the close:** our server in mock mode on 7105 (`nohup pnpm dev:mock`, one watcher, on the fresh dev
+  database), against our mock on 7102 (pid 28170, on the platform's `0969d45`). The platform's sitting 10 (`manifest-3d`)
+  is running: Task 14's text pass may touch `packages/contract` and `packages/mock` with a HOLD first. Nothing of ours on
+  7100.
+- **Next: sitting 6** (Tasks 10 and 11), executed by `manifest-app-s6` at Rich's overnight arrangement (coordinated by
+  `manifest-app-3a`).
