@@ -628,6 +628,44 @@ describe('F6 Task 11: end of term on the Overview (moment 20, design §5)', () =
     expect(machineryIn(document.body.textContent ?? '')).toEqual([])
   })
 
+  it('not running for its students (switched off, or back and not started): no message to send them (found by the walk)', async () => {
+    quiet(true)
+    await open(
+      `/apps/${SLUG}`,
+      owned({ launchedAt: LAUNCHED }, 'owner', {
+        launchedAt: LAUNCHED,
+        readiness: BOTH_MET,
+        production: GONE,
+      }),
+    )
+    await screen.findByRole('region', { name: s.students })
+    expect(screen.queryByText(w.students.messageLabel)).toBeNull()
+    cleanup()
+    quiet(true)
+    await open(
+      `/apps/${SLUG}`,
+      owned({ ...ARCHIVED, launchedAt: LAUNCHED }, 'owner', {
+        launchedAt: LAUNCHED,
+        readiness: BOTH_MET,
+        production: GONE,
+      }),
+    )
+    await ready()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByText(w.students.messageLabel)).toBeNull()
+    // Running, it is handed over as ever.
+    cleanup()
+    quiet(true)
+    await open(
+      `/apps/${SLUG}`,
+      owned({ launchedAt: LAUNCHED }, 'owner', {
+        launchedAt: LAUNCHED,
+        readiness: BOTH_MET,
+      }),
+    )
+    expect(await screen.findByText(w.students.messageLabel)).toBeTruthy()
+  })
+
   it('a live app’s owner: FE-45’s sentence where Delete it would be', async () => {
     quiet()
     await open(

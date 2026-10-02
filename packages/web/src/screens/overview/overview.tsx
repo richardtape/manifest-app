@@ -105,6 +105,10 @@ async function read(
   const readiness = answered?.status === 'fulfilled' ? answered.value : undefined
   const launched = (project.launchedAt ?? null) !== null || readiness?.launched === true
   const students = of('students')
+  // F6 Task 11: switched off, or back and not started for them: the students' address shows the
+  // switched-off page, so there is no address to hand over (found by sitting 6's walk).
+  const studentsGone = launched && students?.instance?.state === 'gone'
+  const running = project.state !== 'archived' && !studentsGone
   const serving = (env: Schemas['Environment']) =>
     env.instance === null ? undefined : byId.get(env.instance.releaseId)
   const app = {
@@ -122,7 +126,7 @@ async function read(
   return {
     goingLive,
     launched,
-    studentsGone: launched && students?.instance?.state === 'gone',
+    studentsGone,
     rows: TABS.flatMap((tab) => {
       const found = of(tab)
       if (found === undefined) return []
@@ -131,17 +135,18 @@ async function read(
       return [{ tab, serving: servingFact(env, serving(env), timeZone) }]
     }),
     band: !launched && readiness !== undefined && clocksUnmet(readiness),
-    handed: launched
-      ? await handOver(
-          platform,
-          ours,
-          project,
-          students,
-          students === undefined ? undefined : serving(students),
-          now,
-          timeZone,
-        )
-      : null,
+    handed:
+      launched && running
+        ? await handOver(
+            platform,
+            ours,
+            project,
+            students,
+            students === undefined ? undefined : serving(students),
+            now,
+            timeZone,
+          )
+        : null,
   }
 }
 
