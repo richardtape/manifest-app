@@ -277,6 +277,11 @@
   color: var(--ink);
   text-decoration: none;
 }
+/* The app's name: a word that cannot break wraps inside the card at 375 (m63). */
+.app-card__name,
+.app-card__link {
+  overflow-wrap: anywhere;
+}
 .app-card__link:hover {
   color: var(--brand);
   text-decoration: underline;

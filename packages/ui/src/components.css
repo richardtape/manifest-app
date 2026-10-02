@@ -958,6 +958,8 @@
   text-transform: uppercase;
   color: var(--nav-ink-subtle);
   margin: 0 24px 10px;
+  /* The app's name: a word that cannot break wraps rather than run out of the rail (m63). */
+  overflow-wrap: anywhere;
 }
 .mf-rail__item {
   display: flex;

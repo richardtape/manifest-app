@@ -11,6 +11,11 @@ const CSS = readFileSync(new URL('./components.css', import.meta.url), 'utf8').r
   /\/\*[\s\S]*?\*\//g,
   '',
 )
+/** The type and the tokens (`.page-title`), read the same way. */
+const TOKENS = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8').replace(
+  /\/\*[\s\S]*?\*\//g,
+  '',
+)
 
 /** The body of the first `@media <query>` block. */
 function media(query: string): string {
@@ -98,4 +103,14 @@ describe('a clock card at a phone’s width (F5 Task 6’s walk)', () => {
   // the card at 375: the title and the chip share one row until they cannot.
   it('its title and chip wrap onto two lines rather than run past the card', () =>
     expect(declarationsFor(CSS, '.mf-clockitem__top')).toMatch(/flex-wrap:\s*wrap/))
+})
+
+describe('an app’s name holding a word that cannot break (m63)', () => {
+  // A hyphen breaks, so real names rarely do this; one that does ran 251 px out of the rail at
+  // 1280, and the Overview's title made the page 888 px wide at 375 (manifest-app-47's control).
+  it('the rail’s overline, the app’s name, wraps anywhere rather than run out of the rail', () =>
+    expect(declarationsFor(CSS, '.mf-rail__over')).toMatch(/overflow-wrap:\s*anywhere/))
+
+  it('a page’s title wraps anywhere rather than widen the page', () =>
+    expect(declarationsFor(TOKENS, '.page-title')).toMatch(/overflow-wrap:\s*anywhere/))
 })

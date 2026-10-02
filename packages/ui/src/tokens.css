@@ -101,6 +101,8 @@
   line-height: 36px;
   font-weight: 700;
   letter-spacing: -0.03em;
+  /* An app's name is a page's title: a word that cannot break wraps, never widens the page (m63). */
+  overflow-wrap: anywhere;
 }
 .moment {
   font-family: var(--font-sans);
