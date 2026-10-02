@@ -11,6 +11,7 @@ import { registerMinted } from './api/minted.js'
 import { registerPlan } from './api/plan.js'
 import { registerProblems } from './api/problems.js'
 import { registerProject } from './api/project.js'
+import { endWork } from './api/work-end.js'
 import { createWork, Refused } from './api/work.js'
 import { beginPiece, createLine, type Line } from './build/line.js'
 import { createRounds, type RoundDeps, type Rounds } from './build/round.js'
@@ -206,6 +207,24 @@ export function buildServer(
   // app with a conversation waiting, and none holding it, starts its next (Review Focus 5).
   rounds.interruptedOnBoot()
   line.onBoot()
+  // F6b DECISION 5: SOMEONE TAKEN OFF AN APP has their work here ended, as Stop ends it, recorded
+  // `removed`: theirs waiting first, so a round's stop never lets one of theirs start; their
+  // conversations' tokens dropped and their token ids forgotten.
+  keeper.onRemoved((projectId, personId) => {
+    const theirs = store.listConversationsOn(projectId, personId)
+    const waitingFirst = [
+      ...theirs.filter((conversation) => conversation.state === 'waiting'),
+      ...theirs.filter((conversation) => conversation.state !== 'waiting'),
+    ]
+    for (const conversation of waitingFirst) {
+      endWork({ store, hub, rounds, line }, conversation, {
+        by: personId,
+        why: 'removed',
+      })
+      tokens.drop(conversation.id)
+    }
+    store.forgetMintedOf(projectId, personId)
+  })
   // F6 (D4): every kept watch token's stream opened; closed with the server.
   keeper.start()
   app.addHook('onClose', async () => keeper.stop())

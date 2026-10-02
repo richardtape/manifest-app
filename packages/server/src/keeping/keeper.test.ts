@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { NO_DETAIL } from '../api/round-state.js'
 import { PlatformRefusal } from '../platform/refusal.js'
 import type { ProjectEvent, ProjectStream, Replay } from '../platform/stream.js'
 import type { Watching } from '../platform/watching.js'
@@ -779,6 +780,98 @@ describe('the emails (Task 5: D3, once each)', () => {
   })
 })
 
+describe('someone taken off the app: their work here ends, once (F6b Task 4, Decision 5)', () => {
+  const carol: KeptMember = {
+    userId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    role: 'owner',
+    displayName: 'Carol Owner',
+    email: 'carol@example.test',
+  }
+
+  /** Handed, its first replay over, and who the keeper says was taken off. */
+  async function live(
+    members: KeptMember[] = [member(ALICE), member(BOB, 'collaborator')],
+  ) {
+    const t = setUp()
+    const removed: [string, string][] = []
+    t.keeper.onRemoved((projectId, personId) => removed.push([projectId, personId]))
+    t.w.members.set(P1, members)
+    await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    const handlers = t.open()[0]!.handlers
+    handlers.replayed!({ ids: [], overlapped: false })
+    return { ...t, handlers, removed }
+  }
+
+  it('member.removed: their work ended once, the members kept without them, and the other owners told once', async () => {
+    const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+    t.w.members.set(P1, [member(ALICE), carol])
+    t.handlers.event(event(5, 'member.removed', { memberId: BOB, userId: ALICE }))
+    await settle()
+    expect(t.removed).toEqual([[P1, BOB]])
+    expect(t.store.members(P1)).toEqual([member(ALICE), carol])
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      {
+        to: 'carol@example.test',
+        subject: 'Reading responses: Bob Helper was taken off it',
+      },
+    ])
+  })
+
+  it('member.removed whose members cannot be read again: the event alone ends their work', async () => {
+    const t = await live()
+    t.w.watching.members = async () => {
+      throw new PlatformRefusal('PLATFORM_UNAVAILABLE', 502)
+    }
+    t.handlers.event(event(5, 'member.removed', { memberId: BOB, userId: ALICE }))
+    await settle()
+    expect(t.removed).toEqual([[P1, BOB]])
+    expect(t.store.members(P1)).toEqual([member(ALICE)])
+  })
+
+  it('no event, and the members read again without someone we kept (FE-48: the hand-over after a 4401): their work ended, once', async () => {
+    const t = await live()
+    // Removing the one whose token we watch with closes our stream before the event (FE-48).
+    t.refuse(t.open()[0]!)
+    t.w.members.set(P1, [member(ALICE)])
+    expect(await t.keeper.hand(P1, handed(TOKEN_B, ID_B), ALICE)).toBe('kept')
+    await settle()
+    expect(t.removed).toEqual([[P1, BOB]])
+    // Read again, and again: they were ended once.
+    t.open()[0]!.handlers.reconnected()
+    await settle()
+    expect(t.removed).toEqual([[P1, BOB]])
+  })
+
+  it('a reconnect’s re-read that no longer lists someone: their work ended', async () => {
+    const t = await live()
+    t.w.members.set(P1, [member(ALICE)])
+    t.handlers.reconnected()
+    await settle()
+    expect(t.removed).toEqual([[P1, BOB]])
+  })
+
+  it('a re-read that still lists everyone: nothing ended', async () => {
+    const t = await live()
+    t.handlers.reconnected()
+    t.handlers.event(event(6, 'member.added', { memberId: BOB, role: 'owner' }))
+    await settle()
+    expect(t.removed).toEqual([])
+  })
+
+  it('member.removed in the first replay of an app we never watched is its past: nothing ended by it', async () => {
+    const t = setUp()
+    const removed: [string, string][] = []
+    t.keeper.onRemoved((projectId, personId) => removed.push([projectId, personId]))
+    await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    t.open()[0]!.handlers.event(
+      event(1, 'member.removed', { memberId: BOB, userId: ALICE }),
+    )
+    await settle()
+    // Taken off once, and on it again now (the members still list them).
+    expect(removed).toEqual([])
+  })
+})
+
 describe('your work is waiting (Decision 14)', () => {
   const runOf = (conversationId: string, status: Run['status']): Run => ({
     id: `run-${conversationId}-1`,
@@ -834,6 +927,20 @@ describe('your work is waiting (Decision 14)', () => {
     expect(t.sent.map(({ subject }) => subject)).toEqual([
       'Reading responses: we need you',
     ])
+  })
+
+  it('a round stopped because its person was taken off the app: nothing (F6b Review Focus 1)', async () => {
+    const t = await waiting('building', 'stopped')
+    t.store.saveRun({
+      ...runOf(t.conversation.id, 'stopped'),
+      detail: {
+        ...NO_DETAIL,
+        stopped: { by: ALICE, why: 'removed' },
+      },
+    })
+    t.keeper.workEnded(t.conversation)
+    await settle()
+    expect(t.sent).toEqual([])
   })
 
   it('a page holding its stream: nothing (they are watching)', async () => {

@@ -9,6 +9,8 @@ import type { KeptMember } from '../store/keeping.js'
  *   person's**, and **Stop** is also an owner's, to free the app.
  * - **An intake conversation** (no app yet) is its own person's alone.
  * - **No kept members** (an app the keeper does not keep): its own person only, as before F6b.
+ * - **Someone taken off the app** (kept members that no longer list them: Decision 5) is a stranger
+ *   to their own conversations on it, which its members still read.
  */
 export type Standing = 'own' | 'owner' | 'member' | 'stranger'
 
@@ -17,14 +19,19 @@ export function standingOf(
   personId: string,
   members: KeptMember[],
 ): Standing {
-  if (conversation.personId === personId) return 'own'
-  if (conversation.projectId === null) return 'stranger'
   const member = members.find((m) => m.userId === personId)
-  if (member === undefined) return 'stranger'
+  if (conversation.personId === personId)
+    // F6b Decision 5: someone taken off the app is no longer its own person here.
+    return conversation.projectId === null || members.length === 0 || member !== undefined
+      ? 'own'
+      : 'stranger'
+  if (conversation.projectId === null || member === undefined) return 'stranger'
   return member.role === 'owner' ? 'owner' : 'member'
 }
 
 export const mayRead = (standing: Standing): boolean => standing !== 'stranger'
+/** Every change to a conversation: its own person's alone (D3). */
+export const mayAct = (standing: Standing): boolean => standing === 'own'
 export const mayStop = (standing: Standing): boolean =>
   standing === 'own' || standing === 'owner'
 

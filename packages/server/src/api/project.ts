@@ -7,6 +7,7 @@ import type { Store } from '../store/db.js'
 import { publishState, type Hub } from './events.js'
 import { guard } from './guard.js'
 import { keepConversationToken, tokenIdOf } from './minted.js'
+import { mayAct, reachable } from './sharing.js'
 
 /**
  * THE END OF MOMENT 4 ON OUR SERVER (F2 Task 8): the project the browser made, and the
@@ -72,7 +73,7 @@ export function registerProject(
       if (who === undefined) return reply
       const handed = handedOf(request.body)
       if (handed === undefined) return refuse(reply, 400, 'PROJECT_INVALID')
-      const conversation = store.getConversation(request.params.id, who.person.id)
+      const conversation = reachable(store, request.params.id, who.person.id, mayAct)
       if (conversation === undefined) return refuse(reply, 404, 'NOT_FOUND')
       // Tied once, for good: after that, only a token of the same project.
       if (conversation.projectId !== null && conversation.projectId !== handed.projectId)

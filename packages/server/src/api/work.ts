@@ -4,6 +4,7 @@ import { PlatformRefusal } from '../platform/refusal.js'
 import type { Conversation, ConversationState, Store } from '../store/db.js'
 import { publishRefusal, publishState, type Hub } from './events.js'
 import type { Allowance, StepKey } from './progress.js'
+import { mayAct, reachable } from './sharing.js'
 
 /**
  * A STEP'S OWN REFUSAL, by our code: what the step itself decided, with what the person must
@@ -83,7 +84,8 @@ export function createWork(
   return {
     moveTo,
     mine(request, reply, who, states) {
-      const conversation = store.getConversation(request.params.id, who.person.id)
+      // Its own person's alone (D3); someone taken off the app no longer (F6b Decision 5).
+      const conversation = reachable(store, request.params.id, who.person.id, mayAct)
       if (conversation === undefined) return void refuse(reply, 404, 'NOT_FOUND')
       if (hub.busy(conversation.id)) return void refuse(reply, 409, 'CONVERSATION_BUSY')
       if (!states.includes(conversation.state))

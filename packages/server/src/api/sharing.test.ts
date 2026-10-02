@@ -42,6 +42,13 @@ describe('standingOf (F6b Decision 1)', () => {
     expect(standingOf(SAMS, ALEX, [])).toBe('stranger')
   })
 
+  it('its own person taken off its app (kept members that no longer list them) is a stranger to it (F6b Decision 5)', () => {
+    expect(standingOf(SAMS, SAM, [member(ALEX, 'owner')])).toBe('stranger')
+    expect(
+      standingOf({ personId: SAM, projectId: null }, SAM, [member(ALEX, 'owner')]),
+    ).toBe('own')
+  })
+
   it('an intake conversation (no app yet) is its own person’s alone, even to an owner of everything', () => {
     const intake = { personId: SAM, projectId: null }
     expect(standingOf(intake, SAM, KEPT)).toBe('own')

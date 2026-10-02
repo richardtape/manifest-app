@@ -289,8 +289,11 @@ export function registerApps(
       const who = await check(request, reply)
       if (who === undefined) return reply
       const { projectId } = request.params
-      // F6b D3: a kept member of the app reads everyone's; anyone else their own (none, mostly).
-      const member = store.members(projectId).some((m) => m.userId === who.person.id)
+      // F6b D3: a kept member of the app reads everyone's; with no kept members, as before, their
+      // own; anyone else, none (someone taken off it included: Decision 5).
+      const members = store.members(projectId)
+      const member = members.some((m) => m.userId === who.person.id)
+      if (!member && members.length > 0) return []
       return store
         .listConversationsOn(projectId, member ? null : who.person.id)
         .map((conversation): AppConversation => {

@@ -8,7 +8,7 @@ import { publishState, type Hub } from './events.js'
 import { guard } from './guard.js'
 import { pieceOf, type Asked } from './piece-state.js'
 import { LIMITS } from './progress.js'
-import { mayStop, reachable } from './sharing.js'
+import { mayAct, mayStop, reachable } from './sharing.js'
 import { endWork } from './work-end.js'
 import type { Work } from './work.js'
 
@@ -109,7 +109,8 @@ export function registerBuild(
     reply: FastifyReply,
     states: string[],
   ) => {
-    const conversation = store.getConversation(id, personId)
+    // Its own person's alone (D3); someone taken off the app no longer (F6b Decision 5).
+    const conversation = reachable(store, id, personId, mayAct)
     if (conversation === undefined) return void refuse(reply, 404, 'NOT_FOUND')
     if (!states.includes(conversation.state))
       return void refuse(reply, 409, 'CONVERSATION_STATE')

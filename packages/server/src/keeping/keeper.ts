@@ -5,7 +5,7 @@ import { chipOf } from '../api/apps.js'
 import type { Hub } from '../api/events.js'
 import type { Chip, Conversation, Happening } from '../api/progress.js'
 import type { Store } from '../store/db.js'
-import type { HistoryEntry, KeptApp } from '../store/keeping.js'
+import type { HistoryEntry, KeptApp, KeptMember } from '../store/keeping.js'
 import { emailsFor, waitingEmail } from './emails.js'
 import { happeningOf } from './happenings.js'
 import { deliver, deliverUnfinished, type Mailer } from './mail.js'
@@ -84,6 +84,13 @@ export interface Keeper {
   workEnded(conversation: Conversation): void
   /** Task 6: the live address's watch, as it stands (Task 7's needs); from history before a look. */
   outage(projectId: string): Outage
+  /**
+   * F6b DECISION 5: WHO TO TELL that someone was taken off an app, once each: on `member.removed`,
+   * or when the members read again no longer list someone we kept (FE-48: removing the one whose
+   * token we watch with closes our stream before the event). The kept members are without them
+   * first. `buildServer` ends their work here with it.
+   */
+  onRemoved(listener: (projectId: string, personId: string) => void): void
 }
 
 /** Decision 5: a token with less than this left is replaced by the next one a page hands over. */
@@ -141,6 +148,8 @@ export function createKeeper({
   const outages = new Map<string, Outage>()
   /** A look still waiting for its answer is not sent again. */
   const inFlight = new Set<string>()
+  /** F6b Decision 5: who ends a removed member's work (`buildServer`'s). */
+  let removed: (projectId: string, personId: string) => void = () => undefined
   /** A stream replaced or closed says nothing more: only the current one is heard. */
   const isCurrent = (projectId: string, one: Open) => open.get(projectId) === one
 
@@ -188,7 +197,25 @@ export function createKeeper({
     if (happening?.kind === 'member-added')
       return void refresh(projectId, one, 'members').then(() => tell(entry, happening))
     if (happening !== null) tell(entry, happening)
+    // F6b Decision 5: told with the members as they were (above), then ended without them.
+    if (happening?.kind === 'member-removed')
+      keepMembers(
+        projectId,
+        store.members(projectId).filter((member) => member.userId !== happening.userId),
+      )
     if (READS_MEMBERS.has(event.type)) void refresh(projectId, one, 'members')
+  }
+
+  /**
+   * THE MEMBERS, KEPT WHOLE (F6 Decision 3), and anyone kept before and not now taken off here,
+   * once (F6b Decision 5): only someone we kept is ended, so a second read ends nobody again.
+   */
+  function keepMembers(projectId: string, members: KeptMember[]): void {
+    const gone = store
+      .members(projectId)
+      .filter((kept) => !members.some((member) => member.userId === kept.userId))
+    store.putMembers(projectId, members)
+    for (const member of gone) removed(projectId, member.userId)
   }
 
   /** D3: each owner told once, by the kept app and members. */
@@ -371,7 +398,7 @@ export function createKeeper({
       }
       if (what !== 'app') {
         const members = await watching.members(one.token, projectId)
-        if (isCurrent(projectId, one)) store.putMembers(projectId, members)
+        if (isCurrent(projectId, one)) keepMembers(projectId, members)
       }
     } catch {
       // A refused token's stream says so itself; anything else is read again at the next event
@@ -430,7 +457,7 @@ export function createKeeper({
       // Review Focus 2: another page's hand may have kept a good one while we read.
       if (good(projectId)) return 'current'
       store.putApp(app)
-      store.putMembers(projectId, members)
+      keepMembers(projectId, members)
       store.putWatch({
         projectId,
         tokenId: handed.tokenId,
@@ -475,6 +502,10 @@ export function createKeeper({
     },
 
     outage: outageOf,
+
+    onRemoved(listener) {
+      removed = listener
+    },
   }
 }
 
@@ -487,4 +518,5 @@ export const idleKeeper: Keeper = {
   forget: () => undefined,
   workEnded: () => undefined,
   outage: () => ({ state: 'answering', recovered: null }),
+  onRemoved: () => undefined,
 }

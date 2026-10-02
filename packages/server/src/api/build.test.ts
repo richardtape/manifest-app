@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildServer } from '../app.js'
 import { createRounds, type Rounds } from '../build/round.js'
+import { idleKeeper, type Keeper } from '../keeping/keeper.js'
 import type { Config } from '../config.js'
 import { answered, type Answered, type Model } from '../model/client.js'
 import { scripted } from '../model/scripted.js'
@@ -96,7 +97,7 @@ function lead(script: unknown[]) {
   })
 }
 
-function setUp(script: unknown[] = []) {
+function setUp(script: unknown[] = [], options: { keeper?: Keeper } = {}) {
   const { dir, remove } = scratchDir()
   cleanups.push(remove)
   const store: Store = openStore(join(dir, 'app.sqlite'))
@@ -153,6 +154,7 @@ function setUp(script: unknown[] = []) {
     projects,
     sessions,
     authoring,
+    ...(options.keeper === undefined ? {} : { keeper: options.keeper }),
     planModel: () => scripted({ plan: [PLAN], change: [{ ...PLAN, title: 'A change' }] }),
     rounds: (base) => {
       rounds = createRounds({
@@ -1134,5 +1136,119 @@ describe('working on it together (F6b D3, Task 2)', () => {
       ).needs.filter((n) => n.kind === 'question')
     expect(await questions(AS_ALICE)).toEqual([])
     expect(await questions(AS_BOB)).toHaveLength(1)
+  })
+
+  /** A keeper whose word that someone was taken off the test gives by hand (`onRemoved`). */
+  function removing() {
+    let listener: ((projectId: string, personId: string) => void) | undefined
+    const keeper: Keeper = {
+      ...idleKeeper,
+      onRemoved: (heard) => void (listener = heard),
+    }
+    return {
+      keeper,
+      /** As the keeper does: the members kept without them first, then their work ended. */
+      remove: (s: Setup, person: { id: string }) => {
+        s.store.putMembers(
+          PROJECT.id,
+          s.store.members(PROJECT.id).filter((m) => m.userId !== person.id),
+        )
+        listener!(PROJECT.id, person.id)
+      },
+    }
+  }
+
+  const keepToken = (s: Setup, conversation: Conversation, person: { id: string }) =>
+    s.store.keepMinted({
+      tokenId: `0f000000-0000-4000-8000-${conversation.id.slice(-12)}`,
+      projectId: PROJECT.id,
+      personId: person.id,
+      purpose: 'conversation',
+      conversationId: conversation.id,
+      name: null,
+      expiresAt: null,
+      mintedAt: new Date().toISOString(),
+    })
+
+  it('taken off the app (F6b Task 4): their round stopped, theirs waiting set aside, their tokens dropped and forgotten, and the line moves on', async () => {
+    const r = removing()
+    const s = setUp(AT_BUILD, { keeper: r.keeper })
+    together(s)
+    const bobs = await bobsRound(s)
+    const bobsNext = changeOf(s, BOB, 'waiting', 'Bigger title.')
+    const alices = changeOf(s, ALICE, 'waiting', 'Next.')
+    s.store.setState(bobsNext.id, 'waiting', { waitingSince: '2026-10-02T10:00:00.000Z' })
+    s.store.setState(alices.id, 'waiting', { waitingSince: '2026-10-02T10:00:01.000Z' })
+    for (const [conversation, person] of [
+      [bobs, BOB],
+      [bobsNext, BOB],
+      [alices, ALICE],
+    ] as const)
+      keepToken(s, conversation, person)
+
+    r.remove(s, BOB)
+
+    await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
+    expect(s.store.latestRun(bobs.id)?.detail?.stopped).toEqual({
+      by: BOB.id,
+      why: 'removed',
+    })
+    expect(s.store.conversationById(bobsNext.id)?.state).toBe('set-aside')
+    expect([s.tokens.get(bobs.id), s.tokens.get(bobsNext.id)]).toEqual([
+      undefined,
+      undefined,
+    ])
+    expect(s.tokens.get(alices.id)).toBe(TOKEN)
+    expect(s.store.mintedOn(PROJECT.id).map((m) => m.conversationId)).toEqual([alices.id])
+    // Its work in flight returned: the app is free, and Alice's change, next, starts by itself.
+    await until(() => s.store.conversationById(alices.id)?.state === 'plan-ready', 3000)
+  })
+
+  it('taken off: their own conversation on it is 404 to them, and readable by the members, ended, saying so', async () => {
+    const r = removing()
+    const s = setUp(AT_BUILD, { keeper: r.keeper })
+    together(s)
+    const bobs = await bobsRound(s)
+    r.remove(s, BOB)
+    await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
+    expect((await get(s, `/api/conversations/${bobs.id}`, AS_BOB)).status).toBe(404)
+    expect((await get(s, `/api/conversations/${bobs.id}`, AS_ALICE)).status).toBe(200)
+    expect(roundOf(s.store, bobs.id)?.stopped).toEqual({
+      name: BOB.displayName,
+      why: 'removed',
+    })
+    expect(await get(s, `/api/apps/${PROJECT.id}/conversations`, AS_BOB)).toEqual({
+      status: 200,
+      body: [],
+    })
+  })
+
+  it('taken off: nothing of theirs on it may change, so nothing of theirs takes the app again', async () => {
+    const r = removing()
+    const s = setUp([], { keeper: r.keeper })
+    together(s)
+    const bobs = changeOf(s, BOB, 'built')
+    r.remove(s, BOB)
+    expect(
+      await post(s, bobs.id, 'messages', { words: 'One more thing.' }, as(AS_BOB)),
+    ).toEqual({ status: 404, body: { error: { code: 'NOT_FOUND' } } })
+    expect((await post(s, bobs.id, 'stop', {}, as(AS_BOB))).status).toBe(404)
+    expect(s.store.conversationById(bobs.id)?.state).toBe('built')
+    expect(s.store.waitingOn(PROJECT.id)).toEqual([])
+  })
+
+  it('told twice, ended once: the first stop’s record stands', async () => {
+    const r = removing()
+    const s = setUp(AT_BUILD, { keeper: r.keeper })
+    together(s)
+    const bobs = await bobsRound(s)
+    await post(s, bobs.id, 'stop')
+    await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
+    r.remove(s, BOB)
+    r.remove(s, BOB)
+    expect(s.store.latestRun(bobs.id)?.detail?.stopped).toEqual({
+      by: ALICE.id,
+      why: 'stopped',
+    })
   })
 })

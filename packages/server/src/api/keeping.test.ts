@@ -44,6 +44,7 @@ function fakeKeeper(did: string[]) {
     stop: () => undefined,
     forget: (projectId) => void did.push(`forget ${projectId}`),
     workEnded: () => undefined,
+    onRemoved: () => undefined,
     outage: (projectId) =>
       outages.get(projectId) ?? { state: 'answering', recovered: null },
     async hand(projectId, handed, personId) {
