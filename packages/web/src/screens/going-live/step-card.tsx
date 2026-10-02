@@ -42,15 +42,19 @@ export function Steps({
           </li>
         ) : (
           <li key={step.id} className="going-live__step">
-            <StateChip state={step.state} label={step.chip} pulse={false} />
-            <div className="going-live__row-words">
-              <span className="going-live__name">{s[step.id].title}</span>
-              {step.next === null ? null : <p className="body-small">{step.next}</p>}
-              {step.label === '' && step.meta === '' ? null : (
-                <p className="body-small">
-                  {[step.label, step.meta].filter((said) => said !== '').join(' · ')}
-                </p>
-              )}
+            {/* The line's layout is its own box: a grid <li> is no list item, so it would lose
+                its number and its count (the walk after the merge: the current step read 1). */}
+            <div className="going-live__step-line">
+              <StateChip state={step.state} label={step.chip} pulse={false} />
+              <div className="going-live__row-words">
+                <span className="going-live__name">{s[step.id].title}</span>
+                {step.next === null ? null : <p className="body-small">{step.next}</p>}
+                {step.label === '' && step.meta === '' ? null : (
+                  <p className="body-small">
+                    {[step.label, step.meta].filter((said) => said !== '').join(' · ')}
+                  </p>
+                )}
+              </div>
             </div>
           </li>
         ),

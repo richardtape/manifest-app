@@ -750,13 +750,14 @@
   font-weight: 600;
   color: var(--ink-secondary);
 }
-.going-live__step:not(.going-live__step--current) {
+/* Each other step's line, laid out inside its <li>, which stays a list item: numbered, and counted. */
+.going-live__step-line {
   display: grid;
   grid-template-columns: 170px minmax(0, 1fr);
   gap: var(--space-2) var(--space-4);
   align-items: start;
 }
-.going-live__step > .mf-chip {
+.going-live__step-line > .mf-chip {
   justify-self: start;
 }
 .going-live__step-note {
@@ -880,7 +881,7 @@
 }
 @media (max-width: 599px) {
   .going-live__row,
-  .going-live__step:not(.going-live__step--current) {
+  .going-live__step-line {
     grid-template-columns: minmax(0, 1fr);
   }
 }
