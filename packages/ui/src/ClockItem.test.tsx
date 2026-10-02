@@ -95,6 +95,14 @@ describe('ClockItem, with a state of ours', () => {
     }
   })
 
+  it('m3: draws its title at the level the page asks, and the reference’s h3 without one', () => {
+    expect(card({ level: 2 }).querySelector('h2.mf-clockitem__title')?.textContent).toBe(
+      'A privacy assessment',
+    )
+    expect(card({ level: 2 }).querySelector('h3')).toBeNull()
+    expect(card({}).querySelector('h3.mf-clockitem__title')).not.toBeNull()
+  })
+
   it('keeps the admission the caller gives, in every state', () => {
     for (const state of ['notyet', 'waiting', 'steady'] as const) {
       const admit = card({

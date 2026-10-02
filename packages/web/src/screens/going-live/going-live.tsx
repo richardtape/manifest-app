@@ -368,6 +368,7 @@ function WhatStands({
         {seen.clocks.map((clock) => (
           <ClockItem
             key={clock.which}
+            level={2}
             title={g.clocks[clock.which].title}
             body={g.clocks[clock.which].body}
             state={clock.state}

@@ -21,6 +21,11 @@ export interface ClockItemProps {
    * not-yet chip; `waiting` and `steady` fill the bar, still, in their colour.
    */
   state?: 'notyet' | 'waiting' | 'steady' | undefined
+  /**
+   * OURS (m3): the title's heading level, so a page whose clocks sit straight under its `h1`
+   * skips none. Absent, the reference's `h3`.
+   */
+  level?: 2 | 3 | undefined
 }
 
 /**
@@ -51,10 +56,11 @@ function Held(props: {
  * `state`, and ClockItem.test.tsx holds `state`. Nothing on it moves, in any state.
  */
 export function ClockItem(props: ClockItemProps) {
+  const Title = props.level === 2 ? 'h2' : 'h3'
   return (
     <div className={cx('mf-clockitem', props.className)}>
       <div className="mf-clockitem__top">
-        <h3 className="mf-clockitem__title">{props.title}</h3>
+        <Title className="mf-clockitem__title">{props.title}</Title>
         <StateChip
           state={props.state || 'waiting'}
           label={props.chip || 'Not started'}

@@ -161,6 +161,23 @@ describe('the page: letting your students in (moment 11)', () => {
     )
   })
 
+  it('m3: its headings go down one level at a time: the h1, then the clocks and the short jobs at h2', async () => {
+    await open()
+    await jobs()
+    const levels = [
+      ...document.querySelectorAll('main h1, main h2, main h3, main h4'),
+    ].map((h) => Number(h.tagName[1]))
+    expect(levels[0]).toBe(1)
+    levels.forEach((level, i) => {
+      if (i > 0)
+        expect(level, `heading ${i}: ${levels.join(',')}`).toBeLessThanOrEqual(
+          levels[i - 1]! + 1,
+        )
+    })
+    for (const clock of clocks())
+      expect(clock.querySelector('.mf-clockitem__title')?.tagName).toBe('H2')
+  })
+
   it('the version that would go live: the one on the trying-out address, by its date', async () => {
     const s = await open()
     await jobs()
@@ -189,10 +206,9 @@ describe('the page: letting your students in (moment 11)', () => {
   it('two clocks, and the trying-out address’s registration in one line with its link', async () => {
     await open()
     await jobs()
-    expect(clocks().map((c) => c.querySelector('h3')?.textContent)).toEqual([
-      g.clocks.registration.title,
-      g.clocks.assessment.title,
-    ])
+    expect(
+      clocks().map((c) => c.querySelector('.mf-clockitem__title')?.textContent),
+    ).toEqual([g.clocks.registration.title, g.clocks.assessment.title])
     expect(screen.getByText(g.staging)).toBeTruthy()
     expect(screen.getByRole('link', { name: g.seeTryingOut }).getAttribute('href')).toBe(
       `/apps/${SLUG}/preview?tab=trying-out`,
