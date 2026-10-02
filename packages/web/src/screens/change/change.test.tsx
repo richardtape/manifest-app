@@ -340,6 +340,19 @@ describe('Ask for a change (/apps/:slug/change)', () => {
     plain()
   })
 
+  it('m4: after a failed press the focus is on the button again, and the alert still says why', async () => {
+    await open(`/apps/${SLUG}/change`, stage({ mint: () => new Error('offline') }))
+    fireEvent.change(await screen.findByLabelText('What should change'), {
+      target: { value: WORDS },
+    })
+    button('Ask for it').focus()
+    await press(button('Ask for it'))
+    expect((await screen.findByRole('alert')).textContent).toMatch(
+      /quote [0-9A-F]{4}-[0-9A-F]{4}/,
+    )
+    await waitFor(() => expect(document.activeElement).toBe(button('Ask for it')))
+  })
+
   it('the app switched off (PROJECT_ARCHIVED, F6 Task 11): said in words, switch it back on first; no reference', async () => {
     const s = stage({
       mint: () =>

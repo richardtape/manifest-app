@@ -6,7 +6,7 @@ import type { Platform } from '../../platform/api.js'
 import { navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { PressNotice } from '../change/notice.js'
-import { pressFailed, type Notice } from '../change/press.js'
+import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
 import { LIMITS } from '../limits.js'
 import { mintRequest } from '../making/token.js'
 import type { Five, Row } from './checklist.js'
@@ -114,6 +114,7 @@ export function SignOff({
 }) {
   const [talking, setTalking] = useState(false)
   const [reference, setReference] = useState<Notice>()
+  const focus = useFocusBack<HTMLDivElement>()
 
   const talk = async () => {
     // Only a refusal read from its approval draws the button (signOffRow).
@@ -147,7 +148,10 @@ export function SignOff({
       setTalking(false)
       const failed = pressFailed(error, step)
       if (failed.expired) expire()
-      else setReference(failed)
+      else {
+        setReference(failed)
+        focus.back()
+      }
     }
   }
 
@@ -166,7 +170,7 @@ export function SignOff({
           </Card>
         </div>
       )}
-      <div className="going-live__row-action">
+      <div className="going-live__row-action" ref={focus.at}>
         {talking ? (
           <StateChip state="working" label={a.talking} />
         ) : (

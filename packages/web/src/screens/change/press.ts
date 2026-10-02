@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { OurRefusal, reportProblem } from '../../ours/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 
@@ -36,4 +37,23 @@ export function pressFailed(error: unknown, operation: string): Failed {
       status === null ? { code, operation } : { code, operation, status },
     ),
   }
+}
+
+/**
+ * THE FOCUS, BACK ON THE BUTTON AFTER A FAILED PRESS (m4): a press swaps its button for a working
+ * chip, so the focus falls to the page. `at` holds the place the button is drawn in; `back()`,
+ * called with the failure, gives the button the focus once it is drawn again. The alert still
+ * says what happened.
+ */
+export function useFocusBack<T extends HTMLElement>() {
+  const at = useRef<T>(null)
+  const [owed, setOwed] = useState(false)
+  useEffect(() => {
+    if (!owed) return
+    const button = at.current?.querySelector('button')
+    if (button === null || button === undefined) return
+    button.focus()
+    setOwed(false)
+  })
+  return { at, back: () => setOwed(true) }
 }

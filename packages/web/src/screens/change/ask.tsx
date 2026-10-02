@@ -8,7 +8,7 @@ import { words } from '../../words.js'
 import { countOf, LIMITS, tooLong } from '../limits.js'
 import { mintRequest } from '../making/token.js'
 import { PressNotice } from './notice.js'
-import { pressFailed, type Notice } from './press.js'
+import { pressFailed, useFocusBack, type Notice } from './press.js'
 
 const w = words.change
 
@@ -32,6 +32,7 @@ export function AskForChange({
   const [text, setText] = useState('')
   const [asking, setAsking] = useState(false)
   const [reference, setReference] = useState<Notice>()
+  const focus = useFocusBack<HTMLDivElement>()
   const count = countOf(text, LIMITS.description)
 
   const ask = async () => {
@@ -57,7 +58,10 @@ export function AskForChange({
       setAsking(false)
       const failed = pressFailed(error, step)
       if (failed.expired) expire()
-      else setReference(failed)
+      else {
+        setReference(failed)
+        focus.back()
+      }
     }
   }
 
@@ -91,7 +95,7 @@ export function AskForChange({
           />
           {count === undefined ? null : <FieldCount id="change-words-count" {...count} />}
         </div>
-        <div className="describe__actions">
+        <div className="describe__actions" ref={focus.at}>
           {asking ? (
             <StateChip state="working" label={w.asking} />
           ) : (

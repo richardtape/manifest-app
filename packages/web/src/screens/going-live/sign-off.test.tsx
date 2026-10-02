@@ -433,6 +433,17 @@ describe('the sign-off on Going live (moment 13)', () => {
     expect(window.location.pathname).toBe(`/apps/${SLUG}/going-live`)
   })
 
+  it('m4: after a failed press the focus is on the button again, and the alert still says why', async () => {
+    await open(stage({}, { mintToken: () => refused(503, 'PLATFORM_UNAVAILABLE') }))
+    const talk = within(await signOff()).getByRole('button', { name: 'Talk it through' })
+    talk.focus()
+    fireEvent.click(talk)
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain(a.couldntTalk)
+    const back = within(await signOff()).getByRole('button', { name: 'Talk it through' })
+    await waitFor(() => expect(document.activeElement).toBe(back))
+  })
+
   it('undecided: waiting on an administrator, no date, nobody told, nothing to press', async () => {
     await open(stage({ approval: null }))
     const row = await signOff()
