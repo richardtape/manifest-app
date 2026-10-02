@@ -9,9 +9,11 @@ says which plan is current. This file states where things stand and the rules. I
 12 (the launch path's acceptance, `manifest-5a`) runs at Rich's word)*:
 
 - **YOUR JOB, IF YOU ARE THE NEXT SESSION: ask Rich which comes next.** Each is his word:
-  1. **F6b's plan** (F6's own close, D1): written from its approved design
-     ([`plans/2026-10-01-f6b-working-together-design.md`](./plans/2026-10-01-f6b-working-together-design.md)) with
-     superpowers:writing-plans; no platform needed. Moment 17 waits on FE-47's spec action.
+  1. **F6b's plan is WRITTEN, for Rich's approval** (2026-10-02, `manifest-app-c0`):
+     [`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md), from its approved design;
+     seven sittings (sitting 1 measures on 7100; 2–3 need no platform; 7 waits for FE-47 and FE-5 (a)); **FE-49** (a token
+     names no minter) and **FE-50** (who answers an agent's question: docs and code disagree) written with it. **Ask Rich
+     to approve it and choose the execution method**, then sitting 2 or 3 may start at once (no 7100).
   2. **F5b sitting 1, the measurements on 7100** (M1–M8 in its plan), in a window the running platform sitting gives. If
      Rich runs the platform's sitting 12 first, it truncates 7100 and restarts the control plane (the local driver, the fake
      GitHub, then back to real GitHub): ask `manifest-5a` (or its successor) what 7100 is on. Our server to edge mode first,
@@ -314,7 +316,8 @@ that runs.
 | [`research/`](./research) | A digest of the contract (every operation, event, code), and an inventory of the prototype and components |
 | [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md) | F6, *Keeping watch*, **executed 2026-10-02**: its sittings, Rich's decisions (in its design, [`…-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md)) and ours |
 | [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | **The current plan**: F5b, approved by Rich, native: part one on today's contract (sitting 2 merged; sitting 1, the measurements on 7100, owed), part two when FE-46 lands. Its design, [`…-design.md`](./plans/2026-10-01-f5b-the-clocks-design.md) |
-| [`plans/2026-10-01-f6b-working-together-design.md`](./plans/2026-10-01-f6b-working-together-design.md) | F6b's design (moments 17, 18, *Agents*), approved by Rich; **its plan is next to write** (F6 is executed) |
+| [`plans/2026-10-01-f6b-working-together-design.md`](./plans/2026-10-01-f6b-working-together-design.md) | F6b's design (moments 17, 18, *Agents*), approved by Rich |
+| [`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md) | **F6b's plan, written 2026-10-02, for Rich's approval**: seven sittings, fifteen tasks |
 | [`minors.md`](./minors.md) | Every deferred minor, checked against the code, for Rich to choose from |
 | [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md) | What the platform's faculty-ready plan (1.6.0, `__Host-` cookies) moves of ours, and the order to adopt it |
 | [`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md) | F5, executed: its sittings, Rich's decisions and ours, and what waits on the platform (F5b) |

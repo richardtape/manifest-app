@@ -1466,6 +1466,54 @@ FE-46"*): carried now, and F6b's moment 17 is designed against it.*
     reads until a member visits).
 - **When:** any platform sitting; nothing of F6 waits on it.
 
+### FE-49 — A token names no minter, though only its minter may revoke it
+
+*Found 2026-10-02 while F6b's plan was written (`manifest-app-c0`), reading manifest `6c77c15` (contract 1.5.0, 72
+operations). Written, not carried: for Rich.*
+
+- **Screen and moment:** *Agents* (the walk-through's *Throughout*, *An agent of their own*; F6b's design §4): every agent
+  with access to an app, **[Revoke]** on the ones the reader may revoke, and their agent's question naming whose agent asks.
+- **What we would call:** `listTokens` (every token on the project, every minter's), and `revokeToken` on a token the
+  reader minted.
+- **What is missing:**
+  - **`Token` carries no minter** ✓ (`openapi.json` `Token`: `id, projectId, name, capabilities, rateLimit, expiresAt,
+    expired, revokedAt, lastUsedAt, createdAt`; `toToken`, `control-plane/src/api/representations/tokens.ts:144-160`).
+  - **Only its minter may revoke it** ✓ (`revokeToken`'s description; `routes/tokens.ts:345-346`: anyone else `404
+    NOT_FOUND`, as for an id that does not exist), and **`PendingAction` names no token's owner either** ✓ (`tokenId` only).
+- **Why it matters:** an owner looking at *Agents* cannot tell their colleague's agent from their own, nor which **[Revoke]**
+  will work: they press, and are told the token does not exist. A question cannot say *whose* agent asks.
+- **What we do meanwhile** (F6b's Decision 4): our page keeps the minter of every token **it** mints; for any other token
+  it shows **[Revoke]**, and a `404` says *"Only the person who made it can revoke it."*. Honest, but only for tokens made
+  through Manifest's own pages.
+- **Options:**
+  - **(a) Recommended:** `Token.mintedBy { userId, displayName }` (the minter is already the row's `userId`); and the same
+    on `PendingAction` (or its token's `mintedBy` through `listTokens`).
+  - (b) A `mine: boolean` on each listed token, for the reader: enough for **[Revoke]**, not for *whose agent*.
+  - (c) Leave it: our pages keep what they minted, and the console's tokens stay anonymous.
+- **When:** any platform sitting; nothing of F6b waits on it.
+
+### FE-50 — Who answers an agent's question: the docs say its minter, the code says anyone holding the capability
+
+*Found 2026-10-02 with FE-49 (`manifest-app-c0`, manifest `6c77c15`). Written, not carried: for Rich, and the platform's to
+rule which is right.*
+
+- **Screen and moment:** their agent's question (F6b's *Agents*, its card): who may answer **[Yes, once]** and **[No]**, and
+  who is emailed.
+- **What the platform says** ✓: `docs/api/authentication.md:50`, *"the person who minted it confirms or rejects"*, and
+  `TOKEN_ACTION_PENDING`'s remedy, *"Ask the person who minted the token…"*.
+- **What the platform does** ✓: `confirmPendingAction` and `rejectPendingAction` let **any person holding the action's
+  capability** on the project answer (`routes/pending-actions.ts:90`, `assertCapability(…, action)`; `tokens/pending.ts`'s
+  `resolveAction` checks no minter). For `members:manage` and `release:promote`: an owner (a collaborator is `FORBIDDEN`),
+  or an administrator.
+- **Why it matters:** an owner may answer a question raised by a colleague's agent, which the docs say they may not; and a
+  helper whose own agent asks to add a member cannot answer it, which the docs say they may.
+- **What we build meanwhile** (F6b's Decisions 14 and Task 12): on the code: an owner answers; a helper reads *"An owner
+  answers this."*; the email goes to the owners. Sitting 1 measures it (M4).
+- **Options:**
+  - (a) The code is right: correct the docs and the remedy (*"a person who may do it themselves answers"*).
+  - (b) The docs are right: require the minter as well (and the minter's capability).
+- **When:** the platform's next text pass, or a sitting, at Rich's word.
+
 ## Not a gap: decisions that are Rich's
 
 - **The building agent's model on the laptop is `qwen3.5:4b`**, a 4B-parameter model ✓ (`infra/models.txt`;
