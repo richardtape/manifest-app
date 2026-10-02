@@ -1643,7 +1643,9 @@ export function createRounds(deps: RoundDeps): Rounds {
       // A SECRET: to the sandbox, and nowhere else (Decision 10). Never a row, never a frame.
       if (words.length < 6 || Buffer.byteLength(words, 'utf8') > 16 * 1024)
         return 'invalid'
-      const token = live?.token ?? deps.tokens.get(conversation.id)
+      // The store's token alone (m14): it holds the newest handed over, and a refused one is
+      // dropped from it, while the round's own may be that refused one until Carry on.
+      const token = deps.tokens.get(conversation.id)
       if (token === undefined) return 'token'
       const name = question.secret
       void (async () => {

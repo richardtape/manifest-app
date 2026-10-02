@@ -1590,6 +1590,42 @@ describe('the stream (Decision 15; Review Focus 5)', () => {
     expect(h.did.filter((d) => d.startsWith('startBuild'))).toHaveLength(1)
   })
 
+  it('m14: a secret answered after the token was refused is never sent with it: no token, until one is handed over', async () => {
+    const { h, id } = await startedRound({ script: STRAIGHT })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.watches.at(-1)!.handlers.refused()
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'token' })
+    // A secret still open from an earlier leg: the answer route takes it while building.
+    const conversation = h.store.getConversation(id, ALICE.id)!
+    h.store.addQuestion({
+      id: 'q-secret',
+      runId: h.store.latestRun(id)!.id,
+      conversationId: id,
+      ask: 'What is the SIS key?',
+      fallback: null,
+      secret: 'SIS_KEY',
+    })
+    expect(h.rounds.answer(conversation, 'q-secret', 'the-secret-value-9f8e7d')).toBe(
+      'token',
+    )
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(h.secretsSet).toEqual([])
+    // The page hands a new token over (TOKEN_MISSING), and the answer goes with it.
+    h.tokens.put(id, NEW_TOKEN)
+    expect(h.rounds.answer(conversation, 'q-secret', 'the-secret-value-9f8e7d')).toBe(
+      'taken',
+    )
+    await until(
+      () => h.secretsSet.length === 1,
+      () => h.secretsSet,
+    )
+    expect(h.secretsSet.map((set) => set.token)).toEqual([NEW_TOKEN])
+  })
+
   it('any call refused 401: needs a token', async () => {
     const { h, id } = await startedRound({
       script: STRAIGHT,
