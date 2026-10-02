@@ -262,6 +262,7 @@ export function WhatWentWrong({
       const made = await ours.startChange(project.id, {
         fix: live ? { incidentId, environment } : { incidentId },
         token: minted.secret,
+        tokenId: minted.token.id,
       })
       open(made.id)
     } catch (error) {

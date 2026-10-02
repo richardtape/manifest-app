@@ -2,6 +2,7 @@ import type { Person } from '../identity.js'
 import type { Conversation, ConversationState } from '../api/progress.js'
 import type { AskedQuestion, Run, RunStatus } from './runs.js'
 import type { KeepingStatements } from './keeping.js'
+import type { MintedStatements } from './minted.js'
 
 /** The page's contract owns these (Decision 4); the store keeps them. */
 export type { Conversation, ConversationState } from '../api/progress.js'
@@ -30,7 +31,7 @@ export interface Problem {
  * F6's sealed watch token (D2, `KeepingStatements`). A plan is `unknown` here: Task 9's schema
  * parses it on the way out.
  */
-export interface Store extends KeepingStatements {
+export interface Store extends KeepingStatements, MintedStatements {
   /**
    * Their name and address, never the decision (FE-39): that is read again with every request.
    * Their visits are kept (F6 Decision 7).

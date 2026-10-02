@@ -163,7 +163,7 @@ function runOf(row: RunRow): Run {
  * NOTHING SHAPED LIKE A CREDENTIAL IS EVER A TRACE ROW (F3 Global Constraints). A token is
  * `mft_…`, a model key `sk-…`; each at a word's start, so `task-list` and `risk-free` pass.
  */
-const CREDENTIAL = /\bmft_[A-Za-z0-9]|\bsk-[A-Za-z0-9]/
+export const CREDENTIAL = /\bmft_[A-Za-z0-9]|\bsk-[A-Za-z0-9]/
 
 /** The runs and trace tables' statements, over the store's one database (`db.ts`). */
 export function runStatements(db: DatabaseSync, now: () => string) {

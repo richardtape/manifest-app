@@ -177,6 +177,8 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     changeForRefusal: never,
     keeping: never,
     handWatch: never,
+    minted: never,
+    keepAgent: never,
     needs: never,
     since: never,
     history: never,
@@ -325,7 +327,7 @@ describe('the plan being written (moment 5’s wait)', () => {
     expect(mint.capabilities).toContain('agent:session')
     expect(key).toMatch(/^[0-9a-f-]{36}$/)
     expect(s.called('handProject')).toEqual([
-      ['c-1', { projectId: PROJECT.id, token: 'mft_test_1' }],
+      ['c-1', { projectId: PROJECT.id, token: 'mft_test_1', tokenId: 't-1' }],
     ])
     expect(screen.queryByRole('alert')).toBeNull()
   })

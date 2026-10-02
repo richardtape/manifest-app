@@ -6,6 +6,7 @@ import { PlatformRefusal } from '../platform/refusal.js'
 import type { Store } from '../store/db.js'
 import { publishState, type Hub } from './events.js'
 import { guard } from './guard.js'
+import { keepConversationToken, tokenIdOf } from './minted.js'
 
 /**
  * THE END OF MOMENT 4 ON OUR SERVER (F2 Task 8): the project the browser made, and the
@@ -15,6 +16,7 @@ import { guard } from './guard.js'
  * - **Kept in memory only** (Decision 1). After a restart the page hands over another, for the
  *   same project: the conversation is tied to one project for good.
  * - **The intake is over**: its key is dropped.
+ * - **Its id is kept** when the page names it (F6b D5): never the secret.
  */
 const refuse = (reply: FastifyReply, status: number, code: string) =>
   reply.code(status).send({ error: { code } })
@@ -22,15 +24,21 @@ const refuse = (reply: FastifyReply, status: number, code: string) =>
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const TOKEN = /^\S{1,512}$/
 
-function handedOf(body: unknown): { projectId: string; token: string } | undefined {
+/** `{ projectId, token }`, and the token's id beside it when the page sends one (F6b D5). */
+function handedOf(
+  body: unknown,
+): { projectId: string; token: string; tokenId: string | null } | undefined {
   if (typeof body !== 'object' || body === null || Array.isArray(body)) return undefined
   const b = body as Record<string, unknown>
   const keys = Object.keys(b)
-  if (keys.length !== 2 || !('projectId' in b) || !('token' in b)) return undefined
+  if (keys.length !== ('tokenId' in b ? 3 : 2) || !('projectId' in b) || !('token' in b))
+    return undefined
   const { projectId, token } = b
   if (typeof projectId !== 'string' || !ID.test(projectId)) return undefined
   if (typeof token !== 'string' || !TOKEN.test(token)) return undefined
-  return { projectId, token }
+  const tokenId = tokenIdOf(b['tokenId'])
+  if (tokenId === undefined) return undefined
+  return { projectId, token, tokenId }
 }
 
 /** What the platform refused, as the page is told: the token's, or the platform's absence. */
@@ -91,6 +99,13 @@ export function registerProject(
       if (now.projectId !== null && now.projectId !== handed.projectId)
         return refuse(reply, 409, 'PROJECT_MISMATCH')
       tokens.put(conversation.id, handed.token)
+      if (handed.tokenId !== null)
+        keepConversationToken(store, {
+          tokenId: handed.tokenId,
+          projectId: handed.projectId,
+          personId: who.person.id,
+          conversationId: conversation.id,
+        })
       if (now.projectId === null) {
         store.addMessage(conversation.id, 'we', { kind: 'project', project: made })
         intakeKeys.drop(conversation.id)

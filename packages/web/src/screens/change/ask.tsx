@@ -50,6 +50,7 @@ export function AskForChange({
       const made = await ours.startChange(project.id, {
         words: theirs,
         token: minted.secret,
+        tokenId: minted.token.id,
       })
       navigate(
         `/apps/${encodeURIComponent(project.slug)}/conversations/${encodeURIComponent(made.id)}`,

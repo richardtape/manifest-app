@@ -4,6 +4,7 @@ import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
 import { keepingStatements } from './keeping.js'
 import { migrate } from './migrate.js'
+import { mintedStatements } from './minted.js'
 import { runStatements } from './runs.js'
 import type {
   Conversation,
@@ -83,6 +84,7 @@ export function openStore(file: string): Store {
   return {
     ...runStatements(db, now),
     ...keepingStatements(db, now),
+    ...mintedStatements(db),
     rememberPerson(person) {
       db.prepare(
         `insert into persons (id, display_name, seen_at, email) values (?, ?, ?, ?)

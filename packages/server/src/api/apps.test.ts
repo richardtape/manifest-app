@@ -1195,3 +1195,48 @@ describe('Talk it through: a change that answers a refusal, and finding it again
     expect(aside.json()).toEqual({ error: { code: 'NOT_FOUND' } })
   })
 })
+
+describe('a change’s token id, kept beside nothing secret (F6b D5, Task 3)', () => {
+  const TOKEN_ID = '0f000000-0000-4000-8000-000000000002'
+
+  it.each([
+    ['their words', { words: WORDS }],
+    ['a fix', { fix: { incidentId: INCIDENT } }],
+    ['a dry run’s fix', { fix: { dryRun: EVIDENCE } }],
+    ['an outage’s fix', { fix: { outage: OUTAGE } }],
+  ])(
+    '%s naming its token’s id keeps it: the change’s, on the app, by its person',
+    async (_, asked) => {
+      const s = setUp()
+      first(s, 'built', 'done')
+      const answer = await s.ask({ ...asked, token: GOOD, tokenId: TOKEN_ID })
+      expect(answer.statusCode).toBe(201)
+      const change = answer.json() as Conversation
+      expect(s.store.mintedOn(PROJECT)).toEqual([
+        expect.objectContaining({
+          tokenId: TOKEN_ID,
+          personId: ALICE.id,
+          purpose: 'conversation',
+          conversationId: change.id,
+        }),
+      ])
+      expect(JSON.stringify(dumpAll(s.file))).not.toContain('mft_')
+    },
+  )
+
+  it('without one keeps nothing, and still works', async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    expect((await s.ask({ words: WORDS, token: GOOD })).statusCode).toBe(201)
+    expect(s.store.mintedOn(PROJECT)).toEqual([])
+  })
+
+  it('an id that is not one is 400 CHANGE_INVALID, and nothing is kept', async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answer = await s.ask({ words: WORDS, token: GOOD, tokenId: 'not-an-id' })
+    expect(answer.statusCode).toBe(400)
+    expect(answer.json()).toEqual({ error: { code: 'CHANGE_INVALID' } })
+    expect(s.store.conversationsOn(PROJECT)).toHaveLength(1)
+  })
+})

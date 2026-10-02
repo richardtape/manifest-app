@@ -212,6 +212,8 @@ function stage(start: Partial<World> = {}) {
     changeForRefusal: () => Promise.resolve(null),
     keeping: never,
     handWatch: never,
+    minted: never,
+    keepAgent: never,
     needs: never,
     since: never,
     history: never,
@@ -371,6 +373,7 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
           },
         },
         token: 'mft_test_fix',
+        tokenId: 't-fix',
       },
     ])
     expect(JSON.stringify(s.oursCalls)).not.toContain(SENTINEL)
@@ -453,6 +456,7 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
       {
         fix: { incidentId: INCIDENT.id, environment: 'production' },
         token: 'mft_test_fix',
+        tokenId: 't-fix',
       },
     ])
   })
@@ -563,6 +567,7 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
       {
         fix: { incidentId: INCIDENT.id, environment: 'production' },
         token: 'mft_test_fix',
+        tokenId: 't-fix',
       },
     ])
   })

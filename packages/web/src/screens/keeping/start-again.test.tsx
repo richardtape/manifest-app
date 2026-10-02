@@ -495,7 +495,11 @@ describe('[What happened?] (design §4: an outage’s own fix)', () => {
       [
         'startChange',
         PROJECT.id,
-        { fix: { outage: { from: FROM, to: TO } }, token: 'mft_test_x_the_outage_fix' },
+        {
+          fix: { outage: { from: FROM, to: TO } },
+          token: 'mft_test_x_the_outage_fix',
+          tokenId: fixtures.MINTED_TOKEN.token.id,
+        },
       ],
     ])
     expect(window.location.pathname).toBe(`/apps/${SLUG}/conversations/c-outage`)

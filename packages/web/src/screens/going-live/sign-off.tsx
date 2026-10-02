@@ -168,6 +168,7 @@ export function SignOff({
       const made = await ours.startChange(project.id, {
         words: said,
         token: minted.secret,
+        tokenId: minted.token.id,
         refusal: { approvalId: decided.id },
       })
       opened(made.id)

@@ -160,3 +160,18 @@ create table if not exists emails (
   at text not null,
   primary key (kind, happening, recipient)
 );
+
+-- F6b D5: THE IDS OF THE TOKENS OUR PAGE MINTS, never a secret: *Agents* tells ours from theirs by them,
+-- and an agent's says who made it (FE-49: the platform's Token names no minter). F6's watch keeps its own
+-- id in watch_tokens. `name` is the token's own name, as minted; an expiry only when the page said one.
+create table if not exists minted (
+  token_id text primary key,
+  project_id text not null,
+  person_id text not null references persons (id),
+  purpose text not null check (purpose in ('conversation', 'privacy', 'agent')),
+  conversation_id text references conversations (id),
+  name text,
+  expires_at text,
+  minted_at text not null
+);
+create index if not exists minted_by_project on minted (project_id);

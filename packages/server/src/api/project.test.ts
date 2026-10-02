@@ -269,3 +269,37 @@ describe('FE-2: what the platform saw from us in this file', () => {
     )
   })
 })
+
+describe('the token’s id, kept beside nothing secret (F6b D5, Task 3)', () => {
+  const TOKEN_ID = '0f000000-0000-4000-8000-000000000001'
+
+  it('a hand-over naming its token’s id keeps it: the conversation’s, on its app, by its person', async () => {
+    const s = await setUp()
+    const answer = await s.hand({ projectId: PROJECT, token: GOOD, tokenId: TOKEN_ID })
+    expect(answer.statusCode).toBe(204)
+    expect(s.store.mintedOn(PROJECT)).toEqual([
+      expect.objectContaining({
+        tokenId: TOKEN_ID,
+        projectId: PROJECT,
+        personId: ALICE.id,
+        purpose: 'conversation',
+        conversationId: s.conversation.id,
+      }),
+    ])
+    expect(JSON.stringify(dumpAll(s.file))).not.toContain('mft_')
+  })
+
+  it('a hand-over without one keeps nothing, and still works', async () => {
+    const s = await setUp()
+    expect((await s.hand({ projectId: PROJECT, token: GOOD })).statusCode).toBe(204)
+    expect(s.store.mintedOn(PROJECT)).toEqual([])
+  })
+
+  it('an id that is not one is 400 PROJECT_INVALID, and nothing is kept', async () => {
+    const s = await setUp()
+    const answer = await s.hand({ projectId: PROJECT, token: GOOD, tokenId: 'mft_x' })
+    expect(answer.statusCode).toBe(400)
+    expect(answer.json()).toEqual({ error: { code: 'PROJECT_INVALID' } })
+    expect(s.tokens.get(s.conversation.id)).toBeUndefined()
+  })
+})

@@ -385,3 +385,19 @@ export type Need =
 
 /** *Since you were last here*: a line, and the app it is about. */
 export type SinceLine = Line & { app: AppRef }
+
+/**
+ * F6b D5: WHICH TOKENS ON AN APP ARE OURS, and who made an agent's (`GET /api/apps/:projectId/minted`),
+ * for *Agents* to join with the platform's `listTokens`. Ids alone, never a secret. `ours`: our
+ * watch (F6), each conversation's (its title) and *Suggesting privacy answers*'; `agents`: an agent
+ * of their own, made on our page, and who made it (FE-49).
+ */
+export interface KeptTokens {
+  ours: {
+    tokenId: string
+    purpose: 'conversation' | 'watch' | 'privacy'
+    conversationId: string | null
+    title: string | null
+  }[]
+  agents: { tokenId: string; by: { id: string; name: string } }[]
+}

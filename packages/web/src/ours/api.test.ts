@@ -133,18 +133,23 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
     ])
   })
 
-  it('handProject sends the project and the conversation’s token, and nothing else (Task 8)', async () => {
+  it('handProject sends the project, the conversation’s token and its id (F6b D5), and nothing else (Task 8)', async () => {
     const fetch = answer(204)
     vi.stubGlobal('fetch', fetch)
     await createOurs().handProject('c-1', {
       projectId: '22222222-2222-4222-8222-222222222222',
       token: 'mft_x',
+      tokenId: 'a0000000-0000-4000-8000-000000000009',
     })
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
     expect([url, init.method, JSON.parse(String(init.body))]).toEqual([
       '/api/conversations/c-1/project',
       'POST',
-      { projectId: '22222222-2222-4222-8222-222222222222', token: 'mft_x' },
+      {
+        projectId: '22222222-2222-4222-8222-222222222222',
+        token: 'mft_x',
+        tokenId: 'a0000000-0000-4000-8000-000000000009',
+      },
     ])
   })
 
@@ -270,6 +275,7 @@ describe('Talk it through (F5 Task 8, the final review’s I1)', () => {
     await createOurs().startChange(PROJECT, {
       words: 'Ours, and their reason.',
       token: 'mft_x',
+      tokenId: 'a0000000-0000-4000-8000-000000000001',
       refusal: { approvalId: APPROVAL },
     })
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
@@ -278,6 +284,7 @@ describe('Talk it through (F5 Task 8, the final review’s I1)', () => {
       {
         words: 'Ours, and their reason.',
         token: 'mft_x',
+        tokenId: 'a0000000-0000-4000-8000-000000000001',
         refusal: { approvalId: APPROVAL },
       },
     ])
@@ -317,11 +324,19 @@ describe('the dry run’s fix (F5 Task 7)', () => {
       async () => new Response(JSON.stringify({ id: 'c-1' }), { status: 201 }),
     )
     vi.stubGlobal('fetch', fetch)
-    await createOurs().startChange(PROJECT, { fix: { dryRun }, token: 'mft_x' })
+    await createOurs().startChange(PROJECT, {
+      fix: { dryRun },
+      token: 'mft_x',
+      tokenId: 'a0000000-0000-4000-8000-000000000001',
+    })
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
     expect([url, JSON.parse(String(init.body))]).toEqual([
       `/api/apps/${PROJECT}/conversations`,
-      { fix: { dryRun }, token: 'mft_x' },
+      {
+        fix: { dryRun },
+        token: 'mft_x',
+        tokenId: 'a0000000-0000-4000-8000-000000000001',
+      },
     ])
   })
 
@@ -572,10 +587,85 @@ describe('keeping watch (F6 Task 8): our routes, from the page', () => {
   it("startChange sends an outage's two moments, and the token, in one request (Decision 9)", async () => {
     const fetch = answering(201, { id: 'c-1' })
     const outage = { from: '2026-10-01T17:03:00.000Z', to: '2026-10-01T17:07:00.000Z' }
-    await createOurs().startChange(PROJECT, { fix: { outage }, token: 'mft_x' })
+    await createOurs().startChange(PROJECT, {
+      fix: { outage },
+      token: 'mft_x',
+      tokenId: 'a0000000-0000-4000-8000-000000000001',
+    })
     expect(sent(fetch)).toMatchObject({
       url: `/api/apps/${PROJECT}/conversations`,
-      body: { fix: { outage }, token: 'mft_x' },
+      body: {
+        fix: { outage },
+        token: 'mft_x',
+        tokenId: 'a0000000-0000-4000-8000-000000000001',
+      },
+    })
+  })
+})
+
+describe('the token ids our page mints (F6b D5, Task 3): our routes, from the page', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const TOKEN_ID = 'a0000000-0000-4000-8000-000000000003'
+  const answering = (status: number, body?: unknown) => {
+    const fetch = vi.fn(
+      async () =>
+        new Response(body === undefined ? null : JSON.stringify(body), { status }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    return fetch
+  }
+  const sent = (fetch: ReturnType<typeof answering>) => {
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    return {
+      url,
+      method: init.method,
+      body: init.body === undefined ? undefined : JSON.parse(String(init.body)),
+    }
+  }
+
+  it('minted reads which tokens are ours and who made an agent’s, and sends nothing', async () => {
+    const kept = {
+      ours: [{ tokenId: TOKEN_ID, purpose: 'watch', conversationId: null, title: null }],
+      agents: [],
+    }
+    const fetch = answering(200, kept)
+    expect(await createOurs().minted(PROJECT)).toEqual(kept)
+    expect(sent(fetch)).toEqual({
+      url: `/api/apps/${PROJECT}/minted`,
+      method: 'GET',
+      body: undefined,
+    })
+  })
+
+  it('keepAgent sends an agent’s id, name and expiry, and never its secret (Review Focus 4)', async () => {
+    const fetch = answering(201)
+    await createOurs().keepAgent(PROJECT, {
+      tokenId: TOKEN_ID,
+      name: 'Claude Code',
+      expiresAt: '2026-11-01T21:00:00.000Z',
+    })
+    expect(sent(fetch)).toEqual({
+      url: `/api/apps/${PROJECT}/agents`,
+      method: 'POST',
+      body: {
+        tokenId: TOKEN_ID,
+        name: 'Claude Code',
+        expiresAt: '2026-11-01T21:00:00.000Z',
+      },
+    })
+  })
+
+  it('startChange carries the token’s id beside the token', async () => {
+    const fetch = answering(201, { id: 'c-1' })
+    await createOurs().startChange(PROJECT, {
+      words: 'Bigger titles.',
+      token: 'mft_x',
+      tokenId: TOKEN_ID,
+    })
+    expect(sent(fetch).body).toEqual({
+      words: 'Bigger titles.',
+      token: 'mft_x',
+      tokenId: TOKEN_ID,
     })
   })
 })

@@ -254,6 +254,8 @@ function stage(start: Partial<World> = {}) {
     changeForRefusal: () => Promise.resolve(null),
     keeping: never,
     handWatch: never,
+    minted: never,
+    keepAgent: never,
     needs: never,
     since: never,
     history: never,
@@ -577,7 +579,7 @@ describe('It never answered: the two facts, and [What went wrong]', () => {
       [
         'startChange',
         PROJECT.id,
-        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix', tokenId: 't-fix' },
       ],
     ])
   })
@@ -609,7 +611,7 @@ describe('It never answered: the two facts, and [What went wrong]', () => {
         [
           'startChange',
           PROJECT.id,
-          { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+          { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix', tokenId: 't-fix' },
         ],
       ]),
     )
@@ -825,7 +827,7 @@ describe('M2: [What went wrong] is fed by THIS attempt’s incident, never the n
     await press(await screen.findByRole('button', { name: t.whatWentWrong }))
     await waitFor(() =>
       expect(fixesAsked(s)).toEqual([
-        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix', tokenId: 't-fix' },
       ]),
     )
   })
@@ -843,7 +845,7 @@ describe('M2: [What went wrong] is fed by THIS attempt’s incident, never the n
     await press(await screen.findByRole('button', { name: t.whatWentWrong }))
     await waitFor(() =>
       expect(fixesAsked(s)).toEqual([
-        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix', tokenId: 't-fix' },
       ]),
     )
     expect(incidentReads(s)).toBe(before + 1)
@@ -912,7 +914,7 @@ describe('M1: our deadline is not the platform’s answer (Review Focus 3)', () 
     await press(await screen.findByRole('button', { name: t.whatWentWrong }))
     await waitFor(() =>
       expect(fixesAsked(s)).toEqual([
-        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix' },
+        { fix: { incidentId: INCIDENT.id }, token: 'mft_test_fix', tokenId: 't-fix' },
       ]),
     )
   })

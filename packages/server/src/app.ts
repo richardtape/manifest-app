@@ -7,6 +7,7 @@ import { registerConversations } from './api/conversations.js'
 import { createHub, registerEvents, type Hub } from './api/events.js'
 import { registerIntake } from './api/intake.js'
 import { registerKeeping } from './api/keeping.js'
+import { registerMinted } from './api/minted.js'
 import { registerPlan } from './api/plan.js'
 import { registerProblems } from './api/problems.js'
 import { registerProject } from './api/project.js'
@@ -213,6 +214,7 @@ export function buildServer(
   registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
   registerBuild(app, { config, store, hub, work, tokens, rounds, line })
   registerApps(app, { config, store, hub, projects, tokens, line })
+  registerMinted(app, { config, store })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's
   // WebSocket, which Vite's own proxy cannot carry in middleware mode: M4) and `/auth` to

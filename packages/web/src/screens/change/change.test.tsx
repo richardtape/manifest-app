@@ -188,6 +188,8 @@ function stage(
     changeForRefusal: never,
     keeping: never,
     handWatch: never,
+    minted: never,
+    keepAgent: never,
     needs: never,
     since: never,
     history: never,
@@ -303,9 +305,9 @@ describe('Ask for a change (/apps/:slug/change)', () => {
       expiresInDays: 7,
     })
     expect(key).toMatch(/^[0-9a-f-]{36}$/)
-    // One request: their words and the token together.
+    // One request: their words, the token, and its id (F6b D5) together.
     expect(s.called('startChange')).toEqual([
-      [PROJECT.id, { words: WORDS, token: 'mft_test_1' }],
+      [PROJECT.id, { words: WORDS, token: 'mft_test_1', tokenId: 't-1' }],
     ])
     await waitFor(() =>
       expect(window.location.pathname).toBe(`/apps/${SLUG}/conversations/c-9`),

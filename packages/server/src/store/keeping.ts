@@ -392,6 +392,8 @@ export function keepingStatements(
         db.prepare(`delete from plans where conversation_id in (${ON_APP})`).run(
           projectId,
         )
+        // F6b D5: the token ids, before the conversations they name.
+        db.prepare('delete from minted where project_id = ?').run(projectId)
         db.prepare('delete from conversations where project_id = ?').run(projectId)
         db.prepare('delete from history where project_id = ?').run(projectId)
         // An email's happening starts with its project id (`<projectId>:<what>`, Task 5).

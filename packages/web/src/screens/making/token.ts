@@ -50,5 +50,9 @@ export async function handOverToken(
     mintRequest(conversation.title, purpose),
     crypto.randomUUID(),
   )
-  await ours.handProject(conversation.id, { projectId, token: minted.secret })
+  await ours.handProject(conversation.id, {
+    projectId,
+    token: minted.secret,
+    tokenId: minted.token.id,
+  })
 }

@@ -349,6 +349,7 @@ export function DryRun({
           },
         },
         token: minted.secret,
+        tokenId: minted.token.id,
       })
       open(made.id)
     } catch (error) {

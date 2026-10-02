@@ -391,7 +391,11 @@ export function NameIt({
         continue
       }
       try {
-        await ours.handProject(id, { projectId: project.id, token: minted.secret })
+        await ours.handProject(id, {
+          projectId: project.id,
+          token: minted.secret,
+          tokenId: minted.token.id,
+        })
         // Ours now: the conversation's state moves on, on the stream.
         forgetMadeProject(id)
         // F6 TASK 8: the app's Keeping watch, from its first minute; best-effort, never waited on.

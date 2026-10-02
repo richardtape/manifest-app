@@ -605,6 +605,7 @@ export function WhatHappened({
       const made = await ours.startChange(project.id, {
         fix: { outage: { from, to } },
         token: minted.secret,
+        tokenId: minted.token.id,
       })
       open(made.id)
     } catch (error) {

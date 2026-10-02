@@ -428,6 +428,7 @@ describe('the sign-off on Going live (moment 13)', () => {
         {
           words: talkWords(REASON),
           token: TOKEN,
+          tokenId: fixtures.MINTED_TOKEN.token.id,
           refusal: { approvalId: fixtures.APPROVAL.id },
         },
       ],

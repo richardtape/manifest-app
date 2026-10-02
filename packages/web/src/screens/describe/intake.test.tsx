@@ -286,6 +286,8 @@ function stage(
       calls.push(['handWatch', projectId, handed])
       return Promise.resolve({ kept: 'new' as const })
     },
+    minted: () => new Promise(() => undefined),
+    keepAgent: () => new Promise(() => undefined),
     needs: () => new Promise(() => undefined),
     since: () => new Promise(() => undefined),
     history: () => new Promise(() => undefined),
@@ -1036,7 +1038,7 @@ describe('Make it (moment 4’s end, F2 Task 8)', () => {
     expect(mint.expiresInDays).toBe(7)
     expect(mintKey).not.toBe(key)
     expect(s.called('handProject')).toEqual([
-      ['c-1', { projectId: project.id, token: 'mft_test_1' }],
+      ['c-1', { projectId: project.id, token: 'mft_test_1', tokenId: 't-1' }],
     ])
     expect(s.called('endIntakeSession')).toEqual([[STARTED.session.id]])
   })
@@ -1363,7 +1365,7 @@ describe('Make it (moment 4’s end, F2 Task 8)', () => {
     )
     await waitFor(() =>
       expect(s.called('handProject')).toEqual([
-        ['c-1', { projectId: 'p-made', token: 'mft_test_1' }],
+        ['c-1', { projectId: 'p-made', token: 'mft_test_1', tokenId: 't-1' }],
       ]),
     )
     expect(s.called('createProject')).toEqual([])

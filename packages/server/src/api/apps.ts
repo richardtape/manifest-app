@@ -8,6 +8,7 @@ import type { Conversation, Run, Store } from '../store/db.js'
 import type { Hub } from './events.js'
 import { guard } from './guard.js'
 import { lineOf, waitsOnPerson } from './line-state.js'
+import { keepConversationToken, tokenIdOf } from './minted.js'
 import type { Asked, DryRunEvidence, Outage } from './piece-state.js'
 import { LIMITS, type AppConversation, type Chip } from './progress.js'
 
@@ -87,17 +88,36 @@ function outageOf(value: unknown): Outage | undefined {
  * `{ words, token }`, `{ words, token, refusal: { approvalId } }` (*[Talk it through]*: F5 Task 8),
  * `{ fix: { incidentId, environment? }, token }` (`staging` when absent, as F4's; `production`
  * for the live address: F5 Decision 13), `{ fix: { dryRun }, token }` (F5 Task 7) or
- * `{ fix: { outage: { from, to } }, token }` (F6 Decision 9), and nothing else.
+ * `{ fix: { outage: { from, to } }, token }` (F6 Decision 9), and nothing else; each may carry its
+ * token's `tokenId` beside it (F6b D5).
  */
 function changeOf(
   body: unknown,
+):
+  | ((
+      | { words: string; token: string; refusal: { approvalId: string } | null }
+      | { incidentId: string; environment: FixEnvironment; token: string }
+      | { dryRun: DryRunEvidence; token: string }
+      | { outage: Outage; token: string }
+    ) & { tokenId: string | null })
+  | undefined {
+  if (!isObject(body)) return undefined
+  // F6b D5: the token's id, beside any of them; never the secret's place.
+  const { tokenId: handedId, ...rest } = body
+  const tokenId = tokenIdOf(handedId)
+  if (tokenId === undefined) return undefined
+  const asked = askedOf(rest)
+  return asked === undefined ? undefined : { ...asked, tokenId }
+}
+
+function askedOf(
+  body: Record<string, unknown>,
 ):
   | { words: string; token: string; refusal: { approvalId: string } | null }
   | { incidentId: string; environment: FixEnvironment; token: string }
   | { dryRun: DryRunEvidence; token: string }
   | { outage: Outage; token: string }
   | undefined {
-  if (!isObject(body)) return undefined
   const keys = Object.keys(body).length
   const { token } = body
   if (typeof token !== 'string' || !TOKEN.test(token)) return undefined
@@ -249,6 +269,13 @@ export function registerApps(
         ...('words' in asked && asked.refusal !== null ? { refusal: asked.refusal } : {}),
       } satisfies Asked)
       tokens.put(change.id, asked.token)
+      if (asked.tokenId !== null)
+        keepConversationToken(store, {
+          tokenId: asked.tokenId,
+          projectId,
+          personId: who.person.id,
+          conversationId: change.id,
+        })
       line.join(change)
       return reply
         .code(201)

@@ -298,6 +298,8 @@ function stage(start: Partial<World> = {}) {
     changeForRefusal: () => Promise.resolve(null),
     keeping: never,
     handWatch: never,
+    minted: never,
+    keepAgent: never,
     needs: never,
     since: never,
     history: never,
@@ -846,6 +848,7 @@ describe('it never answered: the facts, and this attempt’s [What went wrong] (
       {
         fix: { incidentId: INCIDENT.id, environment: 'production' },
         token: 'mft_test_fix',
+        tokenId: 't-fix',
       },
     ])
   })

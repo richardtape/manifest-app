@@ -3,6 +3,7 @@ import type {
   AppConversation,
   Conversation,
   DryRunEvidence,
+  KeptTokens,
   Line,
   Need,
   SinceLine,
@@ -146,9 +147,13 @@ export interface Ours {
   blueprint(id: string, blueprints: Schemas['BlueprintList']): Promise<void>
   /**
    * MAKE IT'S HANDOVER (Task 8): the project made and the conversation's token minted, both
-   * in the person's session, for our server to check and hold in memory.
+   * in the person's session, for our server to check and hold in memory; the token's id beside
+   * it, kept so *Agents* knows it is ours (F6b D5).
    */
-  handProject(id: string, made: { projectId: string; token: string }): Promise<void>
+  handProject(
+    id: string,
+    made: { projectId: string; token: string; tokenId: string },
+  ): Promise<void>
   /** MOMENT 5 (Task 9): write the plan, after Make it, or Carry on. */
   plan(id: string): Promise<void>
   /** Not quite: one sentence of theirs. */
@@ -172,20 +177,22 @@ export interface Ours {
   stop(id: string): Promise<void>
   /**
    * F4 TASK 6: A CHANGE ON AN APP, in one request: their words (or a fix of ours) and the token the
-   * browser has just minted for it. Our server checks the token before it keeps anything.
+   * browser has just minted for it, with its id (F6b D5). Our server checks the token before it
+   * keeps anything.
    */
   startChange(
     projectId: string,
-    body:
-      | { words: string; token: string }
+    body: (
+      | { words: string }
       /** F5 Task 8: *[Talk it through]*, answering an administrator's refusal. */
-      | { words: string; token: string; refusal: { approvalId: string } }
+      | { words: string; refusal: { approvalId: string } }
       /** A fix of ours: absent `environment` is trying-out's (F4); the live address's says so. */
-      | { fix: { incidentId: string; environment?: 'production' }; token: string }
+      | { fix: { incidentId: string; environment?: 'production' } }
       /** F5 Task 7: a dry run that signed nobody in, and what it saw. */
-      | { fix: { dryRun: DryRunEvidence }; token: string }
+      | { fix: { dryRun: DryRunEvidence } }
       /** F6 Decision 9: the live address stopped answering, between these two moments. */
-      | { fix: { outage: { from: string; to: string } }; token: string },
+      | { fix: { outage: { from: string; to: string } } }
+    ) & { token: string; tokenId: string },
   ): Promise<Conversation>
   /** The person's conversations on the app, newest first, each where it left off. */
   conversationsOn(projectId: string): Promise<AppConversation[]>
@@ -247,6 +254,16 @@ export interface Ours {
     projectId: string,
     handed: { token: string; tokenId: string; expiresAt: string },
   ): Promise<{ kept: 'new' | 'current' }>
+  /**
+   * F6b D5: WHICH TOKENS ON THE APP ARE OURS, and who made an agent's (*Agents* joins it with the
+   * platform's `listTokens`). Anyone outside the app's kept members is refused `404`.
+   */
+  minted(projectId: string): Promise<KeptTokens>
+  /** An agent of their own, just minted on *Agents*: its id, name and expiry, never its secret. */
+  keepAgent(
+    projectId: string,
+    made: { tokenId: string; name: string; expiresAt: string },
+  ): Promise<void>
   /** F6 Task 9's band: what needs the person, across their apps or on one. Each load is a visit. */
   needs(projectId?: string): Promise<Need[]>
   /** *Since you were last here*: when, and at most five lines, newest first. */
@@ -308,6 +325,7 @@ export function createOurs(): Ours {
       await call('POST', at(id, '/project'), {
         projectId: made.projectId,
         token: made.token,
+        tokenId: made.tokenId,
       })
     },
     build: async (id, way) => {
@@ -426,6 +444,15 @@ export function createOurs(): Ours {
       })) as { kept?: unknown } | undefined
       // `201 { watching, until }` is kept; `200 { kept: 'current', until }` is not (S2).
       return { kept: answer?.kept === 'current' ? 'current' : 'new' }
+    },
+    minted: async (projectId) =>
+      (await call('GET', app(projectId, '/minted'))) as KeptTokens,
+    keepAgent: async (projectId, made) => {
+      await call('POST', app(projectId, '/agents'), {
+        tokenId: made.tokenId,
+        name: made.name,
+        expiresAt: made.expiresAt,
+      })
     },
     needs: async (projectId) =>
       listed<{ needs: Need[] }>(

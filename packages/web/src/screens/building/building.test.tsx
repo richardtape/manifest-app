@@ -193,6 +193,8 @@ function stage(refusals: Refusals = {}) {
     changeForRefusal: never,
     keeping: never,
     handWatch: never,
+    minted: never,
+    keepAgent: never,
     needs: never,
     since: never,
     history: never,
@@ -853,7 +855,7 @@ describe('a token our server no longer holds (F2 handOverToken), without a word'
       mintRequest(CONVERSATION.title),
     ])
     expect(s.called('handProject')).toEqual([
-      ['c-1', { projectId: PROJECT.id, token: 'mft_test_1' }],
+      ['c-1', { projectId: PROJECT.id, token: 'mft_test_1', tokenId: 't-1' }],
     ])
     expect(screen.queryByRole('alert')).toBeNull()
   })

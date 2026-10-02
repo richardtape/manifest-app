@@ -977,16 +977,12 @@ describe('the migration (F6 Decision 3: what the keeper keeps)', () => {
     return file
   }
 
-  it('is version 5', () => {
-    expect(VERSION).toBe(5)
-  })
-
-  it("opens F4's file (version 4) at version 5: every row kept, persons with three null columns, and the five new tables", () => {
+  it("opens F4's file (version 4) at the latest version: every row kept, persons with three null columns, and the five new tables", () => {
     const file = f4File()
     const before = dumpAll(file)
     const store = openStore(file)
     cleanups.push(() => store.close())
-    expect(pragmaOf(file, 'user_version')).toBe(5)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     const after = dumpAll(file)
     for (const table of [
       'conversations',
@@ -1013,9 +1009,9 @@ describe('the migration (F6 Decision 3: what the keeper keeps)', () => {
     expect(store.personEmail(ALICE.id)).toBe(ALICE.email)
   })
 
-  it('a new file is version 5, with the five new tables and persons holding an address', () => {
+  it('a new file is the latest version, with the five new tables and persons holding an address', () => {
     const { store, file } = fresh()
-    expect(pragmaOf(file, 'user_version')).toBe(5)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     expect(Object.keys(dumpAll(file))).toEqual(expect.arrayContaining(NEW_TABLES))
     store.rememberPerson(ALICE)
     expect(JSON.parse(dumpAll(file)['persons']!)).toEqual([
@@ -1034,6 +1030,54 @@ describe('the migration (F6 Decision 3: what the keeper keeps)', () => {
     const once = dumpAll(file)
     openStore(file).close()
     expect(dumpAll(file)).toEqual(once)
-    expect(pragmaOf(file, 'user_version')).toBe(5)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
+  })
+})
+
+describe('the migration (F6b D5: the token ids our page mints)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  /** What F6 left behind: version 5, everything but `minted`, a row in its new tables. */
+  function f6File(): string {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    const store = openStore(file)
+    store.rememberPerson(ALICE)
+    const made = store.createChange(ALICE.id, PROJECT, 'Word count', 'Also a word count.')
+    store.putMembers(PROJECT, [
+      {
+        userId: ALICE.id,
+        role: 'owner',
+        displayName: ALICE.displayName,
+        email: ALICE.email,
+      },
+    ])
+    store.close()
+    execOn(file, 'drop table minted; pragma user_version = 5;')
+    expect(made.projectId).toBe(PROJECT)
+    return file
+  }
+
+  it('is version 6', () => {
+    expect(VERSION).toBe(6)
+  })
+
+  it("opens F6's file (version 5) at version 6: every row kept, and `minted` made, empty", () => {
+    const file = f6File()
+    const before = dumpAll(file)
+    expect(Object.keys(before)).not.toContain('minted')
+    const store = openStore(file)
+    cleanups.push(() => store.close())
+    expect(pragmaOf(file, 'user_version')).toBe(6)
+    const after = dumpAll(file)
+    for (const table of Object.keys(before)) expect(after[table]).toBe(before[table])
+    expect(after['minted']).toBe('[]')
+    expect(store.mintedOn(PROJECT)).toEqual([])
+  })
+
+  it('a new file is version 6, with `minted`', () => {
+    const { file } = fresh()
+    expect(pragmaOf(file, 'user_version')).toBe(6)
+    expect(Object.keys(dumpAll(file))).toContain('minted')
   })
 })
