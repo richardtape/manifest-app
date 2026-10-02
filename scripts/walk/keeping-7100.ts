@@ -537,7 +537,9 @@ async function quiet() {
     'the Overview: no band',
     !(await page.run(() => !!document.querySelector('[aria-label="What needs you"]'))),
   )
-  // Drawn once the app has been live (the Overview's `seen.launched`).
+  // Drawn once the app has been live (the Overview's `seen.launched`), CLOSED: a closed <details>
+  // shows only its summary, so it is opened as a person would, by its summary (7100's first run).
+  await page.press('How we keep watch', { role: 'DisclosureTriangle' })
   report.check(
     'the Overview: How we keep watch, said of this app',
     (await page.words('main')).includes(
