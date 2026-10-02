@@ -391,12 +391,13 @@ function WhatStands({
           {g.shortJobs.title}
         </h2>
         <p className="body-small going-live__jobs-lead">{g.shortJobs.lead}</p>
-        <ul className="going-live__rows">
-          {seen.rows.filter((row) => !row.apart).map(job)}
-        </ul>
-        <ul className="going-live__rows going-live__apart">
-          {seen.rows.filter((row) => row.apart).map(job)}
-        </ul>
+        {/* One list, named by the heading, and never drawn empty (m2): code review is set apart in
+            it by its row, last (`rowsOf`'s order). */}
+        {seen.rows.length === 0 ? null : (
+          <ul className="going-live__rows" aria-labelledby={id}>
+            {seen.rows.map(job)}
+          </ul>
+        )}
       </section>
     </>
   )

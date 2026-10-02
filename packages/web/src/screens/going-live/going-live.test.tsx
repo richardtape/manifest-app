@@ -256,13 +256,40 @@ describe('the page: letting your students in (moment 11)', () => {
     // The mock's checklist less its two clocks: domain, rehearsal, scans, sign-off, code review.
     expect(rows).toHaveLength(5)
     const last = rows[rows.length - 1]!
-    expect(last.closest('.going-live__apart')).not.toBeNull()
+    expect(last.classList.contains('going-live__row--apart')).toBe(true)
+    expect(
+      rows.filter((r) => r.classList.contains('going-live__row--apart')),
+    ).toHaveLength(1)
     expect(last.textContent).toContain(g.rows.codeReview.name)
     // Its address in mono (a hostname is allowed on screen, and is not a word).
     const address = within(region).getByText(`${SLUG}.manifest.internal`, {
       exact: false,
     })
     expect(address.closest('.mono')).not.toBeNull()
+  })
+
+  it('m2: the short jobs are one list, named by their heading, so no list goes unnamed', async () => {
+    await open()
+    const region = await jobs()
+    const lists = within(region).getAllByRole('list')
+    expect(lists).toHaveLength(1)
+    expect(within(region).getByRole('list', { name: g.shortJobs.title })).toBe(lists[0])
+  })
+
+  it.each([
+    ['without code review', (id: string) => id !== 'code-review'],
+    ['with code review alone', (id: string) => id === 'code-review'],
+  ])('m2: a checklist %s draws no empty list', async (_, keep) => {
+    const readiness: Schemas['LaunchReadiness'] = {
+      ...fixtures.LAUNCH_READINESS,
+      items: fixtures.LAUNCH_READINESS.items.filter(
+        (i) => keep(i.id) || i.id === 'iam-registration' || i.id === 'privacy-assessment',
+      ),
+    }
+    await open(stage({ readiness }))
+    const region = await jobs()
+    for (const list of within(region).getAllByRole('list'))
+      expect(within(list).queryAllByRole('listitem').length).toBeGreaterThan(0)
   })
 
   it('each row says its state in a word, its owner, and one sentence', async () => {

@@ -26,9 +26,13 @@ export function RowView({
       : [row.words, undefined]
   return (
     <li
-      className={
-        row.lit === true ? 'going-live__row going-live__row--lit' : 'going-live__row'
-      }
+      className={[
+        'going-live__row',
+        row.lit === true ? 'going-live__row--lit' : '',
+        row.apart ? 'going-live__row--apart' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       <StateChip state={row.state} label={g.state[row.state]} />
       <div className="going-live__row-words">
