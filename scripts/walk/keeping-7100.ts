@@ -785,7 +785,8 @@ async function switching() {
   const history = await page.words('main')
   for (const line of [
     'Went live',
-    'was added',
+    // "Test Instructor added Test Operator", or "… was added" when the platform names nobody.
+    'added',
     "Your students couldn't reach it",
     'Answering again. It was down for',
     'switched it off',
