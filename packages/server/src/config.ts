@@ -32,6 +32,13 @@ export interface Config {
    * such as the capable model once the platform offers it.
    */
   planModel: string
+  /**
+   * F6 D5: WHERE EMAIL GOES, over SMTP (nodemailer). Both modes send to Mailpit on the laptop
+   * (no authentication, no TLS), so nothing leaves it; `MANIFEST_APP_SMTP_URL` names another.
+   */
+  smtpUrl: string
+  /** Who an email is from: `MANIFEST_APP_MAIL_FROM`, else Manifest at the app's own host. */
+  mailFrom: string
 }
 
 const PLATFORM = { mock: 'http://127.0.0.1:7102', edge: 'http://127.0.0.1:7100' } as const
@@ -51,5 +58,8 @@ export function readConfig(env: NodeJS.ProcessEnv): Config {
     platformOrigin: PLATFORM[mode],
     modelGateway: 'http://127.0.0.1:7106/v1',
     planModel: env['MANIFEST_APP_PLAN_MODEL'] ?? 'default-chat',
+    smtpUrl: env['MANIFEST_APP_SMTP_URL'] ?? 'smtp://127.0.0.1:7111',
+    mailFrom:
+      env['MANIFEST_APP_MAIL_FROM'] ?? 'Manifest <manifest@app.manifest.internal>',
   }
 }

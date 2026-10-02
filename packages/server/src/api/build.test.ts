@@ -135,6 +135,8 @@ function setUp(script: unknown[] = []) {
     platformOrigin: platform.origin,
     modelGateway: GATEWAY,
     planModel: 'default-chat',
+    smtpUrl: 'smtp://127.0.0.1:7111',
+    mailFrom: 'Manifest <manifest@app.manifest.internal>',
   }
   const app = buildServer(config, () => undefined, {
     store,
@@ -481,6 +483,8 @@ describe('while the round works (F2 work.ts, Review Focus 4)', () => {
         platformOrigin: platform.origin,
         modelGateway: GATEWAY,
         planModel: 'default-chat',
+        smtpUrl: 'smtp://127.0.0.1:7111',
+        mailFrom: 'Manifest <manifest@app.manifest.internal>',
       },
       () => undefined,
       { store: s.store },
@@ -622,6 +626,8 @@ describe('a restart (Review Focus 3)', () => {
         platformOrigin: platform.origin,
         modelGateway: GATEWAY,
         planModel: 'default-chat',
+        smtpUrl: 'smtp://127.0.0.1:7111',
+        mailFrom: 'Manifest <manifest@app.manifest.internal>',
       },
       () => undefined,
       { store: s.store },

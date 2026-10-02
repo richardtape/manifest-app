@@ -74,6 +74,8 @@ async function setUp() {
     platformOrigin: platform.origin,
     modelGateway: 'http://127.0.0.1:7106/v1',
     planModel: 'default-chat',
+    smtpUrl: 'smtp://127.0.0.1:7111',
+    mailFrom: 'Manifest <manifest@app.manifest.internal>',
   }
   const app = buildServer(config, () => undefined, { store, hub, tokens, intakeKeys })
   cleanups.push(

@@ -1,10 +1,11 @@
 import { randomBytes } from 'node:crypto'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PlatformRefusal } from '../platform/refusal.js'
 import type { ProjectEvent, ProjectStream, Replay } from '../platform/stream.js'
 import type { Watching } from '../platform/watching.js'
 import { openStore, type Store } from '../store/db.js'
 import type { KeptApp, KeptMember } from '../store/keeping.js'
+import type { Run } from '../store/runs.js'
 import { createKeeper, type Keeper } from './keeper.js'
 import { KEY_BYTES, seal, unseal } from './seal.js'
 
@@ -21,6 +22,8 @@ const P2 = '22222222-2222-4222-8222-222222222222'
 const ALICE = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const BOB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 const DAY = 86_400_000
+const HOUR = 3_600_000
+const ORIGIN = 'http://127.0.0.1:7105'
 const NOW = new Date('2026-10-01T18:00:00.000Z')
 const inDays = (days: number) => new Date(NOW.getTime() + days * DAY).toISOString()
 
@@ -142,12 +145,19 @@ function setUp(options: { store?: Store; key?: Buffer } = {}) {
   w.reads.set(TOKEN_B, appOf(P1))
   w.members.set(P1, [member(ALICE), member(BOB, 'collaborator')])
   let clock = NOW
+  const sent: { to: string; subject: string; text: string }[] = []
+  /** Conversations a page holds the stream of, and those with work in flight. */
+  const pages = new Set<string>()
   const keeper = createKeeper({
     store,
     key,
     stream: s.stream,
     watching: w.watching,
     now: () => clock,
+    mailer: { send: async (message) => void sent.push(message) },
+    origin: ORIGIN,
+    hub: { watched: (id) => pages.has(id), busy: () => false },
+    wait: async () => undefined,
   })
   keepers.push(keeper)
   return {
@@ -156,6 +166,8 @@ function setUp(options: { store?: Store; key?: Buffer } = {}) {
     keeper,
     ...s,
     w,
+    sent,
+    pages,
     later: (ms: number) => (clock = new Date(clock.getTime() + ms)),
   }
 }
@@ -577,5 +589,246 @@ describe('forget (Decision 11)', () => {
     expect(t.store.app(P1)).toBeUndefined()
     expect(t.store.historyOf(P1)).toEqual([])
     expect(t.keeper.status(P1).watching).toBe(false)
+  })
+})
+
+describe('the emails (Task 5: D3, once each)', () => {
+  const CAROL = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+  const DAN = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  const carol: KeptMember = {
+    userId: CAROL,
+    role: 'owner',
+    displayName: 'Carol Owner',
+    email: 'carol@example.test',
+  }
+  const approved = (n: number) =>
+    event(n, 'release.approved', { decision: 'approved', releaseId: 'r-1' })
+
+  /** Handed, and its first replay over: what follows is news. */
+  async function live(
+    members: KeptMember[] = [member(ALICE), member(BOB, 'collaborator')],
+  ) {
+    const t = setUp()
+    t.w.members.set(P1, members)
+    await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    const handlers = t.open()[0]!.handlers
+    handlers.replayed!({ ids: [], overlapped: false })
+    return { ...t, handlers }
+  }
+
+  it('each new happening is emailed to the owners, through its words', async () => {
+    const t = await live()
+    t.handlers.event(approved(1))
+    await settle()
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      { to: 'alice@example.test', subject: 'Reading responses: signed off' },
+    ])
+    expect(t.sent[0]!.text).toContain(`${ORIGIN}/apps/reading-responses/going-live`)
+  })
+
+  it('a happening held already (a replay) sends nothing more', async () => {
+    const t = await live()
+    t.handlers.event(approved(1))
+    t.handlers.event(approved(1))
+    await settle()
+    expect(t.sent).toHaveLength(1)
+  })
+
+  it('what is no email (machinery, a line that emails nobody) sends nothing', async () => {
+    const t = await live()
+    t.handlers.event(event(2, 'build.succeeded'))
+    t.handlers.event(event(3, 'iam_registration.submitted', { environment: 'staging' }))
+    await settle()
+    expect(t.sent).toEqual([])
+  })
+
+  it('the first replay of an app we never watched is its past: written, and no email', async () => {
+    const t = setUp()
+    await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    const handlers = t.open()[0]!.handlers
+    handlers.event(approved(1))
+    handlers.event(event(2, 'rehearsal.completed', { passed: true, releaseId: 'r-1' }))
+    handlers.replayed!({ ids: [approved(1).id, event(2).id], overlapped: false })
+    await settle()
+    expect(t.store.historyOf(P1)).toHaveLength(2)
+    expect(t.sent).toEqual([])
+    handlers.event(event(3, 'rehearsal.completed', { passed: false, releaseId: 'r-1' }))
+    await settle()
+    expect(t.sent.map(({ subject }) => subject)).toEqual([
+      "Reading responses: the dry run didn't sign anyone in",
+    ])
+  })
+
+  it('after a restart, what happened while we were stopped is news; what we held is not', async () => {
+    const first = await live()
+    first.handlers.event(approved(1))
+    await settle()
+    first.keeper.stop()
+    const t = setUp({ store: first.store, key: first.key })
+    t.keeper.start()
+    const handlers = t.open()[0]!.handlers
+    handlers.event(approved(1))
+    handlers.event(event(2, 'rehearsal.completed', { passed: true, releaseId: 'r-1' }))
+    handlers.replayed!({ ids: [approved(1).id, event(2).id], overlapped: true })
+    await settle()
+    expect(first.sent).toHaveLength(1)
+    expect(t.sent.map(({ subject }) => subject)).toEqual([
+      'Reading responses: the dry run worked',
+    ])
+  })
+
+  it('member.added is emailed once the members are read again, naming the one added', async () => {
+    const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+    const dan: KeptMember = {
+      userId: DAN,
+      role: 'collaborator',
+      displayName: 'Dan New',
+      email: 'dan@example.test',
+    }
+    t.w.members.set(P1, [member(ALICE), member(BOB, 'collaborator'), carol, dan])
+    t.handlers.event(
+      event(4, 'member.added', {
+        memberId: DAN,
+        role: 'collaborator',
+        previousRole: null,
+        userId: ALICE,
+      }),
+    )
+    await settle()
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      { to: 'carol@example.test', subject: 'Reading responses: Dan New was added' },
+    ])
+  })
+
+  it('member.removed is emailed with the members as they were, naming the one removed', async () => {
+    const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+    t.w.members.set(P1, [member(ALICE), carol])
+    t.handlers.event(event(5, 'member.removed', { memberId: BOB, userId: ALICE }))
+    await settle()
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      {
+        to: 'carol@example.test',
+        subject: 'Reading responses: Bob Helper was taken off it',
+      },
+    ])
+    expect(t.store.members(P1)).toEqual([member(ALICE), carol])
+  })
+
+  it('at boot, an email claimed and never finished is sent (Review Focus 1)', async () => {
+    const t = setUp()
+    t.store.claimEmail({
+      key: { kind: 'over', happening: `${P1}:e1`, recipient: 'alice@example.test' },
+      subject: 'Reading responses: signed off',
+      text: 'words',
+    })
+    t.keeper.start()
+    await settle()
+    expect(t.sent).toEqual([
+      {
+        to: 'alice@example.test',
+        subject: 'Reading responses: signed off',
+        text: 'words',
+      },
+    ])
+    expect(t.store.emailsUnfinished()).toEqual([])
+  })
+})
+
+describe('your work is waiting (Decision 14)', () => {
+  const runOf = (conversationId: string, status: Run['status']): Run => ({
+    id: `run-${conversationId}-1`,
+    conversationId,
+    round: 1,
+    step: 'pages',
+    moves: 0,
+    tries: {},
+    status,
+    sessionIds: [],
+    model: null,
+    last: null,
+    sameRefusal: null,
+    detail: null,
+  })
+
+  /** Alice's conversation on the kept app, in this state, its run in this status. */
+  async function waiting(
+    state: 'built' | 'building',
+    status: Run['status'],
+    options: { kept?: boolean } = {},
+  ) {
+    const t = setUp()
+    t.store.rememberPerson({
+      id: ALICE,
+      displayName: 'Alice Instructor',
+      email: 'alice@example.test',
+    })
+    if (options.kept !== false) await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    const made = t.store.createConversation(ALICE, 'Add a word count.')
+    const conversation = t.store.setState(made.id, state, { projectId: P1 })
+    t.store.saveRun(runOf(conversation.id, status))
+    return { ...t, conversation }
+  }
+
+  it('built, with no page holding it: we have finished, to the person, once per run', async () => {
+    const t = await waiting('built', 'done')
+    t.keeper.workEnded(t.conversation)
+    t.keeper.workEnded(t.conversation)
+    await settle()
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      { to: 'alice@example.test', subject: "Reading responses: we've finished" },
+    ])
+    expect(t.sent[0]!.text).toContain(
+      `${ORIGIN}/apps/reading-responses/conversations/${t.conversation.id}`,
+    )
+  })
+
+  it('waiting on them: we need you', async () => {
+    const t = await waiting('building', 'needs-you')
+    t.keeper.workEnded(t.conversation)
+    await settle()
+    expect(t.sent.map(({ subject }) => subject)).toEqual([
+      'Reading responses: we need you',
+    ])
+  })
+
+  it('a page holding its stream: nothing (they are watching)', async () => {
+    const t = await waiting('built', 'done')
+    t.pages.add(t.conversation.id)
+    t.keeper.workEnded(t.conversation)
+    await settle()
+    expect(t.sent).toEqual([])
+  })
+
+  it('still working, or an app we do not keep: nothing', async () => {
+    const working = await waiting('building', 'working')
+    working.keeper.workEnded(working.conversation)
+    const unkept = await waiting('built', 'done', { kept: false })
+    unkept.keeper.workEnded(unkept.conversation)
+    await settle()
+    expect([...working.sent, ...unkept.sent]).toEqual([])
+  })
+
+  it('once an hour: waiting on its person, untouched for a day, is still waiting for you, once', async () => {
+    vi.useFakeTimers({ now: NOW, toFake: ['Date', 'setInterval', 'clearInterval'] })
+    try {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.start()
+      for (let hour = 1; hour <= 23; hour++) {
+        t.later(HOUR)
+        vi.advanceTimersByTime(HOUR)
+      }
+      await settle()
+      expect(t.sent).toEqual([])
+      for (let hour = 24; hour <= 27; hour++) {
+        t.later(HOUR)
+        vi.advanceTimersByTime(HOUR)
+      }
+      await settle()
+      expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+        { to: 'alice@example.test', subject: 'Reading responses: still waiting for you' },
+      ])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

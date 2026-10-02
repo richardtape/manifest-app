@@ -34,6 +34,8 @@ export interface Hub {
   /** True when this claim was the conversation's, and is now released. */
   unclaim(conversationId: string, claim: symbol): boolean
   busy(conversationId: string): boolean
+  /** F6 Decision 14: a page holds this conversation's stream. */
+  watched(conversationId: string): boolean
 }
 
 export function createHub(): Hub {
@@ -52,6 +54,7 @@ export function createHub(): Hub {
       return true
     },
     busy: (conversationId) => claims.has(conversationId),
+    watched: (conversationId) => listeners.has(conversationId),
     publish(conversationId, frame) {
       if (frame.kind === 'step') {
         const now = working.get(conversationId) ?? new Map<string, Progress>()

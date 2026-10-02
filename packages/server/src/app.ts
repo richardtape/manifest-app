@@ -155,9 +155,11 @@ export function buildServer(
   // One piece of work per conversation at a time, whichever route began it. When one ends, the
   // app's line starts its next conversation if nothing holds the app now (F4 Decision 5).
   // (`line` is made below, from the rounds; work only ever ends after it exists.)
-  const work = createWork(hub, store, (conversation) =>
-    line.released(conversation.projectId),
-  )
+  // F6 Decision 14: and the keeper tells the person, if no page is watching.
+  const work = createWork(hub, store, (conversation) => {
+    line.released(conversation.projectId)
+    keeper.workEnded(conversation)
+  })
   const rounds = (
     roundsOf ??
     ((base) =>

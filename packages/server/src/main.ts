@@ -2,7 +2,9 @@ import { fileURLToPath } from 'node:url'
 import { createServer as createVite } from 'vite'
 import { buildServer } from './app.js'
 import { readConfig } from './config.js'
+import { createHub } from './api/events.js'
 import { createKeeper } from './keeping/keeper.js'
+import { smtpMailer } from './keeping/mail.js'
 import { KEY_FILE, keyFrom } from './keeping/seal.js'
 import { createIntakeKeys, intakeModelFor } from './platform/intake.js'
 import { platformStream } from './platform/stream.js'
@@ -23,13 +25,19 @@ const intakeKeys = createIntakeKeys()
 // F6 D2: THE KEY THAT SEALS THE WATCH TOKENS, read (or made) before we listen. Never in .data/,
 // so a copy of the database carries no usable token.
 const key = keyFrom(process.env, KEY_FILE)
-// F6 D4: the keeper, in both modes, reading only with each app's watch token.
+// Who is watching what: our API's streams, and the keeper's "is a page on it?" (F6 Decision 14).
+const hub = createHub()
+// F6 D4: the keeper, in both modes, reading only with each app's watch token, and emailing through
+// nodemailer (D5) to Mailpit on the laptop in either mode.
 const keeper = createKeeper({
   store,
   key,
   stream: platformStream(config.platformOrigin),
   watching: platformWatching(config.platformOrigin),
   now: () => new Date(),
+  mailer: smtpMailer(config.smtpUrl, config.mailFrom),
+  origin: config.origin,
+  hub,
 })
 
 // The app is asked for only once we listen, which is after Vite exists: the closure reads
@@ -38,7 +46,7 @@ const keeper = createKeeper({
 const app = buildServer(
   config,
   (request, response) => vite.middlewares(request, response),
-  { store, intakeKeys, intakeModel: intakeModelFor(config, intakeKeys), keeper },
+  { store, hub, intakeKeys, intakeModel: intakeModelFor(config, intakeKeys), keeper },
 )
 const vite = await createVite({
   root: WEB,

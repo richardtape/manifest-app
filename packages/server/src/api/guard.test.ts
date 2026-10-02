@@ -24,6 +24,8 @@ const config = (mode: Config['mode'] = 'edge'): Config => ({
   platformOrigin: platform.origin,
   modelGateway: 'http://127.0.0.1:7106/v1',
   planModel: 'default-chat',
+  smtpUrl: 'smtp://127.0.0.1:7111',
+  mailFrom: 'Manifest <manifest@app.manifest.internal>',
 })
 
 /** An app with a guarded read and write, and a count of the times each handler went past its guard. */

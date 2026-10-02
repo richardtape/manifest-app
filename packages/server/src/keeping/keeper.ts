@@ -1,7 +1,14 @@
 import { PlatformRefusal } from '../platform/refusal.js'
 import type { ProjectEvent, ProjectStream, Replay, Watch } from '../platform/stream.js'
 import type { Watching } from '../platform/watching.js'
+import { chipOf } from '../api/apps.js'
+import type { Hub } from '../api/events.js'
+import type { Chip, Conversation, Happening } from '../api/progress.js'
 import type { Store } from '../store/db.js'
+import type { HistoryEntry } from '../store/keeping.js'
+import { emailsFor, waitingEmail } from './emails.js'
+import { happeningOf } from './happenings.js'
+import { deliver, deliverUnfinished, type Mailer } from './mail.js'
 import { seal, unseal } from './seal.js'
 
 /**
@@ -9,7 +16,9 @@ import { seal, unseal } from './seal.js'
  * over by a member's page and kept sealed (D2); one event stream per token, through F3's
  * `platformStream`, which sees each event once, reconnects after a drop, and stops for good on a
  * refusal (`4401` included). Every event is written once to `history`, as the platform sent it
- * (Decision 1); later tasks read it into lines, emails and *needs you*.
+ * (Decision 1); later tasks read it into lines and *needs you*. **Each new happening is emailed
+ * once** (Task 5: D3), as is **work waiting on its person** (Decision 14): a piece of work that ends
+ * with no page watching, and a conversation waiting a day (looked for once an hour).
  *
  * **It only reads** (`launch-actions.test.ts`): the stream, the app and its members. In memory it
  * holds the open streams and nothing else: a restart opens them again from the sealed rows.
@@ -20,6 +29,13 @@ export interface KeeperDeps {
   stream: ProjectStream
   watching: Watching
   now: () => Date
+  mailer: Mailer
+  /** Where an email's link points: `config.origin`, so the laptop's links work in either mode. */
+  origin: string
+  /** Whether a page holds a conversation's stream, and whether work holds it (Decision 14). */
+  hub: Pick<Hub, 'watched' | 'busy'>
+  /** A retry's wait (`deliver`'s); setTimeout's by default. */
+  wait?: (ms: number) => Promise<void>
 }
 
 export type Handed = { token: string; tokenId: string; expiresAt: string }
@@ -38,6 +54,8 @@ export interface Keeper {
   }
   /** Decision 11: its stream closed, and every row forgotten. */
   forget(projectId: string): void
+  /** Decision 14: a piece of work ended (`createWork`'s `ended`), the conversation as it is now. */
+  workEnded(conversation: Conversation): void
 }
 
 /** Decision 5: a token with less than this left is replaced by the next one a page hands over. */
@@ -52,6 +70,10 @@ const READS_APP = new Set([
 ])
 const READS_MEMBERS = new Set(['member.added', 'member.removed'])
 
+/** Decision 14: how long a conversation waits on its person before we say so again. */
+const A_DAY_MS = 86_400_000
+const HOUR_MS = 3_600_000
+
 /** One open stream, and its token, in memory only. */
 interface Open {
   tokenId: string
@@ -59,12 +81,28 @@ interface Open {
   watch: Watch | undefined
   /** Events handed over since the last replay's report that we already held (a restart's). */
   held: Set<string>
+  /**
+   * The first replay of an app we never watched (no platform event held): it is the app's past,
+   * written to history and emailed to nobody. Over at the replay's report.
+   */
+  first: boolean
 }
 
 const NOT_WATCHING = { watching: false, until: null, tokenId: null, mintedBy: null }
 
-export function createKeeper({ store, key, stream, watching, now }: KeeperDeps): Keeper {
+export function createKeeper({
+  store,
+  key,
+  stream,
+  watching,
+  now,
+  mailer,
+  origin,
+  hub,
+  wait,
+}: KeeperDeps): Keeper {
   const open = new Map<string, Open>()
+  let scanning: ReturnType<typeof setInterval> | undefined
   /** A stream replaced or closed says nothing more: only the current one is heard. */
   const isCurrent = (projectId: string, one: Open) => open.get(projectId) === one
 
@@ -77,7 +115,10 @@ export function createKeeper({ store, key, stream, watching, now }: KeeperDeps):
 
   function watchWith(projectId: string, tokenId: string, token: string): void {
     open.get(projectId)?.watch?.close()
-    const one: Open = { tokenId, token, watch: undefined, held: new Set() }
+    const first = !store
+      .historyOf(projectId)
+      .some((entry) => !entry.type.startsWith('keeping.'))
+    const one: Open = { tokenId, token, watch: undefined, held: new Set(), first }
     open.set(projectId, one)
     one.watch = stream.watch(token, projectId, {
       event: (event) => isCurrent(projectId, one) && onEvent(projectId, one, event),
@@ -90,21 +131,73 @@ export function createKeeper({ store, key, stream, watching, now }: KeeperDeps):
   }
 
   function onEvent(projectId: string, one: Open, event: ProjectEvent): void {
-    const written = store.addHistory({
+    const entry: HistoryEntry = {
       id: event.id,
       projectId,
       at: event.at,
       type: event.type,
       detail: event.detail,
-    })
+    }
     // Held already: a replay after a restart. Its rules ran when it was first written.
-    if (!written) {
+    if (!store.addHistory(entry)) {
       one.held.add(event.id)
       return
     }
     if (event.type === 'project.deleted') return forget(projectId)
     if (READS_APP.has(event.type)) void refresh(projectId, one, 'app')
+    const happening = one.first ? null : happeningOf(entry)
+    // Someone added is named once the members are read again; someone removed, before.
+    if (happening?.kind === 'member-added')
+      return void refresh(projectId, one, 'members').then(() => tell(entry, happening))
+    if (happening !== null) tell(entry, happening)
     if (READS_MEMBERS.has(event.type)) void refresh(projectId, one, 'members')
+  }
+
+  /** D3: each owner told once, by the kept app and members. */
+  function tell(entry: HistoryEntry, happening: Happening): void {
+    const app = store.app(entry.projectId)
+    if (app === undefined) return
+    const members = store.members(entry.projectId)
+    const context = { app, members, origin, at: entry.at, id: entry.id }
+    for (const outgoing of emailsFor(happening, context))
+      void deliver(store, mailer, outgoing, wait)
+  }
+
+  /**
+   * Decision 14: the person whose work it is, when it now waits on them or is built, and no page
+   * holds its stream. An app we do not keep is no email: we cannot name it (from F6 Task 8, Make it
+   * hands its watch token over, so every app is kept from its first build).
+   */
+  function waitingOn(
+    conversation: Conversation,
+    why: (chip: Chip) => 'finished' | 'needs-you' | 'a-day' | null,
+    keyOf: (why: string) => string,
+  ): void {
+    if (conversation.projectId === null) return
+    const app = store.app(conversation.projectId)
+    const to = store.personEmail(conversation.personId)
+    if (app === undefined || to === undefined) return
+    const run = store.latestRun(conversation.id)
+    const which = why(chipOf(conversation, run, hub.busy(conversation.id)))
+    if (which === null) return
+    const key = `${app.projectId}:${keyOf(which)}`
+    void deliver(
+      store,
+      mailer,
+      waitingEmail(which, { app, conversation, to, origin, key }),
+      wait,
+    )
+  }
+
+  /** Once an hour: each conversation waiting on its person for a day, said once per wait. */
+  function scan(): void {
+    const before = new Date(now().getTime() - A_DAY_MS).toISOString()
+    for (const conversation of store.idleConversations(before))
+      waitingOn(
+        conversation,
+        (chip) => (chip === 'attention' ? 'a-day' : null),
+        () => `a-day:${conversation.id}:${conversation.updatedAt}`,
+      )
   }
 
   /**
@@ -113,6 +206,7 @@ export function createKeeper({ store, key, stream, watching, now }: KeeperDeps):
    * event we held and the oldest it replayed: said once, by the oldest replayed event's id.
    */
   function onReplayed(projectId: string, one: Open, replay: Replay): void {
+    one.first = false
     const heldBefore = replay.overlapped || replay.ids.some((id) => one.held.has(id))
     one.held.clear()
     if (replay.ids.length === 0 || heldBefore) return
@@ -180,6 +274,10 @@ export function createKeeper({ store, key, stream, watching, now }: KeeperDeps):
 
   return {
     start() {
+      // Review Focus 1: what a stop left claimed and unsent goes now, and never twice.
+      void deliverUnfinished(store, mailer, wait)
+      scanning ??= setInterval(scan, HOUR_MS)
+      scanning.unref?.()
       for (const kept of store.watches()) {
         if (open.has(kept.projectId)) continue
         const token = unseal(key, kept.sealed)
@@ -195,6 +293,8 @@ export function createKeeper({ store, key, stream, watching, now }: KeeperDeps):
     },
 
     stop() {
+      clearInterval(scanning)
+      scanning = undefined
       for (const one of open.values()) one.watch?.close()
       open.clear()
     },
@@ -234,6 +334,23 @@ export function createKeeper({ store, key, stream, watching, now }: KeeperDeps):
     },
 
     forget,
+
+    workEnded(conversation) {
+      if (hub.watched(conversation.id)) return
+      const run = store.latestRun(conversation.id)
+      // A round of work (F3's "You can leave"); the intake's and the plan's are watched as they go.
+      if (run === undefined) return
+      waitingOn(
+        conversation,
+        (chip) =>
+          conversation.state === 'built'
+            ? 'finished'
+            : chip === 'attention'
+              ? 'needs-you'
+              : null,
+        (why) => `${why}:${run.id}`,
+      )
+    },
   }
 }
 
@@ -244,4 +361,5 @@ export const idleKeeper: Keeper = {
   hand: () => Promise.reject(new PlatformRefusal('PLATFORM_UNAVAILABLE', null)),
   status: () => NOT_WATCHING,
   forget: () => undefined,
+  workEnded: () => undefined,
 }

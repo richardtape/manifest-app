@@ -42,6 +42,8 @@ function setUp(): { store: Store; file: string; config: Config } {
       platformOrigin: platform.origin,
       modelGateway: 'http://127.0.0.1:7106/v1',
       planModel: 'default-chat',
+      smtpUrl: 'smtp://127.0.0.1:7111',
+      mailFrom: 'Manifest <manifest@app.manifest.internal>',
     },
   }
 }

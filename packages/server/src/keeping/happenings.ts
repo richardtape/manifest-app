@@ -123,8 +123,8 @@ function nameOf(members: KeptMember[], userId: string | null): string | null {
   return members.find((member) => member.userId === userId)?.displayName ?? null
 }
 
-/** Decision 13: the happenings whose `by` is a person (an answer's `by` is UBC's office). */
-function whoOf(happening: Happening): string | null {
+/** Decision 13: who acted, for the happenings a person does (an answer's `by` is UBC's office). */
+export function actorOf(happening: Happening): string | null {
   switch (happening.kind) {
     case 'member-added':
     case 'member-removed':
@@ -181,7 +181,7 @@ export function linesOf(
       id: entry.id,
       at: entry.at,
       happening,
-      who: nameOf(members, whoOf(happening)),
+      who: nameOf(members, actorOf(happening)),
       whom: nameOf(members, whomOf(happening)),
     })
   }

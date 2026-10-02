@@ -466,6 +466,8 @@ describe('the intake key (FE-1, as it landed)', () => {
     platformOrigin: 'http://127.0.0.1:7100',
     modelGateway: 'http://127.0.0.1:7106/v1',
     planModel: 'default-chat',
+    smtpUrl: 'smtp://127.0.0.1:7111',
+    mailFrom: 'Manifest <manifest@app.manifest.internal>',
   }
   const later = new Date(Date.now() + 30 * 60_000).toISOString()
   const HANDED = {
@@ -567,6 +569,8 @@ describe('each mode’s intake model', () => {
       platformOrigin: 'http://127.0.0.1:7100',
       modelGateway: `${gateway.origin}/v1`,
       planModel: 'default-chat',
+      smtpUrl: 'smtp://127.0.0.1:7111',
+      mailFrom: 'Manifest <manifest@app.manifest.internal>',
     }
     const keys = createIntakeKeys()
     keys.put('c-1', {
@@ -593,6 +597,8 @@ describe('each mode’s intake model', () => {
       platformOrigin: 'http://127.0.0.1:7102',
       modelGateway: 'http://127.0.0.1:7106/v1',
       planModel: 'default-chat',
+      smtpUrl: 'smtp://127.0.0.1:7111',
+      mailFrom: 'Manifest <manifest@app.manifest.internal>',
     }
     const keys = createIntakeKeys()
     const model = intakeModelFor(config, keys)({ id: 'c-1' })
@@ -644,6 +650,8 @@ describe('POST /api/conversations/:id/intake-key: the handover', () => {
       platformOrigin: platform.origin,
       modelGateway: 'http://127.0.0.1:7106/v1',
       planModel: 'default-chat',
+      smtpUrl: 'smtp://127.0.0.1:7111',
+      mailFrom: 'Manifest <manifest@app.manifest.internal>',
     }
     const understood = {
       questions: [],
@@ -884,6 +892,8 @@ describe("each use's deadlines (F5 Decision 14; F4 Step 3, Rich's click)", () =>
     platformOrigin: 'http://127.0.0.1:7100',
     modelGateway: 'http://127.0.0.1:7106/v1',
     planModel: 'default-chat',
+    smtpUrl: 'smtp://127.0.0.1:7111',
+    mailFrom: 'Manifest <manifest@app.manifest.internal>',
   }
 
   /**

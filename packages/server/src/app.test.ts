@@ -51,6 +51,8 @@ const mock = (platformOrigin: string): Config => ({
   platformOrigin,
   modelGateway: 'http://127.0.0.1:7106/v1',
   planModel: 'default-chat',
+  smtpUrl: 'smtp://127.0.0.1:7111',
+  mailFrom: 'Manifest <manifest@app.manifest.internal>',
 })
 const edge = (platformOrigin: string): Config => ({
   mode: 'edge',
@@ -59,6 +61,8 @@ const edge = (platformOrigin: string): Config => ({
   platformOrigin,
   modelGateway: 'http://127.0.0.1:7106/v1',
   planModel: 'default-chat',
+  smtpUrl: 'smtp://127.0.0.1:7111',
+  mailFrom: 'Manifest <manifest@app.manifest.internal>',
 })
 const SESSION = { cookie: 'theme=dark; manifest_session=mock-session' }
 const json = async (response: Response) =>
@@ -73,6 +77,8 @@ describe('readConfig', () => {
       platformOrigin: 'http://127.0.0.1:7100',
       modelGateway: 'http://127.0.0.1:7106/v1',
       planModel: 'default-chat',
+      smtpUrl: 'smtp://127.0.0.1:7111',
+      mailFrom: 'Manifest <manifest@app.manifest.internal>',
     })
   })
   it('is mock when asked, served on 7105 itself, asking manifest-mock', () => {
@@ -83,6 +89,23 @@ describe('readConfig', () => {
       platformOrigin: 'http://127.0.0.1:7102',
       modelGateway: 'http://127.0.0.1:7106/v1',
       planModel: 'default-chat',
+      smtpUrl: 'smtp://127.0.0.1:7111',
+      mailFrom: 'Manifest <manifest@app.manifest.internal>',
+    })
+  })
+  it('sends email to Mailpit on the laptop from us, unless told otherwise (F6 D5)', () => {
+    expect(readConfig({})).toMatchObject({
+      smtpUrl: 'smtp://127.0.0.1:7111',
+      mailFrom: 'Manifest <manifest@app.manifest.internal>',
+    })
+    expect(
+      readConfig({
+        MANIFEST_APP_SMTP_URL: 'smtps://mail.example.test:465',
+        MANIFEST_APP_MAIL_FROM: 'Manifest <noreply@example.test>',
+      }),
+    ).toMatchObject({
+      smtpUrl: 'smtps://mail.example.test:465',
+      mailFrom: 'Manifest <noreply@example.test>',
     })
   })
   it('writes plans on the model it is told, default-chat unless told otherwise (Task 9)', () => {

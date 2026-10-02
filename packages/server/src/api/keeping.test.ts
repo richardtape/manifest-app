@@ -38,6 +38,7 @@ function fakeKeeper() {
     start: () => undefined,
     stop: () => undefined,
     forget: () => undefined,
+    workEnded: () => undefined,
     async hand(projectId, handed, personId) {
       hands.push({ projectId, handed, personId })
       return answer()
@@ -68,6 +69,8 @@ function setUp() {
     platformOrigin: platform.origin,
     modelGateway: 'http://127.0.0.1:7106/v1',
     planModel: 'default-chat',
+    smtpUrl: 'smtp://127.0.0.1:7111',
+    mailFrom: 'Manifest <manifest@app.manifest.internal>',
   }
   const app = buildServer(config, () => undefined, { store, keeper: k.keeper })
   cleanups.push(

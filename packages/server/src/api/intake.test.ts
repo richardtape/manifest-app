@@ -3,6 +3,7 @@ import type { Schemas } from '@manifest/contract'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildServer } from '../app.js'
+import { idleKeeper, type Keeper } from '../keeping/keeper.js'
 import type { Config } from '../config.js'
 import type { Model } from '../model/client.js'
 import { scripted } from '../model/scripted.js'
@@ -74,7 +75,7 @@ afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup()
 })
 
-async function setUp(model: Model | undefined) {
+async function setUp(model: Model | undefined, keeper?: Keeper) {
   const { dir, remove } = scratchDir()
   const file = join(dir, 'app.sqlite')
   const store: Store = openStore(file)
@@ -86,11 +87,14 @@ async function setUp(model: Model | undefined) {
     platformOrigin: platform.origin,
     modelGateway: 'http://127.0.0.1:7106/v1',
     planModel: 'default-chat',
+    smtpUrl: 'smtp://127.0.0.1:7111',
+    mailFrom: 'Manifest <manifest@app.manifest.internal>',
   }
   const app: FastifyInstance = buildServer(config, () => undefined, {
     store,
     hub,
     ...(model === undefined ? {} : { intakeModel: () => model }),
+    ...(keeper === undefined ? {} : { keeper }),
   })
   cleanups.push(
     () => app.close(),
@@ -163,6 +167,20 @@ describe('POST /api/conversations/:id/intake: round 1 (moment 3)', () => {
       namesAsked: 0,
     })
     expect(model.calls[0]!.messages[1]!.content).toContain(WORDS)
+  })
+
+  it('when the work ends, the keeper is told, with the conversation as it is now (F6 Decision 14)', async () => {
+    const ended: Conversation[] = []
+    const keeper: Keeper = {
+      ...idleKeeper,
+      workEnded: (conversation) => ended.push(conversation),
+    }
+    const s = await setUp(scripted({ understanding: [understood([Q1])] }), keeper)
+    await post(s, 'intake', {})
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(ended.map((conversation) => [conversation.id, conversation.state])).toEqual([
+      [s.conversation.id, 'questions'],
+    ])
   })
 
   it('asking nothing goes straight to naming', async () => {

@@ -55,6 +55,8 @@ async function serve(
     platformOrigin: platform.origin,
     modelGateway: 'http://127.0.0.1:7106/v1',
     planModel: 'default-chat',
+    smtpUrl: 'smtp://127.0.0.1:7111',
+    mailFrom: 'Manifest <manifest@app.manifest.internal>',
   }
   const app = buildServer(config, (_, response) => response.end(), {
     store,
@@ -122,6 +124,21 @@ async function open(base: string, id: string, cookie = AS_ALICE) {
   closers.push(() => abort.abort())
   return { response, frames, comments, until, abort }
 }
+
+describe('Hub.watched: a page holds the conversation’s stream (F6 Decision 14)', () => {
+  it('true while a listener is subscribed, for that conversation only; false once each has gone', () => {
+    const hub = createHub()
+    expect(hub.watched('c1')).toBe(false)
+    const first = hub.subscribe('c1', () => undefined)
+    const second = hub.subscribe('c1', () => undefined)
+    expect(hub.watched('c1')).toBe(true)
+    expect(hub.watched('c2')).toBe(false)
+    first()
+    expect(hub.watched('c1')).toBe(true)
+    second()
+    expect(hub.watched('c1')).toBe(false)
+  })
+})
 
 describe('Review Focus 5: a step at work is heard by a connection made after it began (F2 Task 9)', () => {
   it('connecting while a step works gets the state, then that step, now; once it is done, the state alone', async () => {
