@@ -20,16 +20,23 @@ export interface Asked {
    * A fix of ours (F4 Decision 6): the incident it answers, and where it happened: absent is the
    * trying-out address, as every F4 fix was; `production` is the live address (F5 Decision 13).
    * A dry run's fix carries its evidence instead (F5 Task 7): it happened on the live setup, and
-   * left no incident. Null for their change.
+   * left no incident. An outage's fix carries its two moments (F6 Decision 9): the live address
+   * stopped answering, and nothing recorded why. Null for their change.
    */
   fix:
-    { incidentId: string; environment?: 'production' } | { dryRun: DryRunEvidence } | null
+    | { incidentId: string; environment?: 'production' }
+    | { dryRun: DryRunEvidence }
+    | { outage: Outage }
+    | null
   /**
    * F5 Task 8: a change started by *[Talk it through]* answers an administrator's refusal, so
    * pressed again it opens this one (the final review's I1). Absent on every other change.
    */
   refusal?: { approvalId: string }
 }
+
+/** F6 Decision 9: when the live address stopped answering, and when it answered again. */
+export type Outage = { from: string; to: string }
 
 export interface Piece {
   kind: 'first' | 'change' | 'fix'
@@ -40,6 +47,8 @@ export interface Piece {
   environment: FixEnvironment | null
   /** A dry run's fix: what it saw (F5 Task 7); null for anything else. */
   dryRun: DryRunEvidence | null
+  /** An outage's fix: its two moments (F6 Decision 9); null for anything else. */
+  outage: Outage | null
 }
 
 /** The latest change asked, whole; a conversation with none is on its first piece. */
@@ -51,6 +60,7 @@ export function pieceOf(store: Store, conversationId: string): Piece {
     incidentId: null,
     environment: null,
     dryRun: null,
+    outage: null,
   }
   for (const { body } of store.listMessages(conversationId)) {
     const said = body as { kind?: unknown }
@@ -58,25 +68,35 @@ export function pieceOf(store: Store, conversationId: string): Piece {
     const asked = body as Asked
     if (asked.change !== piece.change) {
       const fix = asked.fix
+      const none = { asked: [], incidentId: null, dryRun: null, outage: null }
       piece =
-        fix !== null && 'dryRun' in fix
-          ? {
-              kind: 'fix',
-              change: asked.change,
-              asked: [],
-              incidentId: null,
-              // A dry run runs on the live setup.
-              environment: 'production',
-              dryRun: fix.dryRun,
-            }
-          : {
-              kind: fix === null ? 'change' : 'fix',
-              change: asked.change,
-              asked: [],
-              incidentId: fix?.incidentId ?? null,
-              environment: fix === null ? null : (fix.environment ?? 'staging'),
-              dryRun: null,
-            }
+        fix === null
+          ? { ...none, kind: 'change', change: asked.change, environment: null }
+          : 'dryRun' in fix
+            ? // A dry run runs on the live setup.
+              {
+                ...none,
+                kind: 'fix',
+                change: asked.change,
+                environment: 'production',
+                dryRun: fix.dryRun,
+              }
+            : 'outage' in fix
+              ? // The live address stopped answering: no incident, nothing recorded why.
+                {
+                  ...none,
+                  kind: 'fix',
+                  change: asked.change,
+                  environment: 'production',
+                  outage: fix.outage,
+                }
+              : {
+                  ...none,
+                  kind: 'fix',
+                  change: asked.change,
+                  incidentId: fix.incidentId,
+                  environment: fix.environment ?? 'staging',
+                }
     }
     piece = { ...piece, asked: [...piece.asked, asked.words] }
   }

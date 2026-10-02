@@ -692,6 +692,7 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
       incidentId: null,
       environment: null,
       dryRun: null,
+      outage: null,
     })
   })
 

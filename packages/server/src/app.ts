@@ -208,7 +208,7 @@ export function buildServer(
   // F6 (D4): every kept watch token's stream opened; closed with the server.
   keeper.start()
   app.addHook('onClose', async () => keeper.stop())
-  registerKeeping(app, { config, store, keeper })
+  registerKeeping(app, { config, store, keeper, hub, rounds })
   registerIntake(app, { config, store, work, intakeModel, intakeKeys })
   registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
   registerBuild(app, { config, store, hub, work, tokens, rounds, line })

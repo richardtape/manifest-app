@@ -50,6 +50,7 @@ describe('pieceOf', () => {
       incidentId: null,
       environment: null,
       dryRun: null,
+      outage: null,
     })
   })
 
@@ -76,6 +77,7 @@ describe('pieceOf', () => {
       incidentId: null,
       environment: null,
       dryRun: null,
+      outage: null,
     })
   })
 
@@ -95,6 +97,7 @@ describe('pieceOf', () => {
       // F4's fixes name no address: every one was the trying-out address's (F5 Decision 13).
       environment: 'staging',
       dryRun: null,
+      outage: null,
     })
   })
 
@@ -116,6 +119,7 @@ describe('pieceOf', () => {
       incidentId: 'incident-2',
       environment: 'production',
       dryRun: null,
+      outage: null,
     })
   })
 
@@ -141,6 +145,28 @@ describe('pieceOf', () => {
       incidentId: null,
       environment: 'production',
       dryRun,
+      outage: null,
+    })
+  })
+
+  it("an outage's fix is the live address's, carries its two moments, and no incident (F6 Decision 9)", () => {
+    const store = fresh()
+    const c = store.createChange(ALICE.id, PROJECT, 'Your students', 'ours')
+    const outage = { from: '2026-10-01T17:03:00.000Z', to: '2026-10-01T17:07:00.000Z' }
+    store.addMessage(c.id, 'we', {
+      kind: 'asked',
+      change: 1,
+      words: "Your students couldn't reach it",
+      fix: { outage },
+    } satisfies Asked)
+    expect(pieceOf(store, c.id)).toEqual({
+      kind: 'fix',
+      change: 1,
+      asked: ["Your students couldn't reach it"],
+      incidentId: null,
+      environment: 'production',
+      dryRun: null,
+      outage,
     })
   })
 })

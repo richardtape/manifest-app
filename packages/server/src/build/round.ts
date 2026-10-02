@@ -606,8 +606,19 @@ export function createRounds(deps: RoundDeps): Rounds {
         incident: null,
         unread: null,
         dryRun: { signInStatus, attributesReleased, attributesAsked },
+        outage: null,
       }
     }
+    // F6 Decision 9: the live address stopped answering. Nothing recorded why (FE-4), and its
+    // output is never ours to read (§14): the lead looks in the code.
+    if (piece.kind === 'fix' && piece.outage !== null && live.fix === null)
+      live.fix = {
+        environment: 'production',
+        incident: null,
+        unread: null,
+        dryRun: null,
+        outage: piece.outage,
+      }
     if (piece.kind === 'fix' && piece.incidentId !== null && live.fix === null) {
       const incidentId = piece.incidentId
       // Where it did not start: F4's fixes were all the trying-out address's (F5 Decision 13).
@@ -617,11 +628,24 @@ export function createRounds(deps: RoundDeps): Rounds {
       )
       live.fix =
         read === 'confidential'
-          ? { environment, incident: null, unread: 'confidential', dryRun: null }
+          ? {
+              environment,
+              incident: null,
+              unread: 'confidential',
+              dryRun: null,
+              outage: null,
+            }
           : read === undefined
-            ? { environment, incident: null, unread: 'missing', dryRun: null }
+            ? {
+                environment,
+                incident: null,
+                unread: 'missing',
+                dryRun: null,
+                outage: null,
+              }
             : {
                 dryRun: null,
+                outage: null,
                 environment,
                 incident: {
                   exitReason: read.exitReason,

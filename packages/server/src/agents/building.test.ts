@@ -794,7 +794,13 @@ describe("the lead's view (Decision 3)", () => {
   it('a fix round: what the platform recorded where it did not start, and the change paragraph', () => {
     const user = said({
       ...view([]),
-      fix: { environment: 'staging', incident: INCIDENT, unread: null, dryRun: null },
+      fix: {
+        environment: 'staging',
+        incident: INCIDENT,
+        unread: null,
+        dryRun: null,
+        outage: null,
+      },
     })
     expect(user).toMatch(/did not start on the trying-out address/)
     for (const value of Object.values(INCIDENT)) expect(user).toContain(value)
@@ -804,7 +810,13 @@ describe("the lead's view (Decision 3)", () => {
   it('a fix of a start on the live address says the live address, never trying-out (F5 Decision 13)', () => {
     const user = said({
       ...view([]),
-      fix: { environment: 'production', incident: INCIDENT, unread: null, dryRun: null },
+      fix: {
+        environment: 'production',
+        incident: INCIDENT,
+        unread: null,
+        dryRun: null,
+        outage: null,
+      },
     })
     expect(user).toMatch(/did not start on the live address/)
     expect(user).not.toMatch(/trying-out/)
@@ -817,6 +829,7 @@ describe("the lead's view (Decision 3)", () => {
         incident: null,
         unread: 'confidential',
         dryRun: null,
+        outage: null,
       },
     })
     expect(unread).toMatch(/did not start on the live address/)
@@ -832,6 +845,7 @@ describe("the lead's view (Decision 3)", () => {
         incident: null,
         unread: 'confidential',
         dryRun: null,
+        outage: null,
       },
     })
     expect(user).toMatch(/did not start on the trying-out address/)
@@ -852,6 +866,7 @@ describe("the lead's view (Decision 3)", () => {
           attributesReleased: [],
           attributesAsked: ['ubcEduCwlPuid', 'mail'],
         },
+        outage: null,
       },
     })
     expect(user).toMatch(/dry run on the live setup did not sign anyone in/)
@@ -862,6 +877,28 @@ describe("the lead's view (Decision 3)", () => {
     expect(user).toContain('The details the sign-in carried: none')
     expect(user).toContain('Asked for and never carried: ubcEduCwlPuid, mail')
     expect(user).not.toMatch(/did not start|cannot read why/)
+    expect(user).toContain(CHANGE_PARAGRAPH)
+  })
+
+  it("an outage's fix: the live address stopped answering, when, that nothing records why and nothing it wrote can be read; look in the code (F6 Decision 9)", () => {
+    const user = said({
+      ...view([]),
+      fix: {
+        environment: 'production',
+        incident: null,
+        unread: null,
+        dryRun: null,
+        outage: { from: '2026-10-01T17:03:00.000Z', to: '2026-10-01T17:07:00.000Z' },
+      },
+    })
+    expect(user).toMatch(/stopped answering on its live address/)
+    expect(user).toContain(
+      'between 2026-10-01T17:03:00.000Z and 2026-10-01T17:07:00.000Z',
+    )
+    expect(user).toMatch(/no record of why/)
+    expect(user).toMatch(/nothing it wrote while it ran can be read/)
+    expect(user).toMatch(/Look in the code/)
+    expect(user).not.toMatch(/did not start|cannot read why|dry run/)
     expect(user).toContain(CHANGE_PARAGRAPH)
   })
 
@@ -883,6 +920,7 @@ describe("the lead's view (Decision 3)", () => {
         incident: { ...INCIDENT, logTail: huge, prompt: huge, diffSinceHealthy: huge },
         unread: null,
         dryRun: null,
+        outage: null,
       },
     }
     const messages = [

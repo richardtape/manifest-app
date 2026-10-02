@@ -6,7 +6,7 @@ import type { Config } from '../config.js'
 import { createConversationTokens } from '../platform/project.js'
 import { openStore, type Conversation, type Run, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
-import { DRY_RUN_FIX_WORDS, FIX_WORDS } from './apps.js'
+import { DRY_RUN_FIX_WORDS, FIX_WORDS, OUTAGE_FIX_WORDS } from './apps.js'
 import { createHub, publishState, type Hub } from './events.js'
 import { pieceOf } from './piece-state.js'
 import { LIMITS, type AppConversation, type Progress } from './progress.js'
@@ -39,6 +39,8 @@ const EVIDENCE = {
   attributesReleased: ['mail'],
   attributesAsked: ['ubcEduCwlPuid', 'mail'],
 }
+/** F6 Decision 9: the outage's two moments, from the fall to the first answer. */
+const OUTAGE = { from: '2026-10-01T17:03:00.000Z', to: '2026-10-01T17:07:00.000Z' }
 const GOOD = 'mft_test_x_the_changes_token'
 const SECOND = 'mft_test_x_the_second_changes_token'
 const STRANGER = 'mft_test_x_another_projects_token'
@@ -252,6 +254,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       incidentId: null,
       environment: null,
       dryRun: null,
+      outage: null,
     })
   })
 
@@ -311,6 +314,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       incidentId: INCIDENT,
       environment: 'staging',
       dryRun: null,
+      outage: null,
     })
     expect(s.store.getConversation(made.id, ALICE.id)?.state).toBe('building')
   })
@@ -337,6 +341,33 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       incidentId: null,
       environment: 'production',
       dryRun: EVIDENCE,
+      outage: null,
+    })
+  })
+
+  it("an outage's fix (F6 Decision 9) keeps its two moments, is titled for it, is the live address's, and starts on a free app", async () => {
+    const s = setUp()
+    first(s, 'built', 'done')
+    const answer = await s.ask({ fix: { outage: OUTAGE }, token: GOOD })
+    expect(answer.statusCode).toBe(201)
+    const made = answer.json() as Conversation
+    expect(made.title).toBe("Your students couldn't reach it")
+    expect(OUTAGE_FIX_WORDS).toBe(made.title)
+    expect(s.did).toEqual([`start ${made.title}`])
+    expect(s.store.listMessages(made.id).at(-1)?.body).toEqual({
+      kind: 'asked',
+      change: 1,
+      words: OUTAGE_FIX_WORDS,
+      fix: { outage: OUTAGE },
+    })
+    expect(pieceOf(s.store, made.id)).toEqual({
+      kind: 'fix',
+      change: 1,
+      asked: [OUTAGE_FIX_WORDS],
+      incidentId: null,
+      environment: 'production',
+      dryRun: null,
+      outage: OUTAGE,
     })
   })
 
@@ -500,6 +531,34 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
         fix: { dryRun: { ...EVIDENCE, attributesAsked: ['a'.repeat(129)] } },
         token: GOOD,
       },
+    ],
+    [
+      "an outage's fix that ends before it starts",
+      { fix: { outage: { from: OUTAGE.to, to: OUTAGE.from } }, token: GOOD },
+    ],
+    [
+      "an outage's fix that ends as it starts",
+      { fix: { outage: { from: OUTAGE.from, to: OUTAGE.from } }, token: GOOD },
+    ],
+    [
+      "an outage's fix with no end",
+      { fix: { outage: { from: OUTAGE.from } }, token: GOOD },
+    ],
+    [
+      "an outage's fix whose moment is words",
+      { fix: { outage: { ...OUTAGE, from: 'ten past ten' } }, token: GOOD },
+    ],
+    [
+      "an outage's fix with a key of its own",
+      { fix: { outage: { ...OUTAGE, why: 'it crashed' } }, token: GOOD },
+    ],
+    [
+      "an outage's fix naming an incident too",
+      { fix: { outage: OUTAGE, incidentId: INCIDENT }, token: GOOD },
+    ],
+    [
+      "an outage's fix naming an address",
+      { fix: { outage: OUTAGE, environment: 'production' }, token: GOOD },
     ],
   ])('%s is 400 CHANGE_INVALID, and nothing is asked or stored', async (_what, body) => {
     const s = setUp()

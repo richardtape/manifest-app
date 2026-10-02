@@ -347,3 +347,26 @@ export type Line = {
   who: string | null
   whom: string | null
 }
+
+/** F6 Task 7: an app, as a need or a line names it. */
+export type AppRef = { projectId: string; name: string; slug: string }
+
+/**
+ * F6 TASK 7: WHAT NEEDS THEM (design §2: the band), read when the page loads. A question waiting
+ * in one of their conversations; the live address down (`owner`: they may start it again); answering
+ * again, for a day after; a change that didn't go live with no fix under way.
+ */
+export type Need =
+  | {
+      kind: 'question'
+      app: AppRef
+      conversationId: string
+      title: string
+      since: string
+    }
+  | { kind: 'down'; app: AppRef; from: string; owner: boolean }
+  | { kind: 'answering-again'; app: AppRef; from: string; to: string }
+  | { kind: 'change-failed'; app: AppRef; incidentId: string; at: string; owner: boolean }
+
+/** *Since you were last here*: a line, and the app it is about. */
+export type SinceLine = Line & { app: AppRef }

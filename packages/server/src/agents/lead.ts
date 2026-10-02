@@ -62,6 +62,11 @@ export interface LeadView {
       attributesReleased: string[]
       attributesAsked: string[]
     } | null
+    /**
+     * F6 Decision 9: the live address stopped answering between these two moments, by our own
+     * watch. No incident: the platform did not see it (FE-4). Null for any other fix.
+     */
+    outage: { from: string; to: string } | null
   } | null
 }
 
@@ -203,6 +208,16 @@ function pieceOf(view: LeadView): string[] {
       d.signInStatus === null
         ? 'Look for what would stop it starting or signing someone in, and change only that.'
         : "Look for what in the app's sign-in would cause that, and change only that.",
+      CHANGE_PARAGRAPH,
+    ]
+  }
+  if (view.fix?.outage != null) {
+    const { from, to } = view.fix.outage
+    return [
+      '',
+      `The app stopped answering on its live address between ${from} and ${to} (UTC), and we are looking for why. It started answering again by itself, or when it was started again.`,
+      'Manifest did not notice it stop, so there is no record of why, and nothing it wrote while it ran can be read.',
+      'Look in the code for what could stop it answering or hang it: an error nothing catches, a request that never ends, memory or connections that grow without limit. Change only what explains it. If nothing in the code does, change nothing, and say so plainly in your account.',
       CHANGE_PARAGRAPH,
     ]
   }

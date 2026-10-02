@@ -8,7 +8,7 @@ import type { Conversation, Run, Store } from '../store/db.js'
 import type { Hub } from './events.js'
 import { guard } from './guard.js'
 import { lineOf, waitsOnPerson } from './line-state.js'
-import type { Asked, DryRunEvidence } from './piece-state.js'
+import type { Asked, DryRunEvidence, Outage } from './piece-state.js'
 import { LIMITS, type AppConversation, type Chip } from './progress.js'
 
 /**
@@ -35,6 +35,8 @@ export const FIX_WORDS = "It didn't start on the trying-out address"
 export const LIVE_FIX_WORDS = "It didn't start on the live address"
 /** A fix for a dry run that signed nobody in (F5 Task 7; Words proposed for Rich, S1: M4). */
 export const DRY_RUN_FIX_WORDS = "The dry run didn't sign anyone in"
+/** F6 Decision 9: a fix for the live address that stopped answering (Words proposed for Rich). */
+export const OUTAGE_FIX_WORDS = "Your students couldn't reach it"
 /**
  * A detail a sign-in carries, as the platform names one (`mail`, `ubcEduCwlPuid`, an `urn:oid:`):
  * never a sentence, since the page's evidence reaches the lead's view.
@@ -70,10 +72,22 @@ function dryRunOf(value: unknown): DryRunEvidence | undefined {
 }
 
 /**
+ * An outage's two moments (F6 Decision 9), exactly: when the live address stopped answering, and
+ * when it answered again, as our own watch wrote them; never a sentence, and never backwards.
+ */
+function outageOf(value: unknown): Outage | undefined {
+  if (!isObject(value) || Object.keys(value).length !== 2) return undefined
+  const { from, to } = value
+  if (typeof from !== 'string' || !MOMENT.test(from)) return undefined
+  if (typeof to !== 'string' || !MOMENT.test(to)) return undefined
+  return Date.parse(from) < Date.parse(to) ? { from, to } : undefined
+}
+
+/**
  * `{ words, token }`, `{ words, token, refusal: { approvalId } }` (*[Talk it through]*: F5 Task 8),
  * `{ fix: { incidentId, environment? }, token }` (`staging` when absent, as F4's; `production`
- * for the live address: F5 Decision 13) or `{ fix: { dryRun }, token }` (F5 Task 7), and nothing
- * else.
+ * for the live address: F5 Decision 13), `{ fix: { dryRun }, token }` (F5 Task 7) or
+ * `{ fix: { outage: { from, to } }, token }` (F6 Decision 9), and nothing else.
  */
 function changeOf(
   body: unknown,
@@ -81,6 +95,7 @@ function changeOf(
   | { words: string; token: string; refusal: { approvalId: string } | null }
   | { incidentId: string; environment: FixEnvironment; token: string }
   | { dryRun: DryRunEvidence; token: string }
+  | { outage: Outage; token: string }
   | undefined {
   if (!isObject(body)) return undefined
   const keys = Object.keys(body).length
@@ -107,6 +122,11 @@ function changeOf(
     if (Object.keys(fix).length !== 1) return undefined
     const dryRun = dryRunOf(fix['dryRun'])
     return dryRun === undefined ? undefined : { dryRun, token }
+  }
+  if ('outage' in fix) {
+    if (Object.keys(fix).length !== 1) return undefined
+    const outage = outageOf(fix['outage'])
+    return outage === undefined ? undefined : { outage, token }
   }
   const { incidentId, environment = 'staging' } = fix
   if (Object.keys(fix).length !== ('environment' in fix ? 2 : 1)) return undefined
@@ -204,9 +224,11 @@ export function registerApps(
           ? asked.words
           : 'dryRun' in asked
             ? DRY_RUN_FIX_WORDS
-            : asked.environment === 'production'
-              ? LIVE_FIX_WORDS
-              : FIX_WORDS
+            : 'outage' in asked
+              ? OUTAGE_FIX_WORDS
+              : asked.environment === 'production'
+                ? LIVE_FIX_WORDS
+                : FIX_WORDS
       const change = store.createChange(who.person.id, projectId, titleOf(words), words)
       store.addMessage(change.id, 'we', { kind: 'project', project: made })
       store.addMessage(change.id, 'words' in asked ? 'person' : 'we', {
@@ -219,9 +241,11 @@ export function registerApps(
             ? null
             : 'dryRun' in asked
               ? { dryRun: asked.dryRun }
-              : asked.environment === 'production'
-                ? { incidentId: asked.incidentId, environment: 'production' }
-                : { incidentId: asked.incidentId },
+              : 'outage' in asked
+                ? { outage: asked.outage }
+                : asked.environment === 'production'
+                  ? { incidentId: asked.incidentId, environment: 'production' }
+                  : { incidentId: asked.incidentId },
         ...('words' in asked && asked.refusal !== null ? { refusal: asked.refusal } : {}),
       } satisfies Asked)
       tokens.put(change.id, asked.token)
