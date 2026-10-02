@@ -23,6 +23,7 @@
  *   node $W fall --stop           (Rich's word: Docker) the live app's container stopped; the email
  *                                 and the band; a helper's line; Start it again with the second
  *                                 sign-in; answering again and its email; What happened?
+ *   node $W again                 the fall's second half alone, from Start it again (to resume)
  *   node $W switch                switch it off (second sign-in), 410, the card; back on, the watch
  *                                 minted again; Start it for your students; the history page
  *   node $W draft                 a draft made, then deleted from its Overview; its slug free
@@ -237,11 +238,16 @@ async function fillIdp(page: Page, user: string) {
  * list's `aria-label` counts; never a status the page drew before the press. Answers whether the
  * second sign-in was asked.
  */
+/**
+ * After a press: the second sign-in asked, or the press ENDED (`ended`: an ending's words, never
+ * a working line). The card arrives after a moment's working line (ORIENTATION §7, F5 sitting 6),
+ * so a working line here would be taken for "not asked" (7100's first run: Start it again).
+ */
 async function signInAgainIfAsked(
   page: Page,
   user: string,
   then: string,
-  going: string[],
+  ended: string[],
 ) {
   const asked = await page.until(
     `the press under way, or the second sign-in asked`,
@@ -255,7 +261,7 @@ async function signInAgainIfAsked(
             )
           ? 'going'
           : '',
-    [going],
+    [ended],
     60_000,
   )
   if (asked !== 'asked') return false
@@ -672,6 +678,18 @@ async function fall() {
       !(await helper.names('button')).some((b) => b.name === 'Start it again'),
   )
   await helper.shot('band-down-helper')
+  await startAgain()
+}
+
+/** The fall's second half (`again` alone resumes it): Start it again, answering again, What happened? */
+async function startAgain() {
+  const projectId = need('projectId')
+  const slug = need('slug')
+  const name = need('name')
+  const owner = await as('instructor')
+  const list = await membersOf(owner, projectId)
+  const email = (login: string) => list.find((m) => m.cwlLogin === login)?.email ?? ''
+  const url = field(await environments(owner, projectId), 'production', 'url')
   // The owner's band, at both widths, then Start it again.
   const page = await tabFor('instructor')
   await atEachWidth(
@@ -683,10 +701,7 @@ async function fall() {
   await page.setWidth(1440)
   await page.press('Start it again')
   if (
-    await signInAgainIfAsked(page, 'instructor', 'start-again', [
-      'Starting it again',
-      "It's answering again.",
-    ])
+    await signInAgainIfAsked(page, 'instructor', 'start-again', ["It's answering again."])
   )
     await page.press('Start it again')
   await page.untilWords("It's answering again.", 'main', 3 * MINUTE)
@@ -758,12 +773,7 @@ async function switching() {
   }
   report.check('back on: our watch minted again, a new token', minted(after))
   await page.press('Start it for your students')
-  if (
-    await signInAgainIfAsked(page, 'instructor', 'students', [
-      'Letting your students in',
-      `${name} is live.`,
-    ])
-  )
+  if (await signInAgainIfAsked(page, 'instructor', 'students', [`${name} is live.`]))
     await page.press('Start it for your students')
   await page.untilWords(`${name} is live.`, 'main', 4 * MINUTE)
   await page.shot('students-again')
@@ -877,6 +887,7 @@ const steps: Record<string, () => Promise<unknown>> = {
   quiet,
   members,
   fall,
+  again: startAgain,
   switch: switching,
   draft,
   mail,
