@@ -629,6 +629,35 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
     expect(screen.queryByText(k.band.goingLive('Mock course app'))).toBeNull()
   })
 
+  it('F5b: switched off, an unasked sign-off raises no need on Your apps (Decision 16; the sitting 2 review’s M9)', async () => {
+    const k = words.keeping
+    const unasked = {
+      ...fixtures.LAUNCH_READINESS,
+      items: fixtures.LAUNCH_READINESS.items.map((i) =>
+        i.id === 'admin-approval' ? { ...i, state: 'unmet' as const, since: null } : i,
+      ),
+    }
+    const read: string[] = []
+    render(
+      <App
+        platform={{
+          ...mockPlatform({ state: 'archived', archivedAt: '2026-09-29T17:00:00.000Z' }),
+          getLaunchReadiness: (id: string) => {
+            read.push(id)
+            return Promise.resolve(unasked)
+          },
+        }}
+      />,
+    )
+    const card = (
+      await screen.findByRole('heading', { name: 'Mock course app' })
+    ).closest('.mf-card') as HTMLElement
+    expect(await within(card).findByText(k.card.switchedOff('29 September'))).toBeTruthy()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByText(k.band.goingLive('Mock course app'))).toBeNull()
+    expect(screen.queryByRole('region', { name: k.band.label })).toBeNull()
+  })
+
   it('a checklist that cannot be read: the card as it is, without the line', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     render(

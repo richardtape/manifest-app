@@ -490,6 +490,19 @@ describe('F6 Task 9: coming back to the Overview (moment 16, design §2 and §4)
     expect(screen.queryByText(k.band.goingLive(PROJECT.name))).toBeNull()
   })
 
+  it('F5b: switched off, an unasked sign-off raises no need (Decision 16; the sitting 2 review’s M9)', async () => {
+    ours({})
+    const s = await open(
+      `/apps/${SLUG}`,
+      stage({ readiness: signOff(null), archived: true }),
+    )
+    await ready()
+    await waitFor(() => expect(s.called('getLaunchReadiness')).toHaveLength(1))
+    await screen.findByText(k.card.switchedOff('29 September'))
+    expect(screen.queryByText(k.band.goingLive(PROJECT.name))).toBeNull()
+    expect(screen.queryByRole('region', { name: k.band.label })).toBeNull()
+  })
+
   it('asks our server for this app’s needs and lines alone', async () => {
     const asked = ours({})
     await open(`/apps/${SLUG}`)
