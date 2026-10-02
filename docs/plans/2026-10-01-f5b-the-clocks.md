@@ -941,7 +941,9 @@ who asked for the sign-off (nothing reads a request back: the row says *asked*).
 - **The walks use `scripts/walk/`** (`8a63767`), and the sitting's end runs `check-keeping.sh` with its half two.
 - **Unchanged, checked:** the store is still at version 5 (Task 5's version 6 holds); the shared fakes are still
   `screens.test.tsx`'s `mockPlatform` and `two`; no step-up is asked by anything F5b presses.
-- **Open questions for Rich** (none blocks part one; each has the plan's default, which stands until he says otherwise):
+- **Open questions for Rich** (none blocks part one; each has the plan's default, which stands until he says otherwise).
+  **Answered by Rich, 2026-10-01 ~22:35 PDT**, in `manifest-app-3a`'s session: *"All three defaults"*: the nudge as
+  approved, the four proposed lines as written, and no F5b button on a switched-off app.
   1. **The nudge** (Decision 15): the unasked sign-off is *needs you* (the design's §3, which he approved), and F6's band
      now says so on *Your apps* and the Overview from the moment a version is on trying-out, before the three steps are
      done. *Default:* as approved. *The alternative:* the unasked row is *not yet* until the steps are done (one condition

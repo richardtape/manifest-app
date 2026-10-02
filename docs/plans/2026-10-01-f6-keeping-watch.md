@@ -1522,7 +1522,8 @@ empty). The admin grant was run by `manifest-8e` at Rich's own word in its sessi
 - **A test race of F5's** (`f0429f1`): the second closing run went 2182/2183 on Going live's *"launched since"*, which
   answered the checklist before the page had asked under the whole suite's load (10 runs alone passed); it now waits for the
   ask (§7's trap). Nothing of the page moved.
-- **For Rich:**
+- **For Rich:** *(**approved by Rich, 2026-10-01 ~22:35 PDT**, in `manifest-app-3a`'s session: "Approve all", the words
+  marked "ours" below and the hand-over held back; the deferred minor stays deferred)*
   - **words marked "ours"**: the gate's sentence on *Start it again* and *Start it for your students* (*"It can't go to your
     students yet. Going live shows what it needs."*); the undated forms of the RELEASE_NOT_STAGED question (*"…put the one
     your students had back…"*, *[Put theirs back first]*); *"We stopped waiting, and couldn't see how it ended."*; *"Keep it"*;
