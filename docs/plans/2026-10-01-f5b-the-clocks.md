@@ -54,7 +54,7 @@ administrator to sign off the version on trying-out. Walk-through moments **10 a
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements** (M1–M8), on 7100 in the platform's window, at Rich's word. **Alone.** Sitting 2 may run before it (it needs no platform), but not Tasks 5–7 | not started |
-| 2 | 2, 3, 4 | **Part one.** The three steps (`steps.ts`) from today's records, *waiting since*, F5's admission kept on the current card; *Going live*, the band, *Your apps*' line, *Trying out*'s line and **[Open it]**; **the sign-off request, whole** | **done on a branch, `f5b-s2`, not merged** (`manifest-app-80`, 2026-10-01, `6a55b9d`..`608521e`): Rich merges after his demo; **the walks at 1440 and 375 and the acceptance scripts are owed after the merge** |
+| 2 | 2, 3, 4 | **Part one.** The three steps (`steps.ts`) from today's records, *waiting since*, F5's admission kept on the current card; *Going live*, the band, *Your apps*' line, *Trying out*'s line and **[Open it]**; **the sign-off request, whole** | **done 2026-10-02** (`manifest-app-80` on the branch `f5b-s2`, 2026-10-01; **merged by `manifest-app-c0`**, 2026-10-02, after Rich's demo and F6's click): rebased onto `main` (m1–m4 met it: both sides kept, m3 carried onto the step card, `ab3841e`), the review's M9 test (`5b2bbf6`), fast-forwarded (`807347f`); **walked at 1440 and 375 in the mock's seven stages: one defect found and fixed** (`fc0cce1`: a later step unnumbered, the current one read *1.*); the six acceptance scripts pass from a fresh dev database |
 | 3 | 5, 6 | **Part two, when FE-46 lands.** The *Privacy answers* agent, our store's next version and its routes; the assessment's card: **[Start]**, the disclosure, the fields, **[Send it to the Manifest team]** | **waits for FE-46** |
 | 4 | 7 | The registrations' cards: the plain words, **[Take it out]**, stale drafts, every refusal; F5's admission gone for good | **waits for FE-46** |
 | 5 | 8 | **The acceptance:** `scripts/check-clocks.sh` in mock mode; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **waits for FE-46** (and FE-46's own mock half). **(S0)** The platform's sitting 10 has closed (`8ff925f`) |
@@ -1034,3 +1034,44 @@ who asked for the sign-off (nothing reads a request back: the row says *asked*).
 - **The gates, twice, in the worktree** (`608521e`): `pnpm test` 2269/2269 and 2269/2269 (93 files; 2183 on `main` at
   `3ae288c`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check` clean; `pgrep -fl vitest` empty at the start and the close.
 
+### 2026-10-02 — Sitting 2, merged: the rebase, the walks, the acceptance (session `manifest-app-c0`, after Rich's demo)
+
+- **Order, at Rich's word:** F6's walk on 7100 and his click first (the platform held 7100 for it); the rebase and the gates in
+  the worktree during the click's 30-minute wait; nothing landed on `main` until his click was done.
+- **The rebase** (`f5b-s2`, in `/Users/rich/Developer/manifest-app-f5b`, from `3ae288c` onto `main`'s `83535aa`, then
+  `0af3847`): the dry `merge-tree` predated m1–m4, which met it in seven files. **Every conflict kept both sides:**
+  `ClockItem` (F5b's `attention` and m3's `level`); *Going live* (F5b's `<Steps>` in place of F5's clocks and staging line,
+  D2); its test (the title read by class); the Overview (F5b's band and m1's no empty list) and its test (`kinds` and
+  `archived`); the sign-off (m4's `useFocusBack` and F5b's note limits) and its test (m4's focus test beside F5b's unasked
+  and asked ones). **m3 carried onto the step card** (`ab3841e`): the rebase made *Going live*'s headings 1, 3, 2 (m3's own
+  test red), so the one card's title is `h2`; the card's test reads it by class and asserts `H2` (red with the level
+  removed). **The review's M9** (`5b2bbf6`): a switched-off app with an unasked sign-off raises no need, on the Overview
+  and *Your apps*; green at once (`needsStillTrue`), each page's switch-off filter made blind turns its test red alone.
+  Prettier on one resolution (`807347f`). In the worktree: 2299/2299 twice, lint, typecheck clean. Fast-forwarded;
+  the worktree removed, `f5b-s2` deleted.
+- **The walks** (`scripts/walk/`, a script in the session's scratchpad; at 1440 and 375; our watch answered as kept, so no
+  page minted one; our mock restarted for each stage): `MANIFEST_MOCK_RECORDS=none` (step 1 current, the band, *Trying
+  out*'s line *"…: not started yet."*, no **[Open it]**), `=assessed` (step 2 current, the band, the line, no **[Open it]**),
+  `=approved` (no card, no band, **[Open it]**, no line), the default (step 1 current with the Privacy Office, *waiting 14
+  days*, **[Open it]**, no line): each 23/23 after the fix below. `MANIFEST_MOCK_APPROVAL=pending` (needs you, the one
+  press; the note open in place; **[Ask them]** sent one `requestApproval` with the note; the asked row by DevTools'
+  rewrite: *"A Manifest administrator looks at this next."*, *"asked 30 September · waiting 2 days"*, nothing to press)
+  14/14; `=rejected` (F5's refusal and **[Talk it through]**, no **[Ask…]**) 6/6; the default (signed off, nothing to
+  ask) 6/6.
+  - **The walk found one defect, fixed** (`fc0cce1`): **the steps after the current one were unnumbered, and the current
+    one read *1.*** wherever it stood (the mock's `assessed`: step 2 read *1.*). A `<li>` laid out as a grid is no list
+    item: it loses its marker and its count. The line's grid moved into the `<li>` (`.going-live__step-line`). No unit test
+    reads `app.css`; the walk is the test: each step's `<li>` a list item, red before at both widths (`grid, list-item,
+    grid`), green after in all four stages, and seen numbered 1, 2, 3 in the screenshots.
+  - The walk's own two bugs, fixed in the walk: the contract's client passes `fetch` a `Request` (a spy reading `init`
+    saw a `GET`), and the asked row found by its title (it has no button).
+- **The acceptance** in mock mode, from a fresh dev database (the walks' kept as `app-before-f5b-acceptance.sqlite`), our
+  mock on its default: `check-seeing.sh` 8/8, `check-going-live.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh`
+  18/18, `check-building.sh` 12/12, `check-keeping.sh` 8/8 and 12/12.
+- **The gates on `main`** at `fc0cce1`: `pnpm test` 2299/2299 twice (93 files), lint, typecheck, format clean.
+- **For Rich** (the branch entry's list, unchanged, now on `main`): the new words; M1 and M2 read from the platform's code
+  until sitting 1 measures them; *"the Manifest team is emailed"* on an ask, which nothing does until FE-46; his *Trying
+  out* sentence reading stale once registered; **[Open it]** hidden with a change on file; the day words in the reader's
+  zone beside counts in Vancouver days.
+- **Next:** sitting 1, the measurements on 7100, at Rich's word (and after the platform's sitting 12, if he runs it
+  first). Part two waits for FE-46's spec action (drafted, not applied).

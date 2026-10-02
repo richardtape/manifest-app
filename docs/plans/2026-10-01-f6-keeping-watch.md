@@ -54,7 +54,7 @@ went live. Walk-through moments **16, 19 and 20**. Moments 17 and 18, and the *A
 | 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | **done 2026-10-01** (`manifest-app-00`, mock mode only, beside the platform's sitting 9 and its holds): `238e6a0` (Task 6), `5d95181` (Task 7). **The recovery is declared at the third answer and dated from the first; a fall within 30 minutes of a recovery, and its recovery, are told to nobody; a restored app is watched again from its first answer; `/history` is a member's alone; a switched-off app's needs are its questions**; Tasks 9, 10 and 12 noted (S4). 1992 tests twice; the five acceptance scripts pass; the platform's `a230c1a` adopted. **The email bodies approved by Rich with A, B and C** (`manifest-app-3a`'s edit, after this sitting). FE-46, FE-47, FE-5 (a) written |
 | 5 | 8, 9 | The page: the platform's new calls; the watch token minted; *Your apps* and the Overview (the band, *Since you were last here*, the card's states, *How we keep watch*); the history page | **done 2026-10-01** (`manifest-app-00`, the same session as sitting 4, mock mode, beside the platform's sitting 10 and its mock edit): `ed8c6af` (Task 8), `c20cfff` (Task 9). **The watch minted on every app page, on *Your apps* one at a time, and after Make it, never for an app switched off; the band, *Since*, *How we keep watch*, the history page, the card's two new states; our server's reads never hold the page**; walked at 1440 and 375 with `scripts/walk/` (one defect found and fixed). 2094 tests twice; the five acceptance scripts pass; `check-keeping.sh` half one 8/8; the platform's `0969d45` adopted. **Words marked "ours" for Rich** |
 | 6 | 10, 11 | The page: *Start it again* and *What happened?*; switching off, back on, *Start it for your students*, and delete | **done 2026-10-01** (`manifest-app-s6`, overnight at Rich's arrangement, mock mode, beside the platform's sitting 10 and its holds; in a worktree, each task fast-forwarded to `main`): `dc3e8e6` (Task 10), `c864e7d` (Task 11), `635be85` (the walk's fix), `047d6a7` (its review's fixes), `f0429f1` (a test race). **Start it again reads the live address at the press; RELEASE_NOT_STAGED asks with both days; What happened? finds its fix again (the outage's lookup route, S4); switching off repeats an unfinished teardown once; back on mints the watch; Start it for your students is offered by the platform's own state; PROJECT_ARCHIVED is said one way on every press**; walked at 1440 and 375 (one defect found and fixed: the hand-over while not running); **a fresh review of the sitting** (three Important, two minors re-graded, all fixed test-first). 2183 tests twice; the five acceptance scripts pass from a fresh dev database; the platform's sitting 10 (`b571471`, `6d76459`, closed at `8ff925f`) adopted. **Words marked "ours" for Rich**; **the hand-over held back while not running, for Rich** |
-| 7 | 12 | **The acceptance:** `scripts/check-keeping.sh` against the mock and Mailpit; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **part one done 2026-10-02** (`manifest-app-s7`, overnight, mock mode, in a worktree): Steps 0–2. `check-keeping.sh` 8/8 and 12/12 with the plan's four controls, the five others pass; **the whole-branch review: no Critical, two Important fixed test-first** (`fca7e49`: a switched-off app's band said only its questions, by the platform's state; `d3600be`: our kept members trusted only while we watch, *Your apps* to the apps the platform lists; **FE-48**); nine minors (m64–m71, one ruling). **The morning staged:** `scripts/walk/keeping-7100.ts` (`2b0cb70`, smoke-tested on the mock) and the click list (the dated entry). 2193 tests twice. **The walk on 7100 and Rich's click owed** |
+| 7 | 12 | **The acceptance:** `scripts/check-keeping.sh` against the mock and Mailpit; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **part one done 2026-10-02** (`manifest-app-s7`, overnight, mock mode, in a worktree): Steps 0–2. `check-keeping.sh` 8/8 and 12/12 with the plan's four controls, the five others pass; **the whole-branch review: no Critical, two Important fixed test-first** (`fca7e49`: a switched-off app's band said only its questions, by the platform's state; `d3600be`: our kept members trusted only while we watch, *Your apps* to the apps the platform lists; **FE-48**); nine minors (m64–m71, one ruling). **The morning staged:** `scripts/walk/keeping-7100.ts` (`2b0cb70`, smoke-tested on the mock) and the click list (the dated entry). 2193 tests twice. **Part two done 2026-10-02** (`manifest-app-c0`, on 7100 in `manifest-5a`'s window, at Rich's word): **the walk** (`keeping-7100.ts`, every step on 7100; four of the walk's own bugs fixed, `9a9bdc1`, `994a285`, `7ef9712`, `0af3847`; the product's only blemish m69, seen live) and **Rich's click** (*"yes it all looks good"*; m75 found). **F6 EXECUTED** |
 
 **Every sitting starts** with `pgrep -fl vitest` (a stray worker of ours loads the machine the platform times its tiers
 against; the platform's own are not ours to stop) and **Step 0: the platform's landings** (*Adopting what lands*,
@@ -1700,3 +1700,55 @@ empty). The admin grant was run by `manifest-8e` at Rich's own word in its sessi
   `check-keeping.sh`'s `DELETE`); our mock on 7102 (pid 24850, on `6d76459`). Nothing of ours on 7100.
 - **Next:** Step 3, the walk on 7100, **at Rich's word**, with the list above; then Step 4, **Rich's click**; then the close
   (the gates, the record, F6 executed) and F6b's plan (D1).
+
+### 2026-10-02 — Sitting 7, part two: the walk on 7100 and Rich's click (session `manifest-app-c0`, F6 EXECUTED)
+
+- **Rich's word** (this session, ~10:05 PDT, after his demo): the walk first, before F5b sitting 2's merge and ahead of the
+  platform's sitting 12 (`manifest-5a` held 7100, no Vitest, tier, restart or reset, from ~10:00 until our WALK DONE at
+  12:05); the walk to type the laptop IdP's test passwords; the slug `keep-walk-1002`; `fall --stop`. Our server already in
+  edge mode (since 07:51, a fresh dev database). Step 0: manifest at `6c77c15` (documents only since `6d76459`); contract
+  1.5.0, 72 operations; our mock on 7102 serving the platform's working tree.
+- **Step 3, the walk** (`scripts/walk/keeping-7100.ts`, its first run on 7100, `OUT` in the session's scratchpad):
+  - `check` 5/5. `people`: the four signed in; **`operator` already an administrator** (granted the night before by the
+    platform session), so no grant. `make keep-walk-1002`: created in 8.9 s, built, on trying-out healthy (1/1). `launch`:
+    the records, the dry run (9.2 s, passed), the sign-off, the owner's press: live at 17:16:46Z, the students' address
+    routed (2/2).
+  - `quiet`: 9/10, then **10/10**: *How we keep watch* is drawn **closed** (as designed), and the walk read its hidden body
+    (`9a9bdc1`: opened by its summary first). Our watch minted by the page, kept.
+  - `members`: 0/1, then **2/2**: **the platform refuses `student` as a member** (`409 MEMBER_MAY_NOT_BUILD`, its 5a), so
+    the helper's add (and the email it was to cause) never happened, while colleague's own adding rightly emailed nobody
+    (Decision 13: the actor and the member it is about are its only owners). **Ruling: the helper is `operator`** (the
+    one other laptop person who may build; our pages read the member's role, so it sees a helper's view; cost: a
+    non-administrator helper is not walked) (`994a285`). *"Test Operator was added"* to colleague alone; a re-add answers
+    `201` with no event (the platform's contract, `manifest-5a` read it).
+  - `fall --stop` (17:23:30Z, `mf-keep-walk-1002-production-3cd274cc-19ecb3d2-app`): the address `502` unrouted; **down
+    from 17:24:05Z; *can't reach* to both owners in 103 s, not the helper**; the helper's band (no button); the owner's at
+    1440 and 375. Then the walk stopped: **Start it again's working line came a moment before the second sign-in's card**,
+    and the walk took it for *"not asked"* (ORIENTATION §7's trap, F5 sitting 6). The product was right (the card, read
+    over DevTools). Fixed (`7ef9712`): the helper waits for the card or an *ending*; the fall's second half is its own
+    step, `again`. **`again` 12/12**: the second sign-in asked and taken; *"It's answering again."* in ~5 s; the outage
+    17:24:05Z → 17:30:05Z (`to` the first of three answers); *answering again* to both owners; *What happened?* opened.
+  - `switch`: 16/17. The switch-off with its second sign-in, `410`, the card at both widths; back on, the watch minted
+    again; *Start it for your students*; the history at both widths with every line and **no false gap**. The red was the
+    walk's: the platform names who added someone, so the line is *"Test Instructor added Test Operator"* (the click list
+    allows both forms). Fixed (`0af3847`); **not re-run** (it would switch Rich's app off and on again before his click),
+    the fixed check proven on the recorded text.
+  - `draft` 6/6: made, deleted from its Overview with the second sign-in, `404`, its slug free, our watch forgets it, **its
+    GitHub repository removed by the platform's delete**. `mail`: six emails, word for word, each as Rich approved them.
+  - **m69 seen live:** *What happened?*'s round (the real model, its lead about to commit a fix) met `createCommit`
+    `UNAUTHENTICATED` the second the walk switched the app off, and instructor was emailed *"we need you"*. Nothing was
+    committed. At Rich's word the conversation was stopped through our API before his click, so his band held only
+    *answering again*.
+- **Step 4, Rich's click** (11:30–12:00 PDT, in his browser as `instructor`; Mailpit open): the fall at his *"go"*
+  (`stop --stop` at 18:33:00Z); **can't reach at 18:34:05Z** (65 s) to instructor and colleague, not operator; from the
+  email's link, **Start it again** with his second sign-in (*"it says it's answering again, nice"*); **switched off 48 s
+  later** (18:46:02Z), before the third answer, so no *answering again* email and no recovery line: **m75** (the switch-off
+  makes the outage `off`; the band right throughout, nothing stale after); back on, *Start it for your students*, live at
+  18:48:45Z; the history. **Rich: *"yes it all looks good"*.** The walk's 10:32 email stands for *answering again*.
+- **Left on 7100** (told to `manifest-5a` with WALK DONE): `keep-walk-1002`, live, owners instructor and colleague,
+  operator a helper; **`Manifest-local-dev/keep-walk-1002` on GitHub, for Rich to delete**. Nothing must survive.
+- **Gates** on `main` at `fc0cce1` (F5b sitting 2 merged after the click): `pnpm test` **2299/2299 twice** (93 files),
+  lint, typecheck and format clean; the six acceptance scripts pass in mock mode from a fresh dev database (seeing 8,
+  going-live 8, slice 8, describing 18, building 12, keeping 8 and 12); `pgrep -fl vitest` empty at the start and the
+  close.
+- **F6 is executed.** Next by this plan's own close: **F6b's plan** (D1), written from its approved design.

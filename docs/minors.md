@@ -190,7 +190,7 @@ green; nothing it found costs the demo).
 | m66 | F6's whole-branch review, M3 | A watch token the page minted is left alive when our server's hand-over fails (a `502`, a timeout): a year-long read-only token in the person's name, one more on each visit while it fails. | `packages/web/src/screens/keeping/watch.ts:67` (the `catch` never revokes `minted.token.id`). | S | robustness |
 | m67 | F6's whole-branch review, M4 | The hourly *still waiting for you* scan has no guard for the past: the first hand-over of an older app makes each long-stale waiting conversation on it one email an hour later; and the first scan runs only an hour after each start (a restart postpones it). | `packages/server/src/keeping/keeper.ts:306` (`scan`), `packages/server/src/store/db.ts:202` (`idleConversations`). | S | faculty-visible |
 | m68 | F6's whole-branch review, M5 | An app's history grows without bound, and each `/api/needs` and `/api/since` load reads every kept app's whole history up to three times. Fine at pilot scale. | `packages/server/src/api/keeping.ts:114`, `:126`, `:202`. | M | robustness |
-| m69 | F6's whole-branch review, M6 | Someone who switches off or deletes an app while a round is building on it is emailed *"we need you"*: the switch-off revokes the round's token, the round pauses, and `workEnded` emails its person (Decision 13's spirit: nobody is told what they did). | `packages/server/src/keeping/keeper.ts:460` (`workEnded`) with `api/line-state.ts`. | S | faculty-visible |
+| m69 | F6's whole-branch review, M6 | Someone who switches off or deletes an app while a round is building on it is emailed *"we need you"*: the switch-off revokes the round's token, the round pauses, and `workEnded` emails its person (Decision 13's spirit: nobody is told what they did). | `packages/server/src/keeping/keeper.ts:460` (`workEnded`) with `api/line-state.ts`. **Seen live on 7100, 2026-10-02** (F6 sitting 7's walk: *What happened?*'s round refused `createCommit` `UNAUTHENTICATED` the second the walk switched the app off, and instructor was emailed *"we need you"*). | S | faculty-visible |
 | m70 | F6's whole-branch review, M7 | The keeper starts inside `buildServer`, before our server knows it holds 7105; `deliverUnfinished` resends each `sending` row without claiming it afresh, so a second process (§7's idle watchers, an overlapping restart) can send an email the live server is also retrying. | `packages/server/src/app.ts:209` (`keeper.start()`), `packages/server/src/keeping/mail.ts:76`. | S | robustness |
 | m71 | F6's whole-branch review, M8 | `close-out.sh`'s `watchers()` matches the checkout's root as a substring, so run from `/Users/rich/Developer/manifest-app` it also matches a sibling worktree's (`manifest-app-s6`, `-s7`) server and would stop it. For Rich's review of the script. | `scripts/close-out.sh:92-95` (`index($0, root)`; `index($0, root "/")` closes it). | S | scripts |
 
@@ -208,6 +208,16 @@ kept state, or the stream's `keeping.stopped` within a minute); test with a roun
 **m70.** Start the keeper after `listen`, or give the boot's resend its own compare-and-set claim (`emails.state`
 `sending` → `sending` with a new claim time). Test with two keepers on one store.
 **m71.** One word in the `awk`, and a `--dry-run` with a sibling worktree's `tsx watch` listed by name.
+
+**From F6 sitting 7's walk on 7100 and Rich's click** (`manifest-app-c0`, 2026-10-02).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m75 | Rich's click on 7100 | An outage ended by a switch-off never gets its recovery: no *answering again* email, and the history reads *"Your students couldn't reach it"*, then *"switched it off"*, with no *"Answering again. It was down for…"* line. Rich pressed *Start it again* and switched the app off 48 s later, before the third answer (S4: a recovery is declared at the third answer); the switch-off makes the outage `off`, and a restored app is watched afresh. The band is right throughout (no stale need after). | `packages/server/src/keeping/outage.ts:67` (`off` drops a `down` outage with its answers so far); `keeping/happenings.ts`'s lines. | S | faculty-visible |
+
+**m75.** Decide first (Rich's): when a switch-off ends an outage that has started answering, either close it at its first
+answer (a `keeping.answering` row and its line, no email: the owner is the one who switched it off), or say nothing more.
+Test in `outage.test.ts`: down, one answer, `off`.
 
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
