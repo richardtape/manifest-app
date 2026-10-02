@@ -6,7 +6,8 @@
 
 **Status: WRITTEN 2026-10-01** by `manifest-app-d9` with Rich, from the design he approved section by section and then
 reviewed as a file (*"Approved, write the plan"*), [`2026-10-01-f5b-the-clocks-design.md`](./2026-10-01-f5b-the-clocks-design.md):
-**read it first**. **Not yet approved**: Rich reviews this plan and chooses how it is executed. Written **ahead of the
+**read it first**. **APPROVED BY RICH, 2026-10-01** (*"Approved, native"*, session `manifest-app-d9`), **to be executed
+natively** (superpowers:executing-plans, as F3 to F6 ran), part one after F6. Written **ahead of the
 platform's launch-path sitting 10** (D1), and **in two parts**: part one builds on today's contract; part two waits for
 **FE-46** (the *sent to LTIC* step), which Rich filed and carried the same day.
 
@@ -805,3 +806,7 @@ who asked for the sign-off (nothing reads a request back: the row says *asked*).
 - **FE-46 needs Rich's confirmation to a platform session**, then a spec action, before any platform task builds it.
 - **Part one needs nothing from the platform**: it can run after F6. Part two waits for FE-46; its acceptance for the
   platform's sitting 10.
+- **The plan approved by Rich** (*"Approved, native"*): executed natively, one sitting per session, from F6's close.
+- **Beside it, the contract digest's addendum** (`2d94516`, written by a subagent of this session and checked here: its
+  counts against the contract, two entries against the operations read for this design): every operation, event, code
+  and schema from 1.4.0 at `186fa34` to 1.5.0 at `a230c1a`, and what the old digest no longer gets right.
