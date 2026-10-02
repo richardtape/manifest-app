@@ -19,7 +19,12 @@ import { mayRead, reachable } from './sharing.js'
 /** Who is listening to which conversation. One per server: never a module global. */
 export interface Hub {
   publish(conversationId: string, frame: Progress): void
-  subscribe(conversationId: string, listener: (frame: Progress) => void): () => void
+  /** `personId`: whose page it is (F6b D3: every member may hold one); a test's listener is nobody's. */
+  subscribe(
+    conversationId: string,
+    listener: (frame: Progress) => void,
+    personId?: string,
+  ): () => void
   /**
    * The steps at work now, each as its `now` frame (Review Focus 5): a connection made after a
    * step began hears it, so a reconnect mid-step shows it working. After a restart there are
@@ -35,12 +40,17 @@ export interface Hub {
   /** True when this claim was the conversation's, and is now released. */
   unclaim(conversationId: string, claim: symbol): boolean
   busy(conversationId: string): boolean
-  /** F6 Decision 14: a page holds this conversation's stream. */
-  watched(conversationId: string): boolean
+  /**
+   * F6 Decision 14: a page of THIS PERSON holds this conversation's stream. Since F6b (D3) a
+   * colleague's page may hold it too, and that is not its person watching (the review's I1).
+   */
+  watched(conversationId: string, personId: string): boolean
 }
 
 export function createHub(): Hub {
   const listeners = new Map<string, Set<(frame: Progress) => void>>()
+  /** Whose page each listener is, by conversation. */
+  const readers = new Map<(frame: Progress) => void, string | undefined>()
   const working = new Map<string, Map<string, Progress>>()
   const claims = new Map<string, symbol>()
   return {
@@ -55,7 +65,10 @@ export function createHub(): Hub {
       return true
     },
     busy: (conversationId) => claims.has(conversationId),
-    watched: (conversationId) => listeners.has(conversationId),
+    watched: (conversationId, personId) =>
+      [...(listeners.get(conversationId) ?? [])].some(
+        (listener) => readers.get(listener) === personId,
+      ),
     publish(conversationId, frame) {
       if (frame.kind === 'step') {
         const now = working.get(conversationId) ?? new Map<string, Progress>()
@@ -67,11 +80,13 @@ export function createHub(): Hub {
       for (const listener of [...(listeners.get(conversationId) ?? [])]) listener(frame)
     },
     working: (conversationId) => [...(working.get(conversationId)?.values() ?? [])],
-    subscribe(conversationId, listener) {
+    subscribe(conversationId, listener, personId) {
       const set = listeners.get(conversationId) ?? new Set()
       listeners.set(conversationId, set.add(listener))
+      readers.set(listener, personId)
       return () => {
         set.delete(listener)
+        readers.delete(listener)
         if (set.size === 0) listeners.delete(conversationId)
       }
     },
@@ -213,9 +228,17 @@ export function registerEvents(
       // which run without a pause between them.
       response.write(data(stateFrame(store, conversation, hub.busy)))
       for (const frame of hub.working(conversation.id)) response.write(data(frame))
-      const unsubscribe = hub.subscribe(conversation.id, (frame) => {
-        response.write(data(frame))
-      })
+      const unsubscribe = hub.subscribe(
+        conversation.id,
+        (frame) => {
+          // F6b DECISION 5: someone taken off the app hears no more of it, on a stream they had
+          // open too: it ends at the next frame, as the platform ends theirs (the review's I3).
+          if (reachable(store, conversation.id, who.person.id, mayRead) === undefined)
+            return void response.end()
+          response.write(data(frame))
+        },
+        who.person.id,
+      )
       const heartbeat = setInterval(() => response.write(': keep-alive\n\n'), heartbeatMs)
       open.add(response)
       // The connection going. (The request's `close` fires at the same moment, measured on

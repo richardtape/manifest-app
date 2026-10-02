@@ -485,7 +485,8 @@ export function createKeeper({
     forget,
 
     workEnded(conversation) {
-      if (hub.watched(conversation.id)) return
+      // Its own person's page (F6b D3: a colleague reading it is not them).
+      if (hub.watched(conversation.id, conversation.personId)) return
       const run = store.latestRun(conversation.id)
       // A round of work (F3's "You can leave"); the intake's and the plan's are watched as they go.
       if (run === undefined) return

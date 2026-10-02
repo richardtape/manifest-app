@@ -179,7 +179,7 @@ function setUp(
     now: () => clock,
     mailer: { send: async (message) => void sent.push(message) },
     origin: ORIGIN,
-    hub: { watched: (id) => pages.has(id), busy: () => false },
+    hub: { watched: (id, personId) => pages.has(`${id} ${personId}`), busy: () => false },
     wait: async () => undefined,
     probe: p.probe,
     probing: options.probing ?? true,
@@ -943,9 +943,19 @@ describe('your work is waiting (Decision 14)', () => {
     expect(t.sent).toEqual([])
   })
 
+  it('a colleague’s page holding its stream: its own person is still told, and only they (F6b D3, the review’s I1)', async () => {
+    const t = await waiting('building', 'needs-you')
+    t.pages.add(`${t.conversation.id} ${BOB}`)
+    t.keeper.workEnded(t.conversation)
+    await settle()
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      { to: 'alice@example.test', subject: 'Reading responses: we need you' },
+    ])
+  })
+
   it('a page holding its stream: nothing (they are watching)', async () => {
     const t = await waiting('built', 'done')
-    t.pages.add(t.conversation.id)
+    t.pages.add(`${t.conversation.id} ${ALICE}`)
     t.keeper.workEnded(t.conversation)
     await settle()
     expect(t.sent).toEqual([])

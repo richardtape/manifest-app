@@ -125,18 +125,26 @@ async function open(base: string, id: string, cookie = AS_ALICE) {
   return { response, frames, comments, until, abort }
 }
 
-describe('Hub.watched: a page holds the conversation’s stream (F6 Decision 14)', () => {
-  it('true while a listener is subscribed, for that conversation only; false once each has gone', () => {
+describe('Hub.watched: a page of theirs holds the conversation’s stream (F6 Decision 14)', () => {
+  it('true while a listener of theirs is subscribed, for that conversation only; false once each has gone', () => {
     const hub = createHub()
-    expect(hub.watched('c1')).toBe(false)
-    const first = hub.subscribe('c1', () => undefined)
-    const second = hub.subscribe('c1', () => undefined)
-    expect(hub.watched('c1')).toBe(true)
-    expect(hub.watched('c2')).toBe(false)
+    expect(hub.watched('c1', 'alice')).toBe(false)
+    const first = hub.subscribe('c1', () => undefined, 'alice')
+    const second = hub.subscribe('c1', () => undefined, 'alice')
+    expect(hub.watched('c1', 'alice')).toBe(true)
+    expect(hub.watched('c2', 'alice')).toBe(false)
     first()
-    expect(hub.watched('c1')).toBe(true)
+    expect(hub.watched('c1', 'alice')).toBe(true)
     second()
-    expect(hub.watched('c1')).toBe(false)
+    expect(hub.watched('c1', 'alice')).toBe(false)
+  })
+
+  it('another member’s page, or a listener for nobody, is not theirs (F6b D3, the review’s I1)', () => {
+    const hub = createHub()
+    hub.subscribe('c1', () => undefined, 'bob')
+    hub.subscribe('c1', () => undefined)
+    expect(hub.watched('c1', 'alice')).toBe(false)
+    expect(hub.watched('c1', 'bob')).toBe(true)
   })
 })
 

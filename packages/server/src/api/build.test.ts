@@ -13,7 +13,7 @@ import type { ProjectStream } from '../platform/stream.js'
 import { storeTrace } from '../runtime/trace.js'
 import { openStore, type Conversation, type Store } from '../store/db.js'
 import { scratchDir } from '../store/testing.js'
-import { createHub, type Hub } from './events.js'
+import { createHub, publishState, type Hub } from './events.js'
 import { pieceOf } from './piece-state.js'
 import type { AppConversation, Progress } from './progress.js'
 import { roundOf } from './round-state.js'
@@ -1235,6 +1235,48 @@ describe('working on it together (F6b D3, Task 2)', () => {
     expect((await post(s, bobs.id, 'stop', {}, as(AS_BOB))).status).toBe(404)
     expect(s.store.conversationById(bobs.id)?.state).toBe('built')
     expect(s.store.waitingOn(PROJECT.id)).toEqual([])
+  })
+
+  it('taken off while holding a colleague’s stream: the next frame ends it, as the platform ends theirs (the review’s I3)', async () => {
+    const r = removing()
+    const s = setUp([], { keeper: r.keeper })
+    together(s)
+    const alices = changeOf(s, ALICE, 'plan-ready')
+    await s.app.listen({ host: '127.0.0.1', port: 0 })
+    const port = (s.app.server.address() as { port: number }).port
+    /** A stream, read until it ends: how many frames it brought. */
+    const stream = async (cookie: string) => {
+      const controller = new AbortController()
+      cleanups.push(() => controller.abort())
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/conversations/${alices.id}/events`,
+        { headers: { cookie }, signal: controller.signal },
+      )
+      const reader = response.body!.getReader()
+      const read = { frames: 0, ended: false }
+      void (async () => {
+        try {
+          for (;;) {
+            const { done, value } = await reader.read()
+            if (done) break
+            read.frames += new TextDecoder().decode(value).split('data: ').length - 1
+          }
+          read.ended = true
+        } catch {
+          // Aborted by the test's cleanup.
+        }
+      })()
+      return read
+    }
+    const bobs = await stream(AS_BOB)
+    const own = await stream(AS_ALICE)
+    await until(() => bobs.frames === 1 && own.frames === 1)
+    r.remove(s, BOB)
+    publishState(s.hub, s.store, alices)
+    await until(() => bobs.ended)
+    expect(bobs.frames).toBe(1)
+    await until(() => own.frames === 2)
+    expect(own.ended).toBe(false)
   })
 
   it('told twice, ended once: the first stop’s record stands', async () => {
