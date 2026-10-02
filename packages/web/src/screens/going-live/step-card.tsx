@@ -24,6 +24,7 @@ export function Steps({
         step.current ? (
           <li key={step.id} className="going-live__step going-live__step--current">
             <ClockItem
+              level={2}
               title={s[step.id].title}
               body={bodyOf(step)}
               state={step.state}

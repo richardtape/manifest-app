@@ -64,7 +64,11 @@ describe('Steps: one card at a time (D2)', () => {
     expect(items()).toHaveLength(3)
     expect(cards()).toHaveLength(1)
     const [first, second, third] = items()
-    expect(first!.querySelector('.mf-clockitem h3')?.textContent).toBe(s.assessment.title)
+    // By its class, not its tag: the card's title is at the page's level, h2 (m3).
+    expect(first!.querySelector('.mf-clockitem__title')?.tagName).toBe('H2')
+    expect(first!.querySelector('.mf-clockitem__title')?.textContent).toBe(
+      s.assessment.title,
+    )
     expect(first!.querySelector('.mf-chip')?.textContent).toBe(s.assessment.with)
     expect(first!.textContent).toContain('since 18 September')
     expect(first!.textContent).toContain('waiting 17 days')
