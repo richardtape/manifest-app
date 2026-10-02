@@ -219,6 +219,27 @@ kept state, or the stream's `keeping.stopped` within a minute); test with a roun
 answer (a `keeping.answering` row and its line, no email: the owner is the one who switched it off), or say nothing more.
 Test in `outage.test.ts`: down, one answer, `off`.
 
+**From F6b sitting 2's whole-sitting review** (`manifest-app-b8`, 2026-10-02, a fresh reviewer over `af8983c..144d513`; its
+I1 and I3 fixed test-first the same sitting, its I2 and ten minors here). Lines are at the fix pass's commit.
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m76 | The review's **I2** (graded Important; carried with m69 at the executor's ruling, **a departure from the plan's Review Focus 1**) | Someone taken off an app while a round of theirs is in flight is usually emailed *"we need you"* first: the platform revokes their tokens and ends their sessions before it publishes `member.removed`, so the round ends needs-you (`token`) and `workEnded` emails them, before our removal stops it. When they minted our watch (FE-48) the event never comes, and the stop waits for the next hand-over. | `packages/server/src/keeping/keeper.ts:489` (`workEnded`), `build/round.ts`'s `fromError`. | S | faculty-visible |
+| m77 | The review's M1 (the plan's interface) | `LineView.holder.by` and `RoundView.stopped` carry a name and no id, so the page cannot say *"You're working on it"*, and two people can share a name. Decide before sitting 3 draws them: `{ id, name }`, as `AppConversation.by`. | `packages/server/src/api/progress.ts` (`LineView`, `RoundView`); `api/round-state.ts`'s `stoppedOf`. | S | faculty-visible |
+| m78 | The review's M2 | *"Stopped by Someone."*: Stop never remembers the person pressing it, and `personName` falls back to an English word from our server. Rare: every page's band (`GET /api/needs`) remembers its reader. | `packages/server/src/store/db.ts:118`; the Stop route, `api/build.ts:232`. | S | faculty-visible |
+| m79 | The review's M3 | A removal can be lost for good: `keepMembers` keeps the new members before ending anyone's work, so a throw for one person ends nobody after them, and nobody retries (they are no longer kept). | `packages/server/src/keeping/keeper.ts:213`. | S | robustness |
+| m80 | The review's M4 | An empty members read would end everyone's work. Every project has an owner, so an empty `listMembers` is better ignored. | `keeping/keeper.ts:213`. | S | robustness |
+| m81 | The review's M5 (F6's race, a new consequence) | Two members reads can land out of order: one begun before a `member.removed` can put the removed member back until the next read. | `keeping/keeper.ts`'s `refresh`. | S | robustness |
+| m82 | The review's M6 (closes Task 4's first residual where it applies) | Kept members are trusted for a person's own conversations even while we do not watch the app (F6's whole-branch I2 trusted them only while watching): someone added since our last read meets 404 on their own new change. Their own could stay theirs while the keeper is not watching; and a change asked (whose token `projects.read` has just proved a member's) could prompt a read of the members. | `packages/server/src/api/sharing.ts`'s `standingOf`. | S | faculty-visible |
+| m83 | The review's M7 | A hand-over's `tokenId` is not checked against its secret (`mft_<id>_<secret>`, the id without dashes): a page bug could mark someone else's token ours; and an old page's id could be read from its secret. | `packages/server/src/api/project.ts:104`, `api/apps.ts:273`. | S | robustness |
+| m84 | The review's M8 | Someone taken off an app while its first piece is `making` (the creator, with another owner already added) leaves it holding the app: neither `endWork` nor Stop reaches `making`. Rare. | `packages/server/src/api/work-end.ts`; `api/line-state.ts:23`. | S | robustness |
+| m85 | The review's M9 | A removal sets aside the first plan too (it bypasses the Stop route's first-plan refusal), untested. Reasonable; pin it. | `packages/server/src/app.ts` (`onRemoved`), `api/work-end.ts`. | S | tests-only |
+| m86 | The review's M10 | Small: `store/conversations.ts:45`'s comment says every change still asks `getConversation` (they ask `reachable(…, mayAct)` now); `STOPPED_FROM` repeats `work-end.ts`'s two sets; `endWork`'s boolean is never read; `api/minted.ts:21`'s `MOMENT` wants seconds the contract's date-time leaves optional. | as named | S | robustness |
+
+**m76.** With m69, one mechanism (Rich's to choose): hold a *we need you* for a round that paused on its token for about a
+minute, and at send time say nothing when its run is stopped, or the app's history has `keeping.stopped` (FE-48's `4401`)
+within that minute. Test: a round refused `token`, then the removal heard (the event; FE-48's hand-over): nothing sent.
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed

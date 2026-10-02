@@ -55,7 +55,7 @@ moments **17 and 18**, and *Throughout*'s **An agent of their own**.
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
 | 1 | 1 | **The measurements** that reading could not settle (M1–M5, below), on 7100 in the platform's window, at Rich's word, **with two people**. **Alone.** Sittings 2 and 3 may run before it (they need no platform); 4 and 5 after it | not started |
-| 2 | 2, 3, 4 | **Our server:** sharing (§3); the token ids kept (D5), store version 6; the keeper's removals (§2's last part) | not started |
+| 2 | 2, 3, 4 | **Our server:** sharing (§3); the token ids kept (D5), store version 6; the keeper's removals (§2's last part) | **done 2026-10-02** (`manifest-app-b8`, mock mode): `a751003`, `2e3a21a`, `144d513`; the review's I1 and I3 `2169b13`; a flake `32887f1`. 2386 tests twice; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 3 | 5, 6, 7 | **The page:** the platform's six new calls, *People* and *Agents* in the rail; *People* (moment 18); working on it together (§3) | not started |
 | 4 | 8, 9, 10 | **A change after launch** (moment 17): the kind of change; the new detail's stop and **[Leave it out]**; *Waiting to reach your students* | not started |
 | 5 | 11, 12 | ***Agents***: ours and theirs, **[Revoke]**, an agent of their own let in; their agent's questions (the band, the email, the card) | not started |
@@ -418,7 +418,7 @@ Progress's state frame: conversation: Conversation & { byName: string }
 RoundView gains: stopped: { name: string; why: 'stopped' | 'removed' } | null
 ```
 
-- [ ] **Step 1: Tests, failing first.**
+- [x] **Step 1: Tests, failing first.**
   - **`standingOf`** (pure, every row): own; a kept owner; a kept collaborator; a stranger; no kept members (own only); an
     intake conversation read by a member of nothing (stranger), by its person (own).
   - **The routes, by standing** (a store with two people on one app, `alice` owner and `sam` helper, and `eve` outside):
@@ -435,11 +435,11 @@ RoundView gains: stopped: { name: string; why: 'stopped' | 'removed' } | null
   - **`launch-actions.test.ts`:** `/v1/projects/{projectId}/members` (`POST`), `/v1/projects/{projectId}/members/{userId}`,
     `/v1/projects/{projectId}/tokens` (`POST`), `/v1/tokens/{tokenId}`, `/v1/pending-actions/{pendingActionId}/confirm`,
     `…/reject` are named nowhere in our server's source (the page's alone).
-- [ ] **Step 2: Red. Step 3: Implement** (`check` then `standingOf` with `store.members(projectId)` on each read route;
+- [x] **Step 2: Red. Step 3: Implement** (`check` then `standingOf` with `store.members(projectId)` on each read route;
   change routes untouched; *Stop* by `mayStop`, through `endWork`).
-- [ ] **Step 4: Green; controls:** `mayRead` true for a stranger (red: eve reads); `mayStop` true for a member (red: sam
+- [x] **Step 4: Green; controls:** `mayRead` true for a stranger (red: eve reads); `mayStop` true for a member (red: sam
   stops alice's); the intake rule dropped (red). Each restored.
-- [ ] **Step 5: Commit** `feat(server): every member reads every conversation on an app; only its own person acts, and an owner may stop it (F6b D3)`.
+- [x] **Step 5: Commit** `feat(server): every member reads every conversation on an app; only its own person acts, and an owner may stop it (F6b D3)`.
 
 ## Task 3: The token ids, kept (sitting 2)
 
@@ -488,16 +488,16 @@ minted(projectId: string): Promise<KeptTokens>
 keepAgent(projectId: string, made: { tokenId: string; name: string; expiresAt: string }): Promise<void>
 ```
 
-- [ ] **Step 1: Tests, failing first.** The migration: version 6, `minted` made, an old database migrated with its rows
+- [x] **Step 1: Tests, failing first.** The migration: version 6, `minted` made, an old database migrated with its rows
   (`db.test.ts`'s pattern, `it('is version 6')`); **the no-credential scan reads `minted`** and a row holding `mft_` is red;
   `POST …/project` and a change keep `{ tokenId, purpose: 'conversation', conversationId }`; a hand-over without `tokenId`
   keeps nothing and still works; `GET …/minted` for a member lists ours (the watch's from `watch_tokens`, a conversation's
   with its title) and agents with their minter's name; for eve `404`; `POST …/agents` with a body holding `token` or
   `secret` is **`400`** (zod strict: Review Focus 4); the page sends `minted.token.id` beside the secret on every
   hand-over (recording `Ours`).
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the scan skipping `minted` (red); `POST …/agents`
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the scan skipping `minted` (red); `POST …/agents`
   accepting an extra field (red). Each restored.
-- [ ] **Step 5: Commit** `feat(server,web): the ids of the tokens our page mints are kept, never a secret — ours told from theirs (F6b D5)`.
+- [x] **Step 5: Commit** `feat(server,web): the ids of the tokens our page mints are kept, never a secret — ours told from theirs (F6b D5)`.
 
 ## Task 4: A removed member's work ends here (sitting 2)
 
@@ -516,15 +516,15 @@ endWorkOf(projectId: string, personId: string): void   // app.ts: each of their 
 // no longer lists a kept member (Decision 5)
 ```
 
-- [ ] **Step 1: Tests, failing first** (the keeper's scripted stream, as F6's): `member.removed` for sam → sam's building
+- [x] **Step 1: Tests, failing first** (the keeper's scripted stream, as F6's): `member.removed` for sam → sam's building
   round stopped `{ why: 'removed' }`, his waiting conversation set aside, his token dropped, his `minted` rows gone, **the
   line moves on**; **a re-read without sam and no event** (the FE-48 path: the hand-over after a `4401`) → the same, once;
   a re-read that still lists everyone → nothing; **sam's own `GET` of his conversation on that app → `404`**, alice's →
   `200` with `stopped.why: 'removed'`; **no *we need you* email to sam** for the round the removal stopped (Review Focus 1:
   `workEnded` skips a `removed` stop); F6's *who's on it changed* email still goes to the other owners, once.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the re-read path removed (red on the FE-48 test); the
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the re-read path removed (red on the FE-48 test); the
   `workEnded` skip removed (red). Each restored.
-- [ ] **Step 5: Commit** `feat(server): someone taken off an app has their work here ended — on the event, or on the next read of its members (FE-48)`.
+- [x] **Step 5: Commit** `feat(server): someone taken off an app has their work here ended — on the event, or on the next read of its members (FE-48)`.
 
 ## Task 5: The platform's six calls, and *People* and *Agents* in the rail (sitting 3)
 
@@ -879,3 +879,75 @@ question), tested as Task 12's card is, with the object present and absent. The 
 - **Rich approved it the same day** (*"plan approved, we'll do it native"*), and a new session took sitting 2 at once
   (7100 was the platform's sitting 12's). **Still for Rich, at each sitting:** the *Words proposed*; Decisions 2, 3, 5, 10, 11, 13 and 14 (each says what it rejected and
   what changing it costs); FE-49 and FE-50 (written, not carried); the execution method.
+
+### 2026-10-02 — Sitting 2: our server (Tasks 2, 3, 4) (session `manifest-app-b8`, mock mode, natively)
+
+**At Rich's word** (*"yes, start F6b sitting 2"*), beside the platform's sitting 12 (`manifest-5a`, which held 7100
+throughout and announced its holds; nothing of ours touched 7100). Executed with superpowers:executing-plans, one ledger
+(`.superpowers/sdd/2026-10-02-f6b-working-together/progress.md`, git-ignored: every ruling with its cost).
+
+- **What landed:**
+  - **`a751003`, Task 2 (D3):** `api/sharing.ts`'s pure `standingOf` (own · owner · member · stranger) and `reachable`:
+    a conversation, its stream and an app's list read by every kept member; every change its own person's; Stop an
+    owner's too, through `api/work-end.ts`'s `endWork` (Stop's body, shared). `RunDetail.stopped { by, why }`;
+    `RoundView.stopped { name, why }`; `AppConversation.by`, the state frame's `byName`, `LineView.holder.by`.
+    `launch-actions.test.ts`: no member, token or pending-action write named anywhere in our server.
+  - **`2e3a21a`, Task 3 (D5):** store **version 6**, `minted` (`store/minted.ts`): each token's id, app, minter,
+    purpose and conversation, never a secret, forgotten with the app. The page sends `tokenId` beside every secret it
+    hands over (Make it, a restart's, a change, each fix, *Talk it through*, *What happened?*);
+    `GET /api/apps/:projectId/minted` and `POST /api/apps/:projectId/agents` (exactly `{ tokenId, name, expiresAt }`);
+    the page's `ours.minted` and `ours.keepAgent`, ready for sitting 3.
+  - **`144d513`, Task 4 (Decision 5, FE-48):** the keeper keeps the members whole and says once who was taken off
+    (`Keeper.onRemoved`), on `member.removed` (the other owners told first) or when a read of the members no longer
+    lists someone kept (a hand-over after a `4401`, a reconnect, the boot); `buildServer` ends their work as Stop does,
+    recorded `removed` (theirs waiting first), drops their conversations' tokens and forgets their token ids.
+  - **`2169b13`, the review's I1 and I3** (below); **`32887f1`**, a flake met at the close (below).
+- **Gates:** `pnpm test` **2386 tests, 97 files, twice**; lint, typecheck, format clean. **The six acceptance scripts pass
+  in mock mode from a fresh dev database**, at `144d513` and again after the fixes (`check-seeing` 8, `check-going-live` 8,
+  `check-slice` 8, `check-describing` 18, `check-building` 12, `check-keeping` 8 + 12). **The migration** 5 → 6 opened a
+  copy of F6's walk database (version 5: three members, a sealed watch, a run) with every row kept and `minted` made.
+- **Negative controls** (each red, then restored): `mayRead` true for a stranger (4 red); `mayStop` true for a member
+  (2); the intake rule dropped (1, the pure test: the routes are also held by `reachable` giving an intake no members); a
+  source naming `/v1/tokens/{tokenId}` (1) or POSTing members (1); the no-credential scan skipping `minted` (3); `POST
+  …/agents` without `.strict()` (2); the keeper's re-read path removed (2); `workEnded` emailing a stopped round (1); a
+  person always `own` (3); `Hub.watched` ignoring whose page it is (1).
+- **Decided in executing (each in the ledger with its cost):**
+  - `RoundView.stopped` is null when a round's own person stopped it: Decision 6 says *"Stopped by Alex."* only for
+    another's, and the plan's `{ name, why }` carries no id to compare (see m77).
+  - `minted.expires_at` may be null: the hand-over carries the token's id alone, so our server knows only an agent's
+    expiry. A row or an agent's name shaped like a credential is refused (as the trace's is). `tokenId` must be a uuid
+    (the contract's `Token.id`), required on the page and optional on our server (an old page's hand-over still works).
+  - **The keeper says who was taken off through `Keeper.onRemoved`**, which `buildServer` registers, not the plan's
+    `KeeperDeps.endWorkOf`: main.ts makes the keeper before `buildServer` makes the rounds and the line.
+  - **Someone taken off is a stranger to their own conversations on the app on every route** (reads, changes, Stop),
+    not only reads, and their list of the app's conversations is empty: otherwise a message on their built conversation
+    would join the line with no token and hold the app.
+  - No `workEnded` skip was needed: a round stopped `removed` has the chip `notyet`, so nothing emails it (pinned).
+  - No separate `work-end.test.ts`: every branch of `endWork` is driven through the Stop route and the removal.
+- **The whole-sitting review** (a fresh reviewer, `af8983c..144d513`): **no Critical**; it found no route the standing
+  rule missed.
+  - **I1, fixed** (`2169b13`): since every member may hold a conversation's stream, a colleague reading it silenced its
+    person's *we need you* and *we've finished* (F6 Decision 14 counted any listener). `Hub.watched` now asks whose page
+    it is. The plan's *"sam's email goes to sam alone"* test, missed in Task 2, is written.
+  - **I3, fixed** (`2169b13`): someone taken off kept hearing every frame on a stream they had open. A stream now re-checks
+    its reader before each frame and ends, as the platform ends their browser streams.
+  - **I2, carried with m69 (for Rich): a departure from Review Focus 1.** Someone taken off while a round of theirs is in
+    flight is usually emailed *we need you* first: the platform revokes their token before it publishes `member.removed`,
+    so the round ends needs-you and is emailed before our removal stops it. The fix is m69's own (a short hold and a
+    re-check at send time), which is Rich's to choose: **m76** in [`minors.md`](../minors.md).
+  - **Ten minors, m77–m86** in [`minors.md`](../minors.md). **m77 wants deciding before sitting 3 draws them**:
+    `LineView.holder.by` and `RoundView.stopped` carry a name and no id.
+- **A flake met at the close** (`32887f1`, test only): *the app's conversations* read `conversationsOn`'s call as soon as
+  the heading was drawn, before the effect that asks it (1 run in 12 under the platform's load); now read once the list
+  it fills is there, 16 in 16 (§7's trap).
+- **For Rich:** I2/m76 (above); m77 before sitting 3; **someone added since our last read of the members meets 404 on
+  their own new change** until the keeper reads them again (`member.added`, a reconnect, a hand-over: normally seconds;
+  m82 says how to close it); Decision 5's rule is made from kept members, as D3's reads are.
+- **For sitting 3:** the page's `Ours` has `minted` and `keepAgent`; the state frame's `conversation.byName`,
+  `AppConversation.by`, `LineView.holder.by` and `RoundView.stopped` are there to draw; **in mock mode every mint answers
+  the mock's one token id** (`77777777-…`), so `minted` keeps only the first (the watch shares it): a walk of *Agents*
+  rewrites `listTokens` and `…/minted`, as F6's walks rewrite `…/keeping`.
+- **The platform:** its sitting 12's text-only contract change (`f619376`: `IamRegistration.registeredAt`'s description;
+  1.5.0, 72 operations) adopted with no change of ours; our Vitest held across its regeneration at `manifest-5a`'s word.
+- **The machine:** our server in **mock mode** on a fresh dev database (version 6), restarted twice for the acceptance; the
+  databases before kept in `.data/`: `app-before-f6b-s2.sqlite` (the session's start), `app-f6b-s2-first-acceptance.sqlite`.
