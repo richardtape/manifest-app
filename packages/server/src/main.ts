@@ -4,6 +4,7 @@ import { buildServer } from './app.js'
 import { readConfig } from './config.js'
 import { createHub } from './api/events.js'
 import { createKeeper } from './keeping/keeper.js'
+import { probeAddress } from './keeping/probe.js'
 import { smtpMailer } from './keeping/mail.js'
 import { KEY_FILE, keyFrom } from './keeping/seal.js'
 import { createIntakeKeys, intakeModelFor } from './platform/intake.js'
@@ -38,6 +39,10 @@ const keeper = createKeeper({
   mailer: smtpMailer(config.smtpUrl, config.mailFrom),
   origin: config.origin,
   hub,
+  // F6 Task 6 (D6): each live address looked at once a minute, through the edge; never in mock
+  // mode, where the mock's app has no live address on the laptop (Decision 12).
+  probe: (url) => probeAddress(url),
+  probing: config.mode !== 'mock',
 })
 
 // The app is asked for only once we listen, which is after Vite exists: the closure reads

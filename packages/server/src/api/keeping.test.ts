@@ -39,6 +39,7 @@ function fakeKeeper() {
     stop: () => undefined,
     forget: () => undefined,
     workEnded: () => undefined,
+    outage: () => ({ state: 'answering', recovered: null }),
     async hand(projectId, handed, personId) {
       hands.push({ projectId, handed, personId })
       return answer()

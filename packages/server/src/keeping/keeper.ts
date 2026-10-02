@@ -5,10 +5,18 @@ import { chipOf } from '../api/apps.js'
 import type { Hub } from '../api/events.js'
 import type { Chip, Conversation, Happening } from '../api/progress.js'
 import type { Store } from '../store/db.js'
-import type { HistoryEntry } from '../store/keeping.js'
+import type { HistoryEntry, KeptApp } from '../store/keeping.js'
 import { emailsFor, waitingEmail } from './emails.js'
 import { happeningOf } from './happenings.js'
 import { deliver, deliverUnfinished, type Mailer } from './mail.js'
+import {
+  answerOf,
+  observe,
+  outageFrom,
+  type Change,
+  type Outage,
+  type Probed,
+} from './outage.js'
 import { seal, unseal } from './seal.js'
 
 /**
@@ -18,7 +26,9 @@ import { seal, unseal } from './seal.js'
  * refusal (`4401` included). Every event is written once to `history`, as the platform sent it
  * (Decision 1); later tasks read it into lines and *needs you*. **Each new happening is emailed
  * once** (Task 5: D3), as is **work waiting on its person** (Decision 14): a piece of work that ends
- * with no page watching, and a conversation waiting a day (looked for once an hour).
+ * with no page watching, and a conversation waiting a day (looked for once an hour). **Once a
+ * minute it looks at each live app's students' address** (Task 6: D6, Decision 8), and writes and
+ * tells each outage itself.
  *
  * **It only reads** (`launch-actions.test.ts`): the stream, the app and its members. In memory it
  * holds the open streams and nothing else: a restart opens them again from the sealed rows.
@@ -36,6 +46,10 @@ export interface KeeperDeps {
   hub: Pick<Hub, 'watched' | 'busy'>
   /** A retry's wait (`deliver`'s); setTimeout's by default. */
   wait?: (ms: number) => Promise<void>
+  /** Task 6: one look at a students' address (`probeAddress`, through the edge). */
+  probe: (url: string) => Promise<Probed>
+  /** Decision 12: false in mock mode, where the mock's app has no live address on the laptop. */
+  probing: boolean
 }
 
 export type Handed = { token: string; tokenId: string; expiresAt: string }
@@ -56,6 +70,8 @@ export interface Keeper {
   forget(projectId: string): void
   /** Decision 14: a piece of work ended (`createWork`'s `ended`), the conversation as it is now. */
   workEnded(conversation: Conversation): void
+  /** Task 6: the live address's watch, as it stands (Task 7's needs); from history before a look. */
+  outage(projectId: string): Outage
 }
 
 /** Decision 5: a token with less than this left is replaced by the next one a page hands over. */
@@ -73,6 +89,8 @@ const READS_MEMBERS = new Set(['member.added', 'member.removed'])
 /** Decision 14: how long a conversation waits on its person before we say so again. */
 const A_DAY_MS = 86_400_000
 const HOUR_MS = 3_600_000
+/** D6: how often each live address is looked at. */
+const MINUTE_MS = 60_000
 
 /** One open stream, and its token, in memory only. */
 interface Open {
@@ -100,9 +118,16 @@ export function createKeeper({
   origin,
   hub,
   wait,
+  probe,
+  probing,
 }: KeeperDeps): Keeper {
   const open = new Map<string, Open>()
   let scanning: ReturnType<typeof setInterval> | undefined
+  let looking: ReturnType<typeof setInterval> | undefined
+  /** Task 6: each watched app's outage, once looked at; before that, our history says it. */
+  const outages = new Map<string, Outage>()
+  /** A look still waiting for its answer is not sent again. */
+  const inFlight = new Set<string>()
   /** A stream replaced or closed says nothing more: only the current one is heard. */
   const isCurrent = (projectId: string, one: Open) => open.get(projectId) === one
 
@@ -186,6 +211,81 @@ export function createKeeper({
       mailer,
       waitingEmail(which, { app, conversation, to, origin, key }),
       wait,
+    )
+  }
+
+  /** Decision 8: launched, switched on, with an address, and its token kept. */
+  const watched = (app: KeptApp | undefined): app is KeptApp & { studentsUrl: string } =>
+    app !== undefined &&
+    app.launchedAt !== null &&
+    app.state === 'active' &&
+    app.studentsUrl !== null &&
+    open.has(app.projectId)
+
+  const outageOf = (projectId: string): Outage =>
+    outages.get(projectId) ?? outageFrom(store.historyOf(projectId))
+
+  /** Once a minute: one look at each watched app's students' address. */
+  function look(): void {
+    // An app no longer watched (switched off, refused, forgotten) starts again from its history.
+    for (const projectId of outages.keys())
+      if (!watched(store.app(projectId))) outages.delete(projectId)
+    for (const projectId of open.keys()) {
+      const app = store.app(projectId)
+      if (watched(app) && !inFlight.has(projectId)) void lookAt(app)
+    }
+  }
+
+  async function lookAt(app: KeptApp & { studentsUrl: string }): Promise<void> {
+    const { projectId } = app
+    const at = now().toISOString()
+    inFlight.add(projectId)
+    try {
+      const { status, routed } = await probe(app.studentsUrl)
+      if (!watched(store.app(projectId))) return
+      const { outage, change } = observe(
+        outageOf(projectId),
+        answerOf(status, routed),
+        at,
+      )
+      outages.set(projectId, outage)
+      if (change !== null) changed(projectId, change)
+    } catch {
+      // A look that failed is no answer at all: the next minute looks again.
+    } finally {
+      inFlight.delete(projectId)
+    }
+  }
+
+  /**
+   * An outage's start or end: written to history once, and told to every owner (D3), but never a
+   * fall within 30 minutes of a recovery, nor its recovery (Review Focus 3): those rows say
+   * `again`, and are told to nobody.
+   */
+  function changed(projectId: string, change: Change): void {
+    const { from, again } = change
+    const entry: HistoryEntry =
+      change.kind === 'fell'
+        ? {
+            id: `keeping.unreachable:${projectId}:${from}`,
+            projectId,
+            at: from,
+            type: 'keeping.unreachable',
+            detail: again ? { from, again } : { from },
+          }
+        : {
+            id: `keeping.answering:${projectId}:${from}`,
+            projectId,
+            at: change.to,
+            type: 'keeping.answering',
+            detail: again ? { from, to: change.to, again } : { from, to: change.to },
+          }
+    if (!store.addHistory(entry) || again) return
+    tell(
+      entry,
+      change.kind === 'fell'
+        ? { kind: 'unreachable', from }
+        : { kind: 'answering-again', from, to: change.to },
     )
   }
 
@@ -278,6 +378,10 @@ export function createKeeper({
       void deliverUnfinished(store, mailer, wait)
       scanning ??= setInterval(scan, HOUR_MS)
       scanning.unref?.()
+      if (probing) {
+        looking ??= setInterval(look, MINUTE_MS)
+        looking.unref?.()
+      }
       for (const kept of store.watches()) {
         if (open.has(kept.projectId)) continue
         const token = unseal(key, kept.sealed)
@@ -295,6 +399,8 @@ export function createKeeper({
     stop() {
       clearInterval(scanning)
       scanning = undefined
+      clearInterval(looking)
+      looking = undefined
       for (const one of open.values()) one.watch?.close()
       open.clear()
     },
@@ -351,6 +457,8 @@ export function createKeeper({
         (why) => `${why}:${run.id}`,
       )
     },
+
+    outage: outageOf,
   }
 }
 
@@ -362,4 +470,5 @@ export const idleKeeper: Keeper = {
   status: () => NOT_WATCHING,
   forget: () => undefined,
   workEnded: () => undefined,
+  outage: () => ({ state: 'answering', recovered: null }),
 }

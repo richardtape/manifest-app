@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PlatformRefusal } from '../platform/refusal.js'
 import type { ProjectEvent, ProjectStream, Replay } from '../platform/stream.js'
 import type { Watching } from '../platform/watching.js'
@@ -128,6 +128,25 @@ function fakeWatching() {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve))
 
+type Probed = { status: number | null; routed: boolean }
+const UP: Probed = { status: 200, routed: true }
+const DOWN: Probed = { status: 502, routed: true }
+const OFF: Probed = { status: 410, routed: false }
+
+/** The live-address watch's one look (Task 6): what each address was asked, and what it answers. */
+function fakeProbe() {
+  const asked: string[] = []
+  let answer = UP
+  return {
+    probe: async (url: string) => {
+      asked.push(url)
+      return answer
+    },
+    asked,
+    answer: (next: Probed) => void (answer = next),
+  }
+}
+
 const keepers: Keeper[] = []
 const stores: Store[] = []
 afterEach(() => {
@@ -135,12 +154,13 @@ afterEach(() => {
   for (const store of stores.splice(0)) store.close()
 })
 
-function setUp(options: { store?: Store; key?: Buffer } = {}) {
+function setUp(options: { store?: Store; key?: Buffer; probing?: boolean } = {}) {
   const store = options.store ?? openStore(':memory:')
   if (options.store === undefined) stores.push(store)
   const key = options.key ?? randomBytes(KEY_BYTES)
   const s = fakeStream()
   const w = fakeWatching()
+  const p = fakeProbe()
   w.reads.set(TOKEN_A, appOf(P1))
   w.reads.set(TOKEN_B, appOf(P1))
   w.members.set(P1, [member(ALICE), member(BOB, 'collaborator')])
@@ -158,6 +178,8 @@ function setUp(options: { store?: Store; key?: Buffer } = {}) {
     origin: ORIGIN,
     hub: { watched: (id) => pages.has(id), busy: () => false },
     wait: async () => undefined,
+    probe: p.probe,
+    probing: options.probing ?? true,
   })
   keepers.push(keeper)
   return {
@@ -166,9 +188,11 @@ function setUp(options: { store?: Store; key?: Buffer } = {}) {
     keeper,
     ...s,
     w,
+    p,
     sent,
     pages,
     later: (ms: number) => (clock = new Date(clock.getTime() + ms)),
+    now: () => clock,
   }
 }
 
@@ -830,5 +854,178 @@ describe('your work is waiting (Decision 14)', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('the live-address watch (Task 6: Decision 8, design §4)', () => {
+  const LAUNCHED = '2026-09-30T17:00:00.000Z'
+  const URL_A = 'https://reading-responses.manifest.internal'
+  const MINUTE = 60_000
+
+  // Only the minute's timer is faked: the keeper's own waits and `settle` stay real.
+  beforeEach(() => void vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] }))
+  afterEach(() => void vi.useRealTimers())
+
+  /** A launched, switched-on app, its token kept and its first replay over. */
+  async function watchedLive(
+    options: Parameters<typeof setUp>[0] = {},
+    patch: Partial<KeptApp> = {},
+  ) {
+    const t = setUp(options)
+    t.w.reads.set(TOKEN_A, appOf(P1, { launchedAt: LAUNCHED, ...patch }))
+    t.keeper.start()
+    await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    t.open()[0]!.handlers.replayed!({ ids: [], overlapped: false })
+    return t
+  }
+
+  /** n minutes pass, one probe each; what each probe was asked at, oldest first. */
+  async function minutes(t: ReturnType<typeof setUp>, n: number) {
+    const ats: string[] = []
+    for (let i = 0; i < n; i++) {
+      t.later(MINUTE)
+      ats.push(t.now().toISOString())
+      await vi.advanceTimersByTimeAsync(MINUTE)
+      await settle()
+    }
+    return ats
+  }
+
+  const ours = (t: ReturnType<typeof setUp>) =>
+    t.store
+      .historyOf(P1)
+      .filter((entry) => entry.type.startsWith('keeping.'))
+      .map(({ type, detail }) => ({ type, detail }))
+  const subjects = (t: ReturnType<typeof setUp>) => t.sent.map(({ subject }) => subject)
+  const CANT_REACH = "Reading responses: your students can't reach it"
+  const ANSWERING_AGAIN = 'Reading responses is answering again'
+
+  it('once a minute, one look at a launched, switched-on, kept app’s students’ address', async () => {
+    const t = await watchedLive()
+    await minutes(t, 3)
+    expect(t.p.asked).toEqual([URL_A, URL_A, URL_A])
+  })
+
+  it.each<[string, Partial<KeptApp>]>([
+    ['never launched', { launchedAt: null }],
+    ['switched off', { state: 'archived' }],
+    ['with no students’ address', { studentsUrl: null }],
+  ])('an app %s is not looked at', async (_name, patch) => {
+    const t = await watchedLive({}, patch)
+    await minutes(t, 2)
+    expect(t.p.asked).toEqual([])
+  })
+
+  it('an app we keep with no token (refused) is not looked at', async () => {
+    const t = await watchedLive()
+    t.refuse(t.open()[0]!)
+    await minutes(t, 2)
+    expect(t.p.asked).toEqual([])
+  })
+
+  it('mock mode (probing false): nothing is looked at (Decision 12)', async () => {
+    const t = await watchedLive({ probing: false })
+    await minutes(t, 3)
+    expect(t.p.asked).toEqual([])
+  })
+
+  it('one miss is nothing; the second: a keeping.unreachable row from the first, and every owner told once', async () => {
+    const t = await watchedLive()
+    t.p.answer(DOWN)
+    const [first] = await minutes(t, 1)
+    expect(ours(t)).toEqual([])
+    expect(t.sent).toEqual([])
+    await minutes(t, 3)
+    expect(ours(t)).toEqual([{ type: 'keeping.unreachable', detail: { from: first } }])
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      { to: 'alice@example.test', subject: CANT_REACH },
+    ])
+    expect(t.keeper.outage(P1)).toMatchObject({ state: 'down', from: first })
+  })
+
+  it('three answers in a row after: a keeping.answering row from the fall to the first answer, and every owner told', async () => {
+    const t = await watchedLive()
+    t.p.answer(DOWN)
+    const [from] = await minutes(t, 2)
+    t.p.answer(UP)
+    const [to] = await minutes(t, 3)
+    expect(ours(t)).toEqual([
+      { type: 'keeping.unreachable', detail: { from } },
+      { type: 'keeping.answering', detail: { from, to } },
+    ])
+    expect(subjects(t)).toEqual([CANT_REACH, ANSWERING_AGAIN])
+    expect(t.keeper.outage(P1)).toEqual({
+      state: 'answering',
+      recovered: { from, to },
+    })
+  })
+
+  it('a restart in the middle of an outage starts down (Review Focus 1): no second email, and its recovery is from the first fall', async () => {
+    const first = await watchedLive()
+    first.p.answer(DOWN)
+    const [from] = await minutes(first, 2)
+    expect(subjects(first)).toEqual([CANT_REACH])
+    first.keeper.stop()
+
+    const t = setUp({ store: first.store, key: first.key })
+    t.w.reads.set(TOKEN_A, appOf(P1, { launchedAt: LAUNCHED }))
+    t.later(5 * MINUTE)
+    t.keeper.start()
+    expect(t.keeper.outage(P1)).toMatchObject({ state: 'down', from })
+    t.p.answer(DOWN)
+    await minutes(t, 3)
+    expect(t.sent).toEqual([])
+    t.p.answer(UP)
+    const [to] = await minutes(t, 3)
+    expect(subjects(t)).toEqual([ANSWERING_AGAIN])
+    expect(ours(t).at(-1)).toEqual({ type: 'keeping.answering', detail: { from, to } })
+  })
+
+  it('a flapping app, down, up, down, up within 20 minutes, sends two emails in all (Review Focus 3)', async () => {
+    const t = await watchedLive()
+    for (const [answer, n] of [
+      [DOWN, 2],
+      [UP, 3],
+      [DOWN, 2],
+      [UP, 3],
+    ] as const) {
+      t.p.answer(answer)
+      await minutes(t, n)
+    }
+    expect(subjects(t)).toEqual([CANT_REACH, ANSWERING_AGAIN])
+    // The history still says each fall: the second told to nobody.
+    expect(
+      ours(t).map(({ type, detail }) => [type, (detail as { again?: boolean }).again]),
+    ).toEqual([
+      ['keeping.unreachable', undefined],
+      ['keeping.answering', undefined],
+      ['keeping.unreachable', true],
+      ['keeping.answering', true],
+    ])
+  })
+
+  it('switched off (410) is never down: no row, no email', async () => {
+    const t = await watchedLive()
+    t.p.answer(OFF)
+    await minutes(t, 5)
+    expect(ours(t)).toEqual([])
+    expect(t.sent).toEqual([])
+    expect(t.keeper.outage(P1)).toEqual({ state: 'off' })
+  })
+
+  it('outage: answering for an app never looked at, and read from history in mock mode', async () => {
+    const t = await watchedLive({ probing: false })
+    expect(t.keeper.outage(P1)).toEqual({ state: 'answering', recovered: null })
+    t.store.addHistory({
+      id: `keeping.unreachable:${P1}:x`,
+      projectId: P1,
+      at: '2026-10-01T17:00:00.000Z',
+      type: 'keeping.unreachable',
+      detail: { from: '2026-10-01T17:00:00.000Z' },
+    })
+    expect(t.keeper.outage(P1)).toMatchObject({
+      state: 'down',
+      from: '2026-10-01T17:00:00.000Z',
+    })
   })
 })
