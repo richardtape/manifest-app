@@ -626,10 +626,11 @@ describe("the app's conversations (/apps/:slug/conversations)", () => {
         'Every piece of work on Reading responses, and where each one left it.',
       ),
     ).toBeTruthy()
-    expect(s.called('conversationsOn')).toEqual([[PROJECT.id]])
     const rows = within(
       await screen.findByRole('list', { name: 'Conversations' }),
     ).getAllByRole('listitem')
+    // Asked in an effect after the heading is drawn: read once the list it fills is there (§7).
+    expect(s.called('conversationsOn')).toEqual([[PROJECT.id]])
     expect(rows).toHaveLength(4)
     for (const [i, row] of ROWS.entries()) {
       const link = within(rows[i]!).getByRole('link', { name: row.title })
