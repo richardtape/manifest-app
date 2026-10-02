@@ -2,8 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "types": ["node"],
-    "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true
+    "allowImportingTsExtensions": true
   },
   "include": ["scripts", "vitest.workspace.ts"]
 }
