@@ -50,7 +50,7 @@ went live. Walk-through moments **16, 19 and 20**. Moments 17 and 18, and the *A
 |---|---|---|---|
 | 1 | 1 | **The measurements**, on 7100 in the platform's window, at Rich's word: a watch token's reads and stream; the students' address through the edge; switch off, back on and the two deploys after; delete; a fall (stopping the container: **Rich's word first**); the mock's answers. **Alone.** It needs 7100 free (the platform's sitting 7 closes first), so **sittings 2–4 may run before it**: they need no platform | **done 2026-10-01** (`manifest-app-34`, 16:46–17:10Z on 7100, in `manifest-8e`'s window): M0, M2–M4, M6–M8 measured, M5 not (no failing production change without changing the platform); **Tasks 3, 4, 6 and 11 corrected (S1)**: the edge's catch-all answers `200` (an answer counts only with `x-manifest-instance`), a dry run's production instance is not a line, the last-served release is production's own `instance`. `f6-watch` left live. No code (the dated entry below) |
 | 2 | 2, 3 | Our server: the store's version 5; the seal and its key; the watch token handed over and kept; the keeper's streams, its history and its gaps | **done 2026-10-01** (`manifest-app-28`, mock mode only): `ecec79e` (Task 2), `361058d` (Task 3). **F3's stream gained each event's `at` and an optional `replayed` report** (a ruling: the keeper cannot see a reconnect's overlap otherwise); Tasks 4, 5, 7 and 8 noted (S2). 1771 tests twice; the five acceptance scripts pass; the platform's `4aaf0ef` adopted |
-| 3 | 4, 5 | The happenings and the lines; the emails, once each, through nodemailer | not started |
+| 3 | 4, 5 | The happenings and the lines; the emails, once each, through nodemailer | **done 2026-10-01** (`manifest-app-fc`, mock mode only): `b4cfb9f` (Task 4), `bacf85c` (Task 5: nodemailer 10.0.13, its types its own). **`linesOf` takes the kept app's `launchedAt`; `Line` gains `whom`; the first replay of an app never watched emails nobody**; Tasks 4–7 and 9 noted (S3). 1905 tests twice; the five acceptance scripts pass; the platform's `a1d4baa` (72 operations) adopted. **The email bodies wait for Rich's word** |
 | 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | not started |
 | 5 | 8, 9 | The page: the platform's new calls; the watch token minted; *Your apps* and the Overview (the band, *Since you were last here*, the card's states, *How we keep watch*); the history page | not started |
 | 6 | 10, 11 | The page: *Start it again* and *What happened?*; switching off, back on, *Start it for your students*, and delete | not started |
@@ -598,6 +598,10 @@ export function fromOf(entries: HistoryEntry[]): string | null
     **same** release as the production instance before it is no line; `who` is the kept member's `displayName` for
     `by`, `null` for an unknown id; newest first.
   - `gapsOf` gives each `keeping.gap`; `fromOf` the first entry that is not ours (a platform event), else null.
+  - **(S3) As built** (`b4cfb9f`): **`linesOf(entries, members, launchedAt)`**, the kept app's `launchedAt` its third
+    argument (the replay of 50 may no longer reach `project.launched`); **`Line` gains `whom`**, the member a member's line
+    is about; the member is `machineDetail.memberId` and who acted `userId`; a `…recorded` as `submitted` is `sent`, not
+    `answered`; before the app went live, a production incident is no line either. The sitting's entry has each ruling.
     **(S2)** As Task 3 built them: a platform event's `at` is its own `createdAt` (`ProjectEvent.at`); a `keeping.gap`
     row is `keeping.gap:<oldest replayed id>`, its `at` its `from`, its `detail` `{ from, to }`; a refused token leaves
     `keeping.stopped:<tokenId>` at the moment it stopped, `detail: {}` (no line in F6).
@@ -670,6 +674,12 @@ mailFrom: string    // MANIFEST_APP_MAIL_FROM ?? 'Manifest <manifest@app.manifes
   - **`smtpMailer`** against a one-connection SMTP listener the test opens on a free port (`node:net`, answering `220`,
     `250`, `354`, `250`, `221`): the `MAIL FROM`, `RCPT TO` and the subject arrive; no authentication is sent to a URL
     without credentials.
+  - **(S3) As built** (`bacf85c`): nodemailer's types ship with it (no `@types/nodemailer`). **The first replay of an app
+    never watched is its past**: written, emailed to nobody (else a first hand-over emails up to 50 old happenings).
+    *Someone added* is told after the members are read again (to name them), *someone removed* before; the member an email
+    is about is never emailed. *Your work is waiting* only for a conversation with a run, keyed
+    `<projectId>:<finished|needs-you>:<runId>`, and only for a kept app (its name and slug are the keeper's). Waits of 1,
+    2, 4, 8, 16, then 29 minutes: 7 tries in the hour. `deliverUnfinished` finishes a restart's claimed emails.
 - [ ] **Step 2: Red. Step 3: Implement**; `app.ts`'s `createWork(…, (conversation) => { line.released(...);
   keeper.workEnded(conversation) })`; `main.ts` builds `smtpMailer(config.smtpUrl, config.mailFrom)`.
 - [ ] **Step 4: Green; controls:** the actor emailed (red); a replay sending again (red); the machinery list not imported
@@ -728,6 +738,10 @@ export function probeAddress(
     `keeping.answering` `{ from, to }` and the *answering again* email; **a restart with an open outage starts `down`**
     and a further miss sends nothing (Review Focus 1); **a flapping run of down, up, down, up within 20 minutes sends two
     emails in all** (Review Focus 3); `outage(projectId)` answers the state for Task 7.
+  - **(S3)** `emailsFor` emails every `unreachable` happening (`<projectId>:outage:<from>`) and every `answering-again`
+    (`<projectId>:answering:<from>`): the watch writes its own rows (`addHistory`), and tells `fell` (not `again`) and
+    `recovered` itself through `emailsFor` and `deliver`, as the keeper's `tell` does for the stream. The `again` row is
+    told to nobody.
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** one miss counted as down (red); `410` as a miss (red);
   the outage read fresh at boot instead of from history (red). Each restored.
 - [ ] **Step 5: Commit** `feat(server): we watch every live address once a minute — down after two misses, answering again after three answers`.
@@ -770,6 +784,7 @@ export const OUTAGE_FIX_WORDS = "Your students couldn't reach it"
     gives no lines; the visit recorded (a second call within the hour answers the same `lastHere`).
   - **`/history`**: a member gets `from`, `gaps` and every line; a non-member `404`; an archived app's members still get
     it (kept members, no token).
+  - **(S3)** `/api/since` and `/history` call `linesOf(historyOf(id), members(id), app(id).launchedAt)` (Task 4 as built).
   - **`DELETE`**: from another `Origin` `403`; a helper `404`; a stranger `404`; an owner `204`, the keeper's `forget`
     called, and **a round working on one of the app's conversations stopped first** (the line's `stop`, as `/stop`);
     the rows gone (`forgetApp`).
@@ -865,6 +880,8 @@ unreachable: string | null      // a `down` need's time: the students' fact turn
 
 - [ ] **Step 1: Tests, failing first.**
   - **`lineWords`** for every `Happening` kind (the table in *Words proposed for Rich*), with `who` and without;
+    **(S3)** a member's line names its member by `whom` (null: *"Someone"*; a removed member is no longer kept once the
+    members are read again, so their removal's line says *"Someone was taken off it"*);
     `answering-again`'s minutes; **`machineryIn` empty over all of them**.
   - **The band** (`needs.tsx`): none → not drawn; each `Need` kind its sentence and button: `question` → the
     conversation; `down` → **[Start it again]** for an owner (Task 10's press), *An owner can start it again.* for a helper
@@ -1197,3 +1214,67 @@ empty). The admin grant was run by `manifest-8e` at Rich's own word in its sessi
   our mock on 7102 (restarted for `4aaf0ef`). Nothing of ours on 7100.
 - **Next: sitting 3** (Tasks 4 and 5): the happenings and their lines; the emails through nodemailer, its first new
   dependency (Step 0 of Task 5), to Mailpit on 7111.
+
+### 2026-10-01 — Sitting 3: what happened, and the emails (session `manifest-app-fc`, mock mode only)
+
+- **Step 0:** contract 1.5.0, 70 operations, manifest's tree clean; typecheck clean, 1771 tests. **The platform's sitting
+  9 (`manifest-6d`, Task 12) ran beside us**, by agreement: we hold every Vitest run of ours during its Docker tier and
+  its two closing runs (it messages first); it messages before a contract commit and at its close. **Its contract commit
+  `a1d4baa` landed mid-sitting** (1.5.0, additive, **72 operations**: `requestApproval`, `listQueue`,
+  `approval.requested`, `IamRegistration.changeRequestedFrom`, the fleet's `name`/`state`/`archivedAt`): adopted with no
+  change of ours (typecheck, 1905 tests), our mock restarted (pid 52985), `api-findings.md` the same day.
+- **Task 4** (`b4cfb9f`): `keeping/happenings.ts` (`happeningOf`, `linesOf`, `gapsOf`, `fromOf`, `actorOf`), and
+  `Happening` and `Line` in `api/progress.ts`. **The rulings** (the ledger has each, with its cost):
+  - **`linesOf` takes the kept app's `launchedAt`**: the plan's *"before the app's `project.launched`"* cannot be read
+    when the replay of 50 no longer reaches the launch, nor tell a never-launched app's dry runs from new versions. The
+    held `project.launched` wins, else `launchedAt`.
+  - **Before the app went live, a production incident is no line either**: *"your students kept the version before
+    it"* is untrue before a first launch (Decision 15's reason); F5's *Going live* shows a failed first launch.
+  - **A production healthy is a new version only when its release differs from the one served before it** (the
+    launch's, or the last healthy's): the launch's own healthy, a restart, and a healthy with nothing held before it are
+    no line. The plan's separate *same instance as the launch* rule is not written: it was dead code under the release
+    rule (its control stayed green).
+  - **`…recorded` as `submitted` is `sent`**, not `answered`: an administrator recording a submission is not UBC
+    answering (no *"a long wait is over"*).
+  - **`Line` gains `whom`**, the member a member's line is about; the member is `machineDetail.memberId` and who acted
+    `userId` (the platform's `observability/examples.ts`).
+  - Controls, seven, each red and restored: staging's healthy a line; the same release allowed (the launch's healthy
+    kept); a second dry run before launch; a healthy with nothing before it; the launch's release not the one before; a
+    first launch's incident a line; a recorded submission as an answer.
+- **Task 5** (`bacf85c`): **nodemailer 10.0.13**, pinned, our server only; **its types ship with it** (no
+  `@types/nodemailer`). `keeping/emails.ts` (pure: `emailsFor`, `waitingEmail`), `keeping/words.ts` (every sentence),
+  `keeping/mail.ts` (`deliver`, `deliverUnfinished`, `smtpMailer`); `Hub.watched`; `Config.smtpUrl` and `mailFrom`
+  (`MANIFEST_APP_SMTP_URL`, `MANIFEST_APP_MAIL_FROM`; Mailpit by default); the keeper tells each new happening, finishes
+  a restart's claimed emails, and looks once an hour for a day's wait; `app.ts`'s work's end tells the keeper; `main.ts`
+  makes the hub and the mailer. **The rulings:**
+  - **The first replay of an app never watched is its past**: written, emailed to nobody. Not in the plan: a page's
+    first hand-over of a long-lived app would otherwise email up to 50 old happenings.
+  - ***Someone added* is told after the members are read again** (to name them); *someone removed*, before (still
+    kept); **the member an email is about is never emailed**.
+  - ***Your work is waiting* only for a conversation with a run** (the design's *"a round ended"*), keyed
+    `<projectId>:<finished|needs-you>:<runId>`; **only for a kept app** (its name and slug are the keeper's; Task 8 hands
+    the token over at *Make it*, so until then none is sent). The day's wait is keyed
+    `<projectId>:a-day:<conversationId>:<updatedAt>`.
+  - Waits of 1, 2, 4, 8, 16, then 29 minutes: seven tries in the hour, then `failed`. Times *"10:03am"*, Vancouver's
+    (the page's convention); straight apostrophes; an owner with no address skipped.
+  - Controls, twelve: the actor emailed; the member it is about emailed; a change before the first launch emailed;
+    *"instance"* in an email (the machinery list is imported: red); the claim removed; the first replay emailed;
+    someone added told before the re-read; `watched` ignored; a day of 22 hours; no retries: each red, restored. **The
+    keeper's early return for a held event, removed alone, stays green**: *once* rests on the claim (`emails` is unique
+    on kind, happening and recipient); removed together, red.
+- **For Rich: the email bodies are ours.** The subjects and the last lines are those approved with the plan; the two to
+  four sentences of each body (`keeping/words.ts`) are new, and wait for his word, as the page's do.
+- **Measured: a real send.** `smtpMailer` with the mock-mode config, to Mailpit on 7111: it arrived from *Manifest
+  &lt;manifest@app.manifest.internal&gt;*, found by its subject through `/api/v1/search`, then deleted by its id (Task 12's
+  `check-keeping.sh` can read Mailpit the same way).
+- **Notes carried (S3)** into Tasks 4–7 and 9: `linesOf`'s third argument at Task 7's two callers; the watch tells its
+  own `fell` and `recovered` (the `again` row is told to nobody); a member's line reads `whom`, and a removed member's is
+  *"Someone"* once the members are read again.
+- **Gates:** 1905 tests (82 files), twice; lint, typecheck and format clean; `pgrep -fl vitest` empty at the start and the
+  close. **In mock mode, from a fresh dev database** (the old one kept as `.data/app-before-f6s3.sqlite`):
+  `check-seeing.sh` 8/8, `check-going-live.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh` 18/18,
+  `check-building.sh` 12/12. They sent no email and kept no app (nothing hands a watch token over before Task 8).
+- **The machine at the close:** our server in mock mode on 7105 (`nohup pnpm dev:mock`, one watcher), against our mock on
+  7102 (restarted for `a1d4baa`, pid 52985). Nothing of ours on 7100.
+- **Next: sitting 4** (Tasks 6 and 7): the live-address watch and its outages; our routes (needs, since, history,
+  forget) and the outage's fix.
