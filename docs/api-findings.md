@@ -56,7 +56,10 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **The launch path's sitting 8 contract commit, 2026-10-01** (`81892d4`, Task 11, D19's privacy-assessment draft; announced before and after by `manifest-8d`, the sitting still running, 7100 its own) | FE-6 (F5b) | — | **Contract 1.5.0, 70 operations.** **`draftPrivacyAssessment`** (`POST …/launch-records/privacy-assessment/draft`, capability `launch:draft`, mintable; answers `PrivacyAssessment`, or `409 LAUNCH_RECORD_SUBMITTED` while `submitted` or `approved`; declares the `SOURCE_*` codes and `AI_BACKEND_UNAVAILABLE`, `AI_CATALOGUE_EMPTY`). **`PrivacyAssessment.draft`**, required, a `PrivacyAssessmentDraft` or `null`: `{ project { slug, name }, generatedAt, fromCommit, sections[] { id: collected | stored | flows | retention | accountable | hosting, title, facts[] { label, value, source }, gaps[] }, warnings[], text }`. A new event, **`privacy_assessment.drafted`** `{ fromCommit, gapCount }`. `submitPrivacyAssessment`'s earliest `sentAt` is the draft's `generatedAt`, as for the registrations, so `draftGeneratedAt` now means something for the assessment too. **The mock:** `PRIVACY_ASSESSMENT` gains `draft: null`. **Adopted with no change of ours**, checked against its working tree before the commit (`manifest-8d` kept contract and mock typecheck-clean as one step): typecheck and 1671 tests pass; the mock restarted (pid 64223). Read by F5b |
 | **The launch path's sitting 8 fix wave, 2026-10-01** (`4aaf0ef`, Task 11's review fix wave; announced before and after by `manifest-8d` to `manifest-app-28`, the sitting still running) | FE-6 (F5b) | — | **Contract 1.5.0, 70 operations, no shape changed**: only `openapi.json`'s examples and doc comments, and `schema.d.ts`'s comments. The privacy-assessment draft's words: retention claims no period Manifest enforces; an undeclared classification is named Manifest's default and listed as a gap; the environments claim no backup or clearing; new facts *Incident logs* and *Deletion*, a breach-response gap, and on GitHub a gap about names leaving Canada. The checklist's privacy-assessment `why` gains a sentence when the draft was not made from the release serving staging. **Adopted with no change of ours** (F6 sitting 2): typecheck clean, 1771 tests; **our mock on 7102 restarted** for the new examples (pid 52507). **Sitting 8 closed at `c5116e0`** (docs and a script only after `4aaf0ef`; reported by `manifest-8d`): 7100's control plane back on `4aaf0ef` with an empty database. Read by F5b |
 | **The launch path's sitting 9 contract commit, 2026-10-01** (`a1d4baa`, Task 12, FE-25 and §26's queue, Spec actions 5 and 10; announced before and after by `manifest-6d` to F6's sitting 3, `manifest-app-fc`) | **FE-25** (F5b) | — | **Contract 1.5.0, additive, 72 operations.** **`requestApproval`** (`POST /v1/releases/{releaseId}/approval-request`, body `{ note?: string ≤500 }`, answers `200 ApprovalRequest` `{ id, releaseId, projectId, requestedBy { id, displayName }, viaToken { id, name } \| null, createdAt, open }` for a first ask and a second alike; the note is never in the answer): capability **`approval:request`**, new, **mintable** (owner, collaborator, administrator); refusals `409 RELEASE_NOT_STAGED` (with `launchReadiness`), `409 APPROVAL_NOT_NEEDED`, **`409 RELEASE_REJECTED`** (new), `NOT_FOUND`, `FORBIDDEN`, `PROJECT_ARCHIVED`. **`listQueue`** (`GET /v1/queue`, an administrator's session only): `Queue { items, oldestSince, truncated }`. A new event, **`approval.requested`** (`requestId`, `releaseId`, `viaToken`: boolean). **`IamRegistration.changeRequestedFrom`**, required: `submitted` (UBC came back with questions: the owner's move) or `active` (an administrator's change request, which UBC holds), null otherwise. The fleet's entries gain `name`, `state` and `archivedAt`; `LaunchReadinessItem.since` dates `admin-approval` from an open request. **Adopted with no change of ours**: our registration test data spreads the mock's fixtures, which carry `changeRequestedFrom: null`; nothing of ours reads the fleet; F6's `happeningOf` reads `approval.requested` as no happening (a type it does not name). Our typecheck and 1905 tests pass against it; the mock restarted (pid 52985) and answers the new field. Read by F5b (the owner's *please sign this off*) |
+| **The launch path's sitting 9 fix wave, 2026-10-01** (`a230c1a`, Task 12's review fix wave; announced before and after by `manifest-6d` to F6's sitting 4, `manifest-app-00`, the sitting still running) | FE-25 (F5b) | — | **Contract 1.5.0, 72 operations, one shape changed:** `QueueItem.project` is `{ id, slug, name }` (no `state`: the queue lists active projects only); descriptions only for `requestApproval`, `ApprovalRequest.open` (a request waits again when its release serves staging again), `Queue`, `listQueue` and `RELEASE_NOT_STAGED`'s summary and remedy. No mock fixture changed. **Adopted with no change of ours** (F6 sitting 4, with Task 6): nothing of ours reads the queue; typecheck clean, 1953 tests. Read by F5b |
 | **Decided by Rich, 2026-10-01** (writing F6's design; carried to `manifest-8e` for the platform's record, `manifest-60` not running) | **FE-45** | An owner's *mark as removed* for a switched-off app that has been live: gone from every listing and route for its members, its data kept; an administrator alone restores it or deletes it for good under UBC's retention | **Build it, in the future** (*"so it gets built in the future"*): production data is never an owner's to delete; *never been live* stays the owner's delete line. **Confirmed by Rich in the platform's session** (*"Yes, confirmed."*, relayed by `manifest-8e`, 2026-10-01), recorded in manifest's ORIENTATION §8 |
+| **Decided by Rich, 2026-10-01** (designing F5b with `manifest-app-d9`; carried by it to `manifest-6d` at his word, for the platform's record and its next planning) | **FE-46** | The owner sends the launch documents to LTIC, not to UBC: a *sent to LTIC* step before `submitted`, LTIC told by email, the assessment's gaps answered on the send | **Rich's (a)**: a state between `draft` and `submitted` for all three records (the owner's person-only send; an administrator records LTIC's submission with UBC's reference); `since` from each step; `listQueue` shows what LTIC holds; **the platform** emails LTIC; each assessment gap gets an id and the send carries the owner's answers (*"Our agent suggests, they check"*). F5b is designed against it; its sending sittings wait for it. **CONFIRMED by Rich in `manifest-6d`'s session** (19:56 PDT, manifest `ddc76d7`); a spec action before it is built |
+| **Decided by Rich, 2026-10-01** (designing F6b with `manifest-app-d9`; carried by it to `manifest-6d` at his word, as FE-46) | **FE-47**, **FE-5** | After launch an owner cannot ask for a new sign-in detail, and every build that needs one fails until UBC registers it; an agent's question does not say what it asks | **FE-47 (a):** the owner's request for a change to the live registration, from `active`, through LTIC as FE-46's sends are (a package drafted from the newest valid manifest; `since` and `listQueue` as FE-46; LTIC emailed); the build's check stays. **FE-5 (a):** the question carries its specific object (who and what role; which release and environment; which record), never a secret. F6b's moment 17 and *Agents* screen are designed against them. **CONFIRMED by Rich in `manifest-6d`'s session** (19:56 PDT, manifest `ddc76d7`); a spec action before they are built |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -265,6 +268,12 @@ raised follows.
   - (b) Publish the canonical form, so a front-end whose own agent asked can show and prove what it asked.
     That helps only the agent the front-end runs.
 - **When:** not in the plan. (b) is a sentence in the guide (sitting 11).
+
+**FE-5, carried (2026-10-01, Rich: *"Build it honest, carry FE-5 now"*).** FE-5 (*a question an agent raises does not say what it is asking*) is carried with FE-47, **option (a)**: the question
+carries the specific object, taken from the request and never a secret: for a member, who (their name, CWL login or email
+as the request named them) and what role; for a deploy, which release and which environment; for a launch record, which
+one. F6b's *Agents* screen builds the card honestly meanwhile (*"Your agent '<name>' asked to add a member to this
+project."* · *"It didn't say who. If you're not sure, say no."*), and gains the object when it lands.
 
 ### FE-6 — The owner cannot start the long clocks, and the drafts D19 promises do not exist
 
@@ -1313,6 +1322,114 @@ running, so it went to `manifest-8e` for the platform's record at its sitting 7'
   allow."* When it lands, **[Remove it from your apps]** follows, and our own rows for it are kept under the same
   retention (what students and owners wrote to us is part of it).
 - **When:** Rich's word: *"so it gets built in the future"*; not before F6.
+
+### FE-46 — The owner sends to LTIC, not to UBC: the launch records have no step between the two, nobody at LTIC is told, and the assessment's gaps have nowhere to be answered
+
+*Found 2026-10-01 while F5b (moments 10 and 13's own actions) was designed with Rich (`manifest-app-d9`), against manifest
+`a230c1a` (contract 1.5.0, 72 operations). **Decided by Rich the same day:** file it, and carry it now; F5b is designed
+against it, and its build waits for it.*
+
+- **Screen and moment:** *Going live* (moments 10 and 11): the three steps in UBC's order (the privacy assessment, the
+  staging registration, production's), each with its one action, and the band's *[Start them]*.
+- **How UBC's process runs** (Rich, 2026-10-01): *"Sent to LTIC. And then submitted to PRISM by LTIC."*, and **all three go
+  via LTIC**: the faculty member sends the assessment and both registrations to LTIC (the team that runs Manifest), and
+  LTIC submits the assessment to PRISM (UBC's privacy system) and the registrations to UBC IAM. A faculty member never deals
+  with UBC's forms. And *"It emails us and we fill out the appropriate forms"*: the platform tells LTIC (Rich: the platform,
+  not the front-end's server).
+- **What we would call:** after `draftPrivacyAssessment` / `draftIamRegistration`, the owner's **send to LTIC**, from their
+  own session (person-only, as `launch:submit` is): the day (today), the draft they read (`draftGeneratedAt`), and **for the
+  assessment, their answers to its gaps**. Then, read back: *with LTIC since 5 October*, then *with UBC's Privacy Office
+  (or identity team) since 7 October*, then UBC's answer.
+- **What is missing:**
+  - **A state for "with LTIC".** The records go `draft → submitted → approved | active`, and `submitted` means UBC has it
+    (`IamRegistration.submittedAt`: *"When the request now with UBC IAM was sent"*; `submitIamRegistration`: *"says the
+    staging or production registration was sent to UBC IAM"*; `submitPrivacyAssessment`: *"sent to UBC's Privacy
+    Office"*). The owner's press would claim UBC has it while LTIC still has to fill out PRISM's form, and the wait would
+    be counted against UBC from a day UBC never saw it. An administrator's later `record…` with UBC's reference cannot say
+    *"now with UBC"* except by a field being set: a state read from a field, which we never do.
+  - **Nobody at LTIC is told.** `listQueue` lists a `submitted` record (*"here, to record UBC's answer"*), but nothing emails
+    the administrators, so a sent document waits until someone opens the console.
+  - **The assessment's gaps have nowhere to be answered.** `PrivacyAssessmentDraft.sections[].gaps` are strings (*"what the
+    app keeps in its own database"*, *"where UBC will host it"*); `SubmitLaunchRecordRequest` carries `sentAt`, `reference`
+    and `draftGeneratedAt` only. LTIC cannot fill out PRISM's form without the owner's answers, and the gaps carry no id to
+    key an answer to.
+- **Why it matters:** *"Name the owner of every wait"* (`10-language.md`). Between the owner's press and LTIC's submission,
+  the wait is LTIC's, and the page would name UBC; LTIC would not know it has anything to do; and the one part of the
+  assessment only the faculty member can write would travel by a separate email, outside the record LTIC works from.
+- **Options:**
+  - **(a) Recommended, and decided by Rich: a step of its own, and LTIC told** (the names are the platform's to choose):
+    - **A state between `draft` and `submitted`**, for all three records (*sent to LTIC*): the owner's send (person-only,
+      `launch:submit` as today) moves `draft → sent` (a registration also from `change_requested` and `expired`), with
+      `sentAt` and `sentBy`; **an administrator** then records **`sent → submitted`** when LTIC has submitted it to PRISM or
+      UBC IAM, with UBC's reference and that day as `submittedAt`. UBC's order gates the owner's send, as it gates the
+      submission today (the assessment approved before staging's is sent; staging's active before production's).
+    - **`LaunchReadinessItem.since`** dates the wait from `sentAt` while it is with LTIC, and from `submittedAt` once UBC
+      has it, so a client can say who has it and for how long.
+    - **`listQueue`** lists a record LTIC holds (*to submit to PRISM* / *to submit to UBC IAM*), oldest first, apart from
+      one UBC holds (*to record UBC's answer*).
+    - **The platform emails LTIC** (an address it is configured with; Mailpit on the laptop) when a record is sent to it,
+      naming the app and what was sent, with a link to the record in the console. Never the owner's answers in the email
+      body, if the platform prefers them read in the console. **And the same for a sign-off request** (Rich, 2026-10-01,
+      the same session: *"Yes, and email it too"*): `approval.requested` emails LTIC too, so *"A Manifest administrator
+      looks at this next"* is backed by someone being told (the note stays out of the email, as it stays out of events).
+    - **The owner's answers to the assessment's gaps**: each gap gains a stable id, and the send carries
+      `answers[] { gapId, answer }` (plain text, bounded), kept on the record beside the draft as it was sent, and shown
+      to administrators. **The front-end suggests each answer** (Rich: *"Our agent suggests, they check"*: our agent drafts
+      an answer from the app's agreed plan and its code, and the faculty member reads and changes it before sending), so
+      the answer the platform keeps is always the person's own.
+    - **Events** for the stream, as `…submitted` has today: one when a record is sent to LTIC, one when LTIC submits it.
+  - (b) The owner's `submit…` read as *sent to LTIC*, and an administrator's `externalTicketRef` read as *now with UBC*.
+    *Rejected by Rich*: a state read from a field, and the queue and the stream would still say UBC has it.
+  - (c) F5b waits, designed only once the platform has built the step. *Rejected by Rich*: F5b is designed now against
+    (a), and marks plainly what waits for it.
+- **When:** carried now, at Rich's word (2026-10-01). **Before F5b is built**: F5b's sittings that send anything wait for
+  it; its drafts, its *waiting since* from the records as they are, and the sign-off request do not. The platform's mock
+  half (its launch path's Task 13, sitting 10) would script the new step too.
+- **Not asked here** (F5b's own, or later): what UBC asked when it comes back with questions (`changeRequestedFrom:
+  submitted`), which LTIC relays to the owner today by its own means.
+
+### FE-47 — After launch, an owner cannot ask for a new sign-in detail, and every build that needs one fails until UBC registers it
+
+*Found 2026-10-01 while F6b (moments 17, 18 and the Agents screen) was designed with Rich (`manifest-app-d9`), against
+manifest `a230c1a` (contract 1.5.0, 72 operations). **Decided by Rich the same day:** file it, as FE-46 (*"File FE-47, as
+FE-46"*): carried now, and F6b's moment 17 is designed against it.*
+
+- **Screen and moment:** a change after launch (moment 17), whose agreed plan adds a detail about the people who sign in
+  (a CWL attribute: their last name, their affiliation). The walk-through: *"…and UBC's identity team must agree to share
+  it first."*
+- **How it runs at UBC** (Rich, FE-46): the faculty member sends to LTIC, and LTIC files it with UBC IAM. For a live app's
+  registration that is a **change request** (`change_requested` from `active`, Spec action 10).
+- **What we would call:** the owner's **ask for a change to the live registration**, from their own session (person-only):
+  the attributes wanted, with a package drafted for them (each attribute's purpose and where the app reads it, as
+  `draftIamRegistration` justifies one), sent to LTIC; then, read back: *with LTIC since 5 October*, *with UBC's identity
+  team since 7 October*, *registered*.
+- **What is missing:**
+  - **No owner write on an `active` registration.** `draftIamRegistration` refuses it (`409 LAUNCH_RECORD_SUBMITTED`: it
+    drafts again only from `change_requested` or `expired`), and `submitIamRegistration` moves only from `draft`,
+    `change_requested` or `expired`. Only an administrator can file the change (`recordIamRegistration` to
+    `change_requested` with `requestedAttributes`), and nothing tells them an owner wants one.
+  - **Every build that needs it fails meanwhile.** Once production's registration is registered, `releases/build.ts`'s
+    `assertAttributesRegistered` fails any build, the sandbox's included, whose manifest asks for an attribute not in
+    `registeredAttributes` (naming a change request on file, if there is one). So the change cannot even be tried on the
+    draft address until UBC has registered the detail.
+  - **Nobody at LTIC is told** (FE-46's gap, for this request too).
+- **Why it matters:** moment 17's third kind of change has no path but an email outside the platform. A faculty member
+  whose change needs one more detail meets a failed build with a reason they cannot act on, and nobody owns the wait.
+- **Options:**
+  - **(a) Recommended, and decided by Rich: an owner's request for a change to the live registration, through LTIC as
+    FE-46's sends are** (the names are the platform's to choose):
+    - from `active`, the owner (person-only, `launch:submit` as today) asks for the attributes wanted, with a package drafted
+      from the newest valid manifest (as staging's is), and the request goes to LTIC (FE-46's *sent to LTIC*); LTIC files it
+      with UBC (`change_requested` from `active`, as an administrator does today), and UBC's answer is recorded as now;
+    - `LaunchReadinessItem.since` and `listQueue` date and list it (FE-46's rules);
+    - the platform emails LTIC (FE-46's email).
+    - **Not asked here:** the build's check stays as it is. The front-end's conversation stops before building, says
+      why and who has it, and carries on once the detail is registered.
+  - (b) Say no, for now: a change's plan leaves a new sign-in detail out of a live app, with no path. *Rejected by Rich.*
+  - (c) LTIC told by an email from the front-end's server, nothing recorded on the platform. *Rejected by Rich*: no wait
+    can be counted, and nothing is in the queue.
+- **When:** carried now, at Rich's word (2026-10-01). F6b's moment 17 waits for it for that one kind of change; its other two
+  kinds (straight to students; an administrator's look) do not.
 
 ## Not a gap: decisions that are Rich's
 

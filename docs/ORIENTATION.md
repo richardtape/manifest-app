@@ -4,23 +4,34 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-01, 19:00Z: **F6's sitting 3 is done** (what happened, and the emails); the platform's
-sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa` adopted)*:
+**Where things stand** *(2026-10-01, ~21:15 PDT: **F6's sitting 4 is done** (the live-address watch, and what the page
+reads); the platform's sitting 9 **closed** at `4a6f6c6`, its sitting 10 next; three prep sessions of ours, started by Rich,
+worked ahead beside it)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6's sitting 4, natively** (superpowers:executing-plans).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6's sitting 5, natively** (superpowers:executing-plans).
   1. **First, `ListAgents`, and message the platform's live sitting** with your own session name: the platform knows us
-     as `manifest-app-fc`, which has ended its work. Its sitting 9 (`manifest-6d`) **messages us before its Docker tier
-     and its two closing `pnpm test` runs: hold every Vitest run of ours between its start and end messages** (Rich's
-     arrangement, agreed with it); its single-file runs need nothing. Then `pgrep -fl vitest`, and Step 0 (the plan's
-     *Adopting what lands*).
+     as `manifest-app-00`, which has ended its work. Its **sitting 10** (Tasks 13 and 14: the console and the mock, then
+     the guides) **moves `packages/mock`** and messages us first: **hold every Vitest run of ours through its announced
+     Docker tier and closing runs** (Rich's arrangement), and **restart `pnpm mock`** when its fixtures move. If other
+     sessions of ours are running, relay its holds to them. Then `pgrep -fl vitest`, and Step 0 (the plan's *Adopting what
+     lands*).
   2. **Read** the design, [`plans/2026-10-01-f6-keeping-watch-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md),
      then the plan, [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md): its sittings table,
-     its decisions, sitting 3's dated entry, and **Tasks 6 and 7** (the live-address watch and its outages; our routes:
-     needs, since, history, forget; the outage's fix), **with the (S1), (S2) and (S3) notes**.
-  3. **Sitting 4 needs no platform** (mock mode; the probe is off there, Decision 12: the keeper's tests drive it with
-     fake timers). End it as the plan says: the gates twice, the five acceptance scripts in mock mode
-     (`check-seeing.sh` and `check-going-live.sh` **from a fresh dev database**), the dated entry, the sittings table,
-     this section, the roadmap.
+     its decisions, sitting 4's dated entry, and **Tasks 8 and 9** (the page's calls and the watch token minted; *Your
+     apps* and the Overview: the band, *Since you were last here*, the card's states, *How we keep watch*; the history
+     page), **with the (S1) to (S4) notes**.
+  3. **Sitting 5 needs no platform** (mock mode; its walks rewrite our `/api/needs` and `/api/since` answers in the
+     browser). **Walk with `scripts/walk/`**, the shared library (its README; `node scripts/walk/self-test.ts` proves its
+     checks). End it as the plan says: the gates twice, the five acceptance scripts in mock mode **from a fresh dev
+     database**, the dated entry, the sittings table, this section, the roadmap.
+  - **Sitting 4 is done** (`manifest-app-00`, `238e6a0`, `5d95181`): **`keeping/outage.ts`** and **`probe.ts`**: the
+    keeper looks once a minute at each launched, switched-on, kept app (never in mock mode); down after two misses;
+    **answering again declared at the third answer and dated from the first**; a fall within 30 minutes of a recovery,
+    and its recovery, told to nobody; `410` off; a restored app watched again from its first answer; `outage(projectId)`.
+    **`api/keeping.ts`**: `GET /api/needs` and `/api/since` (each load a visit), `GET /api/apps/:projectId/history` (**a
+    member's alone**), `DELETE /api/apps/:projectId` (an owner's); `AppRef`, `Need`, `SinceLine` in `progress.ts`; the
+    outage's fix (`{ fix: { outage: { from, to } } }`; **no lookup route yet: Task 10's**). **Rich approved the email
+    bodies with three tidy-ups (A, B, C)**; `manifest-app-3a` makes that edit after sitting 4: check `git log` for it.
   - **Sitting 3 is done** (`manifest-app-fc`, `b4cfb9f`, `bacf85c`): `keeping/happenings.ts` (an event read into a
     `Happening`; `linesOf(entries, members, launchedAt)`, **its third argument the kept app's `launchedAt`**; `Line`
     gains `whom`); the emails (`keeping/emails.ts`, `words.ts`, `mail.ts`), **nodemailer 10.0.13, our first new
@@ -42,10 +53,21 @@ sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa`
     gone from 7100** (the platform's sitting 8 truncated its database; `manifest-8d` removed its six containers, networks,
     volumes and image): **its repository `Manifest-local-dev/f6-watch` is owned by no project, for Rich to delete on
     github.com.**
-  - **F5b** (the clocks' own actions, UBC's sequential order: Spec action 9) is written when the platform's sittings 6–10
-    land (`manifest-60`). **Sitting 6 landed** (`d54e1e1`, below): its waits are counted in Vancouver days (a same-day
-    date is noon there), and nothing can be submitted until sitting 7's drafts. **Sitting 7's contract commit landed**
-    (`6cbb489`, below): `draftIamRegistration` and `IamRegistration.package`.
+  - **F5b is designed and planned**, ahead of the platform's sitting 10, at Rich's word (`manifest-app-d9`): the design
+    [`plans/2026-10-01-f5b-the-clocks-design.md`](./plans/2026-10-01-f5b-the-clocks-design.md) (`d5aa9e8`), the plan
+    [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) **APPROVED BY RICH, native** (`d4d3c2b`,
+    `63681ca`): five sittings, **part one after F6** on today's contract (sitting 1 measures on 7100; sitting 2 the three
+    steps in UBC's order, the band, *Trying out*'s line, the sign-off request), **part two when FE-46 lands** (its
+    acceptance also after the platform's sitting 10). **F6b's design is approved by Rich**
+    ([`plans/2026-10-01-f6b-working-together-design.md`](./plans/2026-10-01-f6b-working-together-design.md), `c47ea4b`,
+    `df24be7`: *"See all, act on your own"*; the *Agents* screen honest; FE-47 and FE-5 (a) carried); its plan after F6
+    (D1). Two facts under the walk-through moved (the design carries them into `walkthrough.md` with its plan): moment
+    18's *"keeps its access until it expires"* is untrue since FE-11, and moment 17's *"weeks"* is *"several days"*.
+  - **The prep sessions** (Rich started three on 2026-10-01 to work ahead; their commits are on `main`):
+    `manifest-app-d9` (the contract digest's addendum `2d94516`, F5b, F6b's design: done); `manifest-app-47`
+    (`scripts/walk/`, `8a63767`; **`scripts/close-out.sh`, `2a53a6d`, dry-run only until Rich reviews it**; it waits to agree
+    Task 12's `check-keeping` harness with the next F6 session); `manifest-app-3a` (the faculty-ready adoption note
+    `3529411`; `docs/minors.md` `1f14057`; the email edit, A, B and C).
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
     session starts with `pgrep -fl vitest`. **Restart `pnpm mock`** after a landing that moves the mock's fixtures.
 - **F4a, executed** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), its
@@ -60,19 +82,27 @@ sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa`
     platform today: its load rehearsal is blocking and not built. Options (a) build it first, (b) not-built stops blocking,
     (c) say so earlier.
   - **FE-43**'s read half (nothing reads a dry run back; the platform's half, `REHEARSAL_RUNNING`, landed).
-  - **The platform's F8** (a provider's `422` as `200` `null`): its faculty-ready plan fixes it; ours reads both.
+  - **FE-46, FE-47 and FE-5 (a)** (written 2026-10-01 in `manifest-app-d9`'s session): **CONFIRMED by Rich in
+    `manifest-6d`'s session** (19:56 PDT, manifest `ddc76d7`). **Each needs a spec action** (the platform's planning session)
+    before any platform task builds it; F5b's part two waits for FE-46, F6b's moment 17 for FE-47.
+  - **`scripts/close-out.sh`** (`manifest-app-47`, `2a53a6d`): review it before anyone runs it for real (only `--dry-run`
+    so far).
+  - **The platform's F8** (a provider's `422` as `200` `null`): its faculty-ready plan fixes it. **Ours reads a plain
+    `422` and `200 null`, but not a refusal that arrives mid-stream**: `model/stream.ts` reads any `error` chunk as
+    `MODEL_UNREACHABLE`, so the page would say *"We can't reach the model"* (`manifest-app-3a`; `docs/minors.md`'s m62). A
+    small fix of its own; the platform's Task 1 [M3] decides which form arrives.
   - **F5 sitting 6's decisions** (that plan's two sitting 6 entries): the capable model's view 120,000; the
     blocking-not-built row's words; the intake's audience ceilings; *"A dry run is already running…"*.
   - **Removing the real repositories** `Manifest-local-dev/my-answers` and `class-check-ins` (and the older `f5-reading`,
     `lp-real-a` if they remain), when he wishes.
-  - **Seen, not ours to fix in F4a:** at 375 the folded rail's *Sign out* takes the keyboard's focus with no visible
-    ring (F4a's walk). Accessibility is a legal requirement (§3): a small fix of its own.
-  - **Deferred minors:** F4a's four (its sitting 1 entry), F5's, F4's, F3's and F2's in their dated entries.
+  - **Deferred minors: [`minors.md`](./minors.md)** (`manifest-app-3a`, `1f14057`): every plan's, each checked against
+    the code (61 still true; F3's and m15 were only in git-ignored ledgers, so this is their one committed record), for
+    Rich to choose from. *The 375 focus ring was no defect*: F4a's walk matched `<body>` (`16a79b1`).
 - **Done so far:** **F1** (2026-09-27), **F2** and **F3** (2026-09-28), **F4** (2026-09-29), **F5** (2026-09-30/10-01),
   **F4a** (2026-10-01): Rich clicked each on the real platform. The walk-through is the design ([`walkthrough.md`](./walkthrough.md)).
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
   - **Who is who** *(names change at every handover: `ListAgents` first)*: `manifest-60` its planning session (Rich's
-    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); **`manifest-6d` runs its sitting 9** (Task 12, Rich's (a) on `change_requested`): **its contract commit `a1d4baa` landed and is adopted** (below); next it runs its controls, then **`pnpm test:docker` (~22 min) and two closing `pnpm test` runs, each announced: hold our Vitest through them**, and messages us at its close; a new session of ours tells it its own name; `manifest-s5-b3` Rich's S5 spike,
+    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); `manifest-6d` ran its sitting 9 (Task 12; **closed at `4a6f6c6`**, 2026-10-01, `a1d4baa` and its fix wave `a230c1a` adopted); **its sitting 10 is next** (Tasks 13 and 14), not started at our close: it messages us first, and a new session of ours tells it its own name; `manifest-s5-b3` Rich's S5 spike,
     **finished** (2026-10-01, its findings at manifest `0bb544c`): nothing of it runs, and it no longer needs telling of
     our test runs.
   - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
@@ -82,11 +112,15 @@ sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa`
     and `submitPrivacyAssessment`; five codes; `since`, `stagingRegistration`, `submittedAt`/`submittedBy` (adopted in our
     test data, `f8dcfbc`; nothing else of ours moved). **Sitting 7 CLOSED** (`manifest-8e`, Task 10: `draftIamRegistration`, `IamRegistration.package`, `6cbb489` and `dec71d8`);
     **sitting 8 CLOSED** at `c5116e0` (`manifest-8d`, Task 11: `draftPrivacyAssessment`, `81892d4` and `4aaf0ef`); **sitting
-    9 RUNNING** (`manifest-6d`, Task 12: `requestApproval`, `listQueue`, `changeRequestedFrom`, the fleet's names; its
-    contract commit `a1d4baa` adopted), Rich having chosen (a) on `change_requested` (record where it came from). Each
-    adopted with no change of ours. Then 10 (merged with the published-text pass), then its **faculty-ready plan**:
-    contract 1.6.0, `__Host-` cookies on https (its Task 5 messages us first). `api-findings.md` has each shape.
-  - **The contract is 1.5.0, 72 operations** (the platform's sitting 9, `a1d4baa`: `requestApproval` and `approval:request`, `listQueue`, `approval.requested`, `409 RELEASE_REJECTED`, `IamRegistration.changeRequestedFrom` (required), the fleet's `name`, `state` and `archivedAt`; adopted with no change of ours, `api-findings.md`).
+    9 CLOSED** at `4a6f6c6` (`manifest-6d`, Task 12: `requestApproval`, `listQueue`, `changeRequestedFrom`, the fleet's
+    names; `a1d4baa`, fix wave `a230c1a`), Rich having chosen (a) on `change_requested`. Each adopted with no change of
+    ours. **FE-46, FE-47 and FE-5 are CONFIRMED by Rich** (`ddc76d7`), each awaiting a spec action from its planning
+    session; sitting 10's mock keeps the records as they are until then. Then 10 (the
+    console and the mock, then the guides, merged with the published-text pass), then its **faculty-ready plan**:
+    contract 1.6.0, `__Host-` cookies on https (its Task 5 messages us first; **our adoption is prepared** in
+    [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md): whoIs and edge
+    mode change in one window with its restart). `api-findings.md` has each shape.
+  - **The contract is 1.5.0, 72 operations** (the platform's sitting 9, `a1d4baa`: `requestApproval` and `approval:request`, `listQueue`, `approval.requested`, `409 RELEASE_REJECTED`, `IamRegistration.changeRequestedFrom` (required), the fleet's `name`, `state` and `archivedAt`; its fix wave `a230c1a`: `QueueItem.project` without `state`, descriptions; both adopted with no change of ours, `api-findings.md`).
   - **Mailpit, for F6** (`manifest-60`): SMTP `127.0.0.1:7111` (no authentication, no TLS); the inbox
     `http://127.0.0.1:7112`, its API under `/api/v1/` (`GET /api/v1/messages`, `GET /api/v1/search?query=…`, `DELETE
     /api/v1/messages` with `{"IDs":[…]}`). **Host `127.0.0.1` or `localhost` only** (any other is `403`). In memory, at most
@@ -98,18 +132,18 @@ sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa`
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-01, 19:00Z)*:
-  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher, restarted at F6 sitting 3's close on a fresh
-    dev database), against **our mock on 7102** (restarted for `a1d4baa`, pid 52985). **Its dev database is at version 5**
-    and holds sitting 3's five acceptance runs (no app kept, no email); the ones before are kept as
-    `.data/app-before-f6s3.sqlite` and `app-before-f6s2.sqlite`, F5's as `.data/app-before-f4a.sqlite`. **Its key file**,
-    `packages/server/.keys/keeping.key`, seals nothing yet (no page mints until Task 8). **Its keeper sends email** in both
-    modes, to Mailpit, from *Manifest &lt;manifest@app.manifest.internal&gt;*. Switch to edge mode before anyone clicks the
-    real platform, and say so.
-  - **7100 is the platform's**: at its sitting 8's close the real control plane is up (PID 32498 on `4aaf0ef`, real
-    GitHub, the capable model registered) with an **empty database** (no projects, no users: `operator`'s admin grant
-    went with it, and is asked again after `operator` signs in). Nothing of ours is there. **LiteLLM on 7106; Mailpit on
-    7111/7112.**
+- **The machine** *(2026-10-01, ~21:15 PDT)*:
+  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher, restarted at F6 sitting 4's close on a fresh
+    dev database), against **our mock on 7102** (restarted for `a1d4baa`, pid 52985; nothing has moved its fixtures
+    since). **Its dev database is at version 5** and holds sitting 4's five acceptance runs (no app kept, no email); the
+    ones before are kept as `.data/app-before-f6s4.sqlite`, `app-before-f6s3.sqlite` and `app-before-f6s2.sqlite`, F5's as
+    `.data/app-before-f4a.sqlite`. **Its key file**, `packages/server/.keys/keeping.key`, seals nothing yet (no page mints
+    until Task 8). **Its keeper sends email** in both modes, to Mailpit, from *Manifest &lt;manifest@app.manifest.internal&gt;*,
+    and **looks at live addresses only in edge mode**. Switch to edge mode before anyone clicks the real platform, and say
+    so.
+  - **7100 is the platform's**: at its sitting 9's close the real control plane is up (PID 68983 on `a230c1a`, real
+    GitHub) with an **empty database** (no projects, no users: `operator`'s admin grant is asked again after `operator`
+    signs in). Nothing of ours is there. **LiteLLM on 7106; Mailpit on 7111/7112.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
 - **How to run it** is §6, below.
@@ -152,9 +186,16 @@ sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa`
       `platformStream`; every event once to `history`; `keeping.gap`, `keeping.stopped`; each new happening emailed once;
       *your work is waiting*, at a round's end with no page watching (`Hub.watched`) and once an hour for a day's wait).
       **`happenings.ts`** reads an entry into a `Happening` and chooses the lines (pure); **`emails.ts`** says who is
-      emailed what (pure), **`words.ts`** every sentence of an email, **`mail.ts`** delivers each once (nodemailer). **It only reads**, with
-      `platform/watching.ts` (`getProject?expand=environments`, `listMembers`); `api/keeping.ts` takes the token a page
-      hands over. Started in `buildServer` after the line; `main.ts` reads the key before it listens.
+      emailed what (pure), **`words.ts`** every sentence of an email, **`mail.ts`** delivers each once (nodemailer).
+      **The live-address watch** (sitting 4): **`outage.ts`** (pure: `answerOf`, `observe`, `outageFrom`: down after two
+      misses, answering again after three answers, the outage ending at the first; a fall within 30 minutes of a recovery
+      told to nobody; `410` off) and **`probe.ts`** (one `GET`, no redirect, 10 s, routed by `x-manifest-instance`); the
+      keeper looks once a minute (`probing` is false in mock mode) and answers `outage(projectId)`. **It only reads**, with
+      `platform/watching.ts` (`getProject?expand=environments`, `listMembers`). **`api/keeping.ts`** takes the token a
+      page hands over, and answers the page (sitting 4): `GET /api/needs` and `/api/since` (the person's kept apps; each
+      load a visit), `GET /api/apps/:projectId/history` (a member's alone), `DELETE /api/apps/:projectId` (an owner's,
+      after the page's `deleteProject`). Started in `buildServer` after the line; `main.ts` reads the key before it
+      listens.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. Its contract with
       the page is `api/progress.ts`. One piece of work per conversation at a time runs through `api/work.ts`, its
       claims kept in the hub (`events.ts`), which the line reads. The folds: `intake-state.ts`, `round-state.ts`,
@@ -162,7 +203,9 @@ sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa`
       conversations, the secrets we asked for, the fix under way for an incident (**a fix names its address: `environment:
       'production'` for the live address**), the change under way for a refusal
       (`/refusals/:approvalId/conversation`), **a dry run's fix** (`{ fix: { dryRun } }`, held to its four fields, never the
-      platform's `reason`; found again at `/rehearsals/:rehearsalId/conversation`), and the hand-over's two rows (`/plan?before=`),
+      platform's `reason`; found again at `/rehearsals/:rehearsalId/conversation`), **an outage's fix** (`{ fix: { outage:
+      { from, to } } }`, F6 sitting 4: no incident, the lead looks in the code; no lookup route yet, Task 10's), and the
+      hand-over's two rows (`/plan?before=`),
       and `api/plan.ts` a plan.
     - `model/` asks a model for structured output only, and says which model answered. **Every call streams** (F5
       sitting 2): `model/stream.ts` reads the events, and `client.ts` holds three deadlines per use (`ROUND_DEADLINES`,
@@ -175,7 +218,7 @@ sitting 9 (`manifest-6d`, Task 12) is **running**, its contract commit `a1d4baa`
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (1905 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (1992 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action; **and (F6) holds `keeping/` to the
       watch token's reads, and refuses `archive`, `restore` and a project's `DELETE` anywhere**;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
@@ -253,13 +296,18 @@ that runs.
 | [`2026-09-27-reading-note.md`](./2026-09-27-reading-note.md) | What the first session read, and what surprised it |
 | [`research/`](./research) | A digest of the contract (every operation, event, code), and an inventory of the prototype and components |
 | [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md) | **The current plan**: F6, *Keeping watch*, its sittings, Rich's decisions (in its design, [`…-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md)) and ours |
+| [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | **Next after F6**: F5b, approved by Rich, native: part one on today's contract, part two when FE-46 lands. Its design, [`…-design.md`](./plans/2026-10-01-f5b-the-clocks-design.md) |
+| [`plans/2026-10-01-f6b-working-together-design.md`](./plans/2026-10-01-f6b-working-together-design.md) | F6b's design (moments 17, 18, *Agents*), approved by Rich; its plan is written after F6 |
+| [`minors.md`](./minors.md) | Every deferred minor, checked against the code, for Rich to choose from |
+| [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md) | What the platform's faculty-ready plan (1.6.0, `__Host-` cookies) moves of ours, and the order to adopt it |
 | [`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md) | F5, executed: its sittings, Rich's decisions and ours, and what waits on the platform (F5b) |
 | [`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md) | F4a, approved: built when the platform's `Me.mayBuild` lands |
 | [`plans/2026-09-28-f4-seeing-and-changing-it.md`](./plans/2026-09-28-f4-seeing-and-changing-it.md) | F4, executed: its sitting 7 is the record of Rich's click |
 | [`plans/2026-09-28-f3-building-it.md`](./plans/2026-09-28-f3-building-it.md) | F3, executed: its sitting 7 is the record of the real platform |
 
-*`research/`'s contract digest predates the platform's sittings 7–9a (57 operations, not 66). For F3, read the
-contract and the guides themselves.*
+*`research/contract-digest.md` is of 1.4.0 at `186fa34` (57 operations); its addendum,
+[`research/contract-digest-addendum.md`](./research/contract-digest-addendum.md), covers everything to 1.5.0 at `a230c1a`
+(72): read both. manifest's guides (`launching.md` above all) predate its sittings 6–9.*
 
 **In manifest, read-only:**
 - `docs/superpowers/design/system/`: the design system, the language, the states, the components;
@@ -603,6 +651,20 @@ bash scripts/check-seeing.sh                                    # F4's acceptanc
 - **We read the platform's working tree, not its commits** (`link:`): a platform session's contract edits reach our
   typecheck before it commits them, so *"wait for the commit"* changes nothing we see. Say OK, and adopt it (F4a: sitting
   6's `since` reached five of our test literals mid-review).
+
+- **Walks: import `scripts/walk/index.ts`** (its README; `manifest-app-47`, `8a63767`): headless Chrome over DevTools, Node 24,
+  no dependency, with the walk traps above closed once; **`node scripts/walk/self-test.ts` proves its checks (53)**. A
+  walk's *"focus reached X"* reads a focusable element's accessible name, **never `document.activeElement.textContent`**:
+  past the last control, focus is `<body>`, whose text holds every hidden word (F4a's *"Sign out"* at 375 was `<body>`).
+- **A sitting's end: `bash scripts/close-out.sh --keep-as <name> --logs <dir>`** (`--dry-run` first), **after Rich's review
+  of it** (`2a53a6d`): until then, by hand as §6 and above.
+- **Several sessions of ours in one checkout** (F6 sitting 4, Rich's prep sessions): the index is shared, so **commit by
+  pathspec** (`git commit -m … -- <files>`; a new file `git add`ed first), never a bare `git commit` after `git add`, and
+  **format only your own files** (`pnpm exec prettier --write <files>`, never `pnpm format`). Another session's
+  uncommitted work is in your gates (the root `tsconfig.json` is `pnpm typecheck`'s first step). Relay the platform's holds
+  to them, and say before an acceptance run, which needs 7105 and a fresh dev database to itself.
+- **An explicit `undefined` takes a parameter's default, in a test helper too**: F6 sitting 4's *"without a person"* request
+  passed `undefined` for the cookie and was sent as Alice. Say *none* with `null`.
 
 ## 8. Working with the platform session, and other agents
 

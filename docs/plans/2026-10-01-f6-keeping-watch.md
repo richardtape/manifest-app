@@ -51,7 +51,7 @@ went live. Walk-through moments **16, 19 and 20**. Moments 17 and 18, and the *A
 | 1 | 1 | **The measurements**, on 7100 in the platform's window, at Rich's word: a watch token's reads and stream; the students' address through the edge; switch off, back on and the two deploys after; delete; a fall (stopping the container: **Rich's word first**); the mock's answers. **Alone.** It needs 7100 free (the platform's sitting 7 closes first), so **sittings 2–4 may run before it**: they need no platform | **done 2026-10-01** (`manifest-app-34`, 16:46–17:10Z on 7100, in `manifest-8e`'s window): M0, M2–M4, M6–M8 measured, M5 not (no failing production change without changing the platform); **Tasks 3, 4, 6 and 11 corrected (S1)**: the edge's catch-all answers `200` (an answer counts only with `x-manifest-instance`), a dry run's production instance is not a line, the last-served release is production's own `instance`. `f6-watch` left live. No code (the dated entry below) |
 | 2 | 2, 3 | Our server: the store's version 5; the seal and its key; the watch token handed over and kept; the keeper's streams, its history and its gaps | **done 2026-10-01** (`manifest-app-28`, mock mode only): `ecec79e` (Task 2), `361058d` (Task 3). **F3's stream gained each event's `at` and an optional `replayed` report** (a ruling: the keeper cannot see a reconnect's overlap otherwise); Tasks 4, 5, 7 and 8 noted (S2). 1771 tests twice; the five acceptance scripts pass; the platform's `4aaf0ef` adopted |
 | 3 | 4, 5 | The happenings and the lines; the emails, once each, through nodemailer | **done 2026-10-01** (`manifest-app-fc`, mock mode only): `b4cfb9f` (Task 4), `bacf85c` (Task 5: nodemailer 10.0.13, its types its own). **`linesOf` takes the kept app's `launchedAt`; `Line` gains `whom`; the first replay of an app never watched emails nobody**; Tasks 4–7 and 9 noted (S3). 1905 tests twice; the five acceptance scripts pass; the platform's `a1d4baa` (72 operations) adopted. **The email bodies wait for Rich's word** |
-| 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | not started |
+| 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | **done 2026-10-01** (`manifest-app-00`, mock mode only, beside the platform's sitting 9 and its holds): `238e6a0` (Task 6), `5d95181` (Task 7). **The recovery is declared at the third answer and dated from the first; a fall within 30 minutes of a recovery, and its recovery, are told to nobody; a restored app is watched again from its first answer; `/history` is a member's alone; a switched-off app's needs are its questions**; Tasks 9, 10 and 12 noted (S4). 1992 tests twice; the five acceptance scripts pass; the platform's `a230c1a` adopted. **The email bodies approved by Rich with A, B and C** (`manifest-app-3a`'s edit, after this sitting). FE-46, FE-47, FE-5 (a) written |
 | 5 | 8, 9 | The page: the platform's new calls; the watch token minted; *Your apps* and the Overview (the band, *Since you were last here*, the card's states, *How we keep watch*); the history page | not started |
 | 6 | 10, 11 | The page: *Start it again* and *What happened?*; switching off, back on, *Start it for your students*, and delete | not started |
 | 7 | 12 | **The acceptance:** `scripts/check-keeping.sh` against the mock and Mailpit; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | not started |
@@ -898,6 +898,12 @@ unreachable: string | null      // a `down` need's time: the students' fact turn
   - **How we keep watch** (`how.tsx`): a closed `Disclosure` on the Overview of a launched app; its words.
   - **The router**: `/apps/x/history` parses; nothing else moves (F4's and F5's addresses still parse).
   - `machineryIn(text())` empty on *Your apps*, the Overview and the history page, closed disclosures excluded.
+  - **(S4) Our routes as built** (Task 7): `AppRef`, `Need` and `SinceLine` are in `api/progress.ts`, as the
+    Interfaces say. `/api/needs` and `/api/since` read the person's **kept** apps; `?projectId=` of another person's app
+    is `404`, of an app we keep nobody for, empty. **A switched-off app's needs are its questions alone** (no `down`,
+    no `answering-again`, no `change-failed`). `answering-again` stands while the watch answers (or has missed once), for
+    a day after the recovery's `to`. **`/history` is `404` for an app we keep nobody for**, as for a stranger: the page's
+    *There's nothing here.*, which before the first hand-over (Task 8) is true.
 - [ ] **Step 2: Red. Step 3: Implement.** Each page reads `ours.needs()` / `ours.since()` beside its platform reads, and
   a failure of ours loses the band or the lines, never the page.
 - [ ] **Step 4: Green; controls:** a helper shown the button (red); `since` drawn with `lastHere` null (red); a
@@ -940,7 +946,10 @@ export function WhatHappened(props: { ours: Ours; project: Schemas['Project']; f
     staging, waits for its end, then to production (the step-up between if asked). Any other refusal: F5's words.
   - **What happened?** posts `startChange` `{ fix: { outage: { from, to } } }` with a freshly minted conversation token
     (as *[What went wrong]* does) and opens the conversation; pressed again, the same conversation (our route, as
-    `fixFor`).
+    `fixFor`). **(S4) That route does not exist yet**: Task 7 built the fix (`{ fix: { outage: { from, to } } }`,
+    `OUTAGE_FIX_WORDS`, `Piece.outage`, the lead's view) but no lookup. Task 10 adds it on our server, test-first:
+    `GET /api/apps/:projectId/outages/:from/conversation` and the store's `fixForOutage` (as `fixForDryRun`:
+    `json_extract(messages.body, '$.fix.outage.from')`, the person's own, not set aside).
   - A helper never sees the press (the band's own test, Task 9); `machineryIn` empty.
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the release read at page load rather than at the
   press (red); staging's release sent on the first press (red); `then` left in the address (red). Each restored.
@@ -1017,6 +1026,14 @@ export function StartForStudents(props: { platform: Platform; project: Schemas['
 
   **Negative controls, each red:** the actor emailed; a second *can't reach* after a restart; a token in the clear in
   `watch_tokens`; the probe running in mock mode.
+
+  **(S4) The watch, as built (Task 6):** `createKeeper` takes `probe` (`probeAddress`) and `probing`; the keeper looks
+  every **60 s by its own `setInterval`** (`MINUTE_MS` in `keeper.ts`), so the sequence above (two misses, three
+  answers, a restart, two misses more) takes about eight real minutes in-process. Either accept that, or give
+  `KeeperDeps` an optional look interval (a dependency of the keeper, default 60 s: never a setting of our server). An
+  outage's rows are `keeping.unreachable` at `from` (`detail.again: true` when within 30 minutes of a recovery, told to
+  nobody) and `keeping.answering` at `to`, **`to` being the first of the three answers**; their emails are keyed
+  `<projectId>:outage:<from>` and `<projectId>:answering:<from>`.
 - [ ] **Step 2: The whole-branch review** (a fresh reviewer, read-only, dispatched at the sitting's start so its fixes
   land before the real platform), its findings fixed test-first.
 - [ ] **Step 3: On the real platform** (at Rich's word, in the platform's window, telling the platform session; our
@@ -1278,3 +1295,81 @@ empty). The admin grant was run by `manifest-8e` at Rich's own word in its sessi
   7102 (restarted for `a1d4baa`, pid 52985). Nothing of ours on 7100.
 - **Next: sitting 4** (Tasks 6 and 7): the live-address watch and its outages; our routes (needs, since, history,
   forget) and the outage's fix.
+
+### 2026-10-01 — Sitting 4: the live-address watch, and what the page reads (session `manifest-app-00`, mock mode only)
+
+- **Step 0:** contract 1.5.0, 72 operations, manifest clean at `a1d4baa`; typecheck clean, 1905 tests. **The platform's
+  sitting 9 (`manifest-6d`) ran beside us**, by the arrangement: every Vitest of ours held through its Docker tier
+  (18:50–19:11 PDT) and its two closing `pnpm test` runs; the tests for both tasks were written in the first hold and run
+  red after it. **Its fix wave `a230c1a`** (1.5.0, 72: `QueueItem.project` without `state`; descriptions only) was
+  announced before and after, and adopted with Task 6: typecheck clean, 1953 tests; nothing of ours moved; no fixture
+  changed (the mock not restarted).
+- **Rich started three prep sessions mid-sitting** (*working ahead*, each handed its work by this one, the platform's holds
+  relayed to them; each commits by pathspec, formats only its own files, and keeps out of `packages/server/src`, 7105,
+  7102 and `.data`). What they did, all committed by pathspec:
+  - **`manifest-app-d9`**: the contract digest's addendum (`2d94516`: 1.4.0 at `186fa34` to 1.5.0 at `a230c1a`); **F5b's
+    design and plan, approved by Rich, native** (`d5aa9e8`, `d4d3c2b`, `63681ca`: five sittings, part one after F6 on
+    today's contract, part two when FE-46 lands); **F6b's design, approved by Rich** (`c47ea4b`, `df24be7`; its plan after F6).
+  - **`manifest-app-47`**: `scripts/walk/` (`8a63767`, a headless-Chrome library over DevTools, no dependency; its
+    `self-test.ts` 53/53), with the root `tsconfig.json`; `scripts/close-out.sh` (`2a53a6d`, **dry-run only until Rich
+    reviews it**).
+  - **`manifest-app-3a`**: the faculty-ready adoption note (`3529411`); `docs/minors.md` (`1f14057`: 61 still true, for
+    Rich to choose from); **the 375 focus ring was no defect** (`16a79b1`: F4a's walk matched `<body>`); the email bodies
+    put to Rich (below).
+- **Task 6** (`238e6a0`): `keeping/outage.ts` (pure: `answerOf`, `observe`, `outageFrom`) and `keeping/probe.ts`
+  (`probeAddress`: no redirect followed, 10 s, the body never read, routed by `x-manifest-instance`); the keeper looks once a
+  minute at each launched, switched-on, kept app with a students' address (`probing` false in mock mode), writes
+  `keeping.unreachable` and `keeping.answering`, tells the owners, and answers `outage(projectId)`. **The rulings** (the
+  ledger has each, with its cost):
+  - **The design and the plan disagreed** (§4: *"closes the outage at its first answer"*; Decision 8: three answers in a
+    row). Both kept: **the recovery is declared at the third answer, and its `to` is the first** (`down.answered`).
+  - **A fall within 30 minutes of a recovery is told to nobody, and so is its recovery** (`again`, on both rows): Review
+    Focus 3's *two emails in all*. Both rows stay in history.
+  - **From `off`, a miss stays `off`**: a restored app is not running until its owner starts it for the students; only an
+    answer brings the watch back. `outageFrom` reads `project.archived` as off.
+  - An app no longer watched is read from history again when next watched; a look in flight is not sent twice.
+  - Controls, five, each red and restored: one miss as down; `410` as a miss; the outage read fresh at boot; a fall
+    `again` told; the outage ending at the third answer.
+- **Task 7** (`5d95181`): `GET /api/needs`, `GET /api/since`, `GET /api/apps/:projectId/history`, `DELETE
+  /api/apps/:projectId` (`api/keeping.ts`); `AppRef`, `Need`, `SinceLine` (`api/progress.ts`); the outage's fix (`{ fix: {
+  outage: { from, to } } }`, `OUTAGE_FIX_WORDS`, `Piece.outage`, the lead's view: no record of why, nothing it wrote can be
+  read, look in the code). **The rulings:**
+  - **`/history` is a member's alone**, so an app we keep nobody for is `404` too (stricter than `…/keeping`).
+  - **`/needs` and `/since` read the person's kept apps**; `?projectId=` of another's app is `404`.
+  - **A switched-off app's needs are its questions alone** (not in the plan; tested).
+  - **`change-failed`** is the newest production change-failed line unless a newer version reached the students (a
+    *line*: a restart's healthy does not clear it) or anyone's fix is under way.
+  - **`DELETE`** stops each `building` or `paused` conversation on the app, anyone's, then the keeper forgets it; a change
+    being planned at that moment is not stopped (rare).
+  - A test fault fixed: the route tests made conversations for people never remembered (`FOREIGN KEY`).
+  - Controls, three, each red and restored: `/needs` without the membership check; `DELETE` for a helper; the outage's
+    fix reading an incident.
+- **Rich's word, on the email bodies** (`keeping/words.ts`): **approved with three tidy-ups**: A, no *"<App>'s"*; B, a day
+  on every time (*"at 10:03am on 1 October"*, Vancouver's); C, *"Someone was added…"* when neither person can be named.
+  Given in `manifest-app-3a`'s session after seeing every body rendered, and confirmed in ours. **The edit is
+  `manifest-app-3a`'s**, test-first, after this sitting.
+- **FE-46 written** (Rich, in `manifest-app-d9`'s session, F5b's design): the owner sends the launch documents to LTIC, not
+  to UBC; Rich's (a), with the sign-off request emailed too. **FE-47 written, and FE-5 carried (a)** (Rich, F6b's design):
+  after launch an owner cannot ask for a new sign-in detail; an agent's question does not say what it asks. All three
+  carried by `manifest-app-d9` to `manifest-6d`, and **confirmed by Rich there** (`ddc76d7`). F5b's sending sittings wait
+  for FE-46.
+- **Found by `manifest-app-3a`, verified:** a provider's refusal arriving mid-stream (an `error` chunk) is read as
+  `MODEL_UNREACHABLE` (`model/stream.ts`), so ORIENTATION's *"ours reads both"* (F8) held only for a plain `422` and for
+  `200 null`. `docs/minors.md`'s m62: a small fix of its own, for Rich.
+- **Notes carried (S4)** into Tasks 9, 10 and 12: the routes as built; Task 10's lookup route for an outage's fix (not yet
+  built); the watch's 60-s interval for `check-keeping.ts`.
+- **Gates:** 1992 tests (84 files), twice; lint, typecheck and format clean (on the whole tree, the prep sessions'
+  commits included); `pgrep -fl vitest` empty of ours at the start and the close. **In mock mode, from a fresh dev
+  database** (the old one kept as `.data/app-before-f6s4.sqlite`): `check-seeing.sh` 8/8, `check-going-live.sh` 8/8,
+  `check-slice.sh` 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12. They sent no email and kept no app
+  (nothing hands a watch token over before Task 8), and the watch never looks in mock mode.
+- **The platform's sitting 9 closed** at `4a6f6c6` (`manifest-6d`; `a1d4baa`, `a230c1a` before it): the contract stays
+  1.5.0, 72 operations, nothing moved for us since `a230c1a`. FE-46, FE-47 and FE-5 recorded there as PROPOSED, its §7e
+  asking sitting 10 (Tasks 13 and 14: the console and the mock, then the guides; it messages us first) to put them to
+  Rich. **Rich then confirmed all three in `manifest-6d`'s session** (19:56 PDT, manifest `ddc76d7`; a relay from
+  `manifest-app-d9` had not been enough, by the platform's rule): each awaits a spec action before it is built.
+- **The machine at the close:** our server in mock mode on 7105 (`nohup pnpm dev:mock`, one watcher, restarted on a fresh
+  dev database), against our mock on 7102 (pid 52985, not restarted: no fixture moved). The platform's control plane is
+  back on 7100 (PID 68983, `a230c1a`, real GitHub, an empty database). Nothing of ours on 7100.
+- **Next: sitting 5** (Tasks 8 and 9): the page's calls and the watch token minted; *Your apps* and the Overview (the
+  band, *Since you were last here*, the card's states, *How we keep watch*); the history page.
