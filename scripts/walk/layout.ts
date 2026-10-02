@@ -7,9 +7,11 @@
  * - THE PAGE: `scrollWidth` against the viewport. It holds while a chip runs past its card
  *   inside the page (F5 sitting 3), so it is never the only check;
  * - EACH CARD'S CHILDREN against the card, left and right edges (F5 sitting 3's clock chip);
- * - EACH SENTENCE'S `scrollWidth` against its `clientWidth`: overflowing text does not grow
- *   its `<p>`, so a box check stays green while a word runs out of it (F5 sitting 4). To prove
- *   a sentence wraps, give it a word that cannot break: Chrome breaks an address at hyphens.
+ * - EVERY BOX THAT HOLDS TEXT, its `scrollWidth` against its `clientWidth`, whatever its tag:
+ *   overflowing text does not grow its `<p>`, so a box check stays green while a word runs out
+ *   of it (F5 sitting 4), and a list of tags missed the rail's overline, a `<span>` (measured:
+ *   a long app name ran out of the rail at 1280). Only the innermost such box is named. To
+ *   prove a sentence wraps, give it a word that cannot break: Chrome breaks at hyphens.
  * Text that a box clips on purpose (`overflow` other than `visible`: an ellipsis, a scroller,
  * a visually hidden label) is not a spill.
  */
@@ -17,14 +19,13 @@
 export interface LayoutOptions {
   /** The boxes whose children must stay inside them. */
   cards: string
-  /** The elements whose own text must stay inside them. */
+  /** Where the text that must stay inside its box is looked for. */
   sentences: string
 }
 
 export const LAYOUT_DEFAULTS: LayoutOptions = {
   cards: '.mf-card',
-  sentences:
-    'p, h1, h2, h3, h4, li, dt, dd, label, legend, td, th, blockquote, figcaption, button, a',
+  sentences: 'body',
 }
 
 /** Every way the page fails to fit, in words; empty when it fits. */
@@ -52,7 +53,7 @@ export function layoutProblems(options: LayoutOptions): string[] {
       .slice(0, 3)
       .map(nameOf)
     problems.push(
-      `the page is ${root.scrollWidth}px wide in a ${root.clientWidth}px window: ${wide.join(', ')}`,
+      `the page is ${root.scrollWidth}px wide in a ${root.clientWidth}px window: ${wide.join(', ') || 'text past its box (below)'}`,
     )
   }
 
@@ -72,13 +73,20 @@ export function layoutProblems(options: LayoutOptions): string[] {
     }
   }
 
-  for (const element of document.querySelectorAll(options.sentences)) {
-    if (!(element instanceof HTMLElement) || !element.clientWidth) continue
-    if (getComputedStyle(element).overflowX !== 'visible') continue
-    if (element.scrollWidth > element.clientWidth + 1)
-      problems.push(
-        `${nameOf(element)} ${quote(element)} runs ${element.scrollWidth - element.clientWidth}px past its own box`,
-      )
+  const spilling: HTMLElement[] = []
+  for (const root of document.querySelectorAll(options.sentences))
+    for (const element of [root, ...root.querySelectorAll('*')]) {
+      if (!(element instanceof HTMLElement) || !element.clientWidth) continue
+      if (!(element.textContent ?? '').trim()) continue
+      if (getComputedStyle(element).overflowX !== 'visible') continue
+      if (element.scrollWidth > element.clientWidth + 1) spilling.push(element)
+    }
+  for (const element of spilling) {
+    // The innermost box only: its parents spill because it does.
+    if (spilling.some((other) => other !== element && element.contains(other))) continue
+    problems.push(
+      `${nameOf(element)} ${quote(element)} runs ${element.scrollWidth - element.clientWidth}px past its own box`,
+    )
   }
   return problems
 }
