@@ -12,7 +12,7 @@ describe('the router', () => {
     ['/new/c-1/more', { name: 'unknown' }],
     ['/nowhere', { name: 'unknown' }],
     // F4 Task 5: an app's own pages; F5 Task 5: the Overview is its landing page (Decision 1).
-    ['/apps/mock-app', { name: 'app-overview', slug: 'mock-app' }],
+    ['/apps/mock-app', { name: 'app-overview', slug: 'mock-app', then: null }],
     ['/apps/mock-app/preview', { name: 'app-preview', slug: 'mock-app', tab: 'draft' }],
     [
       '/apps/mock-app/going-live',
@@ -63,6 +63,36 @@ describe('the router', () => {
       }),
   )
 
+  it.each([
+    ['?then=start-again', 'start-again'],
+    ['?then=students', 'students'],
+    ['?then=switch-off', 'switch-off'],
+    ['then=delete', 'delete'],
+    // Going live's presses are Going live's: the Overview has none of them.
+    ['?then=live', null],
+    ['?then=dry-run', null],
+    ['?then=somewhere', null],
+    ['', null],
+  ])(
+    'the Overview’s `then` from %s is %s (F6 Decision 10: back from the step-up)',
+    (search, then) =>
+      expect(parse('/apps/mock-app', search)).toEqual({
+        name: 'app-overview',
+        slug: 'mock-app',
+        then,
+      }),
+  )
+
+  it.each(['?then=start-again', '?then=switch-off', '?then=students', '?then=delete'])(
+    'Going live never takes the Overview’s %s',
+    (search) =>
+      expect(parse('/apps/mock-app/going-live', search)).toEqual({
+        name: 'app-going-live',
+        slug: 'mock-app',
+        then: null,
+      }),
+  )
+
   // REVIEW FOCUS 5: F4's addresses still open what they opened, and the bar shows the new one.
   it.each([
     ['?tab=trying-out', 'trying-out'],
@@ -81,6 +111,7 @@ describe('the router', () => {
     ['/apps/mock-app', ''],
     ['/apps/mock-app/preview', '?tab=trying-out'],
     ['/apps/mock-app/going-live', '?then=live'],
+    ['/apps/mock-app', '?then=start-again'],
     ['/', ''],
     ['/apps/%E0', '?tab=draft'],
   ])('%s%s is already where it belongs', (path, search) =>

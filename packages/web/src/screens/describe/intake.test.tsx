@@ -274,6 +274,7 @@ function stage(
     fixFor: () => new Promise(() => undefined),
     agreedRows: () => new Promise(() => undefined),
     fixForDryRun: () => Promise.resolve(null),
+    fixForOutage: () => Promise.resolve(null),
     changeForRefusal: () => new Promise(() => undefined),
     // F6 Task 8: the Keeping watch is asked about after Make it; it never answers unless a test says.
     keeping: (projectId) => {

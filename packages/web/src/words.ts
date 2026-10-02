@@ -621,6 +621,32 @@ export const words = {
       switchedOff: (day: string) => `Switched off, ${day}`, // ✓ (the design)
       unreachable: (since: string) => `Your students can't reach it, since ${since}`, // ✓ (the design)
     },
+    /**
+     * F6 TASK 10, *START IT AGAIN* (moment 19, design §4): the version the students' address was
+     * serving, put back up from the person's own session, with moment 14's second sign-in.
+     */
+    startAgain: {
+      stationsLabel: 'Starting it again', // ✓ (F5's stations, named)
+      nobodyLost:
+        "Nobody has lost anything: your students' address keeps what it has until this answers.", // ✓
+      landed: "It's answering again.", // ✓
+      /**
+       * ✓ RELEASE_NOT_STAGED: trying-out has moved on, and the live address takes only what it
+       * serves. `newer` and `older` are "30 September, 10:40am"; null when undated (ours).
+       */
+      newer: (newer: string | null, older: string | null) =>
+        `Your trying-out address has a newer version${newer === null ? '' : `, from ${newer}`}. Start that one instead, or put ${older === null ? 'the one your students had' : `the version from ${older}`} back on trying-out first?`,
+      startNewer: 'Start the newer one', // ✓
+      /** ✓ `day` is "18 September"; null when undated (ours). */
+      putBack: (day: string | null) =>
+        day === null ? 'Put theirs back first' : `Put ${day}'s back first`,
+      unsureLong: "We stopped waiting, and couldn't see how it ended.", // ours (F5's M1)
+      gate: "It can't go to your students yet. Going live shows what it needs.", // ours
+    },
+    /** F6 Task 10, *What happened?*: the conversation's title (our server's OUTAGE_FIX_WORDS). */
+    whatHappened: {
+      fixTitle: "Your students couldn't reach it", // ✓
+    },
   },
   overview: {
     /** Ours: the address rows' name, for a screen reader. */

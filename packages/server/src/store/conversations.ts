@@ -94,6 +94,11 @@ export interface Store extends KeepingStatements {
     rehearsalId: string,
     personId: string,
   ): string | undefined
+  /**
+   * The person's fix for this outage, by the moment it began (as our watch wrote it), the latest,
+   * unless it was set aside: so *[What happened?]* pressed again opens it (F6 Task 10, S4).
+   */
+  fixForOutage(projectId: string, from: string, personId: string): string | undefined
   /** F6 Decision 14: conversations on an app, any person's, untouched since `before`. */
   idleConversations(before: string): Conversation[]
   /** F6 Decision 15: anyone's fix for this incident, not set aside. */

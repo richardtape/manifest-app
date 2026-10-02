@@ -238,6 +238,7 @@ export function App({
           project={lookup.project}
           expire={expire}
           timeZone={timeZone}
+          then={route.then}
           {...(now === undefined ? {} : { now })}
         />
       ) : route.name === 'app-going-live' ? (

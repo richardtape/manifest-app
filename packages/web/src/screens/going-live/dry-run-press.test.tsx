@@ -206,6 +206,7 @@ function stage(start: Partial<World> = {}) {
       ours.push(['fixForDryRun', ...args])
       return Promise.resolve(world.fix === null ? null : { id: world.fix })
     },
+    fixForOutage: () => Promise.resolve(null),
     agreedRows: () => Promise.resolve(null),
     changeForRefusal: () => Promise.resolve(null),
     keeping: never,

@@ -343,6 +343,26 @@ describe('the dry run’s fix (F5 Task 7)', () => {
     )
     expect(await createOurs().fixForDryRun(PROJECT, REHEARSAL)).toBeNull()
   })
+
+  it('fixForOutage asks by the moment the outage began, encoded, and answers the fix under way, or null (404) (F6 Task 10)', async () => {
+    const FROM = '2026-10-01T17:03:00.000Z'
+    const fetch = vi.fn(
+      async () => new Response(JSON.stringify({ id: 'c-9' }), { status: 200 }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    expect(await createOurs().fixForOutage(PROJECT, FROM)).toEqual({ id: 'c-9' })
+    expect((fetch.mock.calls[0] as unknown as [string])[0]).toBe(
+      `/api/apps/${PROJECT}/outages/2026-10-01T17%3A03%3A00.000Z/conversation`,
+    )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: { code: 'NOT_FOUND' } }), { status: 404 }),
+      ),
+    )
+    expect(await createOurs().fixForOutage(PROJECT, FROM)).toBeNull()
+  })
 })
 
 describe('agreedRows: the hand-over’s two rows (F5 Task 9)', () => {

@@ -5,13 +5,14 @@ import { useCallback, useEffect, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import { linkTo, TABS, type Tab } from '../../router.js'
+import { linkTo, remember, TABS, type Tab, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { clocksUnmet, rowsOf } from '../going-live/checklist.js'
 import { HowWeKeepWatch } from '../keeping/how.js'
 import type { PageNeed } from '../keeping/lines.js'
 import { NeedsBand } from '../keeping/needs.js'
 import { Since } from '../keeping/since.js'
+import { StartItAgain, WhatHappened } from '../keeping/start-again.js'
 import { releasesToRead, servingFact, type Said } from '../preview/facts.js'
 import { KIND } from '../preview/preview.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
@@ -148,6 +149,7 @@ export function Overview({
   expire,
   now = () => new Date(),
   timeZone,
+  then = null,
 }: {
   platform: Platform
   ours: Ours
@@ -155,12 +157,23 @@ export function Overview({
   expire: () => void
   now?: () => Date
   timeZone?: string | undefined
+  /** Where the step-up sent them back to: one of F6's presses (Decision 10). */
+  then?: Then
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
+  // BACK FROM SIGNING IN AGAIN (F6 Decision 10): said once, by the press it was for, and `then`
+  // taken out of the address without a navigation (the focus stays put), so a reload is not
+  // "back" again.
+  const [back] = useState(then)
+  useEffect(() => {
+    if (back !== null) remember(`/apps/${encodeURIComponent(project.slug)}`)
+  }, [back, project.slug])
   // F6 TASK 9: our server's reads, on their own: a failure of ours loses the band or the lines,
   // and a slow answer never holds the page.
   const [keeping, setKeeping] = useState<Keeping | null>(null)
+  // Read again when a press ends (Task 10), without losing the page or the press's own words.
+  const [keepingAttempt, setKeepingAttempt] = useState(0)
   useEffect(() => {
     let live = true
     void Promise.allSettled([ours.needs(project.id), ours.since(project.id)]).then(
@@ -175,7 +188,7 @@ export function Overview({
     return () => {
       live = false
     }
-  }, [ours, project.id, attempt])
+  }, [ours, project.id, attempt, keepingAttempt])
 
   useEffect(() => {
     let live = true
@@ -215,6 +228,30 @@ export function Overview({
           <NeedsBand
             needs={[...(keeping?.needs ?? []), ...loaded.seen.goingLive]}
             timeZone={timeZone}
+            press={(need) =>
+              // TASK 10: the band's presses are here, on the app's own page; a helper has none.
+              need.kind === 'down' && need.owner ? (
+                <StartItAgain
+                  platform={platform}
+                  ours={ours}
+                  project={project}
+                  arrived={back === 'start-again'}
+                  onDone={() => setKeepingAttempt((n) => n + 1)}
+                  expire={expire}
+                  now={now}
+                  timeZone={timeZone}
+                />
+              ) : need.kind === 'answering-again' ? (
+                <WhatHappened
+                  platform={platform}
+                  ours={ours}
+                  project={project}
+                  from={need.from}
+                  to={need.to}
+                  expire={expire}
+                />
+              ) : null
+            }
           />
           {loaded.seen.handed === null ? null : (
             <ForYourStudents name={project.name} handed={loaded.seen.handed} />

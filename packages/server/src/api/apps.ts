@@ -362,6 +362,21 @@ export function registerApps(
     },
   )
 
+  // [WHAT HAPPENED?] AGAIN (F6 Task 10, S4): the fix we are already making for this outage, named
+  // by the moment it began as our watch wrote it, so the press opens it rather than starting a
+  // second. One set aside is not under way.
+  app.get<{ Params: { projectId: string; from: string } }>(
+    '/api/apps/:projectId/outages/:from/conversation',
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      const { projectId, from } = request.params
+      const id = store.fixForOutage(projectId, from, who.person.id)
+      if (id === undefined) return refuse(reply, 404, 'NOT_FOUND')
+      return { id }
+    },
+  )
+
   app.get<{ Params: { projectId: string; instanceId: string } }>(
     '/api/apps/:projectId/instances/:instanceId/conversation',
     async (request, reply) => {

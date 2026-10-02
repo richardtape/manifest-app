@@ -774,6 +774,47 @@ describe('GET /api/apps/:projectId/rehearsals/:rehearsalId/conversation (F5 Task
   })
 })
 
+describe('GET /api/apps/:projectId/outages/:from/conversation (F6 Task 10, S4)', () => {
+  it("answers the fix we are making for that outage, so [What happened?] opens it again; set aside, another person's, or none, is 404", async () => {
+    const s = setUp()
+    const fix = (personId: string, outage: { from: string; to: string }) => {
+      const made = s.store.createChange(
+        personId,
+        PROJECT,
+        OUTAGE_FIX_WORDS,
+        OUTAGE_FIX_WORDS,
+      )
+      s.store.addMessage(made.id, 'we', {
+        kind: 'asked',
+        change: 1,
+        words: OUTAGE_FIX_WORDS,
+        fix: { outage },
+      })
+      return made
+    }
+    const shifted = (days: number) => ({
+      from: new Date(Date.parse(OUTAGE.from) + days * 86_400_000).toISOString(),
+      to: new Date(Date.parse(OUTAGE.to) + days * 86_400_000).toISOString(),
+    })
+    const mine = fix(ALICE.id, OUTAGE)
+    s.store.setState(fix(ALICE.id, shifted(1)).id, 'set-aside')
+    fix(BOB.id, shifted(2))
+    // The page names the moment as our server wrote it, colons and all, encoded.
+    const url = (from: string) =>
+      `/api/apps/${PROJECT}/outages/${encodeURIComponent(from)}/conversation`
+    const found = await s.get(url(OUTAGE.from))
+    expect(found.statusCode).toBe(200)
+    expect(found.json()).toEqual({ id: mine.id })
+    for (const from of [shifted(1).from, shifted(2).from, shifted(3).from, OUTAGE.to]) {
+      const missing = await s.get(url(from))
+      expect(missing.statusCode).toBe(404)
+      expect(missing.json()).toEqual({ error: { code: 'NOT_FOUND' } })
+    }
+    expect((await s.get(url(OUTAGE.from), AS_BOB)).statusCode).toBe(404)
+    expect((await s.get(url(OUTAGE.from), '')).statusCode).toBe(401)
+  })
+})
+
 describe('GET /api/apps/:projectId/secrets: what we asked for by name, never an answer (F4 Task 10)', () => {
   /** A question a round of `conversation` asked; a secret's answer never reaches the store. */
   function asked(

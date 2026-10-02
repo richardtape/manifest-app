@@ -293,6 +293,7 @@ function stage(start: Partial<World> = {}) {
     },
     agreedRows: () => Promise.resolve(null),
     fixForDryRun: () => Promise.resolve(null),
+    fixForOutage: () => Promise.resolve(null),
     changeForRefusal: () => Promise.resolve(null),
     keeping: never,
     handWatch: never,

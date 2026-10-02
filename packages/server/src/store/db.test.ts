@@ -715,6 +715,44 @@ describe('conversations on an app (F4 Task 6)', () => {
     expect(store.fixFor(OTHER, 'incident-a', ALICE.id)).toBeUndefined()
     expect(store.fixFor(PROJECT, 'nothing', ALICE.id)).toBeUndefined()
   })
+
+  it("finds the fix conversation for an outage by its start: the latest, never one set aside, never another person's (F6 Task 10, S4)", () => {
+    const { store } = fresh()
+    store.rememberPerson(ALICE)
+    store.rememberPerson(BOB)
+    const A = '2026-10-01T17:03:00.000Z'
+    const B = '2026-10-02T09:00:00.000Z'
+    const C = '2026-10-03T09:00:00.000Z'
+    const later = (from: string) => new Date(Date.parse(from) + 240_000).toISOString()
+    const fix = (personId: string, from: string) => {
+      const made = store.createChange(personId, PROJECT, 'It fell', 'ours')
+      store.addMessage(made.id, 'we', {
+        kind: 'asked',
+        change: 1,
+        words: 'ours',
+        fix: { outage: { from, to: later(from) } },
+      })
+      return made
+    }
+    const older = fix(ALICE.id, A)
+    const newer = fix(ALICE.id, A)
+    store.setState(fix(ALICE.id, B).id, 'set-aside')
+    fix(BOB.id, C)
+    // An incident's fix whose id happens to be the moment is not an outage's.
+    const incident = store.createChange(ALICE.id, PROJECT, 'It didn’t start', 'ours')
+    store.addMessage(incident.id, 'we', {
+      kind: 'asked',
+      change: 1,
+      words: 'ours',
+      fix: { incidentId: C },
+    })
+    expect(store.fixForOutage(PROJECT, A, ALICE.id)).toBe(newer.id)
+    expect(older.id).not.toBe(newer.id)
+    expect(store.fixForOutage(PROJECT, B, ALICE.id)).toBeUndefined()
+    expect(store.fixForOutage(PROJECT, C, ALICE.id)).toBeUndefined()
+    expect(store.fixForOutage(OTHER, A, ALICE.id)).toBeUndefined()
+    expect(store.fixForOutage(PROJECT, later(A), ALICE.id)).toBeUndefined()
+  })
 })
 
 describe('the plan agreed on an app (F5 Task 9, the hand-over)', () => {

@@ -172,6 +172,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     fixFor: never,
     agreedRows: never,
     fixForDryRun: () => Promise.resolve(null),
+    fixForOutage: () => Promise.resolve(null),
     changeForRefusal: never,
     keeping: never,
     handWatch: never,

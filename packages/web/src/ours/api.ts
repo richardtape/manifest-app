@@ -212,6 +212,12 @@ export interface Ours {
    */
   fixForDryRun(projectId: string, rehearsalId: string): Promise<{ id: string } | null>
   /**
+   * F6 TASK 10: the fix we are already making for this outage, named by the moment it began as our
+   * watch wrote it, unless it was set aside; none, null. So *[What happened?]* pressed again opens
+   * it (S4).
+   */
+  fixForOutage(projectId: string, from: string): Promise<{ id: string } | null>
+  /**
    * F5 TASK 9, THE HAND-OVER: *What students see* and *Who gets in* from the plan the person last
    * agreed on the app **by `before`, when the version live was made** (the final review's I2: a
    * change agreed since is on the draft, not live), as written, for the message and the honest
@@ -372,6 +378,18 @@ export function createOurs(): Ours {
         const found = (await call(
           'GET',
           `/api/apps/${encodeURIComponent(projectId)}/rehearsals/${encodeURIComponent(rehearsalId)}/conversation`,
+        )) as { id?: unknown } | undefined
+        return typeof found?.id === 'string' ? { id: found.id } : null
+      } catch (error) {
+        if (error instanceof OurRefusal && error.status === 404) return null
+        throw error
+      }
+    },
+    fixForOutage: async (projectId, from) => {
+      try {
+        const found = (await call(
+          'GET',
+          `/api/apps/${encodeURIComponent(projectId)}/outages/${encodeURIComponent(from)}/conversation`,
         )) as { id?: unknown } | undefined
         return typeof found?.id === 'string' ? { id: found.id } : null
       } catch (error) {

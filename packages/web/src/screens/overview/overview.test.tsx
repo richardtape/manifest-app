@@ -379,13 +379,51 @@ describe('F6 Task 9: coming back to the Overview (moment 16, design §2 and §4)
     )
   })
 
-  it('the band, when our server says the live address is down: its words and Start it again', async () => {
+  it('the band, when our server says the live address is down: its words and Start it again, a press here (Task 10)', async () => {
     ours({ needs: [{ kind: 'down', app, from: AT, owner: true }] })
     await open(`/apps/${SLUG}`)
     const band = await screen.findByRole('region', { name: k.band.label })
     expect(band.textContent).toContain(k.band.down(PROJECT.name, '10:03am'))
-    expect(within(band).getByRole('link', { name: k.band.startAgain })).toBeTruthy()
+    expect(within(band).getByRole('button', { name: k.band.startAgain })).toBeTruthy()
+    expect(within(band).queryByRole('link', { name: k.band.startAgain })).toBeNull()
     expect(machineryIn(document.body.textContent ?? '')).toEqual([])
+  })
+
+  it('a helper: the same words, who can start it again, and no press (Review Focus 5)', async () => {
+    ours({ needs: [{ kind: 'down', app, from: AT, owner: false }] })
+    await open(`/apps/${SLUG}`)
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(k.band.downHelper)
+    expect(within(band).queryByRole('button')).toBeNull()
+    expect(within(band).queryByRole('link')).toBeNull()
+  })
+
+  it('answering again: What happened? is a press here (Task 10)', async () => {
+    ours({
+      needs: [{ kind: 'answering-again', app, from: AT, to: '2026-10-01T17:07:00.000Z' }],
+    })
+    await open(`/apps/${SLUG}`)
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(within(band).getByRole('button', { name: k.band.whatHappened })).toBeTruthy()
+    expect(within(band).queryByRole('link', { name: k.band.whatHappened })).toBeNull()
+  })
+
+  it('back from signing in again (then=start-again): said, the same button, never pressed by itself, and the address without it (Decision 10)', async () => {
+    ours({ needs: [{ kind: 'down', app, from: AT, owner: true }] })
+    const s = await open(`/apps/${SLUG}?then=start-again`)
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(words.goingLive.letIn.again)
+    expect(within(band).getByRole('button', { name: k.band.startAgain })).toBeTruthy()
+    expect(s.called('deploy')).toEqual([])
+    expect(window.location.pathname + window.location.search).toBe(`/apps/${SLUG}`)
+  })
+
+  it('an address with then=start-again and nothing down: the page as ever, the address without it', async () => {
+    ours({})
+    await open(`/apps/${SLUG}?then=start-again`)
+    await ready()
+    expect(window.location.pathname + window.location.search).toBe(`/apps/${SLUG}`)
+    expect(document.body.textContent).not.toContain(words.goingLive.letIn.again)
   })
 
   it('nothing needs them: no band', async () => {

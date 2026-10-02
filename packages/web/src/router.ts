@@ -8,10 +8,17 @@ import { useEffect, useState, type MouseEvent } from 'react'
 export type Tab = 'draft' | 'trying-out' | 'students'
 export const TABS: Tab[] = ['draft', 'trying-out', 'students']
 
-/** Where the step-up sends them back to on *Going live*: the press they were making. */
-export type Then = 'live' | 'dry-run' | null
-const thenOf = (then: string | null): Then =>
-  then === 'live' || then === 'dry-run' ? then : null
+/**
+ * Where the step-up sends them back to: the press they were making. *Going live*'s are `live` and
+ * `dry-run` (F5); the Overview's are F6's (Decision 10): `start-again`, `students` (*Start it for
+ * your students*), `switch-off` and `delete`. Each page reads its own alone.
+ */
+export type Then =
+  'live' | 'dry-run' | 'start-again' | 'students' | 'switch-off' | 'delete' | null
+const GOING_LIVE: Then[] = ['live', 'dry-run']
+const OVERVIEW: Then[] = ['start-again', 'students', 'switch-off', 'delete']
+const thenOf = (then: string | null, page: Then[]): Then =>
+  page.find((one) => one === then) ?? null
 
 export type Route =
   | { name: 'your-apps' }
@@ -23,8 +30,11 @@ export type Route =
    * `/apps/:slug/conversations/:id` (F4). The same screen draws both.
    */
   | { name: 'conversation'; id: string; slug?: string }
-  /** An app's landing page, its Overview (F5 Decision 1, moments 10 and 15): `/apps/:slug`. */
-  | { name: 'app-overview'; slug: string }
+  /**
+   * An app's landing page, its Overview (F5 Decision 1, moments 10 and 15): `/apps/:slug`, and
+   * `?then=…` when the step-up sends them back to one of F6's presses (Decision 10).
+   */
+  | { name: 'app-overview'; slug: string; then: Then }
   /**
    * An app's Preview (F4, moment 7): `/apps/:slug/preview?tab=…`, the draft by default. F4's
    * `/apps/:slug?tab=…` still opens it (`canonical`).
@@ -81,14 +91,14 @@ export function parse(pathname: string, search = ''): Route {
       return {
         name: 'app-going-live',
         slug,
-        then: thenOf(query.get('then')),
+        then: thenOf(query.get('then'), GOING_LIVE),
       }
     // The Preview, and F4's address for it: a `tab` on the bare path (Decision 1).
     if (page === 'preview' || query.has('tab')) {
       const asked = query.get('tab')
       return { name: 'app-preview', slug, tab: TABS.find((t) => t === asked) ?? 'draft' }
     }
-    return { name: 'app-overview', slug }
+    return { name: 'app-overview', slug, then: thenOf(query.get('then'), OVERVIEW) }
   }
   const conversation = /^\/new\/([^/]+)$/.exec(pathname)
   if (conversation?.[1] !== undefined) {
