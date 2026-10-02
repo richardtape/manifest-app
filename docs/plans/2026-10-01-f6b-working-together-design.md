@@ -30,7 +30,8 @@ let through to students; their own agent's question answered.
   a new sign-in detail (no owner write on an `active` registration), and every build that needs one fails until UBC
   registers it (the platform's `releases/build.ts`, read 2026-10-01). FE-47 asks for the owner's request for a change to
   the live registration, sent to LTIC as FE-46's sends are. **Carried 2026-10-01** to `manifest-6d`, recorded
-  **PROPOSED** for its sitting 10 and the next planning session, with FE-46. *Rejected:* saying no to a new detail on a
+  **PROPOSED** for its sitting 10 and the next planning session, with FE-46, then **CONFIRMED by Rich** there with FE-46
+  and FE-5 (a) (2026-10-01 19:56 PDT, *"i approved"*, manifest `ddc76d7`). *Rejected:* saying no to a new detail on a
   live app, with no path; LTIC told by an email from our server, with nothing recorded.
 - **D3. See all, act on your own** (Rich chose *"See all, act on your own"*): every member reads every conversation on
   the app; only the person who started one types in it, answers its questions or carries it on; **an owner may stop
@@ -212,9 +213,9 @@ responses"*. Expired and revoked tokens are not listed.
 
 ## What waits on the platform
 
-- **FE-47** (D2): the new-detail ask. Until it lands, **[Leave it out]**. PROPOSED on the platform's side until Rich
-  confirms it to a platform session, with FE-46; a spec action follows.
-- **FE-5 (a)** (D4): the question's object. Until it lands, the honest line.
+- **FE-47** (D2): the new-detail ask. Until it lands, **[Leave it out]**. **Confirmed by Rich** in the platform's session
+  (`ddc76d7`); a spec action follows, then a sitting.
+- **FE-5 (a)** (D4): the question's object, confirmed with it. Until it lands, the honest line.
 - **Nothing else.** Contract 1.5.0 has the members, the tokens, the pending actions, a launched app's checklist, `deploy`
   and `requestApproval`.
 

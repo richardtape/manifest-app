@@ -53,8 +53,8 @@ administrator to sign off the version on trying-out. Walk-through moments **10 a
 | 4 | 7 | The registrations' cards: the plain words, **[Take it out]**, stale drafts, every refusal; F5's admission gone for good | **waits for FE-46** |
 | 5 | 8 | **The acceptance:** `scripts/check-clocks.sh` in mock mode; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **waits for FE-46 and the platform's sitting 10** |
 
-**Part one runs after F6 is executed** (the roadmap's order). Part two runs when FE-46 has landed on the platform (Rich
-confirms it to a platform session, a spec action is applied, a sitting builds it); its acceptance needs the platform's
+**Part one runs after F6 is executed** (the roadmap's order). Part two runs when FE-46 has landed on the platform
+(**confirmed by Rich**, manifest `ddc76d7`; a spec action is applied, then a sitting builds it); its acceptance needs the platform's
 sitting 10 too (the mock's drafts, submissions and requests scripted). **Between the parts, F5b is usable**: the steps
 show the truth from the records an administrator keeps, and the sign-off can be asked.
 
@@ -160,8 +160,8 @@ sign-off). **New here** (each in `words.ts`):
 ## What waits on the platform
 
 - **FE-46** (Tasks 5–8): the *sent to LTIC* step, its dates, the queue and the email (a sign-off request too), the gaps'
-  ids and the answers kept. Proposed to the platform at Rich's word; **Rich confirms it to a platform session**, a spec
-  action follows, then a sitting.
+  ids and the answers kept. Carried at Rich's word, and **confirmed by Rich in the platform's session** (2026-10-01
+  19:56 PDT, *"i approved"*, manifest `ddc76d7`); a spec action follows, then a sitting.
 - **The platform's sitting 10** (Task 8's mock-mode acceptance): the mock's drafts, submissions, requests and queue
   scripted, FE-40's switches. Until then Tasks 2–7 assert what was **sent**, against recording fakes (ORIENTATION §7),
   and the mock answers its document examples whatever is asked (FE-27).
@@ -803,7 +803,10 @@ who asked for the sign-off (nothing reads a request back: the row says *asked*).
   submitted to PRISM by LTIC"*, D3), which the platform has no step for: **FE-46, filed and carried** (D4) to
   `manifest-6d`, which recorded it **PROPOSED** for its sitting 10 and the next planning session (`manifest-60` was not
   running), with the sign-off email Rich added (D5); and our agent suggesting the assessment's answers (D6).
-- **FE-46 needs Rich's confirmation to a platform session**, then a spec action, before any platform task builds it.
+- **FE-46, FE-47 and FE-5 (a) CONFIRMED by Rich** in the platform's session `manifest-6d` (2026-10-01 19:56 PDT, *"i
+  approved"*, manifest `ddc76d7`), after a relay of his *"confirm FE-46, FE-47 and FE-5 to the platform session"* was
+  held PROPOSED by the platform's rule (his own words in a platform session). Each needs a spec action, drafted by the
+  planning session (`manifest-60`) and decided by Rich, before a platform task builds it.
 - **Part one needs nothing from the platform**: it can run after F6. Part two waits for FE-46; its acceptance for the
   platform's sitting 10.
 - **The plan approved by Rich** (*"Approved, native"*): executed natively, one sitting per session, from F6's close.

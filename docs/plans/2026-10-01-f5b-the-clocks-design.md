@@ -51,8 +51,9 @@ never shown as infrastructure.
     *"now with UBC"* (a state read from a field, which our rules forbid); designing F5b only once the platform has built
     the step.
   - **Carried 2026-10-01** to `manifest-6d` (the platform's sitting 9, closing; `manifest-60` was not running), which
-    records it as **PROPOSED** in its close-out, for its sitting 10 and the next planning session. **It needs Rich's
-    confirmation to a platform session, and a spec action, before any platform task builds it.**
+    records it as **PROPOSED** in its close-out, for its sitting 10 and the next planning session. **CONFIRMED by Rich in
+    that platform session, 2026-10-01 19:56 PDT** (*"i approved"*; manifest `ddc76d7`). **A spec action, drafted by the
+    planning session and decided by Rich, comes before any platform task builds it.**
 - **D5. The platform emails LTIC, a sign-off request too** (Rich chose *"The platform"*, then *"Yes, and email it
   too"*): when a record is sent to LTIC, and when `approval.requested` is published. Part of FE-46. *Rejected:* our
   server emailing LTIC; a sign-off request left in the queue with no email.
@@ -288,8 +289,7 @@ The row is F5's `signOffRow`, extended. Its keys stay the checklist item's state
 
 - **FE-46** (`api-findings.md`): the *sent to LTIC* step, LTIC told by email (a sign-off request too), the gaps' ids and
   the answers kept. **Every press that sends waits for it**, and so do §2's cards and §4's agent (their keys are the
-  gaps' ids). PROPOSED on the platform's side until Rich confirms it to a platform session; then a spec action; then a
-  sitting.
+  gaps' ids). **CONFIRMED by Rich** in the platform's session (`ddc76d7`); next a spec action, then a sitting.
 - **The platform's sitting 10** (the launch path's Task 13: the mock's drafts, submissions, requests and queue scripted,
   and FE-40's switches): **F5b's mock-mode acceptance and walks wait for it.** Until then F5b is built against recording
   fakes, and the mock's document examples (which answer whatever is asked: FE-27). Its hand-forward says the mock should
