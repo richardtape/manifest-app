@@ -38,6 +38,11 @@ type Loaded =
       goingLive: PageNeed[]
       /** The apps the platform says are switched off: their needs are their questions alone. */
       switchedOff: ReadonlySet<string>
+      /**
+       * The apps the platform lists as theirs: our server's needs and lines about any other are
+       * not drawn (its kept members can be stale: the whole-branch review's I2, FE-48).
+       */
+      theirs: ReadonlySet<string>
     }
 
 /**
@@ -55,6 +60,7 @@ async function read(
   read: Schemas['Project'][]
   goingLive: PageNeed[]
   switchedOff: ReadonlySet<string>
+  theirs: ReadonlySet<string>
 }> {
   const projects = mine(await platform.listProjects(), me)
   const read = await Promise.allSettled(projects.map((p) => platform.getProject(p.id)))
@@ -133,7 +139,8 @@ async function read(
   const switchedOff = new Set(
     [...states].flatMap(([id, state]) => (state === 'archived' ? [id] : [])),
   )
-  return { cardsWith, read: expanded, goingLive, switchedOff }
+  const theirs = new Set(projects.map((p) => p.id))
+  return { cardsWith, read: expanded, goingLive, switchedOff, theirs }
 }
 
 /** Our server's two reads, each lost alone: no band, or no lines (Task 9). */
@@ -172,9 +179,9 @@ export function YourApps({
   useEffect(() => {
     let live = true
     read(platform, me).then(
-      ({ cardsWith, read: apps, goingLive, switchedOff }) => {
+      ({ cardsWith, read: apps, goingLive, switchedOff, theirs }) => {
         if (!live) return
-        setLoaded({ state: 'ready', cardsWith, goingLive, switchedOff })
+        setLoaded({ state: 'ready', cardsWith, goingLive, switchedOff, theirs })
         // F6 TASK 8: each app's Keeping watch, after the page's own reads, one at a time.
         void ensureEach(platform, ours, apps, () => live)
       },
@@ -243,12 +250,22 @@ export function YourApps({
         <>
           <NeedsBand
             needs={needsStillTrue(
-              [...(keeping?.needs ?? []), ...loaded.goingLive],
+              [
+                ...(keeping?.needs ?? []).filter((n) =>
+                  loaded.theirs.has(n.app.projectId),
+                ),
+                ...loaded.goingLive,
+              ],
               (projectId) => loaded.switchedOff.has(projectId),
             )}
           />
           {keeping === null ? null : (
-            <Since lastHere={keeping.since.lastHere} lines={keeping.since.lines} />
+            <Since
+              lastHere={keeping.since.lastHere}
+              lines={keeping.since.lines.filter((line) =>
+                loaded.theirs.has(line.app.projectId),
+              )}
+            />
           )}
         </>
       ) : null}

@@ -34,7 +34,7 @@ afterEach(async () => {
 /** A keeper that records what it was handed and forgot, and answers as told. */
 function fakeKeeper(did: string[]) {
   const hands: { projectId: string; handed: Handed; personId: string }[] = []
-  let answer: () => Promise<'kept' | 'current'> = async () => 'kept'
+  let answer: () => Promise<'kept' | 'current' | 'stranger'> = async () => 'kept'
   let watching = false
   let mintedBy: string | null = null
   /** Task 6's watch, as each app's outage reads. */
@@ -59,7 +59,8 @@ function fakeKeeper(did: string[]) {
     keeper,
     hands,
     outages,
-    answers: (next: () => Promise<'kept' | 'current'>) => void (answer = next),
+    answers: (next: () => Promise<'kept' | 'current' | 'stranger'>) =>
+      void (answer = next),
     watches: (by: string) => {
       watching = true
       mintedBy = by
@@ -191,6 +192,16 @@ describe('GET /api/apps/:projectId/keeping', () => {
     ])
   })
 
+  it('not watching, its kept members gone stale (the watch closed 4401 with the members changed since): not watching, so their page mints (the whole-branch review’s I2)', async () => {
+    const t = setUp()
+    t.keepMembers(BOB.id)
+    const response = await t.get(AS_ALICE)
+    expect([response.statusCode, response.json()]).toEqual([
+      200,
+      { watching: false, until: null, tokenId: null, mine: false },
+    ])
+  })
+
   it('an id that is not one is 404', async () => {
     const t = setUp()
     expect((await t.get(AS_ALICE, 'not-a-project')).statusCode).toBe(404)
@@ -236,12 +247,38 @@ describe('POST /api/apps/:projectId/keeping: the token handed over', () => {
     expect(t.hands).toEqual([])
   })
 
-  it('someone whose app it is not is 404, and the keeper is never handed it', async () => {
+  it('someone whose app it is not, while we watch it, is 404, and the keeper is never handed it', async () => {
     const t = setUp()
     t.keepMembers(BOB.id)
+    t.watches(BOB.id)
     const response = await t.post(GOOD)
     expect(response.statusCode).toBe(404)
     expect(t.hands).toEqual([])
+  })
+
+  it('not watching, its kept members gone stale: the token decides, read by the keeper (the whole-branch review’s I2)', async () => {
+    const t = setUp()
+    t.keepMembers(BOB.id)
+    t.answers(async () => {
+      t.watches(ALICE.id)
+      return 'kept'
+    })
+    const kept = await t.post(GOOD)
+    expect([kept.statusCode, kept.json()]).toEqual([
+      201,
+      { watching: true, until: UNTIL },
+    ])
+    expect(t.hands).toEqual([{ projectId: PROJECT, handed: GOOD, personId: ALICE.id }])
+  })
+
+  it('the keeper finds them a stranger by the token’s own members: 404, as a stranger is', async () => {
+    const t = setUp()
+    t.answers(async () => 'stranger')
+    const response = await t.post(GOOD)
+    expect([response.statusCode, response.json()]).toEqual([
+      404,
+      { error: { code: 'NOT_FOUND' } },
+    ])
   })
 
   it.each([

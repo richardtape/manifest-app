@@ -1299,6 +1299,48 @@ describe('F6 Task 9: coming back to Your apps (moment 16, design §2)', () => {
     })
   })
 
+  it('an app no longer theirs on the platform (taken off it, our kept members stale): none of its needs or lines (the whole-branch review’s I2)', async () => {
+    const gone = {
+      projectId: '99999999-9999-4999-8999-999999999999',
+      name: 'Old course app',
+      slug: 'old-course-app',
+    }
+    const ours = oursWith({
+      needs: async () => [
+        { kind: 'down', app: gone, from: AT, owner: true },
+        { kind: 'down', app, from: AT, owner: true },
+      ],
+      since: async () => ({
+        lastHere: '2026-09-30T17:00:00.000Z',
+        lines: [
+          {
+            id: 'e-gone',
+            at: AT,
+            happening: { kind: 'went-live', instanceId: 'i' },
+            who: null,
+            whom: null,
+            app: gone,
+          },
+          {
+            id: 'e1',
+            at: AT,
+            happening: { kind: 'went-live', instanceId: 'i' },
+            who: null,
+            whom: null,
+            app,
+          },
+        ],
+      }),
+    })
+    render(<App platform={mockPlatform()} ours={ours} />)
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(fixtures.PROJECT.name)
+    expect(band.textContent).not.toContain(gone.name)
+    const since = await screen.findByRole('region', { name: k.since.title })
+    expect(since.textContent).toContain(fixtures.PROJECT.name)
+    expect(since.textContent).not.toContain(gone.name)
+  })
+
   it('a failure of ours loses the band and the lines, never the page', async () => {
     const ours = oursWith({
       needs: () => Promise.reject(new Error('UNREACHABLE')),

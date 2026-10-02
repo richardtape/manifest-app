@@ -1432,6 +1432,40 @@ FE-46"*): carried now, and F6b's moment 17 is designed against it.*
 - **When:** carried now, at Rich's word (2026-10-01). F6b's moment 17 waits for it for that one kind of change; its other two
   kinds (straight to students; an administrator's look) do not.
 
+### FE-48 — A watch token's stream closes `4401` without a reason, and the change that closed it never arrives
+
+*Found 2026-10-02 by F6's whole-branch review (sitting 7's unattended half, `manifest-app-s7`), against manifest `8ff925f`
+(contract 1.5.0, 72 operations). Written, not carried: for Rich.*
+
+- **Screen and moment:** moments 16 and 20, our server's *Keeping watch* (F6). The keeper keeps one read-only token per app
+  and follows its event stream; it keeps the app's state and members from what that token reads.
+- **What happens** (✓ `docs/api/events.md` line 102, *"a token's stream closes `4401` before `project.archived` or
+  `project.deleted` reaches it"*; ✓ measured in F6 sitting 1, M4 and M7; ✓ the contract's `removeMember`: *"their delegated
+  tokens on it are revoked, their open event streams on it close (`4401` a token's…)"*): a switch-off, a delete, an expiry,
+  a revocation, and **taking the token's minter off the app** all close the stream `4401`, alike, and the event that says
+  what changed (`project.archived`, `member.removed`) never reaches it. The token can read nothing afterwards.
+- **What we would call:** nothing new: we would read **why** in the close (`4401` with a reason: *switched off*, *deleted*,
+  *expired*, *revoked*, *its minter taken off the project*), or receive the event before the close.
+- **What is missing, and what it costs:**
+  - **Our server cannot tell a switch-off from the rest.** It went on saying an app was down, answering again, or that a
+    change didn't go live after its owner switched it off. **Our side is fixed** (`fca7e49`): the page, which reads the
+    project's state in the person's session, keeps a switched-off app's questions alone.
+  - **Our kept members go stale exactly when the watch dies.** The person taken off an app is, most often, the one who
+    minted its watch token (Make it hands over the creator's), so `member.removed` is never heard: they stay a member in
+    our rows until another member's page hands a new token. Meanwhile our routes would answer them that app's needs, lines
+    and history, and our `DELETE` would let a former owner forget our rows for it. **Our side, in part** (the review's I2):
+    an app we no longer watch trusts the token handed over, not our kept members (so a new member mints, and the members
+    are read again); *Your apps* draws needs and lines only for the apps the platform lists as theirs. **A hand-crafted
+    request by a former member still reads `…/history` and can `DELETE` until a member visits**: our server has no way to
+    ask the platform who is on an app but the token (FE-2: the person's session is replayed to `/v1/me` alone).
+- **Options:**
+  - **(a) Recommended:** the close carries its reason (a `4401` close reason, or a final frame before it), so the keeper
+    marks the app switched off or deleted, or reads its members again with another member's next token.
+  - (b) The event first, then the close, as for any other event (events.md's order reversed for these).
+  - (c) Leave it: our page keeps the truth by the platform's state, and the residual stays (a former member's hand-crafted
+    reads until a member visits).
+- **When:** any platform sitting; nothing of F6 waits on it.
+
 ## Not a gap: decisions that are Rich's
 
 - **The building agent's model on the laptop is `qwen3.5:4b`**, a 4B-parameter model ✓ (`infra/models.txt`;

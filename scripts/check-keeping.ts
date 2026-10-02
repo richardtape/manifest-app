@@ -493,6 +493,8 @@ try {
   keepers.push(mock)
   const mockApp = { ...LIVE, projectId: randomUUID(), studentsUrl: mockPretend.url }
   apps.set(mockApp.projectId, mockApp)
+  // Its token reads its members, the one handing it among them (or it is a stranger's: I2).
+  membersOf.set(mockApp.projectId, [ALICE, BOB])
   TOKENS[mockApp.projectId] = `mft_check_${RUN}_mock`
   mock.start()
   await hand(mock, mockApp)

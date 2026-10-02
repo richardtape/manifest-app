@@ -74,6 +74,14 @@ export function registerKeeping(
     const members = store.members(projectId)
     return members.length > 0 && !members.some((member) => member.userId === personId)
   }
+  /**
+   * The whole-branch review's I2: our kept members are the truth only while we watch. A watch that
+   * closed (`4401`: a switch-off, an expiry, its minter taken off the app, FE-48) heard no
+   * `member.*` after it, so an app we no longer watch is anyone's to mint for, as one we keep
+   * nothing for: the token handed over decides, by the members it reads (`hand`'s `stranger`).
+   */
+  const strangerWhileWatched = (projectId: string, personId: string) =>
+    keeper.status(projectId).watching && stranger(projectId, personId)
   /** Review Focus 5: their role on the app, by the kept members; none for anyone else. */
   const roleOf = (projectId: string, personId: string) =>
     store.members(projectId).find((member) => member.userId === personId)?.role
@@ -248,7 +256,7 @@ export function registerKeeping(
       const who = await check(request, reply)
       if (who === undefined) return reply
       const { projectId } = request.params
-      if (!ID.test(projectId) || stranger(projectId, who.person.id))
+      if (!ID.test(projectId) || strangerWhileWatched(projectId, who.person.id))
         return refuse(reply, 404, 'NOT_FOUND')
       const status = keeper.status(projectId)
       return {
@@ -267,11 +275,11 @@ export function registerKeeping(
       const who = await check(request, reply)
       if (who === undefined) return reply
       const { projectId } = request.params
-      if (!ID.test(projectId) || stranger(projectId, who.person.id))
+      if (!ID.test(projectId) || strangerWhileWatched(projectId, who.person.id))
         return refuse(reply, 404, 'NOT_FOUND')
       const handed = handedOf(request.body)
       if (handed === undefined) return refuse(reply, 400, 'KEEPING_INVALID')
-      let kept: 'kept' | 'current'
+      let kept: 'kept' | 'current' | 'stranger'
       try {
         kept = await keeper.hand(projectId, handed, who.person.id)
       } catch (error) {
@@ -284,6 +292,7 @@ export function registerKeeping(
           return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT')
         return refuse(reply, 502, 'PLATFORM_UNAVAILABLE')
       }
+      if (kept === 'stranger') return refuse(reply, 404, 'NOT_FOUND')
       const { until } = keeper.status(projectId)
       return kept === 'kept'
         ? reply.code(201).send({ watching: true, until })

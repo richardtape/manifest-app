@@ -233,6 +233,24 @@ describe('hand: the watch token handed over (Decision 5)', () => {
     },
   )
 
+  it('handed by someone its own members do not include: a stranger, and nothing is kept (the whole-branch review’s I2)', async () => {
+    const t = setUp()
+    t.w.members.set(P1, [member(BOB)])
+    expect(await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)).toBe('stranger')
+    expect(t.store.watchOf(P1)).toBeUndefined()
+    expect(t.store.app(P1)).toBeUndefined()
+    expect(t.store.members(P1)).toEqual([])
+    expect(t.opened).toEqual([])
+  })
+
+  it('members kept from before, gone stale while we were not watching: the token’s own members are kept (I2)', async () => {
+    const t = setUp()
+    t.store.putMembers(P1, [member(ALICE)])
+    t.w.members.set(P1, [member(BOB)])
+    expect(await t.keeper.hand(P1, handed(TOKEN_A, ID_A), BOB)).toBe('kept')
+    expect(t.store.members(P1)).toEqual([member(BOB)])
+  })
+
   it('a good one is sealed, its app and members kept, and its stream opened', async () => {
     const t = setUp()
     expect(await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)).toBe('kept')

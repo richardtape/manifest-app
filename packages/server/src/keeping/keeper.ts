@@ -63,8 +63,15 @@ export interface Keeper {
   /** Every kept token's stream opened. */
   start(): void
   stop(): void
-  /** Decision 5. Throws PlatformRefusal when the token cannot read the project. */
-  hand(projectId: string, handed: Handed, personId: string): Promise<'kept' | 'current'>
+  /**
+   * Decision 5. Throws PlatformRefusal when the token cannot read the project; `stranger` when the
+   * person handing it is not among the members it reads (nothing kept: the whole-branch review's I2).
+   */
+  hand(
+    projectId: string,
+    handed: Handed,
+    personId: string,
+  ): Promise<'kept' | 'current' | 'stranger'>
   status(projectId: string): {
     watching: boolean
     until: string | null
@@ -417,6 +424,9 @@ export function createKeeper({
       if (app.projectId !== projectId)
         throw new PlatformRefusal('TOKEN_NOT_FOR_PROJECT', null)
       const members = await watching.members(handed.token, projectId)
+      // The token's own members say who is on it now; ours may be stale (a watch that closed
+      // `4401` hears no `member.*` after it). Someone not among them keeps nothing here (I2).
+      if (!members.some((member) => member.userId === personId)) return 'stranger'
       // Review Focus 2: another page's hand may have kept a good one while we read.
       if (good(projectId)) return 'current'
       store.putApp(app)
