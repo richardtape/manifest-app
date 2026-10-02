@@ -2,7 +2,8 @@
 
 *Written 2026-10-01 by `manifest-app-d9`, from a brainstorm with Rich in which he approved each section. **This is the
 design, not the plan.** Rich's D1 for F6 says F6b's plan is written **after F6 is executed**; he asked for this design
-ahead of it (2026-10-01, *"Yes, design now"*), so later sittings start faster. The walk-through
+ahead of it (2026-10-01, *"Yes, design now"*), so later sittings start faster. **Approved by Rich as written, 2026-10-01**
+(*"Approved as written"*), after his approval of each section. The walk-through
 ([`../walkthrough.md`](../walkthrough.md), moments 17 and 18, and *Throughout*'s *An agent of their own*) stays the source
 of the faculty member's words; where this design departs from it, it says so.*
 
