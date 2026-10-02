@@ -190,6 +190,35 @@ card's two are `app.css`'s. The real witness is a walk at 375 and 1280 with the 
 that cannot break, as 47's control did. Its layout check (`1b82119`) now measures every box with text, so it is the test
 that goes red without the fix.
 
+**From F6's whole-branch review** (sitting 7's unattended half, `manifest-app-s7`, 2026-10-02; the plan's entry *Sitting
+7, part one*, its *Minors*). Each was read in the code at `d3600be`; none was fixed (the review's two Important were).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m64 | F6's whole-branch review, M1 | `check-keeping.sh`'s check 1 goes red from **18 November 2026**: the mock mints every token with a fixed `expiresAt` (`2026-12-18T09:00Z`), so 30 days before it our server no longer counts it good and the second hand answers `201`, not `200 current`. From then on, mock mode re-mints on every app page and revokes the id it has just handed (the same fixed id). | `scripts/check-keeping.sh:119`; `packages/web/src/screens/keeping/watch.ts:63` (the revoke); the mock's token fixture (the platform's). | S | scripts |
+| m65 | F6's whole-branch review, M2 | The history page draws a gap one line too high when the gap's end is itself a line: *"We weren't watching between…"* above the line it should follow. | `packages/web/src/screens/history/history.tsx:28` (`>=` where `>` is meant). | S | faculty-visible |
+| m66 | F6's whole-branch review, M3 | A watch token the page minted is left alive when our server's hand-over fails (a `502`, a timeout): a year-long read-only token in the person's name, one more on each visit while it fails. | `packages/web/src/screens/keeping/watch.ts:67` (the `catch` never revokes `minted.token.id`). | S | robustness |
+| m67 | F6's whole-branch review, M4 | The hourly *still waiting for you* scan has no guard for the past: the first hand-over of an older app makes each long-stale waiting conversation on it one email an hour later; and the first scan runs only an hour after each start (a restart postpones it). | `packages/server/src/keeping/keeper.ts:306` (`scan`), `packages/server/src/store/db.ts:202` (`idleConversations`). | S | faculty-visible |
+| m68 | F6's whole-branch review, M5 | An app's history grows without bound, and each `/api/needs` and `/api/since` load reads every kept app's whole history up to three times. Fine at pilot scale. | `packages/server/src/api/keeping.ts:114`, `:126`, `:202`. | M | robustness |
+| m69 | F6's whole-branch review, M6 | Someone who switches off or deletes an app while a round is building on it is emailed *"we need you"*: the switch-off revokes the round's token, the round pauses, and `workEnded` emails its person (Decision 13's spirit: nobody is told what they did). | `packages/server/src/keeping/keeper.ts:460` (`workEnded`) with `api/line-state.ts`. | S | faculty-visible |
+| m70 | F6's whole-branch review, M7 | The keeper starts inside `buildServer`, before our server knows it holds 7105; `deliverUnfinished` resends each `sending` row without claiming it afresh, so a second process (§7's idle watchers, an overlapping restart) can send an email the live server is also retrying. | `packages/server/src/app.ts:209` (`keeper.start()`), `packages/server/src/keeping/mail.ts:76`. | S | robustness |
+| m71 | F6's whole-branch review, M8 | `close-out.sh`'s `watchers()` matches the checkout's root as a substring, so run from `/Users/rich/Developer/manifest-app` it also matches a sibling worktree's (`manifest-app-s6`, `-s7`) server and would stop it. For Rich's review of the script. | `scripts/close-out.sh:92-95` (`index($0, root)`; `index($0, root "/")` closes it). | S | scripts |
+
+**m64.** Date-proof the harness: hand twice and accept `200 current` or, past the fixed date, check the second answer
+against the first's `until`; and in `watch.ts` never revoke an id equal to the one just minted. Control: set the fake
+clock past 18 November and see check 1's new form stay green while the old one goes red.
+**m65.** `>` for `>=`, test first in `history.test.tsx` with a gap whose `to` is a line's `at`.
+**m66.** Revoke `minted.token.id` in the `catch` once it exists; `watch.test.ts`: our `handWatch` rejecting, and the
+platform's `revokeToken` asked once with that id.
+**m67.** Email a day's wait only for a conversation that started waiting after the app was first kept (or after our
+server started); start the first scan a minute after `start()`. Test with the keeper's fake clock.
+**m68.** Read each history once per request, or keep the newest outage and lines per app; measure first.
+**m69.** In `workEnded`, no *we need you* when the round paused for a token revoked by `archive` or `delete` (the app's
+kept state, or the stream's `keeping.stopped` within a minute); test with a round paused after a switch-off.
+**m70.** Start the keeper after `listen`, or give the boot's resend its own compare-and-set claim (`emails.state`
+`sending` → `sending` with a new claim time). Test with two keepers on one store.
+**m71.** One word in the `awk`, and a `--dry-run` with a sibling worktree's `tsx watch` listed by name.
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed
