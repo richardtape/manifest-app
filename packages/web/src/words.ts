@@ -785,6 +785,113 @@ export const words = {
       /** A record in a state we do not know (Review Focus 5). */
       cantTell: 'We can’t tell right now',
     },
+    /**
+     * F5b, THE THREE STEPS IN UBC'S ORDER (D2; the design's §1 and *Words for Rich*, the plan's *Words
+     * proposed for Rich*): the privacy assessment, then the trying-out address's registration, then
+     * the students' address's. Each is sent to the Manifest team, who send it on to UBC (D3). F5's
+     * clock words that still hold are here too, unchanged.
+     */
+    steps: {
+      /** Ours: the list, named for a screen reader. */
+      label: 'Three things other people answer, one after another',
+      assessment: {
+        title: 'A privacy assessment',
+        body: 'Your app keeps what students write, so UBC’s Privacy Office looks at it first.',
+        /** Said only once there is something to start (part two, Decision 3): untrue before. */
+        yours: 'We fill in what Manifest knows; you answer the rest.',
+        with: 'With UBC’s Privacy Office',
+        whose: 'UBC’s Privacy Office',
+        done: (day: string | null) => (day === null ? 'Approved' : `Approved ${day}`),
+        /** (FE-46) With the Manifest team, and where it goes next. */
+        onward: 'They send it on to UBC’s Privacy Office.',
+      },
+      staging: {
+        title: 'Registering your trying-out address',
+        body: 'Before anyone can sign in on your trying-out address, UBC’s identity team registers it.',
+        with: 'With UBC’s identity team',
+        whose: 'UBC’s identity team',
+        done: (day: string | null) => (day === null ? 'Registered' : `Registered ${day}`),
+        onward: 'They send it on to UBC’s identity team.',
+        next: 'Next, once the Privacy Office has approved the assessment.',
+      },
+      production: {
+        title: 'Registering your students’ address',
+        body: 'Before your students can sign in, UBC’s identity team registers the live address too.',
+        with: 'With UBC’s identity team',
+        whose: 'UBC’s identity team',
+        done: (day: string | null) => (day === null ? 'Registered' : `Registered ${day}`),
+        onward: 'They send it on to UBC’s identity team.',
+        next: 'Next, once your trying-out address is registered.',
+      },
+      /** Owners, in words (the plan's). */
+      owners: {
+        you: 'you',
+        team: 'the Manifest team',
+      },
+      notStarted: 'Not started',
+      nothingCounting: 'Nothing counting yet',
+      duration: 'May take several days',
+      admission: {
+        title: 'Manifest can’t start this one for you yet.',
+        body: 'For now the Manifest team does it by hand, and this card shows where it has got to.',
+      },
+      /** The day it went to UBC: "since 7 October". */
+      since: (day: string) => `since ${day}`,
+      /** (FE-46) The day it went to the Manifest team: "sent 5 October". */
+      sent: (day: string) => `sent ${day}`,
+      /** A record in a state we do not know: when an administrator wrote it. */
+      recorded: (day: string) => `recorded ${day}`,
+      /** Ours for none and one; "waiting 12 days" ✓. */
+      waiting: (days: number) =>
+        days <= 0
+          ? 'waiting since today'
+          : days === 1
+            ? 'waiting 1 day'
+            : `waiting ${days} days`,
+      withTeam: 'With the Manifest team',
+      /** Part one: what would be theirs is the Manifest team's until there is somewhere to send it. */
+      teamHasIt: 'The Manifest team has it.',
+      /** Rich, 2026-09-30: a change on file with UBC (`change_requested` from `active`). */
+      changeAsked: (day: string | null) =>
+        day === null ? 'A change' : `A change, recorded ${day}`,
+      /** UBC came back with questions (`change_requested` from `submitted`). */
+      asked: 'UBC’s identity team asked about it.',
+      askedNote: 'The Manifest team will be in touch with what they asked.',
+      /** The assessment sent back (`draft` again, its day sent kept). */
+      sentBack: 'The Privacy Office sent it back.',
+      sentBackNote: 'The Manifest team will be in touch about why.',
+      runOut: {
+        said: 'Its registration has run out.',
+        who: 'The Manifest team renews it.',
+        /** Part two: theirs to send again. */
+        again: 'Check it again and send it.',
+      },
+      /** Part two: nothing on file, and theirs to start. */
+      nothingStarted: 'Nothing started.',
+      /** Part two: drafted, not sent. */
+      ready: 'Ready for you to check and send.',
+      readyChip: 'Ready for you',
+      needsChange: 'The newest version needs it changed.',
+      nothingNeeded: 'Nothing more needed.',
+      done: 'Done',
+      /** (S1: M2) An app that signs nobody in. */
+      notNeeded: 'Not needed',
+      notNeededSaid: 'Not needed: it doesn’t sign anyone in.',
+      cantTell: 'We can’t tell right now',
+      /**
+       * Ours: a step's state inside another page's sentence (*Trying out*'s line): "with UBC's
+       * identity team, waiting 4 days".
+       */
+      phrase: {
+        notStarted: 'not started yet',
+        with: (whose: string, waited: string | null) =>
+          waited === null ? `with ${whose}` : `with ${whose}, ${waited}`,
+        done: 'done',
+        notNeeded: 'not needed',
+        yours: 'waiting for you',
+        cantTell: 'we can’t tell where it is right now',
+      },
+    },
     shortJobs: {
       title: 'Short jobs, for the end',
       lead: 'minutes each, and not worth doing early',

@@ -10,7 +10,7 @@ import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
 import { LIMITS } from '../limits.js'
 import { mintRequest } from '../making/token.js'
 import type { Five, Row } from './checklist.js'
-import { dayWords } from './clocks.js'
+import { dayWords } from './steps.js'
 import { RowView } from './row.js'
 
 const r = words.goingLive.rows
