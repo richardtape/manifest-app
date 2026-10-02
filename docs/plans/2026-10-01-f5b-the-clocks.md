@@ -11,6 +11,12 @@ natively** (superpowers:executing-plans, as F3 to F6 ran), part one after F6. Wr
 platform's launch-path sitting 10** (D1), and **in two parts**: part one builds on today's contract; part two waits for
 **FE-46** (the *sent to LTIC* step), which Rich filed and carried the same day.
 
+**(S0) Re-read against F6's final shapes**, overnight 2026-10-01/02 (`manifest-app-d9`, documents only, after F6's sitting 6
+closed at `a518fd7`): every correction is marked **(S0)** where it applies, and the dated entry lists them with **the open
+questions for Rich**. Two facts moved under the plan: **the platform's sitting 10 has closed** (`8ff925f`), so the mock now
+plays every stage F5b reads; and **F6 built the needs band, `PressNotice` and switching off**, which F5b's presses and its
+band meet.
+
 **Goal:** A faculty member starts the privacy assessment, then the trying-out address's registration, then the students'
 address's, one after another in UBC's order, each drafted by Manifest, checked by them (the assessment's gaps suggested
 by our agent) and sent to the Manifest team; sees how long each has waited and who has it; and asks a Manifest
@@ -51,11 +57,13 @@ administrator to sign off the version on trying-out. Walk-through moments **10 a
 | 2 | 2, 3, 4 | **Part one.** The three steps (`steps.ts`) from today's records, *waiting since*, F5's admission kept on the current card; *Going live*, the band, *Your apps*' line, *Trying out*'s line and **[Open it]**; **the sign-off request, whole** | not started |
 | 3 | 5, 6 | **Part two, when FE-46 lands.** The *Privacy answers* agent, our store's next version and its routes; the assessment's card: **[Start]**, the disclosure, the fields, **[Send it to the Manifest team]** | **waits for FE-46** |
 | 4 | 7 | The registrations' cards: the plain words, **[Take it out]**, stale drafts, every refusal; F5's admission gone for good | **waits for FE-46** |
-| 5 | 8 | **The acceptance:** `scripts/check-clocks.sh` in mock mode; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **waits for FE-46 and the platform's sitting 10** |
+| 5 | 8 | **The acceptance:** `scripts/check-clocks.sh` in mock mode; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | **waits for FE-46** (and FE-46's own mock half). **(S0)** The platform's sitting 10 has closed (`8ff925f`) |
 
 **Part one runs after F6 is executed** (the roadmap's order). Part two runs when FE-46 has landed on the platform
-(**confirmed by Rich**, manifest `ddc76d7`; a spec action is applied, then a sitting builds it); its acceptance needs the platform's
-sitting 10 too (the mock's drafts, submissions and requests scripted). **Between the parts, F5b is usable**: the steps
+(**confirmed by Rich**, manifest `ddc76d7`; a spec action is applied, then a sitting builds it); its acceptance needs the
+mock to play FE-46's step too. **(S0)** The platform's sitting 10 (its Task 13, the mock's half) **closed at `8ff925f`**:
+the mock's drafts, submissions, requests and queue are scripted by stage (*What waits on the platform*), and its
+hand-forward says it does not script *sent to LTIC* until the platform has it. **Between the parts, F5b is usable**: the steps
 show the truth from the records an administrator keeps, and the sign-off can be asked.
 
 **Every sitting starts** with `pgrep -fl vitest` (a stray worker of ours loads the machine the platform times its tiers
@@ -64,7 +72,9 @@ hold every Vitest run of ours between its *hold* and *free*), and **Step 0** (*A
 sitting ends as F6's do:**
 1. the four gates, `pnpm test` twice; and, when it touched our server, the acceptance scripts in mock mode
    (`check-seeing.sh` first, then `check-going-live.sh`, both from a fresh dev database; then `check-slice.sh`,
-   `check-describing.sh`, `check-building.sh`, `check-keeping.sh`; from sitting 5, `check-clocks.sh`);
+   `check-describing.sh`, `check-building.sh`, `check-keeping.sh` and its half two `check-keeping.ts` **(S0)**, as F6's
+   sitting 7 runs them; from sitting 5, `check-clocks.sh`). **(S0) Every walk uses `scripts/walk/`** (the walk library,
+   `8a63767`: headless Chrome over DevTools, its README and `self-test.ts`), never a scratchpad script;
 2. a dated entry in *What executing this plan found*;
 3. this table;
 4. ORIENTATION's *Where things stand*, replaced, and the roadmap;
@@ -77,6 +87,16 @@ or examples moved. **Sitting 3's Step 0 adopts FE-46 as built**: every name this
 names, and the sitting renames ours to match before its own task, test-first, and notes each rename **(S3)** in Tasks
 5–8. If FE-46 landed differently in substance (no gap ids; LTIC not emailed; answers not kept), **stop and ask Rich**
 before building part two.
+
+**(S0) Sitting 3's Step 0 also carries FE-46's events into F6's *what happened*.** F6 reads `iam_registration.submitted`
+and `privacy_assessment.submitted` as the owner's send to UBC (`keeping/happenings.ts`: `{ kind: 'sent', to: 'identity' |
+'privacy' }`, `api/progress.ts`'s `Happening`; the page's `screens/keeping/lines.ts`; `words.ts`: *"The request was sent to
+UBC's identity team"*, *"The privacy assessment was sent to UBC's Privacy Office"*, both Rich's ✓). Under FE-46 the owner's
+send goes to LTIC and `…submitted` becomes LTIC's: so `sent` reads the platform's new *sent to LTIC* event, with *"The
+privacy assessment was sent to the Manifest team"* / *"The request was sent to the Manifest team"*, and a new `{ kind:
+'submitted', to }` reads `…submitted`, *"The Manifest team sent it on to UBC's Privacy Office"* / *"…to UBC's identity
+team"* (**proposed, for Rich**). Test-first, in F6's tests (`happenings.test.ts`, `lines.test.ts`), before Task 5. F6's
+emails do not move: *a long wait is over* still fires on `…recorded`.
 
 ## Decided by Rich: build them, do not re-open them
 
@@ -122,6 +142,13 @@ sign-off). **New here** (each in `words.ts`):
    while any step is not done (F5's `clocksUnmet` gains the staging step), with **[Start them]** while step 1 has nothing
    on file **and `sending` is true**, else **[Going live]**; its state is the current step's. **The shared fakes answer
    the new read** (ORIENTATION §7: a new read in a page's `Promise.all` holds every test whose fake never answers it).
+   **(S0) Where F6 left the reads:** the Overview's `read()` (`overview/overview.tsx`) asks
+   `Promise.allSettled(asks ? [platform.getLaunchReadiness(project.id)] : [])` under F6's `beforeLaunch` gate:
+   `getLaunchRecords` joins that list under the same gate, and `band` (today `!launched && readiness !== undefined &&
+   clocksUnmet(readiness)`) becomes `bandOf(stepsOf(…), launched, sending)`. *Your apps* (`your-apps/your-apps.tsx`)
+   reads every asking app's checklist **at once** (`Promise.allSettled(asking.map(…getLaunchReadiness…))`), not one at a
+   time: `getLaunchRecords` joins it the same way, and `your-apps/model.ts`'s `clocksUnmet(readiness)` (the card's line)
+   reads the steps. The shared fakes are still `screens/screens.test.tsx`'s `mockPlatform` and `two`.
 5. ***Trying out* reads `getLaunchRecords`** (Task 3) for `stagingRegistration`: the line while it is not `active`, and
    **[Open it in a new tab]** once it is (F5's hidden link returns, Rich's *"Hide until registered"*). A failed read is
    *not registered*: the link stays hidden.
@@ -156,15 +183,47 @@ sign-off). **New here** (each in `words.ts`):
 14. **The attribute words are keyed on the name** (Task 7), the platform's seven (`launch/package.ts`'s
     `ATTRIBUTE_PURPOSES`, read-only); an unknown name is drawn by its `purpose`, the one place a registration's card reads
     the platform's prose.
+15. **(S0) F6's needs band raises *"something on its way to your students needs you"* from F5b's states.** F6 computes its
+    page-own `going-live` need on the Overview and *Your apps* as `rowsOf(readiness, { hostname: null }).some((row) =>
+    row.state === 'attention')` (`overview.tsx`'s `read()`, `your-apps.tsx`'s `goingLive`). So **part one's unasked
+    sign-off** (Decision 6: `attention`) raises it with no change to F6's code (Task 4 pins it), and **part two's steps**,
+    which are not rows, must be added: the need is also raised while the current step is `attention` (Tasks 6 and 7 add
+    it to both readers). **Open question for Rich** (the dated entry): this nudges from the moment a version is on
+    trying-out.
+16. **(S0) Every F5b press fails through F6's `Notice`** (`change/press.ts`'s `pressFailed`, drawn by
+    `change/notice.tsx`'s `PressNotice` with the press's own *"We couldn't…"*): a switched-off app (`409
+    PROJECT_ARCHIVED`) is said as F6 says it everywhere (`words.refused.archived`: *"Reading responses is switched off.
+    Switch it back on first."*), never a problem with a reference. **And on a switched-off app (`project.state ===
+    'archived'`) no F5b action is drawn**: the band is not drawn, and *Going live*'s steps and rows say where each stands
+    with no button (No stopgap: the platform refuses each one). A routine reading of No stopgap, recorded for Rich.
+17. **(S0) No F5b press is owner-only**: `approval:request`, `launch:draft` and `launch:submit` are held by an owner and a
+    helper alike (the contract; the addendum's §A3), so F6's `useRole` (`keeping/role.ts`) is not read, and a helper sees
+    every button an owner sees. The platform still decides.
+18. **(S0) Two `dayWords`**: F6's `keeping/lines.ts` has its own (`dayWords(at, timeZone): string`); `steps.ts` keeps
+    F5's, moved from `clocks.ts` (`string | null`, null when unreadable). They are not merged in F5b: a minor for later.
 
 ## What waits on the platform
 
 - **FE-46** (Tasks 5–8): the *sent to LTIC* step, its dates, the queue and the email (a sign-off request too), the gaps'
   ids and the answers kept. Carried at Rich's word, and **confirmed by Rich in the platform's session** (2026-10-01
   19:56 PDT, *"i approved"*, manifest `ddc76d7`); a spec action follows, then a sitting.
-- **The platform's sitting 10** (Task 8's mock-mode acceptance): the mock's drafts, submissions, requests and queue
-  scripted, FE-40's switches. Until then Tasks 2–7 assert what was **sent**, against recording fakes (ORIENTATION §7),
-  and the mock answers its document examples whatever is asked (FE-27).
+- **The platform's sitting 10: (S0) CLOSED at `8ff925f`** (`0969d45`, `b571471`, `6d76459`; adopted by F6's sittings 5
+  and 6 with no change of ours). The mock keeps no state and plays a **stage**, each a switch read when `pnpm mock`
+  starts (`scripts/mock.ts` calls `createMockServer()`, which reads the environment), e.g. `MANIFEST_MOCK_RECORDS=none
+  pnpm mock`:
+  - **`MANIFEST_MOCK_RECORDS`**: `none` (nothing recorded); `drafted` (all three drafted, nothing sent); `assessed` (the
+    assessment approved, both registrations drafted with its PIA number); `approved` (everything registered and approved:
+    the checklist ready, and a production deploy answers production's own instance); **unset, `sent`**: both
+    registrations `active` while the assessment is sent again and with the Privacy Office, **Review Focus 3's
+    out-of-order case**. Each draft and send is answered as the platform answers it from that stage;
+  - **`MANIFEST_MOCK_APPROVAL`**: `pending` (`getApproval` `404`, `admin-approval` unmet, `requestApproval` answers an open
+    request); `rejected` (`requestApproval` `409 RELEASE_REJECTED`); unset, approved (`409 APPROVAL_NOT_NEEDED`);
+  - `MANIFEST_MOCK_STEP_UP=1`, `MANIFEST_MOCK_REHEARSAL=failed`, `MANIFEST_MOCK_QUEUE=full` (FE-40's switches).
+  - **Our mock on 7102 is shared** with every session of ours: a walk that restarts it with a switch says so first, and
+    restores the default after (ORIENTATION §7: restart it for a landing's fixtures). Tests still assert what was
+    **sent**, against recording fakes (ORIENTATION §7); the stages are for walks and `check-clocks.sh`. **The mock does
+    not script *sent to LTIC*** until the platform has it (FE-46's own mock half).
+  - Its text pass (`b571471`) rewrote the checklist's `why` sentences; F5b never reads them (FE-9).
 - **Nothing for part one.** Contract 1.5.0 at `a230c1a` has `getLaunchRecords` (three records, `submittedAt`,
   `changeRequestedFrom`), `LaunchReadinessItem.since`, `requestApproval` and its three refusals.
 
@@ -183,7 +242,8 @@ sign-off). **New here** (each in `words.ts`):
 - **No step's words are read from the platform's prose** (FE-9), but an unknown attribute's `purpose` and, until FE-46's
   ids, a gap's label. **The platform's facts appear only in a closed disclosure.** `machineryIn(text())` is empty on
   every new screen, closed disclosures excluded. A test (Tasks 3, 6, 7).
-- **No stopgap**: no action the platform cannot honour. In part one no step has an action (Decision 3). A test (Task 3).
+- **No stopgap**: no action the platform cannot honour. In part one no step has an action (Decision 3). **(S0)** None on a
+  switched-off app either (Decision 16). A test (Task 3).
 - **Every send carries the draft the person read** (`draftGeneratedAt`), and **the answers sent are the ones on screen**.
   A test (Task 6).
 - **The agent proposes; the person sends.** Nothing the agent writes reaches the platform without the person's press,
@@ -379,6 +439,11 @@ export function bandOf(
     the same with `sending: false` → `going-live`, `notyet` (never *needs you* in part one); a step waiting → `going-live`,
     `waiting`.
   - **`machineryIn`** (from `screens/machinery.ts`) is empty over every string every row produces.
+  - **(S0) The mock's five stages** (*What waits on the platform*) are rows of the table, their records copied from the
+    mock's fixtures (`MANIFEST_MOCK_RECORDS` `none`, `drafted`, `assessed`, `approved`, and the default `sent`): `none`
+    → step 1 current, nothing on file; `drafted` → step 1 current, drafted; `assessed` → step 2 current; `approved` →
+    none current; **`sent` → step 1 current (the assessment with the Privacy Office) while steps 2 and 3 say
+    *"Registered…"* in their lines** (Review Focus 3).
 - [ ] **Step 2: Run, predict red** (`pnpm --filter @manifest-app/web exec vitest run src/screens/going-live/steps.test.ts`:
   *Cannot find module './steps.js'*).
 - [ ] **Step 3: Implement.** `stepsOf` reads `records.privacyAssessment`, `records.stagingRegistration`,
@@ -418,9 +483,9 @@ export function Band(props: { slug: string; band: { button: 'start' | 'going-liv
 ```
 
 - [ ] **Step 1: Tests, failing first.**
-  - **One card at a time** (D2): *Going live* with the mock's records (the assessment `submitted`, staging `active`,
-    production `submitted`: FE-40's order) draws **one** `ClockItem` (the assessment's) and two lines in an `<ol>`, in
-    UBC's order; all three done → three steady lines and no card.
+  - **One card at a time** (D2): *Going live* with the mock's default records (**(S0)** its `sent` stage: the assessment
+    `submitted`, **both** registrations `active`) draws **one** `ClockItem` (the assessment's) and two steady lines in an
+    `<ol>`, in UBC's order; all three done (`approved`) → three steady lines and no card.
   - **Part one** (`sending: false`): the current card shows F5's admission and **no button** (No stopgap); no step is
     *needs you* anywhere on the page.
   - **The lead** says *"one after another"*; the old two-card markup and F5's staging line (*"The trying-out address has
@@ -429,7 +494,10 @@ export function Band(props: { slug: string; band: { button: 'start' | 'going-liv
     **[Going live]** in part one; **[Start them]** (to `/apps/:slug/going-live`) only with `sending: true` and step 1 with
     nothing on file. Not drawn once every step is done.
   - ***Your apps***: the card's line gains *"one after another"*; it reads `getLaunchRecords` per app built and not
-    launched, one at a time after `getLaunchReadiness`; a failed read loses the line, never the card.
+    launched **(S0) beside `getLaunchReadiness`, every asking app at once, as F6 left that read** (Decision 4); a failed
+    read loses the line, never the card.
+  - **(S0) A switched-off app** (`project.state: 'archived'`, Decision 16): no band on the Overview, and on *Going live*
+    no step or row has a button; each still says where it stands.
   - ***Trying out***: with `stagingRegistration` not `active` (or unread), the step-2 line (*"Registering it is the second
     of three steps on Going live: …"*, its state from `stepsOf`) with **[Going live]**, and **no [Open it in a new
     tab]**; with it `active` and something serving, **[Open it in a new tab]** (`href` the environment's `url`,
@@ -439,14 +507,20 @@ export function Band(props: { slug: string; band: { button: 'start' | 'going-liv
   - **The shared fakes** answer `getLaunchRecords` (the mock's three records), so no other screen test hangs.
 - [ ] **Step 2: Red. Step 3: Implement.** `read()` in `going-live.tsx` builds `steps: stepsOf({ records, readiness, now,
   timeZone, sending: false })`; `WhatStands` draws `<Steps>` where the two cards were. The Overview's `Promise.allSettled`
-  gains `getLaunchRecords` beside `getLaunchReadiness`. `clocks.ts` and its test are deleted.
+  gains `getLaunchRecords` beside `getLaunchReadiness` (**(S0)** under F6's `asks` gate, Decision 4), and *Your apps*'
+  `asking` read the same. `clocks.ts` and its test are deleted once `overview.tsx` and `your-apps/model.ts` no longer
+  import `clocksUnmet` (**(S0)** both still do).
   **The walk-through:** moments 10 and 13 changed as the design's *Departures* say, dated 2026-10-01 (F5b), in the same
   commit.
 - [ ] **Step 4: Green; controls:** a second card drawn for a later step with a record (red); the admission dropped in
   part one (red); **[Open it]** shown with staging `submitted` (red). Each restored.
 - [ ] **Step 5: Walk it** against the mock at 1440 and 375 (headless Chrome, as every sitting): the card's children
   inside the card at 375 (ORIENTATION §7: check each card's children, not the page's width), the three steps in order,
-  the band, *Trying out* with DevTools rewriting `stagingRegistration.state` to `active` and back.
+  the band, *Trying out* with DevTools rewriting `stagingRegistration.state` to `active` and back. **(S0)** With
+  `scripts/walk/`, and the mock's stages in place of the rewrites where one serves: `MANIFEST_MOCK_RECORDS=none` (step 1
+  current, nothing on file), `=assessed` (step 2 current, staging drafted: *Trying out*'s line, no **[Open it]**),
+  `=approved` (every step done, no band), and the default (staging `active`: **[Open it]**, no line); our mock on 7102
+  restarted for each, said first, and the default restored after.
 - [ ] **Step 6: Commit** `feat(web): one sequence of three steps on Going live, the band and Trying out read it — Open it once registered`.
 
 ## Task 4: Asking for the sign-off (sitting 2)
@@ -454,7 +528,8 @@ export function Band(props: { slug: string; band: { button: 'start' | 'going-liv
 **Files:**
 - Modify: `packages/web/src/screens/going-live/{sign-off.tsx,sign-off.test.tsx,checklist.ts,row.tsx,going-live.tsx}`,
   `packages/web/src/platform/{api.ts,api.test.ts}`, `packages/web/src/words.ts`,
-  `packages/server/src/launch-actions.test.ts`
+  `packages/server/src/launch-actions.test.ts`; **(S0)** the needs band's tests, `packages/web/src/screens/overview/overview.test.tsx`
+  and `packages/web/src/screens/screens.test.tsx` (*Your apps*), with no change to F6's code (Decision 15)
 
 **Interfaces:**
 
@@ -501,7 +576,12 @@ export const NOTE_LIMIT = 500
     address changed a moment ago. Ask about the new one?"*, `onAsked()` (the page reads again), and the next press names
     the new candidate, never the old (Review Focus 2); `APPROVAL_NOT_NEEDED` and `RELEASE_REJECTED` → `onAsked()` and no
     words of their own (the reading says it); anything else → *"We couldn't ask just now. Nothing is lost."* with a
-    support reference; signed out → `expire()`.
+    support reference; signed out → `expire()`. **(S0)** Through `pressFailed` and `PressNotice` (Decision 16): `409
+    PROJECT_ARCHIVED` → F6's *"Reading responses is switched off. Switch it back on first."*, and no reference.
+  - **(S0) F6's needs band** (Decision 15): the Overview and *Your apps* raise their `going-live` need (*"…something on its
+    way to your students needs you"*, **[Going live]**) for an app with a candidate, nobody decided and `since` null, and
+    raise none once `since` is set (asked, waiting). `rowsOf`'s callers there pass no approval and no `now`: both stay
+    optional in `rowsOf`'s context and `signOffRow`, so F6's calls do not change.
   - **The note is never drawn back** after the ask (the platform never answers it).
   - **`launch-actions.test.ts`**: our server's text names no `/v1/releases/{}/approval-request` path.
 - [ ] **Step 2: Red. Step 3: Implement.** `requestApproval` in `platform/api.ts` (`client.POST('/v1/releases/{releaseId}/approval-request', …)`
@@ -510,7 +590,11 @@ export const NOTE_LIMIT = 500
 - [ ] **Step 4: Green; controls:** the old candidate asked after `RELEASE_NOT_STAGED` (red); one key reused across two
   presses (red); `maxLength` on the note (red). Each restored.
 - [ ] **Step 5: Walk it** against the mock (the mock answers `requestApproval` from its example: FE-27) with DevTools
-  rewriting `admin-approval`'s `since` before and after the press.
+  rewriting `admin-approval`'s `since` before and after the press. **(S0)** With `scripts/walk/`, and the mock's approval
+  stages: `MANIFEST_MOCK_APPROVAL=pending` (unmet, the press answered with an open request), `=rejected` (the press `409
+  RELEASE_REJECTED`, then F5's refusal and **[Talk it through]**), and the default (`409 APPROVAL_NOT_NEEDED`). The mock
+  keeps no state, so the asked row (`since` set) is still DevTools' rewrite. Our mock restarted for each, said first,
+  the default restored after.
 - [ ] **Step 6: Commit** `feat(web): ask a Manifest administrator to sign it off — with a note, and how long it has waited`.
 
 **Sitting 2 ends here** (part one): the gates twice, the acceptance scripts, the dated entry, the tables, ORIENTATION and
@@ -668,9 +752,13 @@ export function AssessmentCard(props: {
     then send it."* and `onChanged()`; `LAUNCH_RECORD_SUBMITTED` / `LAUNCH_TRANSITION_INVALID` → `onChanged()` (the
     reading says it was sent); a draft's `SOURCE_*` / `AI_BACKEND_UNAVAILABLE` / `AI_CATALOGUE_EMPTY` → F5's trouble
     notice with a support reference; the agent's failure → *"We couldn't suggest answers just now. You can write them
-    yourself, or try again."* **[Try again]**, the fields still usable.
+    yourself, or try again."* **[Try again]**, the fields still usable. **(S0)** Every press's other failures through
+    `pressFailed` and `PressNotice` (Decision 16), `409 PROJECT_ARCHIVED` said as F6 says it.
   - **Sent** (the record with LTIC, **(FE-46)**): the card shows its wait (Task 2) and the closed disclosure *What you
     sent*, the answers read back from the record.
+  - **(S0) F6's needs band from the step** (Decision 15): while the current step is `attention` (nothing started, a draft
+    to check and send, sent back), the Overview's and *Your apps*' `going-live` need is raised, beside the rows'; when it
+    is waiting (with LTIC, with UBC), not. Both readers now have the records (Task 3).
   - `machineryIn(text())` empty, the closed disclosures excluded.
 - [ ] **Step 2: Red. Step 3: Implement.** `going-live.tsx` passes `sending: true`; `Steps`' `children` draws
   `<AssessmentCard>` in step 1's card.
@@ -678,7 +766,9 @@ export function AssessmentCard(props: {
   person typed (red); `draftGeneratedAt` omitted (red). Each restored.
 - [ ] **Step 5: Walk it** against the mock (its `draftPrivacyAssessment` answers its example: a real captured draft) at
   1440 and 375, typing an answer, reloading, and sending (the mock's send as FE-46's mock half has it, or DevTools
-  answering it before sitting 10).
+  answering it before sitting 10). **(S0)** With `scripts/walk/`, from `MANIFEST_MOCK_RECORDS=none` (**[Start]**; the
+  mock answers the draft as the platform would from that stage) and `=drafted` (*"Ready for you to check and send."*);
+  the send itself is FE-46's mock half's, or DevTools' answer until the mock scripts it.
 - [ ] **Step 6: Commit** `feat(web): the privacy assessment — what Manifest knows, what only you can say (suggested), sent to the Manifest team`.
 
 **Sitting 3 ends here.**
@@ -743,20 +833,25 @@ changeForAttribute(projectId: string, name: string): Promise<{ id: string } | nu
   - **Not needed (S1: M2)**: `LAUNCH_NOT_CWL` from a draft → `onChanged()`, and the steps say *"Not needed: it doesn't
     sign anyone in."*
   - **F5's admission gone**: `stepsOf`'s `sending` parameter is removed (Decision 3); no `admission` anywhere.
+  - **(S0)** The registrations' presses fail through `PressNotice` (Decision 16), and a registration step that is
+    `attention` raises F6's `going-live` need as Task 6's does (Decision 15).
   - `machineryIn(text())` empty on *Going live* with each card, the closed disclosures excluded.
 - [ ] **Step 2: Red. Step 3: Implement.** `Steps`' `children` draws `<RegistrationCard environment="staging">` in step 2
   and `"production"` in step 3; `read()` gains the candidate's commit (**S1: M4**).
 - [ ] **Step 4: Green; controls:** the package's `acsUrl` drawn (red); `staleOf` reading `warnings` (the warning-only row
   red); a second **[Take it out]** starting a second change (red). Each restored.
 - [ ] **Step 5: Walk it** against the mock (its drafts answer their captured examples) at 1440 and 375, with DevTools
-  marking one attribute `unused` and rewriting `fromCommit`.
+  marking one attribute `unused` and rewriting `fromCommit`. **(S0)** With `scripts/walk/`, from
+  `MANIFEST_MOCK_RECORDS=assessed` (step 2 current, its draft carrying the PIA number) and the default (step 3's draft
+  with staging `active`).
 - [ ] **Step 6: Commit** `feat(web,server): the two registrations — what each asks UBC for, in words, sent to the Manifest team; an unused one taken out`.
 
 **Sitting 4 ends here.**
 
 ## Task 8: The acceptance (sitting 5, alone; FE-46 and the platform's sitting 10 landed)
 
-- [ ] **Step 1: `scripts/check-clocks.sh`, in mock mode** (`pnpm mock` restarted on sitting 10's scripted mock, `pnpm
+- [ ] **Step 1: `scripts/check-clocks.sh`, in mock mode** (**(S0)** `pnpm mock` restarted on the mock as FE-46's mock half
+  left it, `MANIFEST_MOCK_RECORDS=drafted` so the draft view is the mock's own; `pnpm
   dev:mock`, a fresh dev database), as `check-going-live.sh` is written (bash 3.2, jq and node, every line saying what
   it asked, wanted and got), **what our server does in F5b**:
   1. `POST …/assessment/suggestions` with the mock's token and a draft view of the mock's captured draft: an answer per
@@ -775,6 +870,9 @@ changeForAttribute(projectId: string, name: string): Promise<{ id: string } | nu
   Important fixed test-first; Minor recorded in the dated entry.
 - [ ] **Step 3: The walk against the mock** (headless Chrome, 1440 and 375): the three steps from nothing to the
   assessment sent, a registration sent, the sign-off asked; every card's children inside its card; one card at a time.
+  **(S0)** With `scripts/walk/`, stage by stage (`MANIFEST_MOCK_RECORDS` `none` → `drafted` → `assessed` → `approved`,
+  and the default's out-of-order records; `MANIFEST_MOCK_APPROVAL=pending` and `=rejected`), each a restart of our mock
+  said first, the default restored at the end; *sent to LTIC* as FE-46's mock half plays it.
 - [ ] **Step 4: On the real platform, at Rich's word**, in a platform window: one app made through our page (a class
   audience: FE-44), the assessment started, suggestions checked, sent; **`operator` plays LTIC** (the admin grant):
   records the submission to PRISM, then approval with a PIA number; staging's drafted and sent, recorded `active`;
@@ -813,3 +911,41 @@ who asked for the sign-off (nothing reads a request back: the row says *asked*).
 - **Beside it, the contract digest's addendum** (`2d94516`, written by a subagent of this session and checked here: its
   counts against the contract, two entries against the operations read for this design): every operation, event, code
   and schema from 1.4.0 at `186fa34` to 1.5.0 at `a230c1a`, and what the old digest no longer gets right.
+
+### 2026-10-02 — (S0): the plan re-read against F6's final shapes (session `manifest-app-d9`, overnight, documents only)
+
+- **Why, and when:** Rich's overnight arrangement (coordinated by `manifest-app-3a`; GO at ~22:25 PDT, after F6's sitting 6
+  closed at `a518fd7`). F6's page shapes are final for F5b's purposes. No code was run but reads: no Vitest, no 7100, no
+  port. Every correction is marked **(S0)** where it applies.
+- **The platform's sitting 10 has closed** (`8ff925f`; its mock `0969d45`, text `b571471`, fix wave `6d76459`; adopted by
+  F6's sittings 5 and 6 with no change of ours). **The mock plays every stage F5b reads**, as switches read at `pnpm mock`'s
+  start (`MANIFEST_MOCK_RECORDS`: `none`, `drafted`, `assessed`, `approved`, the default `sent`;
+  `MANIFEST_MOCK_APPROVAL`: `pending`, `rejected`; and FE-40's others). So: the sittings table's *waits for the platform's
+  sitting 10* goes (sitting 5 waits for FE-46 and its own mock half); *What waits on the platform* lists the stages;
+  Tasks 2, 3, 4, 6, 7 and 8 walk (and Task 2 tests) by stage. **The mock's default is Review Focus 3's out-of-order case**
+  (both registrations `active` while the assessment is with the Privacy Office), and **Task 3's first test had it wrong**
+  (it said production `submitted`): corrected.
+- **F6's needs band** raises *"something on its way to your students needs you"* from any `rowsOf` row that is
+  `attention` (Decision 15): part one's unasked sign-off raises it with no change to F6's code (Task 4 pins it); part two's
+  steps are added to it (Tasks 6 and 7).
+- **F6's `PressNotice`** (`pressFailed`'s `Notice`): every F5b press fails through it, so a switched-off app is said in F6's
+  words (Decision 16). **On a switched-off app no F5b action is drawn**, the band included (No stopgap).
+- **No F5b press is owner-only** (Decision 17): F6's `useRole` is not read.
+- **The reads F6 left** (Decision 4): the Overview's checklist read sits under F6's `asks` gate; *Your apps* reads every
+  asking app's checklist at once, not one at a time (Task 3 said otherwise: corrected); `clocksUnmet` still has two
+  importers (`overview.tsx`, `your-apps/model.ts`), so `clocks.ts` goes only once both read the steps.
+- **F6's *what happened*** reads `…submitted` as *"sent to UBC's…"* (Rich's ✓ words): sitting 3's Step 0 now carries
+  FE-46's two events into it, with words **proposed for Rich** (*"…was sent to the Manifest team"*, *"The Manifest team
+  sent it on to UBC's Privacy Office"*). F6's emails do not move.
+- **Two `dayWords`** (Decision 18): F6's in `keeping/lines.ts`, F5's moving to `steps.ts`; not merged in F5b.
+- **The walks use `scripts/walk/`** (`8a63767`), and the sitting's end runs `check-keeping.sh` with its half two.
+- **Unchanged, checked:** the store is still at version 5 (Task 5's version 6 holds); the shared fakes are still
+  `screens.test.tsx`'s `mockPlatform` and `two`; no step-up is asked by anything F5b presses.
+- **Open questions for Rich** (none blocks part one; each has the plan's default, which stands until he says otherwise):
+  1. **The nudge** (Decision 15): the unasked sign-off is *needs you* (the design's §3, which he approved), and F6's band
+     now says so on *Your apps* and the Overview from the moment a version is on trying-out, before the three steps are
+     done. *Default:* as approved. *The alternative:* the unasked row is *not yet* until the steps are done (one condition
+     in `signOffRow`).
+  2. **The words for FE-46's two events** in *what happened* (sitting 3's Step 0): proposed above, for his review then.
+  3. **A switched-off app draws no F5b button** (Decision 16): a routine reading of No stopgap, recorded so he can
+     overrule it.

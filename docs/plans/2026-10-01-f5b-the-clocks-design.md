@@ -293,7 +293,9 @@ The row is F5's `signOffRow`, extended. Its keys stay the checklist item's state
 - **The platform's sitting 10** (the launch path's Task 13: the mock's drafts, submissions, requests and queue scripted,
   and FE-40's switches): **F5b's mock-mode acceptance and walks wait for it.** Until then F5b is built against recording
   fakes, and the mock's document examples (which answer whatever is asked: FE-27). Its hand-forward says the mock should
-  not script *sent to LTIC* until the platform has it.
+  not script *sent to LTIC* until the platform has it. **(S0, 2026-10-02) It has closed** (`8ff925f`): the mock plays
+  each stage of the records and the sign-off by a switch (`MANIFEST_MOCK_RECORDS`, `MANIFEST_MOCK_APPROVAL`); the plan
+  says how F5b walks them.
 - **Nothing else.** Contract 1.5.0 at `a230c1a` (72 operations) serves part one: the records, `since`,
   `changeRequestedFrom`, the drafts and `requestApproval`.
 
