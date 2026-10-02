@@ -214,7 +214,8 @@ describe('the page: letting your students in (moment 11)', () => {
       within(steps)
         .getAllByRole('listitem')
         .map(
-          (li) => li.querySelector('.mf-clockitem__title, .going-live__name')?.textContent,
+          (li) =>
+            li.querySelector('.mf-clockitem__title, .going-live__name')?.textContent,
         ),
     ).toEqual([g.steps.assessment.title, g.steps.staging.title, g.steps.production.title])
     expect(clocks()).toHaveLength(1)
