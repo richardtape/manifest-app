@@ -18,7 +18,7 @@
  *                                 owner's press: live (needs operator's admin grant first)
  *   node $W quiet                 Your apps and the Overview with nothing needing them, at 1440 and
  *                                 375; our watch minted by the page
- *   node $W members               colleague added as an owner, student as a helper, in the
+ *   node $W members               colleague added as an owner, operator as a helper, in the
  *                                 owner's session: "who's on it changed" to colleague alone
  *   node $W fall --stop           (Rich's word: Docker) the live app's container stopped; the email
  *                                 and the band; a helper's line; Start it again with the second
@@ -55,6 +55,11 @@ const MAILPIT = process.env['MAILPIT'] ?? 'http://127.0.0.1:7112'
 const OUT = process.env['OUT'] ?? join(tmpdir(), 'keeping-7100')
 const STATE = join(OUT, 'state.json')
 const WIDTHS = [1440, 375]
+/**
+ * The helper: `operator`, the one other laptop person who may build. The platform refuses
+ * `student` as a member (`409 MEMBER_MAY_NOT_BUILD`, its sitting 5a; 7100's first run).
+ */
+const HELPER = 'operator'
 const MINUTE = 60_000
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 mkdirSync(OUT, { recursive: true })
@@ -565,7 +570,7 @@ async function members() {
   const owner = await as('instructor')
   for (const [cwlLogin, role] of [
     ['colleague', 'owner'],
-    ['student', 'collaborator'],
+    [HELPER, 'collaborator'],
   ] as const) {
     const added = await stepped(owner, () =>
       owner.change('POST', `/v1/projects/${projectId}/members`, { cwlLogin, role }),
@@ -576,19 +581,33 @@ async function members() {
   }
   const list = await membersOf(owner, projectId)
   const of = (login: string) => list.find((m) => m.cwlLogin === login)
-  const student = of('student')
-  const subject = `${name}: ${student?.displayName ?? 'someone'} was added`
+  const helper = of(HELPER)
+  const subject = `${name}: ${helper?.displayName ?? 'someone'} was added`
   const toColleague = await untilMail(of('colleague')?.email ?? '', subject, 3 * MINUTE)
   const toInstructor = (await mailTo(of('instructor')?.email ?? '')).filter((m) =>
     m.Subject.includes('was added'),
   )
-  const toStudent = (await mailTo(student?.email ?? '')).filter((m) =>
+  const toHelper = (await mailTo(helper?.email ?? '')).filter((m) =>
     m.Subject.includes('was added'),
   )
   report.check(
-    `"${subject}": to colleague (the other owner), never to instructor (who did it) nor student`,
-    toColleague.length === 1 && toInstructor.length === 0 && toStudent.length === 0,
-    `colleague ${toColleague.length}, instructor ${toInstructor.length}, student ${toStudent.length}`,
+    `"${subject}": to colleague (the other owner), never to instructor (who did it) nor ${HELPER}`,
+    toColleague.length === 1 && toInstructor.length === 0 && toHelper.length === 0,
+    `colleague ${toColleague.length}, instructor ${toInstructor.length}, ${HELPER} ${toHelper.length}`,
+  )
+  // Colleague's own adding told nobody: the only other owner is the one it is about (Decision 13).
+  const colleagueAdded = `${name}: ${of('colleague')?.displayName ?? 'someone'} was added`
+  const told = (
+    await Promise.all(
+      ['instructor', 'colleague', HELPER].map((login) => mailTo(of(login)?.email ?? '')),
+    )
+  )
+    .flat()
+    .filter((m) => m.Subject === colleagueAdded)
+  report.check(
+    `"${colleagueAdded}": to nobody (the actor and the member it is about are its only owners)`,
+    told.length === 0,
+    `${told.length}`,
   )
 }
 
@@ -637,16 +656,14 @@ async function fall() {
   const cantReach = `${name}: your students can't reach it`
   const toInstructor = await untilMail(email('instructor'), cantReach, 5 * MINUTE)
   const toColleague = await untilMail(email('colleague'), cantReach, MINUTE)
-  const toStudent = (await mailTo(email('student'))).filter(
-    (m) => m.Subject === cantReach,
-  )
+  const toHelper = (await mailTo(email(HELPER))).filter((m) => m.Subject === cantReach)
   report.check(
     `"${cantReach}": once to each owner, in ${Math.round((Date.now() - stoppedAt) / 1000)} s; not to the helper`,
-    toInstructor.length === 1 && toColleague.length === 1 && toStudent.length === 0,
-    `instructor ${toInstructor.length}, colleague ${toColleague.length}, student ${toStudent.length}`,
+    toInstructor.length === 1 && toColleague.length === 1 && toHelper.length === 0,
+    `instructor ${toInstructor.length}, colleague ${toColleague.length}, ${HELPER} ${toHelper.length}`,
   )
   // A helper's band: the line, and no button (Review Focus 5).
-  const helper = await tabFor('student')
+  const helper = await tabFor(HELPER)
   await helper.go(`/apps/${slug}`)
   await helper.untilWords(`${name}: your students can't reach it`, 'main', 30_000)
   report.check(
