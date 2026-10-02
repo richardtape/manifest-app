@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { ManifestApiError } from '@manifest/contract'
-import { cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
+import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { words } from '../../words.js'
 import { PressNotice } from './notice.js'
-import { pressFailed } from './press.js'
+import { pressFailed, useFocusBack } from './press.js'
 
 /**
  * F6 TASK 11: `409 PROJECT_ARCHIVED`, wherever a press meets it, is the app switched off, said in
@@ -75,5 +76,27 @@ describe('PressNotice', () => {
     )
     expect(document.body.textContent).toContain(words.tryingOut.couldnt)
     expect(document.body.textContent).toContain('7F3A-9C21')
+  })
+})
+
+describe('m4: the focus owed after a failed press (useFocusBack)', () => {
+  /** A press's place: the button drawn or not, and `back()` called from outside. */
+  let owe: () => void = () => undefined
+  let draw: (drawn: boolean) => void = () => undefined
+  function Place() {
+    const focus = useFocusBack<HTMLDivElement>()
+    const [drawn, setDrawn] = useState(false)
+    owe = focus.back
+    draw = setDrawn
+    return (
+      <div ref={focus.at}>{drawn ? <button type="button">Ask for it</button> : null}</div>
+    )
+  }
+
+  it('is dropped on the render after the failure: a button drawn later never takes the focus', async () => {
+    render(<Place />)
+    await act(async () => owe())
+    await act(async () => draw(true))
+    expect(document.activeElement).toBe(document.body)
   })
 })

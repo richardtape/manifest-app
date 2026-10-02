@@ -126,6 +126,8 @@ function stage(
       calls.push(['mintToken', projectId, body, key])
       mints++
       const trouble = options.mint?.()
+      // A press held open, failed later by the test (m4).
+      if (trouble instanceof Promise) return trouble as never
       if (trouble !== undefined) return Promise.reject(trouble)
       return Promise.resolve({
         token: { id: `t-${mints}` },
@@ -351,6 +353,23 @@ describe('Ask for a change (/apps/:slug/change)', () => {
       /quote [0-9A-F]{4}-[0-9A-F]{4}/,
     )
     await waitFor(() => expect(document.activeElement).toBe(button('Ask for it')))
+  })
+
+  it('m4: a press that fails after they went back to their words leaves the focus with their words', async () => {
+    let fail: (error: unknown) => void = () => undefined
+    const held = new Promise<never>((_, reject) => {
+      fail = reject
+    })
+    await open(`/apps/${SLUG}/change`, stage({ mint: () => held }))
+    const box = await screen.findByLabelText('What should change')
+    fireEvent.change(box, { target: { value: WORDS } })
+    button('Ask for it').focus()
+    await press(button('Ask for it'))
+    box.focus()
+    await act(async () => fail(new Error('offline')))
+    await screen.findByRole('alert')
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
+    expect(document.activeElement).toBe(box)
   })
 
   it('the app switched off (PROJECT_ARCHIVED, F6 Task 11): said in words, switch it back on first; no reference', async () => {
