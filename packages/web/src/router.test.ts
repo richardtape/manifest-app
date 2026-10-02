@@ -28,6 +28,9 @@ describe('the router', () => {
     ],
     ['/apps/mock-app/elsewhere', { name: 'unknown' }],
     ['/apps/mock-app/conversations/c-1/more', { name: 'unknown' }],
+    // F6 Task 9: an app's history.
+    ['/apps/mock-app/history', { name: 'app-history', slug: 'mock-app' }],
+    ['/apps/mock-app/history/more', { name: 'unknown' }],
   ])('%s', (path, route) => expect(parse(path)).toEqual(route))
 
   it.each([

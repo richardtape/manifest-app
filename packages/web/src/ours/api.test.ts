@@ -523,6 +523,20 @@ describe('keeping watch (F6 Task 8): our routes, from the page', () => {
     })
   })
 
+  it.each([
+    ['needs', () => createOurs().needs()],
+    ['since', () => createOurs().since()],
+    ['history', () => createOurs().history(PROJECT)],
+  ] as const)(
+    '%s answering without its list is refused as unexpected, never drawn',
+    async (_name, read) => {
+      answering(204)
+      await expect(read()).rejects.toMatchObject({ code: 'UNEXPECTED' })
+      answering(200, { something: 'else' })
+      await expect(read()).rejects.toMatchObject({ code: 'UNEXPECTED' })
+    },
+  )
+
   it('forget sends DELETE with no body and no content-type (a DELETE with JSON and no body is 400, §7)', async () => {
     const fetch = answering(204)
     await createOurs().forget(PROJECT)

@@ -177,7 +177,8 @@ describe('signing out', () => {
       fireEvent.click(within(rail).getByText('Sign out'))
     })
     expect(await screen.findByText(words.signOut.failed)).toBeTruthy()
-    expect(posts).toEqual(['/auth/logout'])
+    // The only POST is the sign-out's (F6: Your apps also reads our server's needs and lines).
+    expect(posts.filter((url) => !url.startsWith('/api/'))).toEqual(['/auth/logout'])
     expect(window.location.pathname).toBe('/')
   })
 })
@@ -874,7 +875,8 @@ describe('someone who may not build, with no apps (D7, FE-39)', () => {
       fireEvent.click(button)
     })
     expect(await screen.findByText(words.signOut.failed)).toBeTruthy()
-    expect(posts).toEqual(['/auth/logout'])
+    // The only POST is the sign-out's (F6: Your apps also reads our server's needs and lines).
+    expect(posts.filter((url) => !url.startsWith('/api/'))).toEqual(['/auth/logout'])
     expect(screen.getByText(words.notOpen.title)).toBeTruthy()
   })
 
@@ -1122,5 +1124,104 @@ describe('the Keeping watch, minted where it runs (F6 Task 8, design §1)', () =
     await screen.findByRole('heading', { level: 1, name: fixtures.PROJECT.name })
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect([w.asked, mints]).toEqual([[], []])
+  })
+})
+
+describe('F6 Task 9: coming back to Your apps (moment 16, design §2)', () => {
+  const k = words.keeping
+  const app = {
+    projectId: fixtures.PROJECT_ID,
+    name: fixtures.PROJECT.name,
+    slug: 'mock-app',
+  }
+  const AT = '2026-10-01T17:03:00.000Z'
+  const oursWith = (patch: Partial<Ours>): Ours => ({
+    ...createOurs(),
+    keeping: () => new Promise(() => undefined),
+    ...patch,
+  })
+
+  it('the band across their apps, Since naming each app, and the card’s students’ fact turned attention', async () => {
+    const ours = oursWith({
+      needs: async () => [{ kind: 'down', app, from: AT, owner: true }],
+      since: async () => ({
+        lastHere: '2026-09-30T17:00:00.000Z',
+        lines: [
+          {
+            id: 'e1',
+            at: AT,
+            happening: { kind: 'went-live', instanceId: 'i' },
+            who: null,
+            whom: null,
+            app,
+          },
+        ],
+      }),
+    })
+    render(<App platform={mockPlatform()} ours={ours} />)
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(fixtures.PROJECT.name)
+    const since = await screen.findByRole('region', { name: k.since.title })
+    expect(
+      within(since)
+        .getByRole('link', { name: fixtures.PROJECT.name })
+        .getAttribute('href'),
+    ).toBe('/apps/mock-app/history')
+    const card = screen
+      .getByRole('heading', { name: fixtures.PROJECT.name })
+      .closest('.mf-card')!
+    const students = card.querySelector('.app-card__students')!
+    await waitFor(() =>
+      expect(students.textContent).toContain(k.card.unreachable('').trim()),
+    )
+    expect(students.querySelector('.mf-chip')?.className).toContain('mf-is-attention')
+    expect(machineryIn(wordsOnScreen())).toEqual([])
+  })
+
+  it('a switched-off app’s card says so, and when', async () => {
+    const ours = oursWith({
+      needs: async () => [],
+      since: async () => ({ lastHere: null, lines: [] }),
+    })
+    render(
+      <App
+        platform={mockPlatform({
+          state: 'archived',
+          archivedAt: '2026-12-12T20:00:00.000Z',
+        })}
+        ours={ours}
+      />,
+    )
+    const card = (
+      await screen.findByRole('heading', { name: fixtures.PROJECT.name })
+    ).closest('.mf-card')!
+    expect(card.textContent).toContain(k.card.switchedOff('12 December'))
+  })
+
+  it('a failure of ours loses the band and the lines, never the page', async () => {
+    const ours = oursWith({
+      needs: () => Promise.reject(new Error('UNREACHABLE')),
+      since: () => Promise.reject(new Error('UNREACHABLE')),
+    })
+    render(<App platform={mockPlatform()} ours={ours} />)
+    expect(
+      await screen.findByRole('heading', { name: fixtures.PROJECT.name }),
+    ).toBeTruthy()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('region', { name: k.band.label })).toBeNull()
+    expect(screen.queryByRole('region', { name: k.since.title })).toBeNull()
+  })
+
+  it('/apps/:slug/history opens the app’s history', async () => {
+    window.history.pushState({}, '', '/apps/mock-app/history')
+    const ours = oursWith({
+      history: async () => ({ from: '2026-09-18T16:00:00.000Z', gaps: [], lines: [] }),
+    })
+    render(<App platform={mockPlatform()} ours={ours} />)
+    expect(
+      await screen.findByRole('heading', { level: 1, name: k.history.title }),
+    ).toBeTruthy()
+    // The heading draws at once; the lines once our server answers.
+    expect(await screen.findByText(k.history.from('18 September'))).toBeTruthy()
   })
 })

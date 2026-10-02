@@ -139,6 +139,8 @@ describe('a card whose project could not be read (review, deferred minor)', () =
       draft: { hostname: undefined, fact: cantTell },
       tryingOut: { hostname: undefined, fact: cantTell },
       beforeStudents: false,
+      switchedOff: null,
+      unreachable: null,
     })
   })
 })
@@ -232,5 +234,40 @@ describe('the live address before a first launch (Spec action 8 (c), the platfor
     expect(asServed(env('production', 'failed'), true).instance?.state).toBe('failed')
     expect(asServed(env('staging', 'gone'), false).instance?.state).toBe('gone')
     expect(asServed(env('sandbox', 'gone'), false).instance?.state).toBe('gone')
+  })
+})
+
+describe('F6 Task 9: switched off, and can’t be reached (design §2)', () => {
+  const TZ = 'America/Vancouver'
+  const PROJECT = fixtures.PROJECT_EXPANDED
+  it('switched off: "Switched off, 12 December", and its students’ fact Switched off', () => {
+    const card = appCard(
+      { ...PROJECT, state: 'archived', archivedAt: '2026-12-12T20:00:00.000Z' },
+      new Map(),
+      TZ,
+    )
+    expect(card.switchedOff).toBe('Switched off, 12 December')
+    expect(card.students).toEqual({ state: 'notyet', words: 'Switched off' })
+    expect(card.unreachable).toBeNull()
+  })
+
+  it('a down need: the students’ fact turns attention, since when', () => {
+    const card = appCard(PROJECT, new Map(), TZ, undefined, '2026-10-01T17:03:00.000Z')
+    expect(card.unreachable).toBe("Your students can't reach it, since 10:03am")
+    expect(card.students).toEqual({
+      state: 'attention',
+      words: "Your students can't reach it, since 10:03am",
+    })
+    expect(card.switchedOff).toBeNull()
+  })
+
+  it('neither: both null, and the students’ fact as before', () => {
+    const card = appCard(PROJECT, new Map(), TZ)
+    expect([card.switchedOff, card.unreachable]).toEqual([null, null])
+  })
+
+  it('a card that cannot be read is neither', () => {
+    const card = unreadableCard(PROJECT)
+    expect([card.switchedOff, card.unreachable]).toEqual([null, null])
   })
 })

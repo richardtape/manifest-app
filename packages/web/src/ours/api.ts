@@ -255,6 +255,13 @@ export interface Ours {
   forget(projectId: string): Promise<void>
 }
 
+/** A success without its list is not an answer: never drawn as one (as `agreedRows`). */
+function listed<T>(answer: unknown, key: string): T {
+  const list = (answer as Record<string, unknown> | undefined)?.[key]
+  if (!Array.isArray(list)) throw new OurRefusal('UNEXPECTED', 200)
+  return answer as T
+}
+
 const app = (projectId: string, route = '') =>
   `/api/apps/${encodeURIComponent(projectId)}${route}`
 const forOne = (path: string, projectId?: string) =>
@@ -403,15 +410,20 @@ export function createOurs(): Ours {
       return { kept: answer?.kept === 'current' ? 'current' : 'new' }
     },
     needs: async (projectId) =>
-      ((await call('GET', forOne('/api/needs', projectId))) as { needs: Need[] }).needs,
+      listed<{ needs: Need[] }>(
+        await call('GET', forOne('/api/needs', projectId)),
+        'needs',
+      ).needs,
     since: async (projectId) =>
-      (await call('GET', forOne('/api/since', projectId))) as Awaited<
-        ReturnType<Ours['since']>
-      >,
+      listed<Awaited<ReturnType<Ours['since']>>>(
+        await call('GET', forOne('/api/since', projectId)),
+        'lines',
+      ),
     history: async (projectId) =>
-      (await call('GET', app(projectId, '/history'))) as Awaited<
-        ReturnType<Ours['history']>
-      >,
+      listed<Awaited<ReturnType<Ours['history']>>>(
+        await call('GET', app(projectId, '/history')),
+        'lines',
+      ),
     forget: async (projectId) => {
       await call('DELETE', app(projectId))
     },

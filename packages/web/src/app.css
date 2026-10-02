@@ -233,8 +233,14 @@
 }
 .app-card__students {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2) var(--space-3);
+}
+/* F6: "Your students can't reach it, since 10:03am" is long: at 375 it goes below its label, and
+   wraps inside its chip, never past the card (sitting 5's walk). */
+.app-card__students .mf-chip {
+  min-width: 0;
 }
 .app-card__addresses {
   margin: 0;
@@ -1180,4 +1186,97 @@
 }
 .building__end .trying-out {
   margin-top: 0;
+}
+
+/* F6 TASK 9, COMING BACK (moment 16, design §2): the needs-you band, Since you were last here,
+   How we keep watch, an app's history, and the card's switched-off line. Every line wraps: an app's
+   name may be long (minors.md's m63), so nothing here is kept on one line. */
+.needs .mf-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.needs__list,
+.since__lines,
+.history__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.needs__list {
+  gap: var(--space-4);
+}
+.needs__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.app-main .needs__item .body {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.since {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.since .heading,
+.history__day .heading {
+  margin: 0;
+}
+.since__lines,
+.history__lines {
+  gap: var(--space-2);
+}
+.since__line,
+.history__line {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  align-items: baseline;
+}
+.since__when,
+.history__when {
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.since__what,
+.history__line .body {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.app-main .since__everything {
+  margin: 0;
+}
+.how-we-watch .body {
+  margin: 0;
+}
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.history__day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.app-main .history__gap,
+.app-main .history__from {
+  margin: 0;
+  color: var(--ink-muted);
+}
+.history__trouble {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.app-main .app-card__switched-off {
+  margin: 0;
+  color: var(--ink-muted);
 }

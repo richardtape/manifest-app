@@ -40,6 +40,8 @@ export type Route =
   | { name: 'app-conversations'; slug: string }
   /** Ask for a change (F4 Task 9). */
   | { name: 'app-change'; slug: string }
+  /** Everything that happened to an app (F6 Task 9, design §2): `/apps/:slug/history`. */
+  | { name: 'app-history'; slug: string }
   | { name: 'profile' }
   | { name: 'unknown' }
 
@@ -58,7 +60,7 @@ export function parse(pathname: string, search = ''): Route {
   if (pathname === '/new') return { name: 'new' }
   if (pathname === '/profile') return { name: 'profile' }
   const app =
-    /^\/apps\/([^/]+)(?:\/(conversations|change|preview|going-live))?(?:\/([^/]+))?$/.exec(
+    /^\/apps\/([^/]+)(?:\/(conversations|change|preview|going-live|history))?(?:\/([^/]+))?$/.exec(
       pathname,
     )
   if (app !== null) {
@@ -73,6 +75,7 @@ export function parse(pathname: string, search = ''): Route {
     }
     if (page === 'conversations') return { name: 'app-conversations', slug }
     if (page === 'change') return { name: 'app-change', slug }
+    if (page === 'history') return { name: 'app-history', slug }
     const query = new URLSearchParams(search)
     if (page === 'going-live')
       return {

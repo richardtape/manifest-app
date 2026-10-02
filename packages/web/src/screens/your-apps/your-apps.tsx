@@ -1,8 +1,13 @@
 import type { Schemas } from '@manifest/contract'
+import type { Need, SinceLine } from '@manifest-app/server/progress'
 import { Button, Card, StateChip } from '@manifest-app/ui'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
+import { rowsOf } from '../going-live/checklist.js'
+import type { PageNeed } from '../keeping/lines.js'
+import { NeedsBand } from '../keeping/needs.js'
+import { Since } from '../keeping/since.js'
 import { ensureEach } from '../keeping/watch.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
@@ -18,10 +23,18 @@ import {
   type AppCard,
 } from './model.js'
 
+/** Our server's reads (F6 Task 9): a failure of ours loses the band or the lines, never the page. */
+type Ours_ = { needs: Need[]; since: { lastHere: string | null; lines: SinceLine[] } }
 type Loaded =
   | { state: 'loading' }
   | { state: 'trouble'; trouble: Trouble }
-  | { state: 'ready'; cards: AppCard[] }
+  | {
+      state: 'ready'
+      /** The cards, with our watch's outages as our server last said (F6: arrives on its own). */
+      cardsWith: (downs: ReadonlyMap<string, string>) => AppCard[]
+      /** The page's own needs: a Going live row theirs to do. */
+      goingLive: PageNeed[]
+    }
 
 /**
  * THE READS BEHIND *YOUR APPS*. `listProjects`, then one `getProject?expand=environments`
@@ -33,7 +46,11 @@ type Loaded =
 async function read(
   platform: Platform,
   me: Schemas['Me'],
-): Promise<{ cards: AppCard[]; read: Schemas['Project'][] }> {
+): Promise<{
+  cardsWith: (downs: ReadonlyMap<string, string>) => AppCard[]
+  read: Schemas['Project'][]
+  goingLive: PageNeed[]
+}> {
   const projects = mine(await platform.listProjects(), me)
   const read = await Promise.allSettled(projects.map((p) => platform.getProject(p.id)))
   const expanded = read.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
@@ -76,13 +93,45 @@ async function read(
       return r?.status === 'fulfilled' ? [[p.id, r.value] as const] : []
     }),
   )
-  const cards = projects.map((project, i) => {
-    const r = read[i]
-    return r?.status === 'fulfilled'
-      ? appCard(r.value, releaseById, undefined, checklists.get(r.value.id))
-      : unreadableCard(project)
+  const cardsWith = (downs: ReadonlyMap<string, string>) =>
+    projects.map((project, i) => {
+      const r = read[i]
+      return r?.status === 'fulfilled'
+        ? appCard(
+            r.value,
+            releaseById,
+            undefined,
+            checklists.get(r.value.id),
+            downs.get(r.value.id),
+          )
+        : unreadableCard(project)
+    })
+  // The page's own (design §2, source 4): a Going live row theirs to do, for an app not yet live.
+  const goingLive: PageNeed[] = asking.flatMap((p) => {
+    const checklist = checklists.get(p.id)
+    if (checklist === undefined) return []
+    const theirs = rowsOf(checklist, { hostname: null }).some(
+      (row) => row.state === 'attention',
+    )
+    return theirs
+      ? [
+          {
+            kind: 'going-live',
+            app: { projectId: p.id, name: p.name ?? p.slug, slug: p.slug },
+          },
+        ]
+      : []
   })
-  return { cards, read: expanded }
+  return { cardsWith, read: expanded, goingLive }
+}
+
+/** Our server's two reads, each lost alone: no band, or no lines (Task 9). */
+async function keepingOf(ours: Ours): Promise<Ours_> {
+  const [needs, since] = await Promise.allSettled([ours.needs(), ours.since()])
+  return {
+    needs: needs.status === 'fulfilled' ? needs.value : [],
+    since: since.status === 'fulfilled' ? since.value : { lastHere: null, lines: [] },
+  }
 }
 
 /** *YOUR APPS* (moments 2 and 16). */
@@ -99,13 +148,22 @@ export function YourApps({
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
+  // F6 TASK 9: our server's needs and lines, read on their own: the page never waits for them.
+  const [keeping, setKeeping] = useState<Ours_ | null>(null)
+  useEffect(() => {
+    let live = true
+    void keepingOf(ours).then((read) => live && setKeeping(read))
+    return () => {
+      live = false
+    }
+  }, [ours, attempt])
 
   useEffect(() => {
     let live = true
     read(platform, me).then(
-      ({ cards, read: apps }) => {
+      ({ cardsWith, read: apps, goingLive }) => {
         if (!live) return
-        setLoaded({ state: 'ready', cards })
+        setLoaded({ state: 'ready', cardsWith, goingLive })
         // F6 TASK 8: each app's Keeping watch, after the page's own reads, one at a time.
         void ensureEach(platform, ours, apps, () => live)
       },
@@ -129,13 +187,19 @@ export function YourApps({
   }, [])
 
   const w = words.yourApps
+  const downs = new Map(
+    (keeping?.needs ?? []).flatMap((n) =>
+      n.kind === 'down' ? [[n.app.projectId, n.from] as const] : [],
+    ),
+  )
+  const cards = loaded.state === 'ready' ? loaded.cardsWith(downs) : []
   return (
     <>
       <h1 className="page-title">{words.shell.yourApps}</h1>
       {loaded.state === 'trouble' ? (
         <TroubleNotice trouble={loaded.trouble} onRetry={retry} />
       ) : null}
-      {loaded.state === 'ready' && loaded.cards.length === 0 ? (
+      {loaded.state === 'ready' && cards.length === 0 ? (
         <Card className="your-apps__empty">
           <p className="body-lead">{w.empty}</p>
           <div>
@@ -164,9 +228,17 @@ export function YourApps({
           </div>
         </Card>
       ) : null}
-      {loaded.state === 'ready'
-        ? loaded.cards.map((card) => <AppCardView key={card.id} card={card} />)
-        : null}
+      {loaded.state === 'ready' ? (
+        <>
+          <NeedsBand needs={[...(keeping?.needs ?? []), ...loaded.goingLive]} />
+          {keeping === null ? null : (
+            <Since lastHere={keeping.since.lastHere} lines={keeping.since.lines} />
+          )}
+        </>
+      ) : null}
+      {cards.map((card) => (
+        <AppCardView key={card.id} card={card} />
+      ))}
     </>
   )
 }
@@ -189,6 +261,9 @@ function AppCardView({ card }: { card: AppCard }) {
           <p className="body-small app-card__audience">{card.audience}</p>
         )}
       </div>
+      {card.switchedOff === null ? null : (
+        <p className="body-small app-card__switched-off">{card.switchedOff}</p>
+      )}
       <p className="app-card__students">
         <span className="label">{w.forStudents}</span>
         <StateChip state={card.students.state} label={card.students.words} />

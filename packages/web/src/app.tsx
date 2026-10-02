@@ -15,6 +15,7 @@ import { Overview } from './screens/overview/overview.js'
 import { Preview } from './screens/preview/preview.js'
 import { useApp } from './screens/preview/use-app.js'
 import { useWatch } from './screens/keeping/watch.js'
+import { History } from './screens/history/history.js'
 import { Profile } from './screens/profile.js'
 import { SignIn } from './screens/sign-in.js'
 import { TroubleNotice } from './screens/trouble.js'
@@ -57,6 +58,7 @@ export function App({
     route.name === 'app-going-live' ||
     route.name === 'app-conversations' ||
     route.name === 'app-change' ||
+    route.name === 'app-history' ||
     route.name === 'conversation'
       ? route.slug
       : undefined
@@ -218,7 +220,8 @@ export function App({
     route.name === 'app-preview' ||
     route.name === 'app-going-live' ||
     route.name === 'app-conversations' ||
-    route.name === 'app-change'
+    route.name === 'app-change' ||
+    route.name === 'app-history'
   )
     page =
       lookup.state === 'trouble' ? (
@@ -258,6 +261,13 @@ export function App({
           expire={expire}
           {...(now === undefined ? {} : { now })}
           {...(timeZone === undefined ? {} : { timeZone })}
+        />
+      ) : route.name === 'app-history' ? (
+        <History
+          key={lookup.project.id}
+          ours={ours}
+          project={lookup.project}
+          timeZone={timeZone}
         />
       ) : route.name === 'app-change' ? (
         <AskForChange

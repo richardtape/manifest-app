@@ -2,6 +2,7 @@ import type { Schemas } from '@manifest/contract'
 import type { State } from '@manifest-app/ui'
 import { words } from '../../words.js'
 import { clocksUnmet } from '../going-live/checklist.js'
+import { clockWords, dayWords } from '../keeping/lines.js'
 
 /**
  * EVERY VALUE A CARD ON *YOUR APPS* SHOWS, derived here and nowhere else, and pure.
@@ -116,6 +117,10 @@ export type AppCard = {
   tryingOut: Address
   /** Built, not launched, and a production clock unmet: the line and [Going live] (Decision 3). */
   beforeStudents: boolean
+  /** F6 (design §2): "Switched off, 12 December", for an app its owner switched off; else null. */
+  switchedOff: string | null
+  /** F6 (design §2, §4): "Your students can't reach it, since 10:03am", from our watch; else null. */
+  unreachable: string | null
 }
 
 /**
@@ -140,6 +145,8 @@ export function appCard(
   releases: ReadonlyMap<string, Schemas['Release']>,
   timeZone?: string,
   readiness?: Schemas['LaunchReadiness'],
+  /** F6: since when our watch has found the students' address down (a `down` need's `from`). */
+  downSince?: string,
 ): AppCard {
   const launched = (project.launchedAt ?? null) !== null
   const address = (kind: Schemas['Environment']['kind']): Address => {
@@ -155,13 +162,28 @@ export function appCard(
       fact: studentsFact(instance, release, timeZone),
     }
   }
+  const k = words.keeping.card
+  // Switched off says so first: nothing runs, whatever an address last reached.
+  const switchedOff =
+    project.state === 'archived' && (project.archivedAt ?? null) !== null
+      ? k.switchedOff(dayWords(project.archivedAt!, timeZone))
+      : null
+  const unreachable =
+    switchedOff === null && downSince !== undefined
+      ? k.unreachable(clockWords(downSince, timeZone))
+      : null
   return {
     id: project.id,
     slug: project.slug,
     // `Project.name` (sitting 5), or the slug before it has one.
     name: project.name ?? project.slug,
     audience: audienceWords(project.audience),
-    students: address('production').fact,
+    students:
+      switchedOff !== null
+        ? { state: 'notyet', words: f.switchedOff }
+        : unreachable !== null
+          ? { state: 'attention', words: unreachable }
+          : address('production').fact,
     draft: address('sandbox'),
     tryingOut: address('staging'),
     beforeStudents:
@@ -171,6 +193,8 @@ export function appCard(
         project.environments?.find((e) => e.kind === 'sandbox'),
       ) &&
       clocksUnmet(readiness),
+    switchedOff,
+    unreachable,
   }
 }
 
@@ -190,6 +214,8 @@ export function unreadableCard(project: Schemas['Project']): AppCard {
     draft: { hostname: undefined, fact: cantTell },
     tryingOut: { hostname: undefined, fact: cantTell },
     beforeStudents: false,
+    switchedOff: null,
+    unreachable: null,
   }
 }
 

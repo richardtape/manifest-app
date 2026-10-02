@@ -338,3 +338,112 @@ describe('F4’s addresses still work (Review Focus 5)', () => {
     expect(rail().querySelector('[aria-current="page"]')?.textContent).toBe(rail_.preview)
   })
 })
+
+describe('F6 Task 9: coming back to the Overview (moment 16, design §2 and §4)', () => {
+  const k = words.keeping
+  const app = { projectId: fixtures.PROJECT_ID, name: PROJECT.name, slug: SLUG }
+  const AT = '2026-10-01T17:03:00.000Z'
+  /** Our own API answers as told: needs, since; the plan as before (none agreed). */
+  function ours(answers: { needs?: unknown; since?: unknown; fail?: boolean }) {
+    const asked: string[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        asked.push(url)
+        const json = (status: number, body: unknown) =>
+          new Response(JSON.stringify(body), { status })
+        if (answers.fail && /^\/api\/(needs|since)/.test(url))
+          return json(500, { error: { code: 'INTERNAL' } })
+        if (url.startsWith('/api/needs')) return json(200, { needs: answers.needs ?? [] })
+        if (url.startsWith('/api/since'))
+          return json(200, answers.since ?? { lastHere: null, lines: [] })
+        if (/^\/api\/apps\/[^/]+\/plan$/.test(url))
+          return json(404, { error: { code: 'NOT_FOUND' } })
+        return new Response(null, { status: 204 })
+      }),
+    )
+    return asked
+  }
+
+  it('asks our server for this app’s needs and lines alone', async () => {
+    const asked = ours({})
+    await open(`/apps/${SLUG}`)
+    await ready()
+    await waitFor(() =>
+      expect(asked).toEqual(
+        expect.arrayContaining([
+          `/api/needs?projectId=${fixtures.PROJECT_ID}`,
+          `/api/since?projectId=${fixtures.PROJECT_ID}`,
+        ]),
+      ),
+    )
+  })
+
+  it('the band, when our server says the live address is down: its words and Start it again', async () => {
+    ours({ needs: [{ kind: 'down', app, from: AT, owner: true }] })
+    await open(`/apps/${SLUG}`)
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(k.band.down(PROJECT.name, '10:03am'))
+    expect(within(band).getByRole('link', { name: k.band.startAgain })).toBeTruthy()
+    expect(machineryIn(document.body.textContent ?? '')).toEqual([])
+  })
+
+  it('nothing needs them: no band', async () => {
+    ours({})
+    await open(`/apps/${SLUG}`)
+    await ready()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('region', { name: k.band.label })).toBeNull()
+  })
+
+  it('Since you were last here: its own lines and [Everything]; never there before, nothing', async () => {
+    ours({
+      since: {
+        lastHere: '2026-09-30T17:00:00.000Z',
+        lines: [
+          {
+            id: 'e1',
+            at: AT,
+            happening: { kind: 'signed-off', releaseId: 'r' },
+            who: null,
+            whom: null,
+            app,
+          },
+        ],
+      },
+    })
+    await open(`/apps/${SLUG}`)
+    const since = await screen.findByRole('region', { name: k.since.title })
+    expect(since.textContent).toContain(k.lines.signedOff)
+    expect(
+      within(since).getByRole('link', { name: k.since.everything }).getAttribute('href'),
+    ).toBe(`/apps/${SLUG}/history`)
+    cleanup()
+    ours({ since: { lastHere: null, lines: [] } })
+    await open(`/apps/${SLUG}`)
+    await ready()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('region', { name: k.since.title })).toBeNull()
+  })
+
+  it('a failure of ours loses the band and the lines, never the page', async () => {
+    ours({ fail: true })
+    await open(`/apps/${SLUG}`)
+    expect(await ready()).toBeTruthy()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('region', { name: k.band.label })).toBeNull()
+  })
+
+  it('How we keep watch: closed, on a launched app; never before it launched', async () => {
+    ours({})
+    await open(`/apps/${SLUG}`, stage({ launchedAt: LAUNCHED, readiness: BOTH_MET }))
+    await ready()
+    const summary = await screen.findByText(k.how.title)
+    expect((summary.closest('details') as HTMLDetailsElement).open).toBe(false)
+    cleanup()
+    ours({})
+    await open(`/apps/${SLUG}`)
+    await ready()
+    expect(screen.queryByText(k.how.title)).toBeNull()
+  })
+})

@@ -541,6 +541,87 @@ export const words = {
    * the walk-through's moment 10, with Rich's "may take several days"; the rows are the
    * Preview's tab names and F4's serving facts.
    */
+  /**
+   * F6, MOMENTS 16 AND 19 (Task 9): what happened, what needs them, and the history. *Words proposed
+   * for Rich*, approved with the F6 plan, marked ✓; ours where the table has none, marked "ours"
+   * (each named in sitting 5's entry for his word).
+   */
+  keeping: {
+    lines: {
+      wentLive: 'Went live', // ✓
+      reachedStudents: 'A new version reached your students', // ✓
+      changeFailed: "A change didn't go live. Your students kept the version before it.", // ✓
+      signedOff: 'Signed off by a Manifest administrator', // ✓
+      turnedDown: "A Manifest administrator didn't sign it off", // ✓
+      dryRunPassed: 'The dry run signed someone in', // ✓
+      dryRunFailed: "The dry run didn't sign anyone in", // ✓
+      sentIdentity: "The request was sent to UBC's identity team", // ✓
+      sentPrivacy: "The privacy assessment was sent to UBC's Privacy Office", // ✓
+      identityRegistered: "UBC's identity team registered it", // ✓
+      identityChange: "UBC's identity team asked for a change", // ✓
+      identityAnswered: "UBC's identity team answered", // ✓
+      privacyApproved: "UBC's Privacy Office approved it", // ✓
+      privacyAnswered: "UBC's Privacy Office answered", // ✓
+      someone: 'Someone', // ✓ (sitting 3: a member we cannot name)
+      added: (whom: string) => `${whom} was added`, // ✓
+      addedBy: (who: string, whom: string) => `${who} added ${whom}`, // ours
+      nowRole: (whom: string, role: 'owner' | 'collaborator') =>
+        `${whom} is now ${role === 'owner' ? 'an owner' : 'a helper'}`, // ✓
+      madeRole: (who: string, whom: string, role: 'owner' | 'collaborator') =>
+        `${who} made ${whom} ${role === 'owner' ? 'an owner' : 'a helper'}`, // ours
+      removed: (whom: string) => `${whom} was taken off it`, // ✓
+      removedBy: (who: string, whom: string) => `${who} took ${whom} off it`, // ours
+      switchedOff: 'Switched off', // ✓
+      switchedOffBy: (who: string) => `${who} switched it off`, // ours
+      switchedOn: 'Switched back on', // ✓
+      switchedOnBy: (who: string) => `${who} switched it back on`, // ours
+      renamed: (from: string) => `Renamed from ${from}`, // ✓
+      renamedBy: (who: string, from: string) => `${who} renamed it from ${from}`, // ours
+      unreachable: "Your students couldn't reach it", // ✓
+      answering: (howLong: string) => `Answering again. It was down for ${howLong}.`, // ✓
+    },
+    /** The needs-you band (design §2): each line names the app and the thing, with its button. */
+    band: {
+      label: 'What needs you', // ours: the band's name, for a screen reader
+      question: (app: string) => `${app}: we have a question for you.`, // ✓
+      open: 'Open it', // ✓
+      down: (app: string, since: string) =>
+        `${app}: your students can't reach it, since ${since}. We can see that, not why.`, // ✓
+      downOwner: 'Starting it again usually fixes it.', // ✓
+      downHelper: 'An owner can start it again.', // ✓
+      startAgain: 'Start it again', // ✓
+      answering: (app: string, since: string, howLong: string) =>
+        `${app}: answering again since ${since}. It was down for ${howLong}.`, // ✓
+      whatHappened: 'What happened?', // ✓
+      changeFailed: (app: string) =>
+        `${app}: a change didn't go live. Nobody has lost anything: your students still have the version from before.`, // ✓
+      giveIt: 'Give this to your agent', // ✓
+      goingLive: (app: string) =>
+        `${app}: something on its way to your students needs you.`, // ✓
+      goingLiveButton: 'Going live', // ✓
+    },
+    since: {
+      title: 'Since you were last here', // ✓ (the design)
+      everything: 'Everything', // ✓ (the design)
+    },
+    history: {
+      title: 'Everything that happened', // ✓
+      from: (day: string) => `From ${day}.`, // ✓
+      gap: (from: string, to: string) => `We weren't watching between ${from} and ${to}.`, // ✓
+      cantReach: "We can't reach Manifest just now. Nothing of yours has changed.", // ✓ (the design)
+      retry: 'Try again', // ours
+      empty: 'Nothing has happened yet.', // ours
+    },
+    how: {
+      title: 'How we keep watch', // ✓
+      body: (app: string) =>
+        `Once a minute, we check that your students can reach ${app}. If they can't, twice in a row, we email its owners and offer to start it again. We can't see why it stopped, we can't tell when it answers but gets things wrong, and we only watch while we're running ourselves.`, // ✓
+    },
+    card: {
+      switchedOff: (day: string) => `Switched off, ${day}`, // ✓ (the design)
+      unreachable: (since: string) => `Your students can't reach it, since ${since}`, // ✓ (the design)
+    },
+  },
   overview: {
     /** Ours: the address rows' name, for a screen reader. */
     addresses: 'Its three addresses',

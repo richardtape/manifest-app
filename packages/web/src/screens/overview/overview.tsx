@@ -1,4 +1,5 @@
 import type { Schemas } from '@manifest/contract'
+import type { SinceLine } from '@manifest-app/server/progress'
 import { Button, StateChip, type FactTone, type State } from '@manifest-app/ui'
 import { useCallback, useEffect, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
@@ -6,7 +7,11 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, TABS, type Tab } from '../../router.js'
 import { words } from '../../words.js'
-import { clocksUnmet } from '../going-live/checklist.js'
+import { clocksUnmet, rowsOf } from '../going-live/checklist.js'
+import { HowWeKeepWatch } from '../keeping/how.js'
+import type { PageNeed } from '../keeping/lines.js'
+import { NeedsBand } from '../keeping/needs.js'
+import { Since } from '../keeping/since.js'
 import { releasesToRead, servingFact, type Said } from '../preview/facts.js'
 import { KIND } from '../preview/preview.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
@@ -31,6 +36,16 @@ type Seen = {
   band: boolean
   /** Moment 15, once the app has launched (Task 9): what leads the page. */
   handed: Handed | null
+  /** F6 Task 9: the page's own need, a Going live row theirs to do, before a launch. */
+  goingLive: PageNeed[]
+  /** Launched: *How we keep watch* is drawn (design §4). */
+  launched: boolean
+}
+
+/** F6 Task 9: our server's needs and lines for the app, each lost alone, never the page's wait. */
+type Keeping = {
+  needs: PageNeed[]
+  since: { lastHere: string | null; lines: SinceLine[] }
 }
 type Loaded =
   | { state: 'loading' }
@@ -83,7 +98,21 @@ async function read(
   const students = of('students')
   const serving = (env: Schemas['Environment']) =>
     env.instance === null ? undefined : byId.get(env.instance.releaseId)
+  const app = {
+    projectId: project.id,
+    name: project.name ?? project.slug,
+    slug: project.slug,
+  }
+  // The page's own (design §2, source 4): a Going live row theirs to do, before a launch.
+  const goingLive: PageNeed[] =
+    !launched &&
+    readiness !== undefined &&
+    rowsOf(readiness, { hostname: null }).some((row) => row.state === 'attention')
+      ? [{ kind: 'going-live', app }]
+      : []
   return {
+    goingLive,
+    launched,
     rows: TABS.flatMap((tab) => {
       const found = of(tab)
       if (found === undefined) return []
@@ -129,6 +158,24 @@ export function Overview({
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
+  // F6 TASK 9: our server's reads, on their own: a failure of ours loses the band or the lines,
+  // and a slow answer never holds the page.
+  const [keeping, setKeeping] = useState<Keeping | null>(null)
+  useEffect(() => {
+    let live = true
+    void Promise.allSettled([ours.needs(project.id), ours.since(project.id)]).then(
+      ([needs, since]) =>
+        live &&
+        setKeeping({
+          needs: needs.status === 'fulfilled' ? needs.value : [],
+          since:
+            since.status === 'fulfilled' ? since.value : { lastHere: null, lines: [] },
+        }),
+    )
+    return () => {
+      live = false
+    }
+  }, [ours, project.id, attempt])
 
   useEffect(() => {
     let live = true
@@ -165,6 +212,10 @@ export function Overview({
       ) : null}
       {loaded.state === 'ready' ? (
         <>
+          <NeedsBand
+            needs={[...(keeping?.needs ?? []), ...loaded.seen.goingLive]}
+            timeZone={timeZone}
+          />
           {loaded.seen.handed === null ? null : (
             <ForYourStudents name={project.name} handed={loaded.seen.handed} />
           )}
@@ -187,6 +238,15 @@ export function Overview({
               {words.preview.askForChange}
             </Button>
           </div>
+          {keeping === null ? null : (
+            <Since
+              lastHere={keeping.since.lastHere}
+              lines={keeping.since.lines}
+              timeZone={timeZone}
+              app={{ projectId: project.id, name: project.name, slug: project.slug }}
+            />
+          )}
+          {loaded.seen.launched ? <HowWeKeepWatch name={project.name} /> : null}
         </>
       ) : null}
     </div>
