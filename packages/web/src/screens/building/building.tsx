@@ -204,7 +204,7 @@ export function BuildingScreen({
         <PutOnTryingOut
           platform={platform}
           ours={ours}
-          project={{ id: projectId, slug }}
+          project={{ id: projectId, slug, name: intake.project?.name ?? slug }}
           expire={expire}
           now={now}
           timeZone={timeZone}

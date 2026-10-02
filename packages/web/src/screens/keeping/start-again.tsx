@@ -1,16 +1,16 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, Card, StateChip } from '@manifest-app/ui'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { reportProblem, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
-import { pressFailed } from '../change/press.js'
+import { PressNotice } from '../change/notice.js'
+import { pressFailed, type Notice } from '../change/press.js'
 import { whenOf } from '../going-live/live.js'
 import { mintRequest } from '../making/token.js'
 import { agoWords } from '../preview/facts.js'
-import { SupportReference } from '../reference.js'
 import {
   cutByOurDeadline,
   ENDED_BADLY,
@@ -43,6 +43,25 @@ type Sent = { releaseId: string; when: string | null; day: string | null }
 type Where = 'production' | 'staging'
 /** RELEASE_NOT_STAGED: the two versions, and the two addresses' ids. */
 type Choice = { theirs: Sent; newer: Sent; production: string; staging: string }
+/**
+ * What the press is for: the live address fell over (*Start it again*, Task 10), or the app is
+ * back from being switched off and not running yet (*Start it for your students*, Task 11).
+ */
+type Mode = 'again' | 'students'
+type Props = {
+  platform: Platform
+  ours: Ours
+  project: Schemas['Project']
+  /** Back from signing in again (`?then=start-again` or `?then=students`): the same button, said so. */
+  arrived: boolean
+  /** It answers again: the page may read what it shows again. */
+  onDone: () => void
+  expire: () => void
+  now: () => Date
+  timeZone: string | undefined
+  /** What the page says before the button, while it is offered. */
+  intro?: ReactNode
+}
 
 type Phase =
   | { at: 'offer' }
@@ -85,7 +104,25 @@ type Outcome =
  * - **RELEASE_NOT_STAGED** (trying-out has moved on): both versions named by their day, and the
  *   choice: the newer one to the students, or theirs put back on trying-out first, then to them.
  */
-export function StartItAgain({
+export function StartItAgain(props: Props) {
+  return <Redeploy mode="again" {...props} />
+}
+
+/**
+ * [START IT FOR YOUR STUDENTS] (walk-through moment 20; F6 Task 11, design §5): an app switched
+ * back on is not running yet. **(S1: M4) The last-served version is production's own
+ * `instance.releaseId`** (still named after a switch-off, its state `gone`), read at the press, and
+ * put back in two deploys from the person's own session: trying-out first, its end awaited, then
+ * the students' address with the second sign-in when asked (`?then=students`). The checklist is
+ * never read first: right after a restore it is not ready until trying-out serves the version
+ * again. A refusal by the gate is said with *Going live*.
+ */
+export function StartForStudents(props: Props) {
+  return <Redeploy mode="students" {...props} />
+}
+
+function Redeploy({
+  mode,
   platform,
   ours,
   project,
@@ -94,20 +131,10 @@ export function StartItAgain({
   expire,
   now,
   timeZone,
-}: {
-  platform: Platform
-  ours: Ours
-  project: Schemas['Project']
-  /** Back from signing in again (`?then=start-again`): the same button, said so. */
-  arrived: boolean
-  /** It answers again: the page may read what it shows again. */
-  onDone: () => void
-  expire: () => void
-  now: () => Date
-  timeZone: string | undefined
-}) {
+  intro = null,
+}: Props & { mode: Mode }) {
   const [phase, setPhase] = useState<Phase>({ at: 'offer' })
-  const [notice, setNotice] = useState<string>()
+  const [notice, setNotice] = useState<Notice>()
   const [pressedOnce, setPressedOnce] = useState(false)
   const poll = useRef<ReturnType<typeof setInterval>>(undefined)
   const live = useRef(true)
@@ -127,7 +154,7 @@ export function StartItAgain({
     const said = pressFailed(error, operation)
     if (said.expired) return expire()
     if (!live.current) return
-    setNotice(said.reference)
+    setNotice(said)
     setPhase({ at: 'offer' })
   }
 
@@ -307,7 +334,7 @@ export function StartItAgain({
       case 'refused':
         return refused(
           outcome.error,
-          staging === null
+          staging === null || mode === 'students'
             ? null
             : () => askWhich(production, staging, releaseId, outcome.error),
         )
@@ -336,19 +363,23 @@ export function StartItAgain({
     }
   }
 
-  /** THEIRS BACK ON TRYING-OUT FIRST, its end awaited, then to the students' address. */
-  const putBack = async (choice: Choice) => {
+  /** THE VERSION ON TRYING-OUT FIRST, its end awaited, then to the students' address. */
+  const throughTryingOut = async (
+    production: string,
+    staging: string,
+    releaseId: string,
+  ) => {
     setNotice(undefined)
     setPhase({ at: 'reading' })
-    const outcome = await put(choice.staging, choice.theirs.releaseId, 'staging')
+    const outcome = await put(staging, releaseId, 'staging')
     if (!live.current) return
     switch (outcome.end) {
       case 'healthy':
-        return toStudents(choice.production, choice.staging, choice.theirs.releaseId)
+        return toStudents(production, staging, releaseId)
       case 'gave-up':
         return gaveUp('staging')
       case 'failed':
-        return neverAnswered(choice.staging, 'staging', outcome.attemptId)
+        return neverAnswered(staging, 'staging', outcome.attemptId)
       case 'refused':
         return refused(outcome.error, null)
     }
@@ -368,14 +399,39 @@ export function StartItAgain({
     const production = environments.find((e) => e.kind === 'production')
     const staging = environments.find((e) => e.kind === 'staging')
     const releaseId = production?.instance?.releaseId
-    if (production === undefined || releaseId === undefined) {
-      // Nothing was ever served there: nothing to start again (the band asks only for a launched app).
+    /** An address the press needs, missing: said as a problem of ours, with a reference. */
+    const missing = (code: string) => {
       if (!live.current) return
-      setNotice(reportProblem({ code: 'NOTHING_SERVED', operation: 'listEnvironments' }))
-      return setPhase({ at: 'offer' })
+      setNotice({
+        expired: false,
+        archived: false,
+        reference: reportProblem({ code, operation: 'listEnvironments' }),
+      })
+      setPhase({ at: 'offer' })
     }
-    await toStudents(production.id, staging?.id ?? null, releaseId)
+    // Nothing was ever served there: nothing to start (the page offers it only once launched).
+    if (production === undefined || releaseId === undefined)
+      return missing('NOTHING_SERVED')
+    if (mode === 'again') return toStudents(production.id, staging?.id ?? null, releaseId)
+    if (staging === undefined) return missing('NO_TRYING_OUT')
+    await throughTryingOut(production.id, staging.id, releaseId)
   }
+
+  /** The press's own words: its button, its stations, its end, and where the sign-in returns. */
+  const said =
+    mode === 'again'
+      ? {
+          button: b.startAgain,
+          stations: s.stationsLabel,
+          landed: s.landed,
+          then: 'start-again',
+        }
+      : {
+          button: words.keeping.switching.students,
+          stations: words.goingLive.letIn.stationsLabel,
+          landed: words.goingLive.letIn.landed(project.name),
+          then: 'students',
+        }
 
   const offered = phase.at === 'offer' || phase.at === 'reading'
   return (
@@ -383,13 +439,13 @@ export function StartItAgain({
       {notice === undefined ? null : (
         <div role="alert">
           <Card tone="attention">
-            <p className="body-lead">{t.couldnt}</p>
-            <SupportReference reference={notice} />
+            <PressNotice notice={notice} name={project.name} couldnt={t.couldnt} />
           </Card>
         </div>
       )}
       {offered ? (
         <>
+          {intro}
           {phase.at === 'offer' && arrived && !pressedOnce ? (
             <p className="body">{words.goingLive.letIn.again}</p>
           ) : null}
@@ -399,7 +455,7 @@ export function StartItAgain({
               disabled={phase.at === 'reading'}
               onClick={() => void press()}
             >
-              {b.startAgain}
+              {said.button}
             </Button>
           </div>
         </>
@@ -413,7 +469,7 @@ export function StartItAgain({
           {phase.at === 'unsure' && phase.gaveUp ? null : (
             <Stations
               instance={phase.instance}
-              name={phase.where === 'production' ? s.stationsLabel : t.stationsLabel}
+              name={phase.where === 'production' ? said.stations : t.stationsLabel}
             />
           )}
           <p className="body">{s.nobodyLost}</p>
@@ -426,9 +482,9 @@ export function StartItAgain({
       ) : null}
       {phase.at === 'landed' ? (
         <>
-          <Stations instance={{ state: 'healthy' }} name={s.stationsLabel} />
+          <Stations instance={{ state: 'healthy' }} name={said.stations} />
           <p className="body" role="status">
-            {s.landed}
+            {said.landed}
           </p>
         </>
       ) : null}
@@ -437,7 +493,7 @@ export function StartItAgain({
           <StateChip state="attention" label={t.needsYou} />
           <Stations
             instance={{ state: 'failed' }}
-            name={phase.incident?.where === 'staging' ? t.stationsLabel : s.stationsLabel}
+            name={phase.incident?.where === 'staging' ? t.stationsLabel : said.stations}
           />
           <p className="body">{phase.attempt}</p>
           {phase.incident === null ? null : (
@@ -468,7 +524,16 @@ export function StartItAgain({
             >
               {s.startNewer}
             </Button>
-            <Button kind="secondary" onClick={() => void putBack(phase)}>
+            <Button
+              kind="secondary"
+              onClick={() =>
+                void throughTryingOut(
+                  phase.production,
+                  phase.staging,
+                  phase.theirs.releaseId,
+                )
+              }
+            >
               {s.putBack(phase.theirs.day)}
             </Button>
           </div>
@@ -487,7 +552,7 @@ export function StartItAgain({
         </>
       ) : null}
       {phase.at === 'step-up' ? (
-        <StepUpCard returnTo={`/apps/${slug}?then=start-again`} aboutStudents />
+        <StepUpCard returnTo={`/apps/${slug}?then=${said.then}`} aboutStudents />
       ) : null}
     </div>
   )
@@ -509,13 +574,13 @@ export function WhatHappened({
 }: {
   platform: Platform
   ours: Ours
-  project: { id: string; slug: string }
+  project: { id: string; slug: string; name: string }
   from: string
   to: string
   expire: () => void
 }) {
   const [pressing, setPressing] = useState(false)
-  const [reference, setReference] = useState<string>()
+  const [reference, setReference] = useState<Notice>()
   const press = async () => {
     setPressing(true)
     setReference(undefined)
@@ -543,7 +608,7 @@ export function WhatHappened({
       setPressing(false)
       const said = pressFailed(error, step)
       if (said.expired) expire()
-      else setReference(said.reference)
+      else setReference(said)
     }
   }
   return (
@@ -551,8 +616,7 @@ export function WhatHappened({
       {reference === undefined ? null : (
         <div role="alert">
           <Card tone="attention">
-            <p className="body-lead">{t.couldnt}</p>
-            <SupportReference reference={reference} />
+            <PressNotice notice={reference} name={project.name} couldnt={t.couldnt} />
           </Card>
         </div>
       )}

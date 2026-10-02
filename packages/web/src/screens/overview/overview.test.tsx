@@ -485,3 +485,171 @@ describe('F6 Task 9: coming back to the Overview (moment 16, design §2 and §4)
     expect(screen.queryByText(k.how.title)).toBeNull()
   })
 })
+
+describe('F6 Task 11: end of term on the Overview (moment 20, design §5)', () => {
+  const k = words.keeping
+  const s = k.switching
+  /**
+   * Our own API answers nothing needing them; the plan as before (none agreed). `watching`: our
+   * server already keeps the app's watch, so the shell mints nothing on its own (Task 8).
+   */
+  function quiet(watching = false) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const json = (status: number, body: unknown) =>
+          new Response(JSON.stringify(body), { status })
+        if (url.startsWith('/api/needs')) return json(200, { needs: [] })
+        if (url.startsWith('/api/since')) return json(200, { lastHere: null, lines: [] })
+        if (url.includes('/keeping'))
+          return json(200, {
+            watching,
+            until: watching ? '2027-10-01T00:00:00.000Z' : null,
+            tokenId: null,
+            mine: false,
+          })
+        if (/^\/api\/apps\/[^/]+\/plan$/.test(url))
+          return json(404, { error: { code: 'NOT_FOUND' } })
+        return new Response(null, { status: 204 })
+      }),
+    )
+  }
+  /**
+   * The world as `stage`, with the person's role on the app, and the app itself as the platform
+   * holds it: switched off and back on in place, so the shell's second reading sees it.
+   */
+  function owned(
+    project: Partial<Schemas['Project']>,
+    role: 'owner' | 'collaborator' = 'owner',
+    world: Partial<World> = {},
+  ) {
+    const st = stage(world)
+    let held: Schemas['Project'] = { ...PROJECT, ...project }
+    const calls: string[] = []
+    const platform: Platform = {
+      ...st.platform,
+      listProjects: () => Promise.resolve([fixtures.PROJECT, held]),
+      listMembers: () =>
+        Promise.resolve([{ ...fixtures.MEMBERS[0]!, userId: fixtures.ME.id, role }]),
+      archiveProject: () => {
+        calls.push('archiveProject')
+        held = { ...held, state: 'archived', archivedAt: '2026-12-12T20:00:00.000Z' }
+        return Promise.resolve(held)
+      },
+      restoreProject: () => {
+        calls.push('restoreProject')
+        held = { ...held, state: 'active' }
+        return Promise.resolve(held)
+      },
+      mintToken: () => {
+        calls.push('mintToken')
+        return Promise.resolve(fixtures.MINTED_TOKEN)
+      },
+    }
+    return { ...st, platform, calls }
+  }
+  const ARCHIVED = { state: 'archived' as const, archivedAt: '2026-12-12T20:00:00.000Z' }
+  /** The students' address after a switch-off: still naming the version it served, gone (M4). */
+  const GONE: Schemas['Instance'] = {
+    id: 'i-gone',
+    environmentId: '33333333-3333-4333-8333-333333333333',
+    releaseId: fixtures.RELEASE.id,
+    kind: 'web',
+    state: 'gone',
+    lastSeenAt: null,
+    createdAt: '2026-09-20T17:00:00.000Z',
+  }
+  const section = () => screen.queryByRole('region', { name: s.title })
+
+  it('an owner: Switching it off at the foot of the page', async () => {
+    quiet()
+    await open(`/apps/${SLUG}`, owned({}))
+    await ready()
+    expect(await screen.findByRole('region', { name: s.title })).toBeTruthy()
+    expect(within(section()!).getByRole('button', { name: s.off })).toBeTruthy()
+    // Never live: Delete it beside it.
+    expect(within(section()!).getByRole('button', { name: s.delete })).toBeTruthy()
+  })
+
+  it('a helper: none of it (Review Focus 5)', async () => {
+    quiet()
+    await open(`/apps/${SLUG}`, owned({}, 'collaborator'))
+    await ready()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(section()).toBeNull()
+  })
+
+  it('switched off from here: the shell reads the app again, the page standing, and says so with Switch it back on', async () => {
+    quiet(true)
+    const st = owned({})
+    await open(`/apps/${SLUG}`, st)
+    await ready()
+    const area = await screen.findByRole('region', { name: s.title })
+    await press(within(area).getByRole('button', { name: s.off }))
+    await press(within(area).getByRole('button', { name: s.off }))
+    expect(st.calls).toEqual(['archiveProject'])
+    expect(await screen.findByText(k.card.switchedOff('12 December'))).toBeTruthy()
+    expect(screen.getByRole('button', { name: s.backOn })).toBeTruthy()
+    expect(section()).toBeNull()
+  })
+
+  it('switched off: said to everyone; Switch it back on for an owner alone', async () => {
+    quiet()
+    await open(`/apps/${SLUG}`, owned(ARCHIVED, 'collaborator'))
+    expect(await screen.findByText(k.card.switchedOff('12 December'))).toBeTruthy()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('button', { name: s.backOn })).toBeNull()
+  })
+
+  it('switched back on, never live: no second sign-in; It’s back, and the watch minted once (by the shell)', async () => {
+    quiet()
+    const st = owned(ARCHIVED)
+    await open(`/apps/${SLUG}`, st)
+    await press(await screen.findByRole('button', { name: s.backOn }))
+    expect(await screen.findByText(s.backDraft)).toBeTruthy()
+    await waitFor(() => expect(st.calls).toEqual(['restoreProject', 'mintToken']))
+    expect(screen.queryByText(k.card.switchedOff('12 December'))).toBeNull()
+  })
+
+  it('back on after it was live: It’s back, but not running yet, and Start it for your students', async () => {
+    quiet()
+    await open(
+      `/apps/${SLUG}`,
+      owned({ launchedAt: LAUNCHED }, 'owner', {
+        launchedAt: LAUNCHED,
+        readiness: BOTH_MET,
+        production: GONE,
+      }),
+    )
+    const back = await screen.findByRole('region', { name: s.students })
+    expect(back.textContent).toContain(s.back)
+    expect(back.textContent).toContain(s.studentsWhat(s.students))
+    expect(within(back).getByRole('button', { name: s.students })).toBeTruthy()
+    expect(machineryIn(document.body.textContent ?? '')).toEqual([])
+  })
+
+  it('a live app’s owner: FE-45’s sentence where Delete it would be', async () => {
+    quiet()
+    await open(
+      `/apps/${SLUG}`,
+      owned({ launchedAt: LAUNCHED }, 'owner', {
+        launchedAt: LAUNCHED,
+        readiness: BOTH_MET,
+      }),
+    )
+    const area = await screen.findByRole('region', { name: s.title })
+    expect(within(area).queryByRole('button', { name: s.delete })).toBeNull()
+    expect(area.textContent).toContain(s.liveKeptMore)
+  })
+
+  it('back from signing in again (then=switch-off): the confirming step, said, and the address without it', async () => {
+    quiet(true)
+    const st = owned({})
+    await open(`/apps/${SLUG}?then=switch-off`, st)
+    const area = await screen.findByRole('region', { name: s.title })
+    expect(area.textContent).toContain(words.goingLive.letIn.again)
+    expect(area.textContent).toContain(s.confirmOff)
+    expect(st.calls).toEqual([])
+    expect(window.location.pathname + window.location.search).toBe(`/apps/${SLUG}`)
+  })
+})

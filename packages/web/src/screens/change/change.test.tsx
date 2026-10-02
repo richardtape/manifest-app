@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { Schemas } from '@manifest/contract'
+import { ManifestApiError, type Schemas } from '@manifest/contract'
 import type {
   AppConversation,
   Conversation,
@@ -22,6 +22,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../../app.js'
 import { OurRefusal, type Ours, type StreamSource } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
+import { words } from '../../words.js'
 import { CAPABILITIES } from '../making/token.js'
 import { machineryIn } from '../machinery.js'
 
@@ -337,6 +338,25 @@ describe('Ask for a change (/apps/:slug/change)', () => {
       (screen.getByLabelText('What should change') as HTMLTextAreaElement).value,
     ).toBe(WORDS)
     plain()
+  })
+
+  it('the app switched off (PROJECT_ARCHIVED, F6 Task 11): said in words, switch it back on first; no reference', async () => {
+    const s = stage({
+      mint: () =>
+        new ManifestApiError(
+          409,
+          { error: { code: 'PROJECT_ARCHIVED', message: 'x' } } as never,
+          'test',
+        ),
+    })
+    await open(`/apps/${SLUG}/change`, s)
+    fireEvent.change(await screen.findByLabelText('What should change'), {
+      target: { value: WORDS },
+    })
+    await press(button('Ask for it'))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toBe(words.refused.archived(THE_PROJECT.name))
+    expect(s.called('startChange')).toEqual([])
   })
 
   it('speaks plainly', async () => {

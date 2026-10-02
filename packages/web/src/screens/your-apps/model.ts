@@ -121,6 +121,8 @@ export type AppCard = {
   switchedOff: string | null
   /** F6 (design §2, §4): "Your students can't reach it, since 10:03am", from our watch; else null. */
   unreachable: string | null
+  /** F6 Task 11: when it went live, or null: switched back on, said as it is. */
+  launchedAt: string | null
 }
 
 /**
@@ -195,6 +197,7 @@ export function appCard(
       clocksUnmet(readiness),
     switchedOff,
     unreachable,
+    launchedAt: project.launchedAt ?? null,
   }
 }
 
@@ -216,6 +219,7 @@ export function unreadableCard(project: Schemas['Project']): AppCard {
     beforeStudents: false,
     switchedOff: null,
     unreachable: null,
+    launchedAt: project.launchedAt ?? null,
   }
 }
 

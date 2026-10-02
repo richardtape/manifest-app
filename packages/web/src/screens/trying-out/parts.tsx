@@ -6,9 +6,9 @@ import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { navigate } from '../../router.js'
 import { words } from '../../words.js'
-import { pressFailed } from '../change/press.js'
+import { PressNotice } from '../change/notice.js'
+import { pressFailed, type Notice } from '../change/press.js'
 import { mintRequest } from '../making/token.js'
-import { SupportReference } from '../reference.js'
 import { stationsOf, type StationKey } from './stations.js'
 
 /**
@@ -229,14 +229,14 @@ export function WhatWentWrong({
 }: {
   platform: Platform
   ours: Ours
-  project: { id: string; slug: string }
+  project: { id: string; slug: string; name: string }
   incidentId: string
   /** Where it did not start: trying-out's (F4's fix, sent as F4 sent it) or the live address. */
   environment?: 'staging' | 'production'
   expire: () => void
 }) {
   const [pressing, setPressing] = useState(false)
-  const [reference, setReference] = useState<string>()
+  const [reference, setReference] = useState<Notice>()
   const press = async () => {
     setPressing(true)
     setReference(undefined)
@@ -268,7 +268,7 @@ export function WhatWentWrong({
       setPressing(false)
       const said = pressFailed(error, step)
       if (said.expired) expire()
-      else setReference(said.reference)
+      else setReference(said)
     }
   }
   return (
@@ -276,8 +276,7 @@ export function WhatWentWrong({
       {reference === undefined ? null : (
         <div role="alert">
           <Card tone="attention">
-            <p className="body-lead">{t.couldnt}</p>
-            <SupportReference reference={reference} />
+            <PressNotice notice={reference} name={project.name} couldnt={t.couldnt} />
           </Card>
         </div>
       )}

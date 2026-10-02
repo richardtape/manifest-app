@@ -6,9 +6,9 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { navigate } from '../../router.js'
 import { words } from '../../words.js'
-import { pressFailed } from '../change/press.js'
+import { PressNotice } from '../change/notice.js'
+import { pressFailed, type Notice } from '../change/press.js'
 import { mintRequest } from '../making/token.js'
-import { SupportReference } from '../reference.js'
 import {
   cutByOurDeadline,
   incidentLater,
@@ -177,7 +177,7 @@ export function DryRun({
 }) {
   const [phase, set] = useHeld(project.id)
   const [pressedOnce, setPressedOnce] = useState(false)
-  const [reference, setReference] = useState<string>()
+  const [reference, setReference] = useState<Notice>()
   const [fixing, setFixing] = useState(false)
   const live = useRef(true)
 
@@ -257,7 +257,7 @@ export function DryRun({
     set(OFFER)
     const said = pressFailed(error, 'runRehearsal')
     if (said.expired) return expire()
-    if (live.current) setReference(said.reference)
+    if (live.current) setReference(said)
   }
 
   /** Its start never answered: M2's *[What went wrong]*, fed by THIS attempt's incident. */
@@ -354,7 +354,7 @@ export function DryRun({
       setFixing(false)
       const said = pressFailed(error, step)
       if (said.expired) expire()
-      else setReference(said.reference)
+      else setReference(said)
     }
   }
 
@@ -362,8 +362,12 @@ export function DryRun({
     reference === undefined ? null : (
       <div role="alert">
         <Card tone="attention">
-          <p className="body-small">{words.tryingOut.couldnt}</p>
-          <SupportReference reference={reference} />
+          <PressNotice
+            notice={reference}
+            name={project.name}
+            couldnt={words.tryingOut.couldnt}
+            className="body-small"
+          />
         </Card>
       </div>
     )

@@ -141,6 +141,7 @@ describe('a card whose project could not be read (review, deferred minor)', () =
       beforeStudents: false,
       switchedOff: null,
       unreachable: null,
+      launchedAt: null,
     })
   })
 })

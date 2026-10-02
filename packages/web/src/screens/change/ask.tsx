@@ -7,8 +7,8 @@ import { navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { countOf, LIMITS, tooLong } from '../limits.js'
 import { mintRequest } from '../making/token.js'
-import { SupportReference } from '../reference.js'
-import { pressFailed } from './press.js'
+import { PressNotice } from './notice.js'
+import { pressFailed, type Notice } from './press.js'
 
 const w = words.change
 
@@ -31,7 +31,7 @@ export function AskForChange({
 }) {
   const [text, setText] = useState('')
   const [asking, setAsking] = useState(false)
-  const [reference, setReference] = useState<string>()
+  const [reference, setReference] = useState<Notice>()
   const count = countOf(text, LIMITS.description)
 
   const ask = async () => {
@@ -57,7 +57,7 @@ export function AskForChange({
       setAsking(false)
       const failed = pressFailed(error, step)
       if (failed.expired) expire()
-      else setReference(failed.reference)
+      else setReference(failed)
     }
   }
 
@@ -69,8 +69,11 @@ export function AskForChange({
         {reference === undefined ? null : (
           <div role="alert">
             <Card tone="attention">
-              <p className="body-lead">{w.couldntAsk}</p>
-              <SupportReference reference={reference} />
+              <PressNotice
+                notice={reference}
+                name={project.name}
+                couldnt={w.couldntAsk}
+              />
             </Card>
           </div>
         )}

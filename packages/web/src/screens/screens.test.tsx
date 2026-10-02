@@ -70,9 +70,9 @@ function platform(
     getEnvironment: (answers.getEnvironment ?? never) as Platform['getEnvironment'],
     listMembers: (answers.listMembers ?? never) as Platform['listMembers'],
     revokeToken: (answers.revokeToken ?? never) as Platform['revokeToken'],
-    archiveProject: never,
-    restoreProject: never,
-    deleteProject: never,
+    archiveProject: (answers.archiveProject ?? never) as Platform['archiveProject'],
+    restoreProject: (answers.restoreProject ?? never) as Platform['restoreProject'],
+    deleteProject: (answers.deleteProject ?? never) as Platform['deleteProject'],
     watchProject: () => ({ ready: never(), close: () => undefined }),
   }
 }
@@ -1196,6 +1196,81 @@ describe('F6 Task 9: coming back to Your apps (moment 16, design §2)', () => {
       await screen.findByRole('heading', { name: fixtures.PROJECT.name })
     ).closest('.mf-card')!
     expect(card.textContent).toContain(k.card.switchedOff('12 December'))
+  })
+
+  describe('F6 Task 11: switched off, on its card (moment 20)', () => {
+    const s = k.switching
+    const OFF = { state: 'archived' as const, archivedAt: '2026-12-12T20:00:00.000Z' }
+    /** The app, switched off, and the person on it as `role`; what was asked, recorded. */
+    function off(role: 'owner' | 'collaborator', launchedAt: string | null) {
+      const asked: string[] = []
+      const base = mockPlatform({ ...OFF, launchedAt })
+      const platform: Platform = {
+        ...base,
+        listMembers: () =>
+          Promise.resolve([{ ...fixtures.MEMBERS[0]!, userId: fixtures.ME.id, role }]),
+        restoreProject: () => {
+          asked.push('restoreProject')
+          return Promise.resolve({ ...fixtures.PROJECT, launchedAt, state: 'active' })
+        },
+        mintToken: () => {
+          asked.push('mintToken')
+          return Promise.resolve(fixtures.MINTED_TOKEN)
+        },
+      }
+      const ours = oursWith({
+        needs: async () => [],
+        since: async () => ({ lastHere: null, lines: [] }),
+        keeping: async () => ({
+          watching: false,
+          until: null,
+          tokenId: null,
+          mine: false,
+        }),
+        handWatch: async () => ({ kept: 'new' as const }),
+      })
+      return { platform, ours, asked }
+    }
+    const card = async () =>
+      (await screen.findByRole('heading', { name: fixtures.PROJECT.name })).closest(
+        '.mf-card',
+      ) as HTMLElement
+
+    it('an owner: Switch it back on, no second sign-in, the watch minted; back, and Start it for your students on its Overview', async () => {
+      const st = off('owner', '2026-09-20T17:00:00.000Z')
+      render(<App platform={st.platform} ours={st.ours} />)
+      const it_ = await card()
+      const button = await within(it_).findByRole('button', { name: s.backOn })
+      await act(async () => {
+        fireEvent.click(button)
+      })
+      await waitFor(() => expect(st.asked).toEqual(['restoreProject', 'mintToken']))
+      expect(it_.textContent).toContain(s.back)
+      expect(it_.textContent).not.toContain(k.card.switchedOff('12 December'))
+      expect(
+        within(it_).getByRole('link', { name: s.students }).getAttribute('href'),
+      ).toBe('/apps/mock-app')
+      expect(machineryIn(wordsOnScreen())).toEqual([])
+    })
+
+    it('an owner, never live: It’s back. Your draft starts again…', async () => {
+      const st = off('owner', null)
+      render(<App platform={st.platform} ours={st.ours} />)
+      const it_ = await card()
+      await act(async () => {
+        fireEvent.click(await within(it_).findByRole('button', { name: s.backOn }))
+      })
+      expect(await within(it_).findByText(s.backDraft)).toBeTruthy()
+    })
+
+    it('a helper: the date, and no button (Review Focus 5)', async () => {
+      const st = off('collaborator', null)
+      render(<App platform={st.platform} ours={st.ours} />)
+      const it_ = await card()
+      expect(it_.textContent).toContain(k.card.switchedOff('12 December'))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(within(it_).queryByRole('button', { name: s.backOn })).toBeNull()
+    })
   })
 
   it('a failure of ours loses the band and the lines, never the page', async () => {

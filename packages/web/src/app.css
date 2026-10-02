@@ -1280,3 +1280,45 @@
   margin: 0;
   color: var(--ink-muted);
 }
+/* F6 TASKS 10 AND 11 (moments 19 and 20): a need's press in the band (Start it again, What
+   happened?), switched off and back on, Start it for your students, and Switching it off at the
+   Overview's foot, quiet. Every line wraps (m63). */
+.needs__press,
+.start-again {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  width: 100%;
+}
+.overview__switched,
+.overview__back,
+.switching,
+.app-card__switched-off {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.app-card__switched-off {
+  gap: var(--space-2);
+}
+.switching {
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-default);
+}
+.app-main .start-again .body,
+.app-main .overview__switched .body,
+.app-main .overview__switched .body-lead,
+.app-main .overview__back .body,
+.app-main .overview__back .body-lead,
+.app-main .switching .heading,
+.app-main .switching .body,
+.app-main .switching .body-small,
+.app-main .app-card__switched-off .body-small {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.overview__back .start-again {
+  align-items: flex-start;
+}

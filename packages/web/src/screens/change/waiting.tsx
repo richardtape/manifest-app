@@ -28,7 +28,8 @@ function usePress(expire: () => void) {
     } catch (error) {
       const failed = pressFailed(error, operation)
       if (failed.expired) expire()
-      else setReference(failed.reference)
+      // Our server answers its own codes, never the platform's PROJECT_ARCHIVED (F6 Task 11).
+      else if (!failed.archived) setReference(failed.reference)
     }
   }
   const notice =

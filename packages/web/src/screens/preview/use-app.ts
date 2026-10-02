@@ -1,5 +1,5 @@
 import type { Schemas } from '@manifest/contract'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import type { Trouble } from '../trouble.js'
@@ -14,15 +14,18 @@ export type AppLookup =
 /**
  * AN APP BY ITS ADDRESS (F4 Task 5, Decision 2): `listProjects`, in the person's session, and the
  * one whose slug the page names. The shell asks once per slug, for the rail's project section and
- * for the app's pages. A session that ended is the shell's to say.
+ * for the app's pages. A session that ended is the shell's to say. **`refresh`** (F6 Task 11) reads
+ * it again with the page left standing: switched off or back on, the page keeps what it says.
  */
 export function useApp(
   platform: Platform,
   slug: string | undefined,
   expire: () => void,
-): { lookup: AppLookup; retry: () => void } {
+): { lookup: AppLookup; retry: () => void; refresh: () => void } {
   const [lookup, setLookup] = useState<AppLookup>({ state: 'none' })
   const [attempt, setAttempt] = useState(0)
+  // A refresh keeps the app found until the new reading answers; a retry starts again.
+  const quiet = useRef(false)
 
   useEffect(() => {
     if (slug === undefined) {
@@ -30,7 +33,8 @@ export function useApp(
       return
     }
     let live = true
-    setLookup({ state: 'loading' })
+    if (!quiet.current) setLookup({ state: 'loading' })
+    quiet.current = false
     platform.listProjects().then(
       (projects) => {
         if (!live) return
@@ -52,5 +56,9 @@ export function useApp(
   }, [platform, slug, expire, attempt])
 
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
-  return { lookup, retry }
+  const refresh = useCallback(() => {
+    quiet.current = true
+    setAttempt((n) => n + 1)
+  }, [])
+  return { lookup, retry, refresh }
 }

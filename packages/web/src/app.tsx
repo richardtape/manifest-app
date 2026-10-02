@@ -69,7 +69,11 @@ export function App({
     session.state === 'signed-in' || session.state === 'expired' ? session.me : undefined
   const keeps = useKeeps(platform, me, expire)
   const builds = keeps.state === 'builds'
-  const { lookup, retry: retryApp } = useApp(
+  const {
+    lookup,
+    retry: retryApp,
+    refresh: refreshApp,
+  } = useApp(
     platform,
     signedIn && (builds || keeps.state === 'some') ? slug : undefined,
     expire,
@@ -239,6 +243,8 @@ export function App({
           expire={expire}
           timeZone={timeZone}
           then={route.then}
+          me={session.me}
+          onChanged={refreshApp}
           {...(now === undefined ? {} : { now })}
         />
       ) : route.name === 'app-going-live' ? (

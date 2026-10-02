@@ -5,9 +5,9 @@ import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { words } from '../../words.js'
-import { pressFailed } from '../change/press.js'
+import { PressNotice } from '../change/notice.js'
+import { pressFailed, type Notice } from '../change/press.js'
 import { agoWords, servingFact, type Said } from '../preview/facts.js'
-import { SupportReference } from '../reference.js'
 import { Hostname } from '../your-apps/your-apps.js'
 import {
   cutByOurDeadline,
@@ -131,7 +131,7 @@ export function PutOnTryingOut({
 }: {
   platform: Platform
   ours: Ours
-  project: { id: string; slug: string }
+  project: { id: string; slug: string; name: string }
   expire: () => void
   now: () => Date
   timeZone: string | undefined
@@ -141,7 +141,7 @@ export function PutOnTryingOut({
   onPut?: () => void
 }) {
   const [phase, setPhase] = useState<Phase>({ at: 'reading' })
-  const [notice, setNotice] = useState<string>()
+  const [notice, setNotice] = useState<Notice>()
   const poll = useRef<ReturnType<typeof setInterval>>(undefined)
   const live = useRef(true)
   // What the page shows, for a listener that outlives a render (M4).
@@ -184,7 +184,7 @@ export function PutOnTryingOut({
     const said = pressFailed(error, operation)
     if (said.expired) return expire()
     if (!live.current) return
-    setNotice(said.reference)
+    setNotice(said)
     setPhase(then)
   }
 
@@ -448,8 +448,7 @@ export function PutOnTryingOut({
     notice === undefined ? null : (
       <div role="alert">
         <Card tone="attention">
-          <p className="body-lead">{t.couldnt}</p>
-          <SupportReference reference={notice} />
+          <PressNotice notice={notice} name={project.name} couldnt={t.couldnt} />
         </Card>
       </div>
     )

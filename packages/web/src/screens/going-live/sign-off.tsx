@@ -5,10 +5,10 @@ import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { navigate } from '../../router.js'
 import { words } from '../../words.js'
-import { pressFailed } from '../change/press.js'
+import { PressNotice } from '../change/notice.js'
+import { pressFailed, type Notice } from '../change/press.js'
 import { LIMITS } from '../limits.js'
 import { mintRequest } from '../making/token.js'
-import { SupportReference } from '../reference.js'
 import type { Five, Row } from './checklist.js'
 import { dayWords } from './clocks.js'
 import { RowView } from './row.js'
@@ -113,7 +113,7 @@ export function SignOff({
   expire: () => void
 }) {
   const [talking, setTalking] = useState(false)
-  const [reference, setReference] = useState<string>()
+  const [reference, setReference] = useState<Notice>()
 
   const talk = async () => {
     // Only a refusal read from its approval draws the button (signOffRow).
@@ -147,7 +147,7 @@ export function SignOff({
       setTalking(false)
       const failed = pressFailed(error, step)
       if (failed.expired) expire()
-      else setReference(failed.reference)
+      else setReference(failed)
     }
   }
 
@@ -157,8 +157,12 @@ export function SignOff({
       {reference === undefined ? null : (
         <div role="alert">
           <Card tone="attention">
-            <p className="body-small">{a.couldntTalk}</p>
-            <SupportReference reference={reference} />
+            <PressNotice
+              notice={reference}
+              name={project.name}
+              couldnt={a.couldntTalk}
+              className="body-small"
+            />
           </Card>
         </div>
       )}

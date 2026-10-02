@@ -6,9 +6,9 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
-import { pressFailed } from '../change/press.js'
+import { PressNotice } from '../change/notice.js'
+import { pressFailed, type Notice } from '../change/press.js'
 import { agoWords, servingFact, type Said } from '../preview/facts.js'
-import { SupportReference } from '../reference.js'
 import {
   cutByOurDeadline,
   ENDED_BADLY,
@@ -149,7 +149,7 @@ export function LetStudentsIn({
   onChanged: () => void
 }) {
   const [phase, setPhase] = useState<Phase>({ at: 'offer' })
-  const [notice, setNotice] = useState<string>()
+  const [notice, setNotice] = useState<Notice>()
   const [pressedOnce, setPressedOnce] = useState(false)
   const poll = useRef<ReturnType<typeof setInterval>>(undefined)
   const live = useRef(true)
@@ -194,7 +194,7 @@ export function LetStudentsIn({
     const said = pressFailed(error, operation)
     if (said.expired) return expire()
     if (!live.current) return
-    setNotice(said.reference)
+    setNotice(said)
     setPhase({ at: 'offer' })
   }
 
@@ -475,8 +475,7 @@ export function LetStudentsIn({
     notice === undefined ? null : (
       <div role="alert">
         <Card tone="attention">
-          <p className="body-lead">{t.couldnt}</p>
-          <SupportReference reference={notice} />
+          <PressNotice notice={notice} name={project.name} couldnt={t.couldnt} />
         </Card>
       </div>
     )

@@ -9,9 +9,10 @@ import { linkTo, remember, TABS, type Tab, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { clocksUnmet, rowsOf } from '../going-live/checklist.js'
 import { HowWeKeepWatch } from '../keeping/how.js'
-import type { PageNeed } from '../keeping/lines.js'
+import { dayWords, type PageNeed } from '../keeping/lines.js'
 import { NeedsBand } from '../keeping/needs.js'
 import { Since } from '../keeping/since.js'
+import { useRole } from '../keeping/role.js'
 import { StartItAgain, WhatHappened } from '../keeping/start-again.js'
 import { releasesToRead, servingFact, type Said } from '../preview/facts.js'
 import { KIND } from '../preview/preview.js'
@@ -19,8 +20,10 @@ import { TroubleNotice, type Trouble } from '../trouble.js'
 import { asServed, audienceWords, beforeLaunch } from '../your-apps/model.js'
 import { Band } from './band.js'
 import { ForYourStudents, handOver, type Handed } from './students.js'
+import { StartForStudents, SwitchBackOn, Switching } from './switching.js'
 
 const w = words.overview
+const k = words.keeping
 
 /** A serving fact's tint as one of the five states: nothing there is not yet. */
 const STATE: Record<FactTone, State> = {
@@ -41,6 +44,11 @@ type Seen = {
   goingLive: PageNeed[]
   /** Launched: *How we keep watch* is drawn (design §4). */
   launched: boolean
+  /**
+   * F6 Task 11: launched, and the students' address names a version taken down (`gone`): switched
+   * back on and not running yet (S1: M4), so *Start it for your students* is offered.
+   */
+  studentsGone: boolean
 }
 
 /** F6 Task 9: our server's needs and lines for the app, each lost alone, never the page's wait. */
@@ -114,6 +122,7 @@ async function read(
   return {
     goingLive,
     launched,
+    studentsGone: launched && students?.instance?.state === 'gone',
     rows: TABS.flatMap((tab) => {
       const found = of(tab)
       if (found === undefined) return []
@@ -150,6 +159,8 @@ export function Overview({
   now = () => new Date(),
   timeZone,
   then = null,
+  me,
+  onChanged = () => undefined,
 }: {
   platform: Platform
   ours: Ours
@@ -159,6 +170,10 @@ export function Overview({
   timeZone?: string | undefined
   /** Where the step-up sent them back to: one of F6's presses (Decision 10). */
   then?: Then
+  /** Who is looking: an owner's buttons are an owner's alone (F6 Task 11). */
+  me?: Pick<Schemas['Me'], 'id'> | undefined
+  /** Switched off or back on: the shell reads the app again, the page left standing. */
+  onChanged?: () => void
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
@@ -169,6 +184,12 @@ export function Overview({
   useEffect(() => {
     if (back !== null) remember(`/apps/${encodeURIComponent(project.slug)}`)
   }, [back, project.slug])
+  // F6 TASK 11: owner or helper, for the switching buttons; and what the page keeps saying across
+  // the shell's reading of the app again (switched off, back on, started for the students).
+  const role = useRole(platform, project.id, me)
+  const [untidy, setUntidy] = useState(false)
+  const [restored, setRestored] = useState(false)
+  const [startedForStudents, setStartedForStudents] = useState(false)
   // F6 TASK 9: our server's reads, on their own: a failure of ours loses the band or the lines,
   // and a slow answer never holds the page.
   const [keeping, setKeeping] = useState<Keeping | null>(null)
@@ -220,6 +241,35 @@ export function Overview({
       {audience === '' ? null : (
         <p className="body-small overview__audience">{audience}</p>
       )}
+      {project.state === 'archived' ? (
+        // SWITCHED OFF (moment 20): said to everyone; switched back on by an owner.
+        <section className="overview__switched" aria-label={k.lines.switchedOff}>
+          <p className="body-lead">
+            {(project.archivedAt ?? null) === null
+              ? k.lines.switchedOff
+              : k.card.switchedOff(dayWords(project.archivedAt!, timeZone))}
+          </p>
+          {untidy ? <p className="body">{k.switching.untidy}</p> : null}
+          {role === 'owner' ? (
+            <SwitchBackOn
+              platform={platform}
+              ours={ours}
+              project={project}
+              // The shell's own watch mints it, once it reads the app back on (useWatch).
+              watch={false}
+              onChanged={() => {
+                setRestored(true)
+                onChanged()
+              }}
+              expire={expire}
+            />
+          ) : null}
+        </section>
+      ) : restored && (project.launchedAt ?? null) === null ? (
+        <p className="body-lead" role="status">
+          {k.switching.backDraft}
+        </p>
+      ) : null}
       {loaded.state === 'trouble' ? (
         <TroubleNotice trouble={loaded.trouble} onRetry={retry} />
       ) : null}
@@ -253,6 +303,34 @@ export function Overview({
               ) : null
             }
           />
+          {role === 'owner' &&
+          project.state !== 'archived' &&
+          (loaded.seen.studentsGone || startedForStudents) ? (
+            // BACK, NOT RUNNING YET (moment 20): the version from last term, put back by an owner.
+            <section className="overview__back" aria-label={k.switching.students}>
+              <StartForStudents
+                platform={platform}
+                ours={ours}
+                project={project}
+                arrived={back === 'students'}
+                onDone={() => {
+                  setStartedForStudents(true)
+                  onChanged()
+                }}
+                expire={expire}
+                now={now}
+                timeZone={timeZone}
+                intro={
+                  <>
+                    <p className="body-lead">{k.switching.back}</p>
+                    <p className="body">
+                      {k.switching.studentsWhat(k.switching.students)}
+                    </p>
+                  </>
+                }
+              />
+            </section>
+          ) : null}
           {loaded.seen.handed === null ? null : (
             <ForYourStudents name={project.name} handed={loaded.seen.handed} />
           )}
@@ -286,6 +364,18 @@ export function Overview({
           {loaded.seen.launched ? <HowWeKeepWatch name={project.name} /> : null}
         </>
       ) : null}
+      <Switching
+        platform={platform}
+        ours={ours}
+        project={project}
+        role={role}
+        then={back}
+        onChanged={(notFinished) => {
+          if (notFinished === true) setUntidy(true)
+          onChanged()
+        }}
+        expire={expire}
+      />
     </div>
   )
 }

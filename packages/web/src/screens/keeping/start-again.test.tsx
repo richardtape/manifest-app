@@ -330,6 +330,15 @@ describe('[Start it again] (F6 Task 10, design §4)', () => {
     expect(button(b.startAgain)).toBeTruthy()
   })
 
+  it('switched off meanwhile (PROJECT_ARCHIVED, Task 11): said the same way as everywhere, no reference', async () => {
+    const st = stage({ deploys: [{ status: 409, code: 'PROJECT_ARCHIVED' }] })
+    draw(st)
+    await press()
+    expect(screen.getByRole('alert').textContent).toBe(
+      words.refused.archived(PROJECT.name),
+    )
+  })
+
   it('the gate refused it (a sign-off or a checklist item): said, with Going live', async () => {
     const st = stage({ deploys: [{ status: 409, code: 'RELEASE_DIGEST_NOT_APPROVED' }] })
     draw(st)

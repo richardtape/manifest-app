@@ -6,8 +6,8 @@ import type { Ours } from '../../ours/api.js'
 import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
 import { agoWords } from '../preview/facts.js'
-import { SupportReference } from '../reference.js'
-import { pressFailed } from './press.js'
+import { PressNotice } from './notice.js'
+import { pressFailed, type Notice } from './press.js'
 
 const c = words.change.conversations
 
@@ -45,7 +45,7 @@ export function AppConversations({
   timeZone: string | undefined
 }) {
   const [rows, setRows] = useState<AppConversation[] | null>(null)
-  const [reference, setReference] = useState<string>()
+  const [reference, setReference] = useState<Notice>()
   useEffect(() => {
     let live = true
     ours.conversationsOn(project.id).then(
@@ -54,7 +54,7 @@ export function AppConversations({
         if (!live) return
         const failed = pressFailed(error, 'conversationsOn')
         if (failed.expired) expire()
-        else setReference(failed.reference)
+        else setReference(failed)
       },
     )
     return () => {
@@ -72,8 +72,11 @@ export function AppConversations({
       {reference === undefined ? null : (
         <div role="alert">
           <Card tone="attention">
-            <p className="body-lead">{words.refused.body}</p>
-            <SupportReference reference={reference} />
+            <PressNotice
+              notice={reference}
+              name={project.name}
+              couldnt={words.refused.body}
+            />
           </Card>
         </div>
       )}

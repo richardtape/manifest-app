@@ -75,6 +75,8 @@ export const words = {
   refused: {
     body: 'Something went wrong on our side. Nothing of yours has changed.',
     button: 'Try again',
+    /** ✓ F6 (design §5): `409 PROJECT_ARCHIVED`, anywhere, said the same way. */
+    archived: (name: string) => `${name} is switched off. Switch it back on first.`,
   },
   /**
    * F5 Decision 14, approved by Rich in the design: the model's answer stopped coming, or went on
@@ -646,6 +648,35 @@ export const words = {
     /** F6 Task 10, *What happened?*: the conversation's title (our server's OUTAGE_FIX_WORDS). */
     whatHappened: {
       fixTitle: "Your students couldn't reach it", // ✓
+    },
+    /**
+     * F6 TASK 11, END OF TERM (moment 20, design §5): switching it off, back on, *Start it for
+     * your students*, and deleting an app that never went live. An owner's alone.
+     */
+    switching: {
+      title: 'Switching it off', // ✓
+      off: 'Switch it off', // ✓
+      confirmOff:
+        "Your students' address will show 'This app has been switched off by its owner.' Everything is kept: its code, what students wrote, its settings. Switch it back on whenever you like.", // ✓
+      keepRunning: 'Keep it running', // ✓
+      untidy:
+        "It's switched off, but we didn't finish tidying up. Nothing is lost, and we'll finish by ourselves.", // ✓
+      backOn: 'Switch it back on', // ✓
+      back: "It's back, but not running yet.", // ✓
+      students: 'Start it for your students', // ✓
+      /** ✓ Said of the button beside it: "[Start it for your students] puts the version…" */
+      studentsWhat: (button: string) =>
+        `${button} puts the version from last term back, with everything they wrote.`,
+      backDraft: "It's back. Your draft starts again the next time we work on it.", // ✓
+      delete: 'Delete it', // ✓
+      confirmDelete:
+        "Everything goes: its code, its addresses, what anyone wrote in it. This can't be undone. Its name becomes free.", // ✓
+      deleteForGood: 'Delete it for good', // ✓
+      keepIt: 'Keep it', // ours: the confirming step's way back
+      liveKept:
+        "Apps that have been live are kept, because UBC's rules decide when students' data is removed.", // ✓
+      liveKeptMore:
+        'Switch it off, and a Manifest administrator removes it when the rules allow.', // ✓ (FE-45)
     },
   },
   overview: {

@@ -7,10 +7,12 @@ import type { Platform } from '../../platform/api.js'
 import { rowsOf } from '../going-live/checklist.js'
 import type { PageNeed } from '../keeping/lines.js'
 import { NeedsBand } from '../keeping/needs.js'
+import { useRole } from '../keeping/role.js'
 import { Since } from '../keeping/since.js'
 import { ensureEach } from '../keeping/watch.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
+import { SwitchBackOn } from '../overview/switching.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { words } from '../../words.js'
 import {
@@ -237,13 +239,32 @@ export function YourApps({
         </>
       ) : null}
       {cards.map((card) => (
-        <AppCardView key={card.id} card={card} />
+        <AppCardView
+          key={card.id}
+          card={card}
+          platform={platform}
+          ours={ours}
+          me={me}
+          expire={expire}
+        />
       ))}
     </>
   )
 }
 
-function AppCardView({ card }: { card: AppCard }) {
+function AppCardView({
+  card,
+  platform,
+  ours,
+  me,
+  expire,
+}: {
+  card: AppCard
+  platform: Platform
+  ours: Ours
+  me: Schemas['Me']
+  expire: () => void
+}) {
   const w = words.yourApps
   return (
     <Card className="app-card">
@@ -262,7 +283,14 @@ function AppCardView({ card }: { card: AppCard }) {
         )}
       </div>
       {card.switchedOff === null ? null : (
-        <p className="body-small app-card__switched-off">{card.switchedOff}</p>
+        <SwitchedOff
+          card={card}
+          switchedOff={card.switchedOff}
+          platform={platform}
+          ours={ours}
+          me={me}
+          expire={expire}
+        />
       )}
       <p className="app-card__students">
         <span className="label">{w.forStudents}</span>
@@ -300,6 +328,59 @@ function AddressView({ label, address }: { label: string; address: Address }) {
         )}
         <StateChip state={address.fact.state} label={address.fact.words} />
       </dd>
+    </div>
+  )
+}
+
+/**
+ * SWITCHED OFF, ON ITS CARD (moment 20; F6 Task 11): *"Switched off, 12 December"*, and for an owner
+ * *[Switch it back on]*. Once back, the card says so in place of the date: an app that has been
+ * live is not running yet, and *Start it for your students* is on its Overview.
+ */
+function SwitchedOff({
+  card,
+  switchedOff,
+  platform,
+  ours,
+  me,
+  expire,
+}: {
+  card: AppCard
+  switchedOff: string
+  platform: Platform
+  ours: Ours
+  me: Schemas['Me']
+  expire: () => void
+}) {
+  const s = words.keeping.switching
+  const role = useRole(platform, card.id, me)
+  const [back, setBack] = useState(false)
+  return (
+    <div className="app-card__switched-off">
+      {back ? null : <p className="body-small">{switchedOff}</p>}
+      {role === 'owner' ? (
+        <SwitchBackOn
+          platform={platform}
+          ours={ours}
+          project={{ id: card.id, name: card.name, launchedAt: card.launchedAt }}
+          onChanged={() => setBack(true)}
+          expire={expire}
+          launched={
+            <>
+              <p className="body-small" role="status">
+                {s.back}
+              </p>
+              <Button
+                kind="secondary"
+                size="sm"
+                {...linkTo(`/apps/${encodeURIComponent(card.slug)}`)}
+              >
+                {s.students}
+              </Button>
+            </>
+          }
+        />
+      ) : null}
     </div>
   )
 }
