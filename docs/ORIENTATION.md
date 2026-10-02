@@ -4,45 +4,54 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-01, ~20:45 PDT: **F6's sitting 5 is done** (the page's calls, the watch token minted,
-coming back); the platform's sitting 10 is **running** (`manifest-3d`), its mock committed at `0969d45` and adopted; Rich's
-overnight queue, coordinated by `manifest-app-3a`: **sitting 6 next**, then sitting 7's unattended half)*:
+**Where things stand** *(2026-10-01, ~22:30 PDT: **F6's sitting 6 is done** (*Start it again*, *What happened?*, switching
+off, back on, *Start it for your students*, delete); the platform's sitting 10 is **closed** at `8ff925f`, adopted; Rich's
+overnight queue, coordinated by `manifest-app-3a`: **sitting 7's unattended half next**; the freeze is 07:00 PDT)*:
 
-- **YOUR JOB, IF YOU ARE THE NEXT SESSION: execute F6's sitting 6, natively** (superpowers:executing-plans). Tonight its
-  executor is **`manifest-app-s6`**, started by `manifest-app-3a`'s GO.
-  1. **First, `ListAgents`.** Tell `manifest-app-3a` (tonight's coordinator) and the platform's live sitting
-     (`manifest-3d`, sitting 10) your own session name. The platform's holds (a Docker tier, closing runs, **Task 14's text
-     pass, which may touch `packages/contract` and `packages/mock` with a HOLD first**) come to whoever it was told; hold
-     every test that reads its fixtures between a HOLD and its "committed", and **restart `pnpm mock`** after. Then `pgrep
-     -fl vitest`, and Step 0.
-  2. **Read** the design, then the plan, [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md):
-     its sittings table, its decisions, **sittings 4's and 5's dated entries**, and **Tasks 10 and 11** (*Start it again*
-     and *What happened?*; switching off, back on, *Start it for your students*, delete), **with the (S1) to (S5) notes**.
-     Task 10 also builds **the outage's lookup route on our server** (S4), and turns the band's *Start it again* and *What
-     happened?* (links to the Overview today, S5) into presses there.
-  3. **Sitting 6 needs no platform** (mock mode; the mock's new opt-in switches, `MANIFEST_MOCK_STEP_UP=1` and
-     `MANIFEST_MOCK_RECORDS=approved` among them, can play a step-up and a launched app: `packages/mock/src/server.ts`'s
-     `MockOptions`). **Walk with `scripts/walk/`** (sitting 5's `walk-s5.mjs` pattern: rewrite our `/api` answers in the
-     browser; rewrite `…/keeping` to *watching*, or the read-only walk refuses the watch's mint). End it as the plan says:
-     the gates twice, the five acceptance scripts **from a fresh dev database**, the dated entry, the sittings table, this
-     section, the roadmap; then **send `manifest-app-3a` "CLOSED <your name> <sha>"** (tonight's arrangement).
+- **YOUR JOB, IF YOU ARE THE NEXT SESSION: F6's sitting 7, ITS UNATTENDED HALF, natively** (superpowers:executing-plans).
+  Tonight its executor is **`manifest-app-s7`**, resumed by `manifest-app-3a`'s GO.
+  1. **First, `ListAgents`**, and tell `manifest-app-3a` (tonight's coordinator) your own session name. The platform's sitting
+     10 is closed and its next (sitting 12) is not running: no holds are expected tonight. Then `pgrep -fl vitest`, and Step 0
+     (contract 1.5.0, 72 operations; manifest at `8ff925f`; our mock on 7102 already runs its `6d76459`).
+  2. **Read** the plan's **Task 12**, its sitting 6 entry and its Review Focus. **The unattended half is Task 12's Steps 0–2**:
+     Step 1, **`scripts/check-keeping.sh`** (half one, our API as the browser drives it, against `pnpm dev:mock`; half two,
+     **`scripts/check-keeping.ts`**, the keeper in-process with real email to Mailpit on 7111/7112) with the plan's negative
+     controls; Step 2, **the whole-branch review** by a fresh reviewer (read-only), its findings fixed test-first. **Steps 3
+     and 4 are on 7100, at Rich's word** (the real platform, the fall, Rich's click): **not tonight** (no 7100).
+  3. **A background session's harness refuses edits in the shared checkout** until they are isolated in a git worktree
+     (sitting 6): work in a **sibling** worktree (`git worktree add -b <branch> /Users/rich/Developer/manifest-app-<name>
+     main`: the `link:../manifest` dependencies must resolve, so never under `.claude/worktrees/`), `pnpm install --offline
+     --frozen-lockfile` there, commit there by pathspec, and land each task on `main` with `git merge --ff-only <branch>`
+     from the main checkout (after `git status` there); walks and acceptance against 7105, the main checkout's server; at
+     the close `git worktree remove` and `git branch -d`. **A background session ends after about 60 minutes idle**: commit
+     what is finished (on the branch) before a long hold.
   - **Tonight's freeze is 07:00 PDT** (Rich's demo ~09:00): commit what is finished, write a PARTIAL entry, and tell
     `manifest-app-3a`. Rich's word for tonight: decide routine questions and record them (§5); anything genuinely his goes
     under *For Rich*, built the safest reversible way, or left.
+  - **Sitting 6 is done** (`manifest-app-s6`, `dc3e8e6`, `c864e7d`, `635be85`, `047d6a7`, `f0429f1`): **`screens/keeping/start-again.tsx`**
+    (*Start it again*: production's own version read at the press, F5's step-up back to `?then=start-again`,
+    RELEASE_NOT_STAGED's choice; *Start it for your students*, its second mode; *What happened?*, the outage's fix found again
+    by **our route `GET /api/apps/:projectId/outages/:from/conversation`**); **`screens/overview/switching.tsx`** (*Switching
+    it off*, an owner's alone: the repeat on `PROJECT_TEARDOWN_INCOMPLETE`, *Delete it* for a draft, FE-45's sentence for a
+    live app; *Switch it back on* on the Overview and *Your apps*' card); **`screens/change/notice.tsx`** and `pressFailed`'s
+    `archived` (`PROJECT_ARCHIVED` said one way on every press); `useApp`'s `refresh`; the router's `Then`, each page its
+    own. **The walk found the hand-over shown while the app is not running** (fixed, `635be85`, for Rich); **a fresh review
+    of the sitting** found three Important (`PROJECT_ARCHIVED` on the plan and building screens, an unfinished delete, a
+    press reading on after its page had gone), fixed (`047d6a7`). 2183 tests; the five acceptance scripts pass from a
+    fresh dev database.
   - **Sitting 5 is done** (`manifest-app-00`, `ed8c6af`, `c20cfff`): the page's five calls (`listMembers`, `revokeToken`,
     `archiveProject`, `restoreProject`, `deleteProject`) and `Ours`' keeping routes; **`screens/keeping/watch.ts`**
     (`ensureWatch`, `useWatch` in the shell, `ensureEach` on *Your apps*; never for an app switched off) and **`role.ts`**
-    (`useRole`); **`lines.ts`** (every happening and need in words), **`needs.tsx`** (the band), **`since.tsx`**,
-    **`how.tsx`**; **`screens/history/history.tsx`** at `/apps/:slug/history`; the card's `switchedOff` and `unreachable`.
-    **Our server's needs and lines are read in an effect of their own**, never the page's wait. **Words marked "ours" in
-    `words.ts` wait for Rich's word.** `check-keeping.sh` (`manifest-app-47`): half one 8/8, half two 12/12.
+    (`useRole`); **`lines.ts`**, **`needs.tsx`** (the band), **`since.tsx`**, **`how.tsx`**;
+    **`screens/history/history.tsx`** at `/apps/:slug/history`; the card's `switchedOff` and `unreachable`. **Words marked
+    "ours" in `words.ts` wait for Rich's word.** `check-keeping.sh` (`manifest-app-47`): half one 8/8, half two 12/12.
   - **Sitting 4 is done** (`manifest-app-00`, `238e6a0`, `5d95181`): **`keeping/outage.ts`** and **`probe.ts`**: the
     keeper looks once a minute at each launched, switched-on, kept app (never in mock mode); down after two misses;
     **answering again declared at the third answer and dated from the first**; a fall within 30 minutes of a recovery,
     and its recovery, told to nobody; `410` off; a restored app watched again from its first answer; `outage(projectId)`.
     **`api/keeping.ts`**: `GET /api/needs` and `/api/since` (each load a visit), `GET /api/apps/:projectId/history` (**a
     member's alone**), `DELETE /api/apps/:projectId` (an owner's); `AppRef`, `Need`, `SinceLine` in `progress.ts`; the
-    outage's fix (`{ fix: { outage: { from, to } } }`; **no lookup route yet: Task 10's**). **Rich approved the email
+    outage's fix (`{ fix: { outage: { from, to } } }`; its lookup route built in sitting 6). **Rich approved the email
     bodies with three tidy-ups (A, B, C)**; `manifest-app-3a` makes that edit after sitting 4: check `git log` for it.
   - **Sitting 3 is done** (`manifest-app-fc`, `b4cfb9f`, `bacf85c`): `keeping/happenings.ts` (an event read into a
     `Happening`; `linesOf(entries, members, launchedAt)`, **its third argument the kept app's `launchedAt`**; `Line`
@@ -103,6 +112,13 @@ overnight queue, coordinated by `manifest-app-3a`: **sitting 6 next**, then sitt
   - **F6 sitting 5's words marked "ours"** (`words.ts`, `keeping`): who did it (*"Alice added Dan New"*, *"Alice made Dan
     a helper"*, *"Alice took Bob off it"*, *"Alice switched it off"*, *"…back on"*, *"…renamed it from …"*), *"What needs
     you"*, the history's *"Nothing has happened yet."* and *"Try again"*.
+  - **F6 sitting 6's** (the plan's sitting 6 entry, *For Rich*): **words marked "ours"**: the gate's sentence on *Start it
+    again* and *Start it for your students* (*"It can't go to your students yet. Going live shows what it needs."*), the
+    undated forms of RELEASE_NOT_STAGED's question (*"…the one your students had…"*, *[Put theirs back first]*), *"We stopped
+    waiting, and couldn't see how it ended."*, *"Keep it"*, *"It's switched off, and we didn't finish deleting it. Delete it
+    for good again to finish."*; **the hand-over (moment 15) held back while the app is switched
+    off or back and not started** (the walk's finding); and a deferred minor (*Your apps*' card keeps *"Switched off"* as its
+    students' fact after a restore, until started).
   - **The platform's F8** (a provider's `422` as `200` `null`): its faculty-ready plan fixes it. **Ours reads a plain
     `422` and `200 null`, but not a refusal that arrives mid-stream**: `model/stream.ts` reads any `error` chunk as
     `MODEL_UNREACHABLE`, so the page would say *"We can't reach the model"* (`manifest-app-3a`; `docs/minors.md`'s m62). A
@@ -118,7 +134,7 @@ overnight queue, coordinated by `manifest-app-3a`: **sitting 6 next**, then sitt
   **F4a** (2026-10-01): Rich clicked each on the real platform. The walk-through is the design ([`walkthrough.md`](./walkthrough.md)).
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
   - **Who is who** *(names change at every handover: `ListAgents` first)*: `manifest-60` its planning session (Rich's
-    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); `manifest-6d` ran its sitting 9 (Task 12; **closed at `4a6f6c6`**, 2026-10-01, `a1d4baa` and its fix wave `a230c1a` adopted); **`manifest-3d` runs its sitting 10** (Tasks 13 and 14): **its mock committed at `0969d45` and adopted** (real packages and a draft in the records' fixtures, the ACS `/auth/ubcshib/callback`, the launch-path operations refusing as the platform would with no option set, FE-40's opt-in switches `MANIFEST_MOCK_RECORDS`, `_STEP_UP`, `_APPROVAL`, `_REHEARSAL`, `_QUEUE`); Task 14's text pass next, with a HOLD first; a new session of ours tells it its own name; `manifest-s5-b3` Rich's S5 spike,
+    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); `manifest-6d` ran its sitting 9 (Task 12; **closed at `4a6f6c6`**, 2026-10-01, `a1d4baa` and its fix wave `a230c1a` adopted); `manifest-3d` ran its sitting 10 (Tasks 13 and 14; **closed at `8ff925f`**, 2026-10-01, ~22:00 PDT): the mock's `0969d45` (real packages and a draft in the records' fixtures, the ACS `/auth/ubcshib/callback`, the launch-path operations refusing as the platform would with no option set, FE-40's opt-in switches `MANIFEST_MOCK_RECORDS`, `_STEP_UP`, `_APPROVAL`, `_REHEARSAL`, `_QUEUE`), the console's `e55b0bf`, the text pass `b571471` (1.5.0, text only: no section, decision or phase cited), `9e43588` and the fix wave `6d76459` (the mock plays the gate while a launch is scripted; `_STEP_UP` asks a session only): **each adopted with no change of ours** (F6 sitting 6); its sitting 12 (Task 15, the acceptance) next, not running; a new session of ours tells the running platform sitting its own name; `manifest-s5-b3` Rich's S5 spike,
     **finished** (2026-10-01, its findings at manifest `0bb544c`): nothing of it runs, and it no longer needs telling of
     our test runs.
   - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
@@ -131,8 +147,9 @@ overnight queue, coordinated by `manifest-app-3a`: **sitting 6 next**, then sitt
     9 CLOSED** at `4a6f6c6` (`manifest-6d`, Task 12: `requestApproval`, `listQueue`, `changeRequestedFrom`, the fleet's
     names; `a1d4baa`, fix wave `a230c1a`), Rich having chosen (a) on `change_requested`. Each adopted with no change of
     ours. **FE-46, FE-47 and FE-5 are CONFIRMED by Rich** (`ddc76d7`), each awaiting a spec action from its planning
-    session; sitting 10's mock keeps the records as they are until then. Then 10 (the
-    console and the mock, then the guides, merged with the published-text pass), then its **faculty-ready plan**:
+    session; sitting 10's mock keeps the records as they are until then. **Sitting 10 CLOSED** at `8ff925f`
+    (`manifest-3d`: the console and the mock, the guides, the published-text pass). Then 12 (the acceptance), then its
+    **faculty-ready plan**:
     contract 1.6.0, `__Host-` cookies on https (its Task 5 messages us first; **our adoption is prepared** in
     [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md): whoIs and edge
     mode change in one window with its restart). `api-findings.md` has each shape.
@@ -148,17 +165,17 @@ overnight queue, coordinated by `manifest-app-3a`: **sitting 6 next**, then sitt
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-01, ~20:45 PDT)*:
-  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock`, one watcher, restarted at F6 sitting 5's close on a fresh
-    dev database), against **our mock on 7102** (pid 28170, restarted on the platform's `0969d45`). **Its dev database is at
-    version 5** and holds sitting 5's five acceptance runs **less the mock's app's rows** (`check-keeping.sh` half one ends
-    with the owner's `DELETE`); the ones before are kept as `.data/app-before-f6s5.sqlite`, `app-before-f6s4.sqlite`,
+- **The machine** *(2026-10-01, ~22:30 PDT)*:
+  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, restarted at F6 sitting
+    6's close on a fresh dev database), against **our mock on 7102** (pid 24850, restarted on the platform's `6d76459`). **Its
+    dev database is at version 5** and holds sitting 6's five acceptance runs (no `check-keeping.sh` since: sitting 7's); the
+    ones before are kept as `.data/app-before-f6s6.sqlite`, `app-before-f6s5.sqlite`, `app-before-f6s4.sqlite`,
     `app-before-f6s3.sqlite` and `app-before-f6s2.sqlite`, F5's as `.data/app-before-f4a.sqlite`. **Its key file**,
     `packages/server/.keys/keeping.key`, seals the watch tokens our page now hands over. **Its keeper sends email** in both
     modes, to Mailpit, from *Manifest &lt;manifest@app.manifest.internal&gt;*, and **looks at live addresses only in edge
     mode**. Switch to edge mode before anyone clicks the real platform, and say so.
-  - **7100 is the platform's**: at its sitting 9's close the real control plane is up (PID 68983 on `a230c1a`, real
-    GitHub) with an **empty database** (no projects, no users: `operator`'s admin grant is asked again after `operator`
+  - **7100 is the platform's**: at its sitting 10's close the real control plane is up (PID 14109, real GitHub) with an
+    **empty database** (no projects, no users: `operator`'s admin grant is asked again after `operator`
     signs in). Nothing of ours is there. **LiteLLM on 7106; Mailpit on 7111/7112.**
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
@@ -186,7 +203,10 @@ overnight queue, coordinated by `manifest-app-3a`: **sitting 6 next**, then sitt
     M2's `incidentOf`),
     and `ours/pretend-people.ts` the pretend people (FE-3). **F6 (sitting 5):** `screens/keeping/` (`watch.ts`, the
     Keeping watch token minted; `role.ts`, owner or helper; `lines.ts`, every happening and need in words; `needs.tsx`,
-    the band; `since.tsx`; `how.tsx`) and `screens/history/` (`/apps/:slug/history`). **Only `src/auth.ts` names an `/auth/` path** (sign in, sign
+    the band; `since.tsx`; `how.tsx`) and `screens/history/` (`/apps/:slug/history`). **F6 (sitting 6):** `screens/keeping/start-again.tsx` (*Start it again*,
+    *Start it for your students*, *What happened?*), `screens/overview/switching.tsx` (*Switching it off*, *Switch it back
+    on*, *Delete it*), `screens/change/notice.tsx` (`PressNotice`: `PROJECT_ARCHIVED` said one way on every press's notice);
+    the Overview's `?then=` (`start-again`, `students`, `switch-off`, `delete`). **Only `src/auth.ts` names an `/auth/` path** (sign in, sign
     out, step-up).
     **Who may build (F4a)** is the platform's `Me.mayBuild`, read and never re-derived: `screens/keeps.ts`'s `useKeeps`
     (someone who may not build is asked `listProjects` once; its answer keyed to the person), `screens/not-open.tsx`
@@ -236,7 +256,7 @@ overnight queue, coordinated by `manifest-app-3a`: **sitting 6 next**, then sitt
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (2094 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (2183 tests), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action; **and (F6) holds `keeping/` to the
       watch token's reads, and refuses `archive`, `restore` and a project's `DELETE` anywhere**;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
@@ -683,6 +703,16 @@ bash scripts/check-seeing.sh                                    # F4's acceptanc
   to them, and say before an acceptance run, which needs 7105 and a fresh dev database to itself.
 - **An explicit `undefined` takes a parameter's default, in a test helper too**: F6 sitting 4's *"without a person"* request
   passed `undefined` for the cookie and was sent as Alice. Say *none* with `null`.
+- **A background session's harness refuses Edit and Write in the shared checkout** until the session isolates its edits in a
+  git worktree (F6 sitting 6). Never route around it with shell edits. A worktree under `.claude/worktrees/` cannot resolve
+  our `link:../manifest` dependencies: make it a sibling of the checkout, install offline, and land each task on `main` by
+  `git merge --ff-only` from the main checkout. **A background session also ends after about 60 minutes idle** (sitting 7's
+  first executor did, waiting for its GO): commit finished work on the branch before a long hold.
+- **A walk's fetch spy installed twice on one document records every call twice** (F6 sitting 6: a restore "sent twice" was
+  the walk's): install it once per document (a flag on `window`); a navigation forgets it.
+- **The shell mints the watch token on every app page whose watch our server lacks** (`useWatch`, F6 Task 8): a test that
+  counts a press's platform calls on an active app answers `…/keeping` as watching, or the shell's `mintToken` is counted
+  too (F6 sitting 6).
 
 ## 8. Working with the platform session, and other agents
 

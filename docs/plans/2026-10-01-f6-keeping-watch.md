@@ -53,7 +53,7 @@ went live. Walk-through moments **16, 19 and 20**. Moments 17 and 18, and the *A
 | 3 | 4, 5 | The happenings and the lines; the emails, once each, through nodemailer | **done 2026-10-01** (`manifest-app-fc`, mock mode only): `b4cfb9f` (Task 4), `bacf85c` (Task 5: nodemailer 10.0.13, its types its own). **`linesOf` takes the kept app's `launchedAt`; `Line` gains `whom`; the first replay of an app never watched emails nobody**; Tasks 4–7 and 9 noted (S3). 1905 tests twice; the five acceptance scripts pass; the platform's `a1d4baa` (72 operations) adopted. **The email bodies wait for Rich's word** |
 | 4 | 6, 7 | The live-address watch and its outages; our routes: needs, since, history, forget; the outage's fix conversation | **done 2026-10-01** (`manifest-app-00`, mock mode only, beside the platform's sitting 9 and its holds): `238e6a0` (Task 6), `5d95181` (Task 7). **The recovery is declared at the third answer and dated from the first; a fall within 30 minutes of a recovery, and its recovery, are told to nobody; a restored app is watched again from its first answer; `/history` is a member's alone; a switched-off app's needs are its questions**; Tasks 9, 10 and 12 noted (S4). 1992 tests twice; the five acceptance scripts pass; the platform's `a230c1a` adopted. **The email bodies approved by Rich with A, B and C** (`manifest-app-3a`'s edit, after this sitting). FE-46, FE-47, FE-5 (a) written |
 | 5 | 8, 9 | The page: the platform's new calls; the watch token minted; *Your apps* and the Overview (the band, *Since you were last here*, the card's states, *How we keep watch*); the history page | **done 2026-10-01** (`manifest-app-00`, the same session as sitting 4, mock mode, beside the platform's sitting 10 and its mock edit): `ed8c6af` (Task 8), `c20cfff` (Task 9). **The watch minted on every app page, on *Your apps* one at a time, and after Make it, never for an app switched off; the band, *Since*, *How we keep watch*, the history page, the card's two new states; our server's reads never hold the page**; walked at 1440 and 375 with `scripts/walk/` (one defect found and fixed). 2094 tests twice; the five acceptance scripts pass; `check-keeping.sh` half one 8/8; the platform's `0969d45` adopted. **Words marked "ours" for Rich** |
-| 6 | 10, 11 | The page: *Start it again* and *What happened?*; switching off, back on, *Start it for your students*, and delete | not started |
+| 6 | 10, 11 | The page: *Start it again* and *What happened?*; switching off, back on, *Start it for your students*, and delete | **done 2026-10-01** (`manifest-app-s6`, overnight at Rich's arrangement, mock mode, beside the platform's sitting 10 and its holds; in a worktree, each task fast-forwarded to `main`): `dc3e8e6` (Task 10), `c864e7d` (Task 11), `635be85` (the walk's fix), `047d6a7` (its review's fixes), `f0429f1` (a test race). **Start it again reads the live address at the press; RELEASE_NOT_STAGED asks with both days; What happened? finds its fix again (the outage's lookup route, S4); switching off repeats an unfinished teardown once; back on mints the watch; Start it for your students is offered by the platform's own state; PROJECT_ARCHIVED is said one way on every press**; walked at 1440 and 375 (one defect found and fixed: the hand-over while not running); **a fresh review of the sitting** (three Important, two minors re-graded, all fixed test-first). 2183 tests twice; the five acceptance scripts pass from a fresh dev database; the platform's sitting 10 (`b571471`, `6d76459`, closed at `8ff925f`) adopted. **Words marked "ours" for Rich**; **the hand-over held back while not running, for Rich** |
 | 7 | 12 | **The acceptance:** `scripts/check-keeping.sh` against the mock and Mailpit; the whole-branch review; the walk on 7100 at Rich's word; **Rich's click**. **Alone, and last** | not started |
 
 **Every sitting starts** with `pgrep -fl vitest` (a stray worker of ours loads the machine the platform times its tiers
@@ -1429,3 +1429,116 @@ empty). The admin grant was run by `manifest-8e` at Rich's own word in its sessi
   7100.
 - **Next: sitting 6** (Tasks 10 and 11), executed by `manifest-app-s6` at Rich's overnight arrangement (coordinated by
   `manifest-app-3a`).
+
+### 2026-10-01 — Sitting 6: Start it again, What happened?, and end of term (session `manifest-app-s6`, overnight, mock mode only)
+
+- **Rich's overnight arrangement** (coordinated by `manifest-app-3a`; Rich away until his ~09:00 PDT demo): GO at ~20:30 PDT,
+  after sitting 5's close and `manifest-app-47`'s `check-keeping.sh` half one. **Step 0:** contract 1.5.0, 72 operations;
+  manifest at `e55b0bf` (console only); typecheck clean, 2094 tests. **The platform's sitting 10 (`manifest-3d`) ran beside
+  us, and every hold was kept** (its mock negative controls twice, its text pass, its Docker tier, its fix pass's mock, its
+  two closing runs; our tests import the mock's fixtures in-process, so they waited for each "mock committed"). **Its
+  `b571471` landed mid-sitting** (1.5.0, text only: descriptions, error meanings and remedies, the checklist's sentences, four
+  refusal messages), **then `9e43588` (its tests) and `6d76459` (its fix wave: the mock plays the gate while a launch is
+  scripted; archive's and delete's step-up message in a person's words), closed at `8ff925f`**: each adopted with no change
+  of ours (typecheck clean; 2128 tests at the first; no test of ours pinned a moved sentence or the knowledge pack's hash);
+  our mock restarted on each by `manifest-app-3a` (now pid 24850, on `6d76459`).
+- **In a worktree, by the harness** (a ruling, agreed with `manifest-app-3a`): this background session's harness refuses
+  edits in the shared checkout until they are isolated in a git worktree, and it was not routed around. The work was done in
+  `/Users/rich/Developer/manifest-app-s6` on branch `f6-s6` (a sibling directory, because the `link:../manifest`
+  dependencies must resolve; `.claude/worktrees/` would not), installed offline, and **each task landed on `main` by `git
+  merge --ff-only f6-s6`** in the main checkout (no merge commit, nothing pushed), after `git status` there showed nobody's
+  change on a file it moved. The walks and the acceptance ran against 7105, the main checkout's server, after each landing;
+  no server ran from the worktree. Removed at the close (`git worktree remove`, `git branch -d f6-s6`).
+- **Task 10** (`dc3e8e6`): `screens/keeping/start-again.tsx`: **[Start it again]** in the band on the Overview, an owner's
+  (a helper's line keeps *"An owner can start it again."*); the live address read **at the press**
+  (`listEnvironments`: production's own `instance.releaseId`, which FE-4 leaves naming the one that fell) and exactly that
+  version deployed to production with an `Idempotency-Key`, from the person's session; F5's stations, *"Nobody has lost
+  anything: your students' address keeps what it has until this answers."*; *"It's answering again."*; never answered: F5's
+  words and *[What went wrong]* (this attempt's incident); F5's step-up card back to `?then=start-again`, said once on
+  arrival, never pressed by itself; past our deadline, F5's M1 (read on five minutes more). **RELEASE_NOT_STAGED** asks with
+  both days (*"Your trying-out address has a newer version, from 30 September, 10:40am. Start that one instead, or put the
+  version from 18 September, 3:12pm back on trying-out first?"*): *[Start the newer one]* sends trying-out's version to the
+  students; *[Put 18 September's back first]* puts theirs on trying-out, awaits its end, then the students' address (the
+  second sign-in between when asked). **[What happened?]**: the outage's fix (`{ fix: { outage: { from, to } } }`) with a
+  freshly minted token, opened; pressed again, the one under way: **the outage's lookup route on our server (S4)**, `GET
+  /api/apps/:projectId/outages/:from/conversation` and the store's `fixForOutage` (the person's own, the latest, never one set
+  aside). The router: one `Then`, each page parsing its own; the Overview takes it out of the address (`remember`).
+  **The rulings** (the ledger has each, with its cost):
+  - the gate's refusals (a version not signed off, a checklist item) say *"It can't go to your students yet. Going live
+    shows what it needs."* with *[Going live]* (**words marked "ours"**); any other refusal F5's words with a reference;
+  - the band's presses are on the Overview only (`NeedsBand`'s `press`, never where the band offers no button); *Your apps*
+    keeps S5's links; each need keyed by its own id, so a press keeps where it got to when the band is read again. After
+    *"It's answering again."* the band's sentence still says it can't be reached until our watch's third answer (~3
+    minutes);
+  - the components take `expire`, `now`, `timeZone` (and *What happened?* `platform`) beyond the plan's interface.
+  - Controls, four, each red and restored: the release read at load; staging's release sent on the first press; `then` left
+    in the address; the put-back not waiting for trying-out's end. **Its tests passed on their first run** (run after the
+    component, a step skipped): the controls are their evidence.
+- **Task 11** (`c864e7d`): `screens/overview/switching.tsx`: **Switching it off**, a quiet section at the Overview's foot,
+  **an owner's alone** (a helper and an unknown role see none of it): the confirming step's words, *[Keep it running]*;
+  `archiveProject` behind the second sign-in (`?then=switch-off` comes back to the confirming step, said); **`500
+  PROJECT_TEARDOWN_INCOMPLETE` repeated once by itself**, still incomplete *"It's switched off, but we didn't finish tidying
+  up…"* under the switched-off line. **[Delete it]** only for an app that never went live: its confirming step, *[Delete it
+  for good]*, the second sign-in (`?then=delete`), `deleteProject`, our rows forgotten (`ours.forget`), then *Your apps*;
+  `PROJECT_LAUNCHED_NOT_DELETABLE` and a live app's FE-45 sentence where *Delete it* would be. **Switched off**: *"Switched
+  off, 12 December"* on the Overview to everyone, **[Switch it back on]** for an owner there and on *Your apps*' card:
+  `restoreProject`, no second sign-in, our watch minted again; a draft: *"It's back. Your draft starts again the next time we
+  work on it."* **[Start it for your students]**: *Start it again*'s press in a second mode, production's own last version
+  (S1: M4) through trying-out first, then the students' address (`?then=students`), *"Mock course app is live."* **`409
+  PROJECT_ARCHIVED` anywhere a press meets it**: *"Mock course app is switched off. Switch it back on first."*, never a
+  problem with a reference (`pressFailed`'s `archived`, and `screens/change/notice.tsx`'s `PressNotice` on every press's
+  notice: *Ask for a change*, *Trying out*, *Going live*'s three presses, *What went wrong*, and F6's own). `useApp` gains
+  `refresh` (the app read again with the page left standing). **The rulings:**
+  - *Start it for your students* is offered **by the platform's own state** (an owner; the app active and launched; its
+    students' address naming a version `gone`), so it is there after a reload and on arriving from *Your apps*' card;
+  - the Overview's *Switch it back on* leaves minting to the shell's `useWatch` (it runs again when the app's state changes),
+    so the watch is minted once; the card mints itself, never waiting on our server;
+  - a delete answering `PROJECT_TEARDOWN_INCOMPLETE` is repeated once too (the contract's remedy); each repeat with a new
+    `Idempotency-Key`; a failure of ours to forget is reported and never keeps them on a gone app's page;
+  - *"Keep it"* (the delete's way back) is **ours**;
+  - a test fault fixed: two Overview tests counted the shell's own watch mint as a press's.
+  - Controls, five, each red and restored: *Delete it* on a launched app; the restore asking a step-up; the teardown not
+    repeated; a helper shown the section; `PROJECT_ARCHIVED` said as any problem.
+- **The walks** (`scripts/walk/`, at 1440 and 375, our `/api` and the platform's answers rewritten in the browser per
+  scene, every write answered by a rewrite, what the page sent read from a fetch spy; each new check with a control by input:
+  a helper, no `then`, the same version on trying-out, a live app, an answering one): Task 10 **49/49**; Task 11 **73/73**.
+  **The walk found one defect no unit test could** (`635be85`, test-first): an app switched back on and not yet started for
+  its students still led with moment 15's hand-over, *"A message to send them"* and the address, though the address shows
+  the switched-off page. The hand-over now waits while the app is switched off or not running yet. Its first run's two FAILs
+  were the walk's own fetch spy installed twice on one document (§7).
+- **The sitting's review** (a fresh reviewer, read-only, `ca3b6f6..635be85`; the plan's whole-branch review stays sitting 7's):
+  no Critical; **three Important, fixed test-first** (`047d6a7`): **I1** a press on a conversation whose app was switched off
+  (its token revoked, the new one refused `PROJECT_ARCHIVED`) said *"Something went wrong on our side"* on the plan and
+  building screens: now *"… is switched off. Switch it back on first."*, nothing to try again; **I2** a delete unfinished twice
+  said *"Nothing is lost"* on a page still showing the app active, and after a reload *Delete it* was gone: now *"It's switched
+  off, and we didn't finish deleting it. Delete it for good again to finish."* (**ours**), the page reads the app again, and a
+  draft switched off keeps *Delete it*; **I3** a press whose deploy our deadline cut after the page had gone read the platform
+  every second for five minutes (F5's guard dropped in the copy). **Two minors re-graded by their effect and fixed**: M1 the
+  band read again when the app is switched off or on; M5 the confirming step takes the focus (a screen reader says it; in view
+  on coming back). **Deferred minors** (the ledger has each): RELEASE_NOT_STAGED with nothing newer on trying-out says F5's
+  *couldn't*; *Start it for your students* puts trying-out up again after the second sign-in (~8 s); no retry button after a
+  failed or given-up press (F5's parity); `waiting.tsx` leaves `PROJECT_ARCHIVED` unsaid (unreachable); a failed refresh
+  loses the Overview's words; the delete's `navigate('/')` even after they left; the building screen may name the slug.
+- **A test race of F5's** (`f0429f1`): the second closing run went 2182/2183 on Going live's *"launched since"*, which
+  answered the checklist before the page had asked under the whole suite's load (10 runs alone passed); it now waits for the
+  ask (§7's trap). Nothing of the page moved.
+- **For Rich:**
+  - **words marked "ours"**: the gate's sentence on *Start it again* and *Start it for your students* (*"It can't go to your
+    students yet. Going live shows what it needs."*); the undated forms of the RELEASE_NOT_STAGED question (*"…put the one
+    your students had back…"*, *[Put theirs back first]*); *"We stopped waiting, and couldn't see how it ended."*; *"Keep it"*;
+    *"It's switched off, and we didn't finish deleting it. Delete it for good again to finish."*;
+  - **the hand-over held back while the app is not running** (switched off, or back and not started): a behaviour of
+    moment 15's, changed by the walk's finding;
+  - a deferred minor: after a restore, *Your apps*' card keeps its students' fact *"Switched off"* (F4's fact for a version
+    taken down) until it is started for the students, beside its own *"It's back, but not running yet."*
+- **Gates:** 2183 tests (92 files), twice; lint, typecheck and format clean on `main` at `f0429f1` (and 2172 twice at
+  `635be85`, before the review); `pgrep -fl vitest` empty
+  of ours at the start and the close. **In mock mode, from a fresh dev database** (our server's tree stopped by name, not
+  refused tonight; the old one kept as `.data/app-before-f6s6.sqlite`): `check-seeing.sh` 8/8, `check-going-live.sh` 8/8,
+  `check-slice.sh` 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12 (at `635be85`; the commits after it are the
+  page's alone, and these drive our server's API, unchanged since `dc3e8e6`).
+- **The machine at the close:** our server in mock mode on 7105 (`nohup pnpm dev:mock` from the main checkout, one `tsx
+  watch`, on the fresh dev database), against our mock on 7102 (pid 24850, on the platform's `6d76459`). The platform's
+  sitting 10 is closed (`8ff925f`); its control plane is up on 7100 (PID 14109, an empty database). Nothing of ours on 7100.
+- **Next: sitting 7** (Task 12), **its unattended half first** (Step 0, Step 1's `check-keeping.sh` both halves with their
+  controls, Step 2's whole-branch review and its fixes); Steps 3 and 4 are on 7100, at Rich's word.
