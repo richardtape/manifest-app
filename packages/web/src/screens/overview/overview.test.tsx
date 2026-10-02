@@ -130,6 +130,7 @@ function stage(
     getLaunchReadiness: answer('getLaunchReadiness', () => readiness),
     getLaunchRecords: answer('getLaunchRecords', () => records),
     getApproval: answer('getApproval', () => null),
+    requestApproval: never,
     getEnvironment: answer('getEnvironment', (id: string) =>
       environments.find((e) => e.id === id)!,
     ),
@@ -456,6 +457,38 @@ describe('F6 Task 9: coming back to the Overview (moment 16, design §2 and §4)
     )
     return asked
   }
+
+  /** The sign-off unmet with a version on trying-out, nobody decided, asked or not (F5b Decision 15). */
+  const signOff = (since: string | null): Schemas['LaunchReadiness'] => ({
+    ...fixtures.LAUNCH_READINESS,
+    items: fixtures.LAUNCH_READINESS.items.map((i) =>
+      i.id === 'admin-approval' ? { ...i, state: 'unmet' as const, since } : i,
+    ),
+  })
+
+  it('F5b: the sign-off unasked raises “something on its way to your students needs you”, with Going live (Decision 15)', async () => {
+    ours({})
+    await open(`/apps/${SLUG}`, stage({ readiness: signOff(null) }))
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(k.band.goingLive(PROJECT.name))
+    expect(
+      within(band)
+        .getByRole('link', { name: k.band.goingLiveButton })
+        .getAttribute('href'),
+    ).toBe(`/apps/${SLUG}/going-live`)
+  })
+
+  it('F5b: asked, and waiting on an administrator: nothing on its way needs them', async () => {
+    ours({})
+    const s = await open(
+      `/apps/${SLUG}`,
+      stage({ readiness: signOff('2026-09-28T19:00:00.000Z') }),
+    )
+    await ready()
+    await waitFor(() => expect(s.called('getLaunchReadiness')).toHaveLength(1))
+    await screen.findByRole('region', { name: w.band.title })
+    expect(screen.queryByText(k.band.goingLive(PROJECT.name))).toBeNull()
+  })
 
   it('asks our server for this app’s needs and lines alone', async () => {
     const asked = ours({})

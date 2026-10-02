@@ -708,6 +708,53 @@ describe('keeping watch and switching (F6 Task 8), in the person’s session', (
     },
   )
 
+  it('requestApproval (F5b Task 4) asks for the release named, with the Idempotency-Key it is given and the note, and answers the request', async () => {
+    const R = 'b0000000-0000-4000-8000-000000000001'
+    const answer = { id: 'asked', releaseId: R }
+    const r = await recording(200, answer)
+    try {
+      const p = createPlatform({ origin: r.origin })
+      expect(await p.requestApproval(R, { note: 'By 2 November.' }, 'k-1')).toEqual(
+        answer,
+      )
+      expect(await p.requestApproval(R, {}, 'k-2')).toEqual(answer)
+      expect(r.seen).toEqual([
+        {
+          method: 'POST',
+          url: `/v1/releases/${R}/approval-request`,
+          key: 'k-1',
+          body: { note: 'By 2 November.' },
+        },
+        {
+          method: 'POST',
+          url: `/v1/releases/${R}/approval-request`,
+          key: 'k-2',
+          body: {},
+        },
+      ])
+    } finally {
+      await r.close()
+    }
+  })
+
+  it('requestApproval’s refusals are thrown with their codes (RELEASE_NOT_STAGED, APPROVAL_NOT_NEEDED, RELEASE_REJECTED)', async () => {
+    for (const code of [
+      'RELEASE_NOT_STAGED',
+      'APPROVAL_NOT_NEEDED',
+      'RELEASE_REJECTED',
+    ]) {
+      const r = await recording(409, { error: { code, message: 'x' } })
+      try {
+        const error = await thrown(() =>
+          createPlatform({ origin: r.origin }).requestApproval('b-1', {}, 'k-3'),
+        )
+        expect(refusalOf(error)).toEqual({ kind: 'refused', code, status: 409 })
+      } finally {
+        await r.close()
+      }
+    }
+  })
+
   it('a refusal is thrown with its code, for the page to say (a step-up, a switch-off’s teardown)', async () => {
     const r = await recording(403, {
       error: { code: 'STEP_UP_REQUIRED', message: 'x' },

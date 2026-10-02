@@ -141,6 +141,7 @@ function stage(
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
+    requestApproval: never,
     getEnvironment: never,
     listMembers: never,
     revokeToken: never,

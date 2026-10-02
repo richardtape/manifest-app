@@ -46,6 +46,7 @@ const THEIRS = [
   '/v1/releases/{releaseId}/approve', // approveRelease
   '/v1/releases/{releaseId}/reject', // rejectRelease
   '/v1/releases/{releaseId}/approval-preview', // createApprovalPreview
+  '/v1/releases/{releaseId}/approval-request', // requestApproval (F5b Task 4: the person's, in the browser)
   '/v1/projects/{projectId}/launch-records/iam-registration', // recordIamRegistration
   '/v1/projects/{projectId}/launch-records/privacy-assessment', // recordPrivacyAssessment
 ]

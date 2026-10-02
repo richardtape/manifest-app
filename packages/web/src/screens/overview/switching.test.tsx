@@ -136,6 +136,7 @@ function stage(answers: Partial<Record<string, Answer[]>> = {}) {
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
+    requestApproval: never,
     startIntakeSession: never,
     endIntakeSession: never,
     checkSlug: never,

@@ -151,6 +151,7 @@ function stage(start: Partial<World> = {}) {
     getLaunchReadiness: record('getLaunchReadiness', () => world.readiness),
     getLaunchRecords: record('getLaunchRecords', () => fixtures.LAUNCH_RECORDS),
     getApproval: record('getApproval', () => fixtures.APPROVAL),
+    requestApproval: never,
     getEnvironment: never,
     startIntakeSession: never,
     endIntakeSession: never,

@@ -69,6 +69,7 @@ function platform(
     // Nobody has decided: the shared fake answers it, so no page waits on it (sitting 3's trap).
     getApproval: (answers.getApproval ??
       (() => Promise.resolve(null))) as Platform['getApproval'],
+    requestApproval: (answers.requestApproval ?? never) as Platform['requestApproval'],
     getEnvironment: (answers.getEnvironment ?? never) as Platform['getEnvironment'],
     listMembers: (answers.listMembers ?? never) as Platform['listMembers'],
     revokeToken: (answers.revokeToken ?? never) as Platform['revokeToken'],
@@ -592,6 +593,40 @@ describe('Your apps: before your students can use it (Decision 3, moment 10)', (
     await screen.findByRole('heading', { name: 'Mock course app' })
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(screen.queryByText(words.yourApps.beforeStudents)).toBeNull()
+  })
+
+  it('F5b: the sign-off unasked raises “something on its way to your students needs you” on Your apps (Decision 15); asked, none', async () => {
+    const k = words.keeping
+    const signOff = (since: string | null) => ({
+      ...fixtures.LAUNCH_READINESS,
+      items: fixtures.LAUNCH_READINESS.items.map((i) =>
+        i.id === 'admin-approval' ? { ...i, state: 'unmet' as const, since } : i,
+      ),
+    })
+    render(
+      <App
+        platform={{
+          ...mockPlatform(),
+          getLaunchReadiness: () => Promise.resolve(signOff(null)),
+        }}
+      />,
+    )
+    const band = await screen.findByRole('region', { name: k.band.label })
+    expect(band.textContent).toContain(k.band.goingLive('Mock course app'))
+    cleanup()
+    render(
+      <App
+        platform={{
+          ...mockPlatform(),
+          getLaunchReadiness: () => Promise.resolve(signOff('2026-09-28T19:00:00.000Z')),
+        }}
+      />,
+    )
+    const card = (
+      await screen.findByRole('heading', { name: 'Mock course app' })
+    ).closest('.mf-card') as HTMLElement
+    expect(await within(card).findByText(words.yourApps.beforeStudents)).toBeTruthy()
+    expect(screen.queryByText(k.band.goingLive('Mock course app'))).toBeNull()
   })
 
   it('a checklist that cannot be read: the card as it is, without the line', async () => {

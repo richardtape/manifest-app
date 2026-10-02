@@ -213,6 +213,7 @@ function stage(start: Partial<World> = {}) {
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
+    requestApproval: never,
     getEnvironment: never,
   }
   const theirs: Ours = {

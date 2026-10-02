@@ -228,6 +228,7 @@ function stage(start: Partial<World> = {}) {
       stagingRegistration: null,
     })),
     getApproval: record('getApproval', () => fixtures.APPROVAL),
+    requestApproval: never,
     getEnvironment: record('getEnvironment', (id: string) =>
       environment((Object.keys(ID) as Kind[]).find((k) => ID[k] === id)!),
     ),

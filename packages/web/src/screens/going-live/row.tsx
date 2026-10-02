@@ -48,6 +48,7 @@ export function RowView({
             </>
           )}
         </p>
+        {row.when === null ? null : <span className="going-live__when">{row.when}</span>}
         {row.owner === '' ? null : <span className="going-live__owner">{row.owner}</span>}
         {/* Lit in words, never colour alone. */}
         {row.lit === true ? (

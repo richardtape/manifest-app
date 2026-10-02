@@ -95,6 +95,7 @@ function stage(
     getLaunchReadiness: answer('getLaunchReadiness', () => w.readiness),
     getLaunchRecords: answer('getLaunchRecords', () => w.records),
     getApproval: answer('getApproval', () => w.approval),
+    requestApproval: never,
     getEnvironment: answer('getEnvironment', (id: string) =>
       environments.find((e) => e.id === id)!,
     ),

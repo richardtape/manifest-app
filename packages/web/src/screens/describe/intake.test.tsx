@@ -214,6 +214,7 @@ function stage(
     getLaunchReadiness: () => new Promise(() => undefined),
     getLaunchRecords: () => new Promise(() => undefined),
     getApproval: () => new Promise(() => undefined),
+    requestApproval: () => new Promise(() => undefined),
     getEnvironment: () => new Promise(() => undefined),
     listMembers: () => new Promise(() => undefined),
     revokeToken: (tokenId) => {

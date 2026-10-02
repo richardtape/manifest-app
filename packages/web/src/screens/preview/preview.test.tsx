@@ -171,6 +171,7 @@ function stage(
       () => world.records ?? fixtures.LAUNCH_RECORDS,
     ),
     getApproval: never,
+    requestApproval: never,
     getEnvironment: never,
     listMembers: never,
     revokeToken: never,

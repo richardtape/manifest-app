@@ -31,11 +31,13 @@ export interface Row {
   words: string
   /** A hostname inside `words`, drawn in mono: hostnames are allowed, and are not words (C3). */
   address: string | null
+  /** F5b: how long it has waited, under its sentence: "asked 21 September · waiting 2 days"; null when none. */
+  when: string | null
   /**
-   * What the person could press: *[Talk it through]* on a sign-off refused (Task 8). The dry run's
-   * is never drawn until the owner may run it (FE-42 (a)): Task 7's press returns then.
+   * What the person could press: *[Run the dry run]* (Task 7), *[Talk it through]* on a sign-off
+   * refused (Task 8), *[Ask a Manifest administrator to sign this off]* (F5b Task 4).
    */
-  action: 'dry-run' | 'talk-it-through' | null
+  action: 'dry-run' | 'talk-it-through' | 'ask' | null
   /**
    * Changed since the page last read it, when the gate refused a press (moment 14: "the changed
    * row lit"). Never set by `rowsOf`: the page marks it, by comparing two readings.
@@ -60,7 +62,13 @@ const o = words.goingLive.owners
  */
 export function rowsOf(
   readiness: Schemas['LaunchReadiness'],
-  context: { hostname: string | null; approval?: Decided; timeZone?: string | undefined },
+  context: {
+    hostname: string | null
+    approval?: Decided
+    timeZone?: string | undefined
+    /** F5b: the clock a sign-off's wait is counted to; without it, the day alone (F6's band). */
+    now?: Date | undefined
+  },
 ): Row[] {
   const candidate = readiness.candidateReleaseId !== null
   const rows = readiness.items
@@ -68,7 +76,13 @@ export function rowsOf(
     .map((i): Row => {
       const drawn =
         i.id === 'admin-approval'
-          ? signOffRow(i, candidate, context.approval ?? null, context.timeZone)
+          ? signOffRow(
+              i,
+              candidate,
+              context.approval ?? null,
+              context.timeZone,
+              context.now,
+            )
           : rowOf(i, candidate, context.hostname)
       // NOT BUILT, AND BLOCKING (sitting 6's real walk: a large course's load rehearsal): it holds
       // the launch until Manifest can do it, and the page says so: never "doesn't check this one".
@@ -78,6 +92,7 @@ export function rowsOf(
             state: 'waiting',
             owner: o.team,
             words: r.notBuiltBlocks,
+            when: null,
             action: null,
           }
         : drawn
@@ -103,6 +118,7 @@ function rowOf(
     name,
     words: said,
     address,
+    when: null,
     action: null,
     apart: item.id === 'code-review',
   })

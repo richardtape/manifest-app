@@ -122,6 +122,18 @@ export interface Platform {
    * refusal is thrown.
    */
   getApproval(releaseId: string): Promise<Schemas['Approval'] | null>
+  /**
+   * ASKING FOR THE SIGN-OFF (F5b Task 4; FE-25 as it landed, `a1d4baa`), in the person's session:
+   * asks for the version on trying-out, with an optional note for the administrators alone. A
+   * second ask answers the first. One `Idempotency-Key` per press. Refused `409
+   * RELEASE_NOT_STAGED` (another version on trying-out now), `APPROVAL_NOT_NEEDED`, or
+   * `RELEASE_REJECTED`.
+   */
+  requestApproval(
+    releaseId: string,
+    body: Schemas['RequestApprovalRequest'],
+    idempotencyKey: string,
+  ): Promise<Schemas['ApprovalRequest']>
   /** Each secret's name, `declared` and `set`, as fields: never a value (F4 S1: M1). */
   listAppSecrets(environmentId: string): Promise<Schemas['AppSecretList']>
   /**
@@ -364,6 +376,15 @@ export function createPlatform(options: {
         if (error instanceof ManifestApiError && error.status === 404) return null
         throw error
       }
+    },
+    async requestApproval(releaseId, body, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/releases/{releaseId}/approval-request', {
+          params: { path: { releaseId }, header: { 'Idempotency-Key': idempotencyKey } },
+          body,
+        }),
+        'requestApproval',
+      )
     },
     async listAppSecrets(environmentId) {
       return unwrap(

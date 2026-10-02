@@ -96,6 +96,7 @@ async function read(
       hostname: production?.hostname ?? null,
       approval: decided,
       timeZone,
+      now,
     }),
     decided,
     launched: readiness.launched,
@@ -317,10 +318,12 @@ export function GoingLive({
                 key={row.id}
                 row={row}
                 decided={seen.decided}
+                candidate={seen.candidate?.releaseId ?? null}
                 platform={platform}
                 ours={ours}
                 project={project}
                 expire={expire}
+                onAsked={readAgain}
               />
             ) : (
               <RowView key={row.id} row={row} />

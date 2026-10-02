@@ -108,11 +108,16 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
           const said = [r.name, r.words, r.owner].join(' ').replace(HOST, '')
           expect(machineryIn(said), where).toEqual([])
           expect(said, where).not.toMatch(/weeks?\b|§|why|staging/i)
-          // From the checklist alone, one row can be pressed: the dry run, theirs to start once a
-          // version is on trying-out (FE-42 (a); Rich: "Build it now").
+          // From the checklist alone, two rows can be pressed once a version is on trying-out: the
+          // dry run, theirs to start (FE-42 (a); Rich: "Build it now"), and the sign-off, nobody
+          // having decided or asked, theirs to ask for (F5b Task 4, D7).
           expect(r.action, where).toBe(
-            id === 'rehearsal' && state === 'unmet' && candidate !== null
-              ? 'dry-run'
+            state === 'unmet' && candidate !== null
+              ? id === 'rehearsal'
+                ? 'dry-run'
+                : id === 'admin-approval'
+                  ? 'ask'
+                  : null
               : null,
           )
         }
@@ -180,12 +185,13 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
       words: 'Done. It answered and signed someone in on the live setup.',
     }))
 
-  it('the sign-off with a candidate: waiting on a Manifest administrator, who is not told', () =>
+  it('the sign-off with a candidate, nobody having decided or asked: theirs to ask for (F5b Task 4)', () =>
     expect(row('admin-approval', 'unmet')).toMatchObject({
-      state: 'waiting',
+      state: 'attention',
       words:
-        'A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off, so nobody’s app reaches students with something it shouldn’t have. Manifest doesn’t tell them yet that it’s waiting.',
-      owner: 'a Manifest administrator',
+        'A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off, so nobody’s app reaches students with something it shouldn’t have.',
+      owner: 'you',
+      action: 'ask',
     }))
 
   it('its address, met: the address, yours for good, done for you', () => {
@@ -235,12 +241,13 @@ describe('rowsOf: the short jobs, in our words (Review Focus 5)', () => {
     expect(refused).toMatchObject({ state: 'attention', action: 'talk-it-through' })
   })
 
-  it('from the checklist alone, nothing is at work, and only the dry run needs you: nobody has decided', () => {
+  it('from the checklist alone, nothing is at work, and only the dry run and the unasked sign-off need you: nobody has decided (F5b: the nudge, Rich’s default)', () => {
     const rows = IDS.flatMap((id) =>
       STATES.flatMap((state) => [row(id, state), row(id, state, null)].filter(Boolean)),
     )
     expect(rows.filter((r) => r.state === 'attention').map((r) => r.id)).toEqual([
       'rehearsal',
+      'admin-approval',
     ])
     expect(rows.map((r) => r.state)).not.toContain('working')
   })

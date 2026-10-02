@@ -48,6 +48,7 @@ function platform(getMe: Platform['getMe']): Platform {
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
+    requestApproval: never,
     getEnvironment: never,
     listMembers: never,
     revokeToken: never,

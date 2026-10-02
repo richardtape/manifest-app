@@ -124,6 +124,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
+    requestApproval: never,
     getEnvironment: never,
     listMembers: never,
     revokeToken: never,

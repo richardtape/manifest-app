@@ -132,6 +132,7 @@ function stage(world: Partial<World> = {}) {
     })),
     getLaunchRecords: answer('getLaunchRecords', () => fixtures.LAUNCH_RECORDS),
     getApproval: answer('getApproval', () => null),
+    requestApproval: never,
     getEnvironment: answer('getEnvironment', (id: string) =>
       environments.find((e) => e.id === id)!,
     ),

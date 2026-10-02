@@ -902,8 +902,12 @@ export const words = {
       },
       approval: {
         name: 'A Manifest administrator’s sign-off',
+        /**
+         * F5b (the design's §3): undecided, and theirs to ask. F5's "Manifest doesn't tell them yet that
+         * it's waiting." goes: an ask is in the administrators' queue, and the Manifest team is emailed (D5).
+         */
         unmet:
-          'A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off, so nobody’s app reaches students with something it shouldn’t have. Manifest doesn’t tell them yet that it’s waiting.',
+          'A Manifest administrator looks at what it keeps, who it lets in and what it can reach, then signs it off, so nobody’s app reaches students with something it shouldn’t have.',
         /** Ours: met, and the approval could not be read to name who and when. */
         met: 'Signed off by a Manifest administrator.',
         /** ✓ `day` is "23 September"; null when it cannot be read. */
@@ -921,7 +925,28 @@ export const words = {
          * the checklist counts it unmet (never "Signed off" while it is).
          */
         again:
-          'It has changed since it was signed off, so a Manifest administrator looks at it afresh. Manifest doesn’t tell them yet that it’s waiting.',
+          'It has changed since it was signed off, so a Manifest administrator looks at it afresh.',
+        /** F5b (the design's §3): asked, and nobody has decided. */
+        asked: 'A Manifest administrator looks at this next.',
+        /**
+         * F5b: "asked 21 September · waiting 2 days", the wait in Vancouver days; the day alone when no
+         * clock is given. Who asked is not read back (nothing reads a request), so *asked*, not *you asked*.
+         */
+        when: (day: string, waited: string | null) =>
+          waited === null ? `asked ${day}` : `asked ${day} · ${waited}`,
+        /** F5b (D7; the design's *Words for Rich*): the press, and the note it opens in place. */
+        ask: 'Ask a Manifest administrator to sign this off',
+        note: 'Anything they should know?',
+        noteHint:
+          'For example, the day your students need it. Only Manifest administrators see it.',
+        askThem: 'Ask them',
+        notNow: 'Not now',
+        /** F5b (the plan's *Words proposed for Rich*): working, and failed. */
+        asking: 'Asking',
+        couldntAsk: 'We couldn’t ask just now. Nothing is lost.',
+        /** F5b: RELEASE_NOT_STAGED, F5's S5 pattern. */
+        changed:
+          'The version on your trying-out address changed a moment ago. Ask about the new one?',
         /** Ours: the approval could not be read. */
         cantTell: 'We can’t tell right now whether it’s been signed off.',
         /** ✓ Starts a change seeded with their reason (Decision 9). */

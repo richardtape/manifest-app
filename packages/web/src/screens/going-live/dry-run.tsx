@@ -58,6 +58,7 @@ export function dryRunRow(item: Schemas['LaunchReadinessItem'], candidate: boole
     name: r.rehearsal.name,
     words: said,
     address: null,
+    when: null,
     action,
     apart: false,
   })

@@ -170,6 +170,7 @@ function stage(world: Partial<World> = {}) {
     getLaunchReadiness: never,
     getLaunchRecords: never,
     getApproval: never,
+    requestApproval: never,
     startIntakeSession: never,
     endIntakeSession: never,
     checkSlug: never,
