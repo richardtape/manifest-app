@@ -180,6 +180,16 @@ could end it from the person's session in the browser, or leave it. It spends no
 there). Negative control: drop the code check, and the new case goes red. `stream.ts` is in `packages/server/src`, so it
 waits for F6 sitting 4 to close.
 
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m63 | `manifest-app-47`'s read-only walk control (`1b82119`), 2026-10-02 | An app's name holding a word that cannot break runs out of three places: the rail's overline (251 px past the rail at 1280, seen in the walk's screenshot), the Overview's `h1` (529 px wide at 375, the page 888 px), and *Your apps*' card link and heading at 375. Real names rarely do, because a hyphen breaks. | `packages/ui/src/components.css:954` (`.mf-rail__over`), `packages/ui/src/tokens.css:98` (`.page-title`; the Overview's at `screens/overview/overview.tsx:159`), `packages/web/src/app.css:226` and `:270` (`.app-card__name`, `.app-card__link`): none sets `overflow-wrap`. | S | faculty-visible |
+
+**m63.** `overflow-wrap: anywhere` on the three closes it. The overline and `.page-title` are the design system's, so
+they are fixed in `packages/ui` at source, with a `styles.test.ts` case each (CSS read as text: jsdom applies none). The
+card's two are `app.css`'s. The real witness is a walk at 375 and 1280 with the name rewritten in the browser to a word
+that cannot break, as 47's control did. Its layout check (`1b82119`) now measures every box with text, so it is the test
+that goes red without the fix.
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed
