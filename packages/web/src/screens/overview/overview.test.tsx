@@ -48,6 +48,8 @@ type World = {
   readiness: Schemas['LaunchReadiness']
   /** The live address's instance, when not the fixture's (none). */
   production?: Schemas['Instance']
+  /** The environments listed, when not all three (m1). */
+  kinds?: Schemas['Environment']['kind'][]
 }
 const BEFORE_LAUNCH: World = {
   built: true,
@@ -60,7 +62,10 @@ function stage(
   world: Partial<World> = {},
   refuse: Partial<Record<string, () => unknown>> = {},
 ) {
-  const { built, launchedAt, readiness, production } = { ...BEFORE_LAUNCH, ...world }
+  const { built, launchedAt, readiness, production, kinds } = {
+    ...BEFORE_LAUNCH,
+    ...world,
+  }
   const calls: [string, ...unknown[]][] = []
   const answer =
     <T,>(name: string, value: (...args: never[]) => T) =>
@@ -71,7 +76,8 @@ function stage(
         ? Promise.resolve(value(...args))
         : Promise.reject(refusal)
     }
-  const environments = fixtures.ENVIRONMENTS.map((e) => ({
+  const listed = fixtures.ENVIRONMENTS.filter((e) => kinds?.includes(e.kind) ?? true)
+  const environments = listed.map((e) => ({
     ...e,
     hostname: e.hostname.replace('mock-app', SLUG),
     instance:
@@ -180,6 +186,19 @@ describe('the Overview: the app’s landing page (Decision 1)', () => {
     expect(rows[0]!.textContent).toMatch(/The version from \d+ September, \d+:\d\d[ap]m/)
     expect(rows[1]!.textContent).toMatch(/The version from \d+ September, \d+:\d\d[ap]m/)
     expect(rows[2]!.textContent).toContain(words.preview.facts.nothing)
+  })
+
+  it('m1: the address list’s name claims no count, so two addresses are not called three', async () => {
+    await open(`/apps/${SLUG}`, stage({ kinds: ['sandbox', 'staging'] }))
+    const list = await ready()
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2)
+    expect(list.getAttribute('aria-label')).not.toMatch(/\b(one|two|three)\b/i)
+  })
+
+  it('m1: with no address listed, no empty list is drawn', async () => {
+    await open(`/apps/${SLUG}`, stage({ kinds: [] }))
+    await screen.findByRole('link', { name: words.preview.askForChange })
+    expect(screen.queryByRole('list', { name: w.addresses })).toBeNull()
   })
 
   it('a dry run taken down again (the platform’s 5b) leaves the live address with nothing there before a launch, never switched off', async () => {

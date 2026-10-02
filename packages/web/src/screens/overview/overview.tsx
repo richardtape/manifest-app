@@ -344,19 +344,21 @@ export function Overview({
             <ForYourStudents name={project.name} handed={loaded.seen.handed} />
           )}
           {loaded.seen.band ? <Band slug={project.slug} /> : null}
-          <ul className="overview__addresses" aria-label={w.addresses}>
-            {loaded.seen.rows.map(({ tab, serving }) => (
-              <li key={tab} className="overview__address">
-                <a
-                  className="overview__tab"
-                  {...linkTo(`/apps/${slug}/preview?tab=${tab}`)}
-                >
-                  {words.preview.tabs[tab]}
-                </a>
-                <StateChip state={STATE[serving.tone]} label={serving.words} />
-              </li>
-            ))}
-          </ul>
+          {loaded.seen.rows.length === 0 ? null : (
+            <ul className="overview__addresses" aria-label={w.addresses}>
+              {loaded.seen.rows.map(({ tab, serving }) => (
+                <li key={tab} className="overview__address">
+                  <a
+                    className="overview__tab"
+                    {...linkTo(`/apps/${slug}/preview?tab=${tab}`)}
+                  >
+                    {words.preview.tabs[tab]}
+                  </a>
+                  <StateChip state={STATE[serving.tone]} label={serving.words} />
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="overview__change">
             <Button kind="secondary" {...linkTo(`/apps/${slug}/change`)}>
               {words.preview.askForChange}

@@ -683,8 +683,8 @@ export const words = {
     },
   },
   overview: {
-    /** Ours: the address rows' name, for a screen reader. */
-    addresses: 'Its three addresses',
+    /** Ours: the address rows' name, for a screen reader: no count, since fewer may be drawn (m1). */
+    addresses: 'Its addresses',
     band: {
       title: 'Before your students can use it.',
       body: 'Three things other people answer, and each may take several days. Going live shows where each one is.',
