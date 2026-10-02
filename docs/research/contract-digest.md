@@ -1,3 +1,5 @@
+> **ADDENDUM, 2026-10-01: this digest is of contract 1.4.0 at `186fa34` (57 operations). Everything since, to 1.5.0 at `a230c1a` (72 operations, 52 event types, 142 codes), is in [`contract-digest-addendum.md`](contract-digest-addendum.md), with what here is no longer true (its §A8). Read both.**
+
 > *Research, 2026-09-27, the front-end's first session: a read-only pass over `manifest` (see its header for the commit). Kept here because a scratchpad is not durable. It is evidence, not a spec. Where it and `manifest` disagree, `manifest` wins.*
 
 # Manifest public API — contract digest for the faculty front-end
