@@ -233,7 +233,8 @@ the console's but for 7105. So the browser's `__Host-manifest_session` will reac
   Its probe of our `GET /api/__doctor` (manifest `doctor.sh:200-207`; ours at `app.ts:137`) is untouched. Keep it.
 - **§26 (Task 10).** `EventFrame.actor` is additive, and nothing of ours parses a frame strictly. Our happenings name an
   actor only among the kept members (`keeping/happenings.ts:120-138`), so an administrator who is not a member acts as
-  nobody named today. Whether we tell an owner that an administrator acted, and why, is open question 10. A non-member
+  nobody named today. Whether we tell an owner that an administrator acted, and why, is open question 10 (**yes**: *Part
+  four*). A non-member
   administrator using our pages would meet `400 ADMIN_REASON_REQUIRED` on a mutation, and our page would word it as a
   refusal. Our *Make it* mints its token for the person's own new project, where they are a member, so it is never asked.
 - **Task 8 and our emails.** We email *in trouble* on `incident.opened` (`keeping/happenings.ts:52`). If a hibernation's
@@ -695,3 +696,41 @@ unchecked). Nothing on 7100.
 '<name>'"* for another's agent; *"Your agent '<name>'"* for the reader's own); **m130: ask the platform**, filed as **FE-53**
 (the asking token's `expiresAt` on `pending_action.created`), placed with FE-5 after the faculty-ready plan; **m131 closes when
 FE-53 lands**, open until then; m122's watch half closed by the third minors sitting (`minors.md`).
+
+---
+
+## Part four, adopted: the platform's Task 10 (`EventFrame.actor`, §26) — 2026-10-03 (`manifest-app-5a`, mock mode)
+
+*Spawned by Rich, coordinated by `manifest-94` (the platform's day session). Against manifest `efcaaeb` (Task 10, contract 1.6.0,
+143 codes) and the platform's sitting 5 beside us (`manifest-b9`: Tasks 7, 15, 9 and 16b landed meanwhile; none moved a shape we
+read). Our server in mock mode throughout; 7100 untouched. Rich's question 10: **yes** (12:45 PDT); his words (~13:15 PDT,
+through `manifest-94`): the administrator **named**; *"worked on it"*; **the emails too**; the rest as drafted.*
+
+**What we built** (`e8072e2`, test-first):
+- **The stream hands over `actor`** as the platform sent it (`ProjectEvent.actor`); the round ignores it.
+- **Store version 8:** `history.actor`, JSON as sent (`null` included), SQL null for ours and for every event kept before.
+- **`linesOf`** (`keeping/happenings.ts`): `administratorOf(entry)` reads `actor.asAdministrator === true` with a name and a
+  reason (anything else, or a shape we do not know, is no administrator). A line that says who acted (someone added, made an
+  owner or a helper, taken off; switched off or on; renamed) names the administrator instead of a member (`Line.administrator`);
+  **any other act of theirs is a line of its own**, `{ kind: 'worked-on' }`, id `<event>:administrator`, said before what it led
+  to; **one line per act**: their later events with the same name and reason within an hour of the last fold into it (a deploy
+  is several events; the platform names who started the work on every event the work publishes).
+- **The page's words** (`words.keeping.lines`, Rich's): *"Operator One, a Manifest administrator, switched it off, and said:
+  ‘…’"*, *"…, worked on it, and said: ‘…’"*; on the history page and in *Since you were last here*.
+- **The emails** (`keeping/emails.ts`, `words.ts`): the people emails that named who acted name the administrator and carry the
+  reason (*"Operator One, a Manifest administrator, took Bob Helper off Reading responses, and said: ‘…’. Who's on it is on its
+  page:"*). An act with only a *worked on it* line sends no email (none did before; `manifest-94` told).
+
+**Decided here (ours):** the hour's fold (one act is one line, Rich's *"one line per act"*; *rejected:* a line per event, a
+deploy's four lines); the administrator's line before the line of what it led to; a collaborator acting beyond their role (the
+platform's Task 15) is said as an administrator, the platform's own name for them, not the kept member's. *Cost to change:*
+`ONE_ACT_MS` and `linesOf`'s order.
+
+**Negative controls** (nine, each red, restored by hash): the stream handing no actor (1); the store writing none (2); the
+keeper keeping none (3); an administrator read whatever `asAdministrator` says (1); no fold (2); a line that says who never
+naming the administrator (2); the emails naming members alone (2); the keeper telling the emails of no administrator (1); the
+page saying no administrator (3).
+
+**Gates** (at `e8072e2`): 2803 tests, typecheck, lint and format clean. **The mock streams no administrator** (its events all
+name the instructor; `MANIFEST_MOCK_ADMIN_REASON=1` makes the signed-in person a non-member administrator for the reason
+header alone), so a page or an email of this is seen only in our tests until a sitting on 7100.

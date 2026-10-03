@@ -889,6 +889,11 @@ doesn't tell them yet that it's waiting"* goes.
   - a launch item that is theirs.
 - **"Since you were last here"**, at most five lines, newest first: *"Signed off by <name>, 23 Sep · <TA> was
   added, 25 Sep · Went live, 26 Sep."* **[Everything]** opens the app's history.
+- **A platform administrator who acted on their app is named, with their reason** (§26's *"shown to the project's
+  people"*; Rich, 2026-10-03, question 10 and his words): *"Operator One, a Manifest administrator, switched it off,
+  and said: ‘…’"*; any act of theirs no other line says is *"Operator One, a Manifest administrator, worked on it,
+  and said: ‘…’"*, one line per act; the owners' people emails name them and carry the reason too. **Built**
+  (`e8072e2`, `EventFrame.actor`).
 
 **Fed by:**
 - `listProjects`, then one `getProject?expand=environments`, `listInstances` and `getLaunchReadiness` per app
@@ -1126,6 +1131,8 @@ and you'll come straight back here."* Their agent keeps working.
   taken off, or the app switched off, the platform ends it at once (`pending_action.expired`, FE-52) and the
   band forgets it; it never outlives its agent's own end, where we know that end (an agent let in here).
 - **The question says what it can**: *"Your agent '<token's name>' asked to add a member to this project."*
+  **Whose agent** (m129, Rich's words, 2026-10-03): *"<Name>'s agent '<name>'"* where it is not the reader's own, on the
+  card, the band and each owner's email; *"An agent '<name>'"* when we cannot name its maker.
   - The platform does not store WHO it wanted to add (**FE-5**), so the card says that too: *"It didn't say
     who. If you're not sure, say no."*
   - Yes buys **one** try at that one request (the prototype's words stand).
