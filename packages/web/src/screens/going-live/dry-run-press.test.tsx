@@ -310,6 +310,17 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
     expect(runButton(li)).toBeTruthy()
   })
 
+  it('each press its own Idempotency-Key, never a fixed one (minors m52)', async () => {
+    const first = stage()
+    await press(first)
+    cleanup()
+    forgetDryRuns()
+    const second = stage()
+    await press(second)
+    const keyOf = (s: Stage) => (s.called('runRehearsal') as [[string, string]])[0][1]
+    expect(keyOf(second)).not.toBe(keyOf(first))
+  })
+
   it('the press sends one runRehearsal for this project with its own Idempotency-Key; while it runs: working, its words, you can leave, and nothing to press', async () => {
     const s = stage()
     const li = await press(s)
