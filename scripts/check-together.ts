@@ -316,7 +316,6 @@ async function ask(
   return { status: response.statusCode, json }
 }
 
-/** Every change route on a conversation, with a body that passes its own check (Decision 2). */
 /**
  * A token whose secret names its own id, as the platform's does (`mft_<id>_<secret>`): our
  * hand-overs refuse an id the secret does not name (m122, m83).
@@ -326,6 +325,7 @@ const named = (what: string) => {
   return { token: `mft_${tokenId.replaceAll('-', '')}_check_${RUN}_${what}`, tokenId }
 }
 
+/** Every change route on a conversation, with a body that passes its own check (Decision 2). */
 const CHANGES = (projectId: string) =>
   [
     ['build', {}],

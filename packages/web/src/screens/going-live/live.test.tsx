@@ -573,7 +573,10 @@ describe('the card never outlives what the page reads (the final review’s I1 a
     expect(s.called('deploy')).toHaveLength(1)
   })
 
-  it('a reading that fails mid-deploy never takes the card away: healthy still lands (I2, Review Focus 3)', async () => {
+  // I2's own fallback (the card drawn from the last good reading, `going-live.tsx`'s `lastSeen`) is
+  // reached by no reading today: every reading during a press is a quiet one (the page shown again),
+  // and since m17 a quiet reading that fails keeps the page whole. These two hold the card by m17.
+  it('a reading that fails mid-deploy never takes the card away: healthy still lands (I2, Review Focus 3; held by m17)', async () => {
     const s = await open(stage())
     await pressed(s)
     s.world.failing = ['getLaunchReadiness']
@@ -588,7 +591,7 @@ describe('the card never outlives what the page reads (the final review’s I1 a
     expect(await screen.findByText('Reading responses is live.')).toBeTruthy()
   })
 
-  it('unsure, and a reading whose addresses fail: the watch stays, and its end still lands (I2)', async () => {
+  it('unsure, and a reading whose addresses fail: the watch stays, and its end still lands (I2; held by m17)', async () => {
     const s = await open(stage())
     await pressed(s)
     await s.refuse(ourDeadline())

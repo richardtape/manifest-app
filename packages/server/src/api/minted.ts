@@ -23,7 +23,7 @@ const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
  * A moment in UTC, as the contract's `Token.expiresAt` allows it: seconds and their fraction
  * optional, `Z` only (m86); a date `Date.parse` cannot read is still refused.
  */
-const MOMENT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?Z$/
+const MOMENT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?Z$/
 
 /** A token id handed over beside a secret: absent, or an id. Undefined when it is neither. */
 export function tokenIdOf(value: unknown): string | null | undefined {

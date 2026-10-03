@@ -209,6 +209,7 @@ describe('POST /api/apps/:projectId/agents: an agent of their own, its id alone 
     ['no seconds', '2026-11-01T21:00Z'],
     ['seconds and no fraction', '2026-11-01T21:00:00Z'],
     ['a fraction of nine digits', '2026-11-01T21:00:00.123456789Z'],
+    ['a fraction of thirteen digits', '2026-11-01T21:00:00.1234567890123Z'],
   ])(
     "m86: an expiry the contract's date-time allows, with %s, is kept as sent: 201",
     async (_, expiresAt) => {

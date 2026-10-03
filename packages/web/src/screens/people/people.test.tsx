@@ -428,6 +428,8 @@ describe('refusals, by code (design §2): each says what is still true', () => {
       await waitFor(async () =>
         expect(within(await rowOf('Alex Owner')).getByText(p.helper)).toBeTruthy(),
       )
+      // The button pressed may be gone with the read: the focus is on what was said (the review).
+      expect(screen.getByRole('alert').contains(document.activeElement)).toBe(true)
     },
   )
 

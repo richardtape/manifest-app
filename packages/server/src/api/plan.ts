@@ -30,7 +30,8 @@ export interface Planning {
  * - **A session never outlives its step**: started, used, and ended, whatever happened.
  * - **The one model Config names**, and only if the session offers it; and only on our own
  *   gateway, as the intake's key is.
- * - **A spent allowance says whose, and when it resets** (Rich), from the budget read.
+ * - **A spent allowance says whose, and when it resets** (Rich), from the budget read, or from the
+ *   platform's own `error.limit` when the start refused it (m126), the read filling what it names not.
  * - **Without the token** (a restart forgot it: Decision 1), `409 TOKEN_MISSING`, and the page
  *   mints another and carries on (Review Focus 5).
  * - **A change (F4 Decision 7) takes the same routes**, dispatched on the conversation's piece:
@@ -167,7 +168,8 @@ export function registerPlan(
     } catch (error) {
       // A budget read can be seconds stale ("spend lands a few seconds after a call"), and the
       // platform caches it; its start reads the month fresh, and states it (m126): its limit is
-      // the allowance when it gave one, the read's amount only where it named none.
+      // the allowance when it gave one, the read's amount and reset only where it named none (a
+      // spent allowance says when it resets, Rich).
       if (error instanceof ModelError && error.code === 'MODEL_BUDGET_EXHAUSTED')
         throw new Refused(
           'MODEL_BUDGET_EXHAUSTED',
@@ -175,7 +177,7 @@ export function registerPlan(
             ? allowance
             : {
                 monthlyUsd: error.limit.amountUsd ?? allowance.monthlyUsd,
-                resetsAt: error.limit.resetsAt,
+                resetsAt: error.limit.resetsAt ?? allowance.resetsAt,
               },
         )
       throw error

@@ -436,7 +436,7 @@ describe('POST /api/conversations/:id/plan: written on the person’s agent sess
     })
   })
 
-  it("m126: a limit that states no amount and no reset keeps the read's amount, and says no reset (never a guess)", async () => {
+  it("m126: a limit that states no amount and no reset keeps the read's, so the allowance still says when it resets", async () => {
     const s = await setUp(undefined, {
       start: () =>
         Promise.reject(
@@ -450,7 +450,7 @@ describe('POST /api/conversations/:id/plan: written on the person’s agent sess
     const answer = await post(s, conversation.id, 'plan')
     expect(answer.refusal).toMatchObject({
       code: 'MODEL_BUDGET_EXHAUSTED',
-      allowance: { monthlyUsd: 10, resetsAt: null },
+      allowance: { monthlyUsd: 10, resetsAt: '2026-10-01T00:00:00.000Z' },
     })
   })
 

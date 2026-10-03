@@ -402,6 +402,23 @@ describe('what never leaves the run (Global Constraints)', () => {
     expect(rows).not.toContain('Built.')
   })
 
+  it('m38: a model row written before F5 sitting 2 reads back without received, and the type says it may', () => {
+    const store = openStore(':memory:')
+    store.recordTrace('run-3', {
+      kind: 'model',
+      agent: 'lead',
+      asked: 'default-chat-large',
+      answered: 'default-chat-large',
+      fallback: false,
+      usage: null,
+    })
+    const [row] = storeTrace(store).list('run-3')
+    expect(row?.kind === 'model' ? row.received : 'not a model row').toBeUndefined()
+    if (row?.kind === 'model')
+      // @ts-expect-error m38: a reader must say what it does without `received` (TS18048).
+      expect(() => row.received.chars).toThrow(TypeError)
+  })
+
   it('a platform entry says what it named, with its time, and a token is refused', () => {
     const trace = storeTrace(openStore(':memory:'))
     trace.record('run-2', {

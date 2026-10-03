@@ -1469,10 +1469,17 @@ export function createRounds(deps: RoundDeps): Rounds {
       if (error.code === 'MODEL_NOT_AVAILABLE' && (await narrowedAway(live)))
         return needs({ kind: 'withdrawn' })
       // m126: a start the platform refused for the month states its limit, read fresh: the month,
-      // never the checkpoint a cached budget read would make of it.
+      // never the checkpoint a cached budget read would make of it. Its reset, or the read's when
+      // it names none (a spent month says when it comes back).
       if (error.code === 'MODEL_BUDGET_EXHAUSTED' && error.limit !== null)
         return needs(
-          { kind: 'month', resetsAt: error.limit.resetsAt },
+          {
+            kind: 'month',
+            resetsAt:
+              error.limit.resetsAt ??
+              (await sessions.budget(live.token).catch(() => undefined))?.resetsAt ??
+              null,
+          },
           'MODEL_BUDGET_EXHAUSTED',
           error.requestId,
         )
@@ -1528,9 +1535,6 @@ export function createRounds(deps: RoundDeps): Rounds {
     // Stop wins over anything but a round already built (Review Focus 4).
     const final = live.stopped && ending.kind !== 'done' ? STOPPED : ending
     if (final.kind === 'done' || final.kind === 'stopped') await endSession(live)
-    // m18: built, the cost is read once more: the last answers can fall inside the 5 s between
-    // reads, and nothing reads it after the round.
-    if (final.kind === 'done') await refreshCost(live, true)
     let state: ConversationState = 'building'
     switch (final.kind) {
       case 'done':
@@ -1565,6 +1569,10 @@ export function createRounds(deps: RoundDeps): Rounds {
     store.saveRun(live.run)
     live.running = false
     publishState(hub, store, store.setState(live.conversation.id, state))
+    // m18: built, the cost is read once more: the last answers can fall inside the 5 s between
+    // reads, and nothing reads it after the round. After `done` is said, so it never waits on it
+    // (the review).
+    if (final.kind === 'done') void refreshCost(live, true)
   }
 
   /** One leg of a round, as one piece of work: from a start, a Carry on, or an answer. */

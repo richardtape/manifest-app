@@ -113,8 +113,9 @@ export function People({
   const [status, setStatus] = useState<string | null>(null)
   /** Where the focus goes once the page is drawn again: a row's first or last button, or the status. */
   const [focusOn, setFocusOn] = useState<
-    { userId: string; which: 'first' | 'last' } | 'status' | null
+    { userId: string; which: 'first' | 'last' } | 'status' | 'said' | null
   >(null)
+  const saidRef = useRef<HTMLDivElement>(null)
   const actions = useRef(new Map<string, HTMLDivElement>())
   const statusRef = useRef<HTMLParagraphElement>(null)
   const { at: addAt, back: focusAdd } = useFocusBack<HTMLDivElement>()
@@ -167,6 +168,7 @@ export function People({
     if (focusOn === null) return
     setFocusOn(null)
     if (focusOn === 'status') return statusRef.current?.focus()
+    if (focusOn === 'said') return saidRef.current?.focus()
     const buttons = actions.current.get(focusOn.userId)?.querySelectorAll('button')
     const button =
       focusOn.which === 'first' ? buttons?.[0] : buttons?.[buttons.length - 1]
@@ -183,28 +185,32 @@ export function People({
   }
 
   /** A press that did not go through: the second sign-in, the design's words, or F5's. */
-  const didNotGo = (error: unknown, operation: string): 'step-up' | 'said' => {
+  const didNotGo = (error: unknown, operation: string): 'step-up' | 'said' | 'moved' => {
     if (!live.current) return 'said'
     setPressing(null)
     const code = codeOf(error)
-    // m93: the list moved under them (the other owner left meanwhile, or they are no longer an
-    // owner themselves): it is read again, so the page shows what is true now.
-    if (code !== null && MOVED.has(code)) readAgain()
     if (code === 'STEP_UP_REQUIRED') {
       setStepUp(true)
       return 'step-up'
     }
     const known = code === null ? null : refusalWords(code)
-    if (known !== null) {
-      setSaid({ kind: 'words', text: known })
-      return 'said'
+    if (known !== null) setSaid({ kind: 'words', text: known })
+    else {
+      const failed = pressFailed(error, operation)
+      if (failed.expired) {
+        expire()
+        return 'said'
+      }
+      setSaid({ kind: 'notice', notice: failed })
     }
-    const failed = pressFailed(error, operation)
-    if (failed.expired) {
-      expire()
-      return 'said'
+    // m93: the list moved under them (the other owner left meanwhile, or they are no longer an
+    // owner themselves): it is read again, so the page shows what is true now; the button pressed
+    // may go with it, so the focus is on what was said (the review).
+    if (code !== null && MOVED.has(code)) {
+      readAgain()
+      setFocusOn('said')
+      return 'moved'
     }
-    setSaid({ kind: 'notice', notice: failed })
     return 'said'
   }
 
@@ -218,13 +224,14 @@ export function People({
         crypto.randomUUID(),
       )
     } catch (error) {
-      if (didNotGo(error, 'addMember') === 'step-up') {
+      const went = didNotGo(error, 'addMember')
+      if (went === 'step-up') {
         try {
           sessionStorage.setItem(keyOf(project.id), JSON.stringify({ typed, role }))
         } catch {
           // Kept nowhere: they type it again.
         }
-      } else focusAdd()
+      } else if (went === 'said') focusAdd()
       return
     }
     if (!live.current) return
@@ -260,9 +267,9 @@ export function People({
     try {
       await platform.removeMember(project.id, member.userId, crypto.randomUUID())
     } catch (error) {
-      didNotGo(error, 'removeMember')
+      const went = didNotGo(error, 'removeMember')
       setConfirming(null)
-      setFocusOn({ userId: member.userId, which: 'last' })
+      if (went !== 'moved') setFocusOn({ userId: member.userId, which: 'last' })
       return
     }
     if (!live.current) return
@@ -408,7 +415,7 @@ export function People({
             <p className="body">{words.goingLive.letIn.again}</p>
           ) : null}
           {said === undefined ? null : (
-            <div role="alert">
+            <div role="alert" ref={saidRef} tabIndex={-1}>
               <Card tone="attention">
                 {said.kind === 'words' ? (
                   <p className="body-lead">{withAddress(said.text)}</p>
