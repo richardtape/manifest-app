@@ -266,8 +266,8 @@ export function openAiCompatible(options: {
               let payload: unknown
               try {
                 payload = JSON.parse(await response.text())
-              } catch (error) {
-                if (why !== null) throw failed(error)
+              } catch {
+                // A body that stalls, breaks or is not JSON: the status has said it (m31).
                 payload = undefined
               }
               throw refusal(response.status, payload)

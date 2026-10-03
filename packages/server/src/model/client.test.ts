@@ -367,6 +367,37 @@ describe('openAiCompatible: when the gateway refuses (LiteLLM 1.98.0, as the pla
     expect(error.received).toMatchObject({ chars: 0, firstWordMs: null })
   })
 
+  /**
+   * A gateway answering `status` and a body that never sends a byte, nor ends; like the real
+   * fetch, an aborted request errors the body.
+   */
+  const stallingBody = (status: number) =>
+    (async (_url: string, init: RequestInit) => {
+      const signal = init.signal!
+      const body = new ReadableStream<Uint8Array>({
+        start(c) {
+          signal.addEventListener('abort', () => c.error(signal.reason))
+        },
+      })
+      return new Response(body, {
+        status,
+        headers: { 'content-type': 'application/json' },
+      })
+    }) as unknown as typeof fetch
+
+  it("m31: a refusal whose body stalls is its status's refusal, never a stall", async () => {
+    const error = await codeOf(
+      openAiCompatible({
+        baseUrl: 'http://127.0.0.1:9/v1',
+        key: KEY,
+        model: 'm',
+        fetch: stallingBody(401),
+        deadlines: { firstWordMs: 100, quietMs: 100, ceilingMs: 1000 },
+      }).complete('a', Guess, MESSAGES),
+    )
+    expect([error.code, error.status]).toEqual(['MODEL_KEY_REFUSED', 401])
+  })
+
   it("an error chunk mid-answer is MODEL_UNREACHABLE, not retried, and never the gateway's words", async () => {
     const broken = [
       `data: ${JSON.stringify({ choices: [{ delta: { content: '{"restatement":' } }] })}\n\n`,
