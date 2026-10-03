@@ -905,6 +905,14 @@ describe('M1: our deadline is not the platform’s answer (Review Focus 3)', () 
     expect(polls()).toBe(ended)
   })
 
+  it('an older browser’s AbortError for our deadline is unsure too, never "couldn’t" (minors m44)', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    await s.refuse(new DOMException('The operation was aborted.', 'AbortError'))
+    expect(await screen.findByText(t.unsure)).toBeTruthy()
+    expect(screen.queryByText(t.couldnt)).toBeNull()
+  })
+
   it('cut, then the new instance fails: the two facts, and this attempt’s [What went wrong]', async () => {
     const s = await open(stage())
     await putOn(s)

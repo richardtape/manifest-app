@@ -29,9 +29,14 @@ export type Missing = { name: string; ask: string | null }
  * M1 (F5 Decision 11): OUR DEADLINE CUT THE WAIT, NOT THE PLATFORM'S ANSWER. `AbortSignal.timeout`
  * rejects `fetch` with a `TimeoutError` (platform/api.ts): the request went, and the deploy may
  * still finish. A connection refused (a `TypeError`) sent nothing, and is a press that did not go.
+ * An older browser says `AbortError` for the same deadline, and nothing else of ours aborts a
+ * request (minors m44; `refusal.ts` reads both alike).
  */
 export function cutByOurDeadline(error: unknown): boolean {
-  return error instanceof DOMException && error.name === 'TimeoutError'
+  return (
+    error instanceof DOMException &&
+    (error.name === 'TimeoutError' || error.name === 'AbortError')
+  )
 }
 
 /** A new instance in these states never answered, and is not going to (M1). */
