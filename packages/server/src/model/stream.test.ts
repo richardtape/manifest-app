@@ -157,6 +157,24 @@ describe('chunksOf: an answer the gateway could not finish', () => {
     expect((await refusal(body(event(delta('{"a":'))))).code).toBe('MODEL_UNREACHABLE')
   })
 
+  it.each([
+    ['the whole body null', 'null'],
+    ['the whole body null, with a trailing newline (minors m34)', 'null\n'],
+    ['the whole body null, with a CRLF', 'null\r\n'],
+    ['one data: null and no blank line after it (minors m34)', 'data: null\n'],
+  ])(
+    'a provider’s refusal (FE-34), as %s: MODEL_ANSWER_INVALID (422)',
+    async (_, text) => {
+      const error = await refusal(body(text))
+      expect([error.code, error.status]).toEqual(['MODEL_ANSWER_INVALID', 422])
+    },
+  )
+
+  it('a body that only starts like null is no refusal: MODEL_UNREACHABLE', async () => {
+    expect((await refusal(body('nullish\n'))).code).toBe('MODEL_UNREACHABLE')
+    expect((await refusal(body('null\ndata: {\n'))).code).toBe('MODEL_UNREACHABLE')
+  })
+
   it('an event that is not JSON is MODEL_UNREACHABLE', async () => {
     expect((await refusal(body('data: {"choices": [\n\n', DONE))).code).toBe(
       'MODEL_UNREACHABLE',

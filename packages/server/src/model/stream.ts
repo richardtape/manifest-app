@@ -70,12 +70,16 @@ export async function* chunksOf(body: ReadableStream<Uint8Array>): AsyncIterable
   let buffered = ''
   let data: string[] = []
   let events = 0
+  // The body's first characters, enough to know one that is only `null` however it ends.
+  let head = ''
   try {
     for (;;) {
       const read = await reader.read()
-      buffered += read.done
+      const text = read.done
         ? decoder.decode()
         : decoder.decode(read.value, { stream: true })
+      buffered += text
+      if (head.length < 32) head += text
       let end: number
       while ((end = buffered.search(/\r?\n/)) !== -1) {
         const line = buffered.slice(0, end)
@@ -92,8 +96,10 @@ export async function* chunksOf(body: ReadableStream<Uint8Array>): AsyncIterable
         }
         // A comment (`:`), or a field we do not read (`event`, `id`, `retry`).
       }
+      // A body that is only `null` (or one `data: null` never closed by a blank line), however
+      // it ends: the provider's refusal, never the gateway gone (minors m34).
       if (read.done)
-        throw events === 0 && buffered.trim() === 'null'
+        throw events === 0 && /^(data: ?)?null$/.test(head.trim())
           ? new ModelError('MODEL_ANSWER_INVALID', REFUSED_AS_NULL)
           : new ModelError('MODEL_UNREACHABLE')
     }
