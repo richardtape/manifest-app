@@ -29,9 +29,9 @@
  *                            answered No; then revoked
  *   node $W off              colleague asks another change; instructor takes colleague off: their
  *                            work ended, said, and theirs no more
- *   node $W tidy             BEFORE RICH'S CLICK: every active Keeping watch our server does not
- *                            keep revoked as its minter (Decision 4's residual), every question left
- *                            answered no
+ *   node $W tidy             BEFORE RICH'S CLICK: every active token our server does not know
+ *                            revoked as its minter (Decision 4's residual; the review's M4), every
+ *                            question left answered no
  *   node $W mail             every email the walk caused, word for word, to <out>/emails.md
  *
  * `OUT=<dir>` (default `$TMPDIR/together-7100`). `APP=<origin>` (default the edge's). Our server
@@ -778,18 +778,21 @@ async function tidy() {
   const projectId = need('projectId')
   const owner = await as('instructor')
   const minted = (await owner.call('GET', `/api/apps/${projectId}/minted`)).body
-  const ours = new Set(
-    (list(minted, 'ours') as { tokenId: string }[]).map((t) => t.tokenId),
-  )
+  // Every token our server knows: ours, and the agents our page let in. Anything else active was
+  // minted under an older dev database (sitting 1's watch, conversation and measurement tokens: the
+  // whole-branch review's M4), and Agents would list it under Your agents at Rich's click.
+  const ours = new Set([
+    ...(list(minted, 'ours') as { tokenId: string }[]).map((t) => t.tokenId),
+    ...(list(minted, 'agents') as { tokenId: string }[]).map((t) => t.tokenId),
+  ])
   const active = (await tokensOf(owner, projectId)).filter(
     (t) => !t.revokedAt && !t.expired,
   )
-  for (const token of active.filter(
-    (t) => t.name === 'Keeping watch' && !ours.has(t.id),
-  )) {
+  for (const token of active.filter((t) => !ours.has(t.id))) {
+    // Only its minter may revoke it (S1: M5): another's answers 404, and is said.
     const revoked = await owner.change('DELETE', `/v1/tokens/${token.id}`)
     log(
-      `a leftover Keeping watch ${token.id.slice(0, 8)} (last used ${token.lastUsedAt}): revoked ${revoked.status}`,
+      `a leftover token '${token.name}' ${token.id.slice(0, 8)} (last used ${token.lastUsedAt}): revoked ${revoked.status}`,
     )
   }
   for (const question of (await questionsOf(owner, projectId)).filter(
@@ -813,9 +816,9 @@ async function tidy() {
     `active tokens now: ${left.map((t) => `${t.name} ${t.id.slice(0, 8)}${ours.has(t.id) ? ' (ours)' : ''}`).join(', ')}`,
   )
   report.check(
-    'every active Keeping watch is the one our server keeps',
-    left.filter((t) => t.name === 'Keeping watch').every((t) => ours.has(t.id)),
-    `${left.filter((t) => t.name === 'Keeping watch').length} active`,
+    'every active token is one our server knows',
+    left.every((t) => ours.has(t.id)),
+    `${left.length} active, ${left.filter((t) => !ours.has(t.id)).length} not ours`,
   )
 }
 
