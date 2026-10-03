@@ -312,32 +312,43 @@ describe('needWords: each need, its sentence and its button', () => {
     })
   })
 
-  it.each([true, false])(
-    'their agent’s question (F6b Task 12), to an owner (%s) or a helper: Agents, where it is answered or said who can',
-    (owner) => {
-      const need: Need = {
-        kind: 'agent-asks',
-        app,
-        pendingActionId: 'q',
-        tokenId: 't',
-        action: 'members:manage',
-        at: AT,
-        expiresAt: '2026-10-02T17:03:00.000Z',
-        owner,
-        whose: 'yours',
-      }
-      expect(needWords(need, TZ)).toEqual({
-        says: 'Reading responses: your agent is asking something.',
-        button: { label: 'Agents', href: '/apps/reading-responses/agents' },
+  const asks = (owner: boolean): Need => ({
+    kind: 'agent-asks',
+    app,
+    pendingActionId: 'q',
+    tokenId: 't',
+    action: 'members:manage',
+    at: AT,
+    expiresAt: '2026-10-02T17:03:00.000Z',
+    owner,
+    whose: 'yours',
+  })
+
+  it('their agent’s question (F6b Task 12), to an owner: Agents, where it is answered', () => {
+    const need = asks(true)
+    expect(needWords(need, TZ)).toEqual({
+      says: 'Reading responses: your agent is asking something.',
+      button: { label: 'Agents', href: '/apps/reading-responses/agents' },
+    })
+    // m132 (Rich's words for m129): another's by name; one whose maker we cannot name, an agent.
+    expect(needWords({ ...need, whose: { name: 'Sam Helper' } }, TZ).says).toBe(
+      "Reading responses: Sam Helper's agent is asking something.",
+    )
+    expect(needWords({ ...need, whose: { name: null } }, TZ).says).toBe(
+      'Reading responses: an agent is asking something.',
+    )
+    expect(machineryIn(needWords(need, TZ).says)).toEqual([])
+  })
+
+  it.each(['yours', { name: 'Sam Helper' }, { name: null }] as const)(
+    'their agent’s question, to a helper: an owner answers it, and no button (m109, Rich’s words): %o',
+    (whose) => {
+      const said = needWords({ ...asks(false), whose } as Need, TZ)
+      expect(said).toEqual({
+        says: "Reading responses: an agent is waiting for an owner's answer.",
+        button: null,
       })
-      // m132 (Rich's words for m129): another's by name; one whose maker we cannot name, an agent.
-      expect(needWords({ ...need, whose: { name: 'Sam Helper' } }, TZ).says).toBe(
-        "Reading responses: Sam Helper's agent is asking something.",
-      )
-      expect(needWords({ ...need, whose: { name: null } }, TZ).says).toBe(
-        'Reading responses: an agent is asking something.',
-      )
-      expect(machineryIn(needWords(need, TZ).says)).toEqual([])
+      expect(machineryIn(said.says)).toEqual([])
     },
   )
 })

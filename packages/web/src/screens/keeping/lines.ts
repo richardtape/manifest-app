@@ -197,11 +197,14 @@ export function needWords(
         says: b.goingLive(name),
         button: { label: b.goingLiveButton, href: appPath(need.app, '/going-live') },
       }
-    // F6b Task 12: to everyone on it; *Agents* says who may answer (FE-50).
+    // F6b Task 12: to everyone on it. An owner answers it on *Agents*; a helper is told who can,
+    // with no button (m109, Rich's words), as `down` tells them.
     case 'agent-asks':
-      return {
-        says: b.agent(name, need.whose),
-        button: { label: b.agents, href: appPath(need.app, '/agents') },
-      }
+      return need.owner
+        ? {
+            says: b.agent(name, need.whose),
+            button: { label: b.agents, href: appPath(need.app, '/agents') },
+          }
+        : { says: b.agentHelper(name), button: null }
   }
 }

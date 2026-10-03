@@ -676,6 +676,8 @@ export const words = {
       /** m132, Rich's words for m129 (2026-10-03): whose agent, to the one reading. */
       agent: (app: string, whose: Whose) =>
         `${app}: ${whose === 'yours' ? 'your agent' : whose.name === null ? 'an agent' : `${whose.name}'s agent`} is asking something.`,
+      /** m109, Rich's words (2026-10-03): a helper's, who cannot answer it; no button. */
+      agentHelper: (app: string) => `${app}: an agent is waiting for an owner's answer.`,
       agents: 'Agents',
     },
     since: {
