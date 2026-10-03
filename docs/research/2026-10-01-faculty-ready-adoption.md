@@ -703,7 +703,7 @@ FE-53 lands**, open until then; m122's watch half closed by the third minors sit
 
 *Spawned by Rich, coordinated by `manifest-94` (the platform's day session). Against manifest `efcaaeb` (Task 10, contract 1.6.0,
 143 codes) and the platform's sitting 5 beside us (`manifest-b9`: Tasks 7, 15, 9 and 16b landed meanwhile; none moved a shape we
-read). Our server in mock mode throughout; 7100 untouched. Rich's question 10: **yes** (12:45 PDT); his words (~13:15 PDT,
+read). Our server in mock mode throughout; 7100 untouched. Rich's question 10: **yes** (12:45 PDT); his words (~13:12 PDT,
 through `manifest-94`): the administrator **named**; *"worked on it"*; **the emails too**; the rest as drafted.*
 
 **What we built** (`e8072e2`, test-first):
