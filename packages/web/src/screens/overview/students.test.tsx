@@ -170,12 +170,24 @@ function stage(world: Partial<World> = {}) {
         : Promise.resolve(w.rows)
     },
   } as Record<string, unknown>
-  const ours = new Proxy(theirs, {
-    get: (target, name: string) => (name in target ? target[name] : never),
-  }) as unknown as Ours
+  /** m49: every call the page makes of either, by name, the ones that never answer included. */
+  const touched: string[] = []
+  const heard = <T extends object>(target: T): T =>
+    new Proxy(target, {
+      get: (on, name: string) => {
+        const value = (on as Record<string, unknown>)[name] ?? never
+        return typeof value === 'function'
+          ? (...args: unknown[]) => (
+              touched.push(name),
+              (value as (...a: unknown[]) => unknown)(...args)
+            )
+          : value
+      },
+    })
+  const ours = heard(theirs) as unknown as Ours
   const called = (name: string) =>
     calls.filter((c) => c[0] === name).map((c) => c.slice(1))
-  return { platform, ours, called }
+  return { platform: heard(platform), ours, called, touched }
 }
 
 const copied: string[] = []
@@ -266,12 +278,17 @@ describe('for your students: the address handed over (moment 15)', () => {
   })
 
   it('the message is theirs to change, and Copy copies what they wrote; nothing is saved', async () => {
-    await open()
+    const s = await open()
     const region = await handOver()
+    const before = s.touched.length
     fireEvent.change(message(region), { target: { value: 'Post by Friday: ' + URL_ } })
     fireEvent.click(within(region).getByRole('button', { name: copyOf(s_.copyMessage) }))
     await waitFor(() => expect(copied).toEqual([`Post by Friday: ${URL_}`]))
-    // Nothing sent anywhere, nothing kept in the browser.
+    // Nothing sent anywhere (m49: the page asks only its two fakes, so they are what is heard;
+    // a read may come, a change never), nothing kept in the browser.
+    expect(s.touched.slice(before).filter((name) => !/^(get|list)/.test(name))).toEqual(
+      [],
+    )
     expect(fetched).toEqual([])
     expect(window.localStorage.length).toBe(0)
     expect(window.sessionStorage.length).toBe(0)
