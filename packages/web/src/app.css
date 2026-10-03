@@ -1538,3 +1538,14 @@
   width: 100%;
   resize: vertical;
 }
+/* The guide's addresses are one long word each: they break anywhere rather than run past the card
+   (the walk, 375). */
+.agents__made .mono {
+  overflow-wrap: anywhere;
+}
+/* At a phone's width the boxes stack: two columns ran a long capability past its box (the walk, 375). */
+@media (max-width: 599px) {
+  .agents__make .mf-choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
