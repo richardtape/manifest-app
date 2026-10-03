@@ -156,7 +156,9 @@ export function publishLine(
 
 /**
  * A REFUSAL, WITH ITS SUPPORT REFERENCE (Decision 11). The row is written before the frame
- * is sent, so a person who quotes the reference the moment they see it can be found.
+ * is sent, so a person who quotes the reference the moment they see it can be found. The
+ * platform's own request id (FE-30), when there is one, is kept in the row and its line, and
+ * never sent to the page (C3).
  */
 export function publishRefusal(
   hub: Hub,
@@ -166,11 +168,13 @@ export function publishRefusal(
     code,
     operation,
     allowance,
+    requestId = null,
   }: {
     conversation: Conversation
     code: string
     operation: string
     allowance?: Allowance | undefined
+    requestId?: string | null
   },
   write?: (line: string) => void,
 ): string {
@@ -182,7 +186,7 @@ export function publishRefusal(
       status: null,
       personId: conversation.personId,
       conversationId: conversation.id,
-      platformRequestId: null,
+      platformRequestId: requestId,
     },
     write,
   )

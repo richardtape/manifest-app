@@ -5,11 +5,13 @@ import { platformBuilds } from './builds.js'
 import { platformDetails } from './details.js'
 import { platformInstances } from './instances.js'
 import { platformMembers } from './members.js'
+import { ManifestApiError } from '@manifest/contract'
 import {
   CommitRefused,
   DEPLOY_TIMEOUT_MS,
   PLATFORM_TIMEOUT_MS,
   PlatformRefusal,
+  refusalFrom,
 } from './refusal.js'
 import { platformReleases } from './releases.js'
 import { platformSecrets } from './secrets.js'
@@ -1032,6 +1034,25 @@ describe('details: what the manifest asks of the people who sign in, and what pr
       }),
     )
     expect(await platformDetails(submitted.origin).registered(TOKEN, PROJECT)).toBeNull()
+  })
+})
+
+describe("FE-30: a refusal keeps the platform's request id (contract 1.6.0)", () => {
+  const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+  it("the envelope's id, else the header's; with neither, null", () => {
+    const envelope = { error: { code: 'SOURCE_CONFLICT', message: 'm', requestId: ID } }
+    expect(
+      refusalFrom(new ManifestApiError(409, envelope as never, 'createCommit')),
+    ).toMatchObject({ code: 'SOURCE_CONFLICT', status: 409, requestId: ID })
+    expect(refusalFrom(new ManifestApiError(500, undefined, 'x', ID))).toMatchObject({
+      code: 'UNPARSEABLE',
+      requestId: ID,
+    })
+    expect(refusalFrom(new ManifestApiError(502, undefined, 'x')).requestId).toBeNull()
+    expect(refusalFrom(new TypeError('fetch failed')).requestId).toBeNull()
+  })
+  it('a refusal made by hand has none', () => {
+    expect(new PlatformRefusal('X', 409).requestId).toBeNull()
   })
 })
 

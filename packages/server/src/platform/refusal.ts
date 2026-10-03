@@ -3,12 +3,15 @@ import { createManifestClient, ManifestApiError } from '@manifest/contract'
 /**
  * WHAT THE PLATFORM REFUSED, AS OUR SERVER CARRIES IT: its code and status, and never its
  * message, which can carry machinery, or name what a message may never be parsed for (FE-29).
- * Nothing the platform was not reached at all is `PLATFORM_UNAVAILABLE`.
+ * Nothing the platform was not reached at all is `PLATFORM_UNAVAILABLE`. **And the platform's
+ * own id for the request** (FE-30, contract 1.6.0), when it gave one: kept in our problem row
+ * and its line beside our reference, so the reference a person quotes finds the platform's line.
  */
 export class PlatformRefusal extends Error {
   constructor(
     readonly code: string,
     readonly status: number | null,
+    readonly requestId: string | null = null,
   ) {
     super(status === null ? code : `${code} (${status})`)
     this.name = 'PlatformRefusal'
@@ -20,8 +23,8 @@ export function refusalFrom(error: unknown): PlatformRefusal {
   if (error instanceof ManifestApiError) {
     // The edge's empty 502/503/504 when the control plane is down (F1 M7).
     if (error.code === 'UNPARSEABLE' && [502, 503, 504].includes(error.status))
-      return new PlatformRefusal('PLATFORM_UNAVAILABLE', error.status)
-    return new PlatformRefusal(error.code, error.status)
+      return new PlatformRefusal('PLATFORM_UNAVAILABLE', error.status, error.requestId)
+    return new PlatformRefusal(error.code, error.status, error.requestId)
   }
   // fetch's TypeError, or our deadline's DOMException: nothing answered.
   return new PlatformRefusal('PLATFORM_UNAVAILABLE', null)
@@ -44,8 +47,9 @@ export class CommitRefused extends PlatformRefusal {
     code: string,
     status: number | null,
     readonly details: { path: string; code: string; hint: string | null }[],
+    requestId: string | null = null,
   ) {
-    super(code, status)
+    super(code, status, requestId)
     this.name = 'CommitRefused'
   }
 }

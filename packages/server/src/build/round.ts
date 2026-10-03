@@ -145,15 +145,26 @@ type Ending =
   | { kind: 'paused' }
   | { kind: 'stopped' }
   /** `code` names the problem behind it, for its support reference; null when it is none. */
-  | { kind: 'needs'; needs: Needs; code: string | null }
+  | {
+      kind: 'needs'
+      needs: Needs
+      code: string | null
+      /** FE-30: the platform's id for the request it refused, kept beside the reference. */
+      requestId: string | null
+    }
 type Outcome = Ending | { kind: 'next' }
 
 const STOPPED: Ending = { kind: 'stopped' }
 const NEXT: Outcome = { kind: 'next' }
-const needs = (what: Needs, code: string | null = null): Ending => ({
+const needs = (
+  what: Needs,
+  code: string | null = null,
+  requestId: string | null = null,
+): Ending => ({
   kind: 'needs',
   needs: what,
   code,
+  requestId,
 })
 
 /** What the round holds in memory for one conversation: its key and token never leave here. */
@@ -414,14 +425,14 @@ export function createRounds(deps: RoundDeps): Rounds {
     return listed.some((instance) => instance.serving)
   }
 
-  function reference(live: Live, code: string): string {
+  function reference(live: Live, code: string, requestId: string | null = null): string {
     return problem(store, {
       code,
       operation: 'conversation round',
       status: null,
       personId: live.conversation.personId,
       conversationId: live.conversation.id,
-      platformRequestId: null,
+      platformRequestId: requestId,
     })
   }
 
@@ -1488,8 +1499,12 @@ export function createRounds(deps: RoundDeps): Rounds {
     if (error instanceof PlatformRefusal) {
       if (error.status === 401) return needs({ kind: 'token' })
       if (error.code === 'PLATFORM_UNAVAILABLE')
-        return needs({ kind: 'unreachable', what: 'platform' }, error.code)
-      return needs({ kind: 'refused', code: error.code }, error.code)
+        return needs(
+          { kind: 'unreachable', what: 'platform' },
+          error.code,
+          error.requestId,
+        )
+      return needs({ kind: 'refused', code: error.code }, error.code, error.requestId)
     }
     if (error instanceof Refused)
       return needs({ kind: 'refused', code: error.code }, error.code)
@@ -1530,7 +1545,8 @@ export function createRounds(deps: RoundDeps): Rounds {
       case 'needs':
         live.run.status = 'needs-you'
         d.needs = final.needs
-        d.reference = final.code === null ? null : reference(live, final.code)
+        d.reference =
+          final.code === null ? null : reference(live, final.code, final.requestId)
         if (final.needs.kind === 'token') deps.tokens.drop(live.conversation.id)
         break
     }
@@ -1765,6 +1781,7 @@ export function createRounds(deps: RoundDeps): Rounds {
             conversation: now(),
             code: codeOf(error),
             operation: 'setAppSecret',
+            requestId: error instanceof PlatformRefusal ? error.requestId : null,
           })
           return
         }

@@ -373,6 +373,20 @@ describe('POST /api/conversations/:id/plan: written on the person’s agent sess
     expect(s.named('end')).toEqual([[TOKEN, 'session-1']])
   })
 
+  it("FE-30: the platform's request id is kept in the refusal's problem row, never sent to the page", async () => {
+    const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const s = await setUp(undefined, {
+      pack: () => Promise.reject(new PlatformRefusal('FORBIDDEN', 403, ID)),
+    })
+    const conversation = made(s)
+    const answer = await post(s, conversation.id, 'plan')
+    const { reference } = answer.refusal as { reference: string }
+    expect(JSON.parse(dumpAll(s.file)['problems']!)).toEqual([
+      expect.objectContaining({ reference, code: 'FORBIDDEN', platform_request_id: ID }),
+    ])
+    expect(JSON.stringify(answer.frames)).not.toContain(ID)
+  })
+
   it('the allowance used up (remainingUsd 0): needs you, whose it is and when it resets, and no session started', async () => {
     const s = await setUp(undefined, {
       budget: () =>

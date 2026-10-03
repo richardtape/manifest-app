@@ -72,7 +72,7 @@ function commitRefusal(error: unknown): Error {
       code: detail.code,
       hint: detail.hint ?? null,
     }))
-    return new CommitRefused(error.code, error.status, details)
+    return new CommitRefused(error.code, error.status, details, error.requestId)
   }
   return refusalFrom(error)
 }

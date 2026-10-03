@@ -1727,6 +1727,27 @@ describe('m19: the platform’s passing git failure (SOURCE_GIT_FAILED: “retry
     expect(h.did.filter((d) => d.startsWith('getTree'))).toHaveLength(2)
   })
 
+  it("FE-30: the platform's request id is kept beside the reference, and nothing else of it", async () => {
+    const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      tree: () => {
+        throw new PlatformRefusal('SOURCE_GIT_FAILED', 409, ID)
+      },
+    })
+    await untilStatus(h, id, 'needs-you')
+    const reference = viewOf(h, id)?.reference
+    expect(reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(JSON.parse(dumpAll(h.file)['problems']!)).toEqual([
+      expect.objectContaining({
+        reference,
+        code: 'SOURCE_GIT_FAILED',
+        place: 'server',
+        platform_request_id: ID,
+      }),
+    ])
+  })
+
   it('a commit is never asked again (a write has its own dry run and key)', async () => {
     const { h, id } = await startedRound({
       script: STRAIGHT,

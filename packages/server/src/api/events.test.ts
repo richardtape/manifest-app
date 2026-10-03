@@ -320,6 +320,33 @@ describe('GET /api/conversations/:id/events', () => {
     ])
   })
 
+  it("FE-30: a refusal's problem row and line keep the platform's request id; the frame never carries it", async () => {
+    const f = file()
+    const { base, store, hub, app } = await serve(f)
+    closers.push(
+      () => app.close(),
+      () => store.close(),
+    )
+    store.rememberPerson(ALICE)
+    const made = store.createConversation(ALICE.id, WORDS)
+    const stream = await open(base, made.id)
+    await stream.until(() => stream.frames.length >= 1)
+    const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const lines: string[] = []
+    const reference = publishRefusal(
+      hub,
+      store,
+      { conversation: made, code: 'FORBIDDEN', operation: 'intake', requestId: ID },
+      (line) => lines.push(line),
+    )
+    await stream.until(() => stream.frames.length >= 2)
+    expect(stream.frames[1]).toEqual({ kind: 'refusal', code: 'FORBIDDEN', reference })
+    expect(JSON.parse(dumpAll(f)['problems']!)).toEqual([
+      expect.objectContaining({ reference, platform_request_id: ID }),
+    ])
+    expect(JSON.parse(lines[0]!)).toMatchObject({ reference, platformRequestId: ID })
+  })
+
   it('an idle stream carries a comment line on the heartbeat, and is never ended', async () => {
     const f = file()
     const { base, store, app } = await serve(f, 40)
