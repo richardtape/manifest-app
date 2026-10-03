@@ -28,6 +28,7 @@ function fakes(
     status?: Status | (() => Promise<Status>)
     kept?: 'new' | 'current'
     mint?: () => Promise<Schemas['MintedToken']>
+    hand?: () => Promise<never>
   } = {},
 ) {
   const did: string[] = []
@@ -70,6 +71,7 @@ function fakes(
     ) => {
       did.push(`hand ${projectId}`)
       handed.push({ projectId, ...h })
+      if (options.hand) return options.hand()
       return { kept: options.kept ?? 'new' }
     },
   } as unknown as Ours
@@ -130,6 +132,21 @@ describe('ensureWatch (design §1, Decision 5)', () => {
     const f = fakes()
     await ensureWatch(f.platform, f.ours, { id: P, state: 'archived' }, NOW)
     expect(f.did).toEqual([])
+  })
+
+  it('our server’s hand-over fails after the mint (minors m66): the token just minted is revoked, nothing thrown', async () => {
+    const f = fakes({ hand: () => Promise.reject(new Error('UNREACHABLE')) })
+    await expect(ensureWatch(f.platform, f.ours, active, NOW)).resolves.toBeUndefined()
+    expect(f.did).toEqual([`keeping ${P}`, `mint ${P}`, `hand ${P}`, `revoke ${NEW}`])
+  })
+
+  it('the hand-over fails on someone’s own old token: only the new one is revoked, theirs is still our server’s', async () => {
+    const f = fakes({
+      status: { watching: true, until: inDays(20), tokenId: OLD, mine: true },
+      hand: () => Promise.reject(new Error('UNREACHABLE')),
+    })
+    await ensureWatch(f.platform, f.ours, active, NOW)
+    expect(f.did).toEqual([`keeping ${P}`, `mint ${P}`, `hand ${P}`, `revoke ${NEW}`])
   })
 
   it.each([

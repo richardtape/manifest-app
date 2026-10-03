@@ -40,8 +40,9 @@ const good = (status: Status, now: Date) =>
  * Mints and hands over when no token works, or under 30 days are left; **never for an app switched
  * off** (Review Focus 4: `mintToken` would be `409 PROJECT_ARCHIVED`). When our server already had
  * a good one, the token just minted is revoked (Review Focus 2); when a new one replaces the
- * person's own, theirs is revoked (only its minter may: another's is left to expire). **Never
- * throws**: a failure waits for the next visit, and says nothing.
+ * person's own, theirs is revoked (only its minter may: another's is left to expire); when the
+ * hand-over fails, the token just minted is revoked. **Never throws**: a failure waits for the next
+ * visit, and says nothing.
  */
 export async function ensureWatch(
   platform: Platform,
@@ -54,14 +55,20 @@ export async function ensureWatch(
     const status: unknown = await ours.keeping(project.id)
     if (!isStatus(status) || good(status, now)) return
     const minted = await platform.mintToken(project.id, WATCH, crypto.randomUUID())
-    const { kept } = await ours.handWatch(project.id, {
-      token: minted.secret,
-      tokenId: minted.token.id,
-      expiresAt: minted.token.expiresAt,
-    })
     const revoke = (tokenId: string) =>
       platform.revokeToken(tokenId, crypto.randomUUID()).catch(() => undefined)
-    if (kept === 'current') await revoke(minted.token.id)
+    const handed = await ours
+      .handWatch(project.id, {
+        token: minted.secret,
+        tokenId: minted.token.id,
+        expiresAt: minted.token.expiresAt,
+      })
+      .catch(() => null)
+    // Never a year-long token left in their name for a hand-over that failed (minors m66). Had our
+    // server kept it after all, its stream meets the revoke (`4401`), forgets it, and the next
+    // visit mints again.
+    if (handed === null) await revoke(minted.token.id)
+    else if (handed.kept === 'current') await revoke(minted.token.id)
     else if (status.watching && status.mine && status.tokenId !== null)
       await revoke(status.tokenId)
   } catch {
