@@ -755,6 +755,14 @@ describe('working on it together (F6b Task 7)', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
+  it('another’s conversation while its app is made (minors m94): Making it says who started it', async () => {
+    const s = await conversation(stage({ members: AS_HELPER }))
+    s.state({ ...sams, state: 'making' })
+    expect(await screen.findByText(words.making.addresses)).toBeTruthy()
+    expect(screen.getByText(t.started(SAM.name))).toBeTruthy()
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
   it('another’s change set aside: no message box', async () => {
     const s = await conversation(stage({ members: AS_HELPER }))
     s.state({ ...sams, state: 'set-aside' })

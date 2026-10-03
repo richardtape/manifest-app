@@ -383,7 +383,12 @@ export function PlanScreen({
   if (state === 'making' && intake.project !== null)
     return (
       <>
-        <Making platform={platform} project={intake.project} onSettled={start} />
+        <Making
+          platform={platform}
+          project={intake.project}
+          onSettled={start}
+          theirs={theirs}
+        />
         {noticeCard}
       </>
     )

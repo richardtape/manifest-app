@@ -2,6 +2,7 @@ import { LiveSteps, type Step } from '@manifest-app/ui'
 import { useEffect, useState } from 'react'
 import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
+import { StartedBy, type Theirs } from '../change/together.js'
 
 /** The three events `createProject` publishes, in order, and the line each ticks (moment 4). */
 const EVENTS = ['project.created', 'repository.seeded', 'spec.validated'] as const
@@ -33,11 +34,14 @@ export function Making({
   platform,
   project,
   onSettled,
+  theirs = null,
 }: {
   platform: Platform
   project: { id: string; name: string }
   /** The replay is done, or the stream could not be opened: either way, on to the plan. */
   onSettled?: () => void
+  /** Another's conversation (F6b D3): who started it, under the title (minors m94). */
+  theirs?: Theirs
 }) {
   const [seen, setSeen] = useState<ReadonlySet<string>>(new Set())
   useEffect(() => {
@@ -58,6 +62,7 @@ export function Making({
   return (
     <div className="making">
       <h1 className="page-title">{project.name}</h1>
+      <StartedBy theirs={theirs} />
       <MakingSteps name={project.name} seen={seen} />
     </div>
   )
