@@ -193,6 +193,8 @@ function pieceOf(view: LeadView): string[] {
     const listed = (details: string[]) =>
       details.length === 0 ? 'none' : details.map((a) => cut(a, FIX_FIELD_CAP)).join(', ')
     const missing = d.attributesAsked.filter((a) => !d.attributesReleased.includes(a))
+    // And the other way (minors m40): a detail carried that its registration never asked for.
+    const unasked = d.attributesReleased.filter((a) => !d.attributesAsked.includes(a))
     return [
       '',
       'The dry run on the live setup did not sign anyone in, and we are fixing that. It put the app up on its live address with nobody watching, tried one CWL sign-in, and took it down again.',
@@ -204,6 +206,9 @@ function pieceOf(view: LeadView): string[] {
       ...(missing.length === 0
         ? []
         : [`Asked for and never carried: ${listed(missing)}`]),
+      ...(unasked.length === 0
+        ? []
+        : [`Carried and never asked for: ${listed(unasked)}`]),
       // The review's I-A: with no sign-in at all, never assume the sign-in is at fault.
       d.signInStatus === null
         ? 'Look for what would stop it starting or signing someone in, and change only that.'

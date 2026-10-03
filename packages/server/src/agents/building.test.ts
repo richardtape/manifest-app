@@ -881,6 +881,25 @@ describe("the lead's view (Decision 3)", () => {
     expect(user).toContain(CHANGE_PARAGRAPH)
   })
 
+  it("a dry run's fix also names the details carried and never asked for (minors m40), and says nothing of either kind it does not have", () => {
+    const dryRun = (attributesReleased: string[], attributesAsked: string[]) =>
+      said({
+        ...view([]),
+        fix: {
+          environment: 'production',
+          incident: null,
+          unread: null,
+          dryRun: { signInStatus: 302, attributesReleased, attributesAsked },
+          outage: null,
+        },
+      })
+    const both = dryRun(['mail', 'givenName'], ['mail', 'ubcEduCwlPuid'])
+    expect(both).toContain('Asked for and never carried: ubcEduCwlPuid')
+    expect(both).toContain('Carried and never asked for: givenName')
+    const same = dryRun(['mail'], ['mail'])
+    expect(same).not.toMatch(/never carried|never asked for/)
+  })
+
   it("an outage's fix: the live address stopped answering, when, that nothing records why and nothing it wrote can be read; look in the code (F6 Decision 9)", () => {
     const user = said({
       ...view([]),
