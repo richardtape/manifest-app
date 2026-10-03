@@ -168,6 +168,15 @@ describe('what it says (design §4; FE-5 (a) honest)', () => {
     expect(machineryIn(prose())).toEqual([])
   })
 
+  it.each(['constructor', 'toString'])(
+    'an action named like an object’s own (%s): no words borrowed from it (minors m118)',
+    (action) => {
+      open(stage(), { action: asking({ action, summary: 'Something new' }) })
+      expect(text()).not.toContain('native code')
+      expect(text()).toContain("Something newIf you're not sure, say no.")
+    },
+  )
+
   it('a helper: an owner answers this, and nothing to press or type (FE-50; (S1: M4))', () => {
     open(stage(), { role: 'helper' })
     expect(text()).toContain(q.ownerAnswers)

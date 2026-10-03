@@ -91,7 +91,10 @@ export function Question({
   }, [])
 
   const known = Object.hasOwn(ACTION_WORDS, action.action)
-  const didnt = q.didntSay[action.action]
+  // Its own words alone: an action named `constructor` borrows nothing (minors m118).
+  const didnt = Object.hasOwn(q.didntSay, action.action)
+    ? q.didntSay[action.action]
+    : undefined
   const expires = action.expiresAt
   const today = dayWords(now().toISOString(), timeZone) === dayWords(expires, timeZone)
   const count = countOf(reason, LIMITS.sentence)
