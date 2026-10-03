@@ -141,6 +141,8 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  // A test that set the page's visibility gives jsdom's own back (minors m48).
+  Reflect.deleteProperty(document, 'visibilityState')
 })
 
 async function open(s = stage()) {
@@ -448,6 +450,26 @@ describe('the page: letting your students in (moment 11)', () => {
     })
     await waitFor(() => expect(s.called('getLaunchReadiness')).toHaveLength(2))
     expect(s.called('getLaunchRecords')).toHaveLength(2)
+  })
+
+  it('hidden again, it reads nothing (minors m48)', async () => {
+    const s = await open()
+    await jobs()
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'hidden',
+    })
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    await act(async () => undefined)
+    expect(s.called('getLaunchReadiness')).toHaveLength(1)
+    expect(s.called('getLaunchRecords')).toHaveLength(1)
+  })
+
+  it('a test that set the visibility leaves jsdom’s own behind (minors m48)', () => {
+    expect(Object.getOwnPropertyDescriptor(document, 'visibilityState')).toBeUndefined()
+    expect(document.visibilityState).toBe('visible')
   })
 
   it('a read refused says what is still true, with a reference, reported once; Try again reads again', async () => {
