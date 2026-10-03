@@ -35,4 +35,13 @@ describe('a refusal because they may not build is heard by the shell (D7, FE-39)
     await expect(createOurs().startConversation('words')).rejects.toBeTruthy()
     expect(heard).not.toHaveBeenCalled()
   })
+
+  it('from the platform, any other refusal raises nothing either (minors m47)', async () => {
+    vi.stubGlobal('fetch', async () => refusedWith('FORBIDDEN'))
+    const platform = createPlatform({ origin: 'http://127.0.0.1:1', session: 's' })
+    await expect(platform.startIntakeSession('key-1')).rejects.toBeTruthy()
+    // The signal is raised from a copy of the answer, read after the call rejects: let it land.
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(heard).not.toHaveBeenCalled()
+  })
 })
