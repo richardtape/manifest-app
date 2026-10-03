@@ -594,6 +594,7 @@ describe('F6 Task 9: coming back to the Overview (moment 16, design §2 and §4)
             happening: { kind: 'signed-off', releaseId: 'r' },
             who: null,
             whom: null,
+            administrator: null,
             app,
           },
         ],

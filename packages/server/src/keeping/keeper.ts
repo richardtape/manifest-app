@@ -7,7 +7,7 @@ import type { Chip, Conversation, Happening } from '../api/progress.js'
 import type { Store } from '../store/db.js'
 import type { HistoryEntry, KeptApp, KeptMember } from '../store/keeping.js'
 import { emailsFor, questionEmails, waitingEmail } from './emails.js'
-import { happeningOf, questionsOf, tokenEndsOf } from './happenings.js'
+import { administratorOf, happeningOf, questionsOf, tokenEndsOf } from './happenings.js'
 import { deliver, deliverUnfinished, type Mailer } from './mail.js'
 import {
   answerOf,
@@ -193,6 +193,7 @@ export function createKeeper({
       at: event.at,
       type: event.type,
       detail: event.detail,
+      actor: event.actor,
     }
     // Held already: a replay after a restart. Its rules ran when it was first written.
     if (!store.addHistory(entry)) {
@@ -251,7 +252,8 @@ export function createKeeper({
     const app = store.app(entry.projectId)
     if (app === undefined) return
     const members = store.members(entry.projectId)
-    const context = { app, members, origin, at: entry.at, id: entry.id }
+    const administrator = administratorOf(entry)
+    const context = { app, members, origin, at: entry.at, id: entry.id, administrator }
     for (const outgoing of emailsFor(happening, context))
       void deliver(store, mailer, outgoing, wait)
   }

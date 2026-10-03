@@ -1325,6 +1325,7 @@ describe('F6 Task 9: coming back to Your apps (moment 16, design §2)', () => {
             happening: { kind: 'went-live', instanceId: 'i' },
             who: null,
             whom: null,
+            administrator: null,
             app,
           },
         ],
@@ -1491,6 +1492,7 @@ describe('F6 Task 9: coming back to Your apps (moment 16, design §2)', () => {
             happening: { kind: 'went-live', instanceId: 'i' },
             who: null,
             whom: null,
+            administrator: null,
             app: gone,
           },
           {
@@ -1499,6 +1501,7 @@ describe('F6 Task 9: coming back to Your apps (moment 16, design §2)', () => {
             happening: { kind: 'went-live', instanceId: 'i' },
             who: null,
             whom: null,
+            administrator: null,
             app,
           },
         ],

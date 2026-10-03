@@ -164,6 +164,25 @@ describe('history: what the keeper saw (Decision 1)', () => {
     expect(store.historyOf(P2).map((held) => held.id)).toEqual(['e-3'])
   })
 
+  it('keeps who acted as the platform sent it (the adoption note’s question 10): an actor, a null, or none (ours)', () => {
+    const { store } = fresh()
+    const actor = {
+      name: 'Operator One',
+      asAdministrator: true,
+      reason: 'Rotating a key that leaked',
+      token: null,
+    }
+    store.addHistory({ ...entry('e-1', '2026-10-01T10:00:00.000Z'), actor })
+    store.addHistory({ ...entry('e-2', '2026-10-01T11:00:00.000Z'), actor: null })
+    store.addHistory(entry('e-3', '2026-10-01T12:00:00.000Z'))
+    expect(store.historyOf(P1)).toEqual([
+      { ...entry('e-1', '2026-10-01T10:00:00.000Z'), actor },
+      { ...entry('e-2', '2026-10-01T11:00:00.000Z'), actor: null },
+      entry('e-3', '2026-10-01T12:00:00.000Z'),
+    ])
+    expect('actor' in store.historyOf(P1)[2]!).toBe(false)
+  })
+
   it('heldOf answers which of these ids the app holds', () => {
     const { store } = fresh()
     store.addHistory(entry('e-1', '2026-10-01T10:00:00.000Z'))

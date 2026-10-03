@@ -23,12 +23,14 @@ const line = (
   happening: Happening,
   who: string | null = null,
   whom: string | null = null,
+  administrator: Line['administrator'] = null,
 ): Line => ({
   id: 'e1',
   at: AT,
   happening,
   who,
   whom,
+  administrator,
 })
 const l = words.keeping.lines
 
@@ -149,6 +151,55 @@ describe('lineWords: every happening (the table in Words proposed for Rich)', ()
     ).toBe('Alice renamed it from Old')
   })
 
+  it('a platform administrator who is not a member (the adoption note’s question 10): named as the platform names them, and their reason in their own words', () => {
+    const op = { name: 'Operator One', reason: 'Rotating a key that leaked' }
+    const said = (what: string) =>
+      `Operator One, a Manifest administrator, ${what}, and said: ‘Rotating a key that leaked’`
+    expect(lineWords(line({ kind: 'switched-off', by: 'o' }, null, null, op))).toBe(
+      said('switched it off'),
+    )
+    expect(lineWords(line({ kind: 'switched-on', by: 'o' }, null, null, op))).toBe(
+      said('switched it back on'),
+    )
+    expect(
+      lineWords(
+        line({ kind: 'renamed', from: 'Old', to: 'New', by: 'o' }, null, null, op),
+      ),
+    ).toBe(said('renamed it from Old'))
+    const added = {
+      kind: 'member-added',
+      userId: 'u',
+      role: 'collaborator',
+      previousRole: null,
+      by: 'o',
+    } as const
+    expect(lineWords(line(added, null, 'Dan New', op))).toBe(said('added Dan New'))
+    expect(
+      lineWords(
+        line({ ...added, role: 'owner', previousRole: 'collaborator' }, null, 'Dan', op),
+      ),
+    ).toBe(said('made Dan an owner'))
+    expect(
+      lineWords(line({ kind: 'member-removed', userId: 'u', by: 'o' }, null, null, op)),
+    ).toBe(said('took Someone off it'))
+    expect(lineWords(line({ kind: 'worked-on' }, null, null, op))).toBe(
+      said('worked on it'),
+    )
+  })
+
+  it('the administrator is said, not the member, when both are known (a helper acting beyond their role, the platform’s Task 15)', () => {
+    expect(
+      lineWords(
+        line({ kind: 'switched-off', by: 'd' }, 'Dana Helper', null, {
+          name: 'Dana Helper',
+          reason: 'Asked by the owner',
+        }),
+      ),
+    ).toBe(
+      'Dana Helper, a Manifest administrator, switched it off, and said: ‘Asked by the owner’',
+    )
+  })
+
   it('no machinery in any of them (C3)', () => {
     const all: Happening[] = [
       { kind: 'went-live', instanceId: 'i' },
@@ -159,6 +210,10 @@ describe('lineWords: every happening (the table in Words proposed for Rich)', ()
       { kind: 'answered', by: 'identity', state: 'active' },
     ]
     expect(machineryIn(all.map((h) => lineWords(line(h))).join(' '))).toEqual([])
+    const op = { name: 'Operator One', reason: 'Asked by the owner' }
+    expect(machineryIn(lineWords(line({ kind: 'worked-on' }, null, null, op)))).toEqual(
+      [],
+    )
   })
 })
 

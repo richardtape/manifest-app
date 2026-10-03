@@ -331,6 +331,7 @@ describe('linesOf: Decision 2, the lines chosen when read', () => {
       happening: { kind: 'reached-students', instanceId: I2, releaseId: R2 },
       who: null,
       whom: null,
+      administrator: null,
     })
   })
 
@@ -455,6 +456,186 @@ describe('linesOf: Decision 2, the lines chosen when read', () => {
       [entries[2]!.id, at(25)],
       [entries[1]!.id, at(20)],
       [entries[0]!.id, at(1)],
+    ])
+  })
+})
+
+describe('linesOf: a platform administrator who is not a member (the adoption note’s question 10, EventFrame.actor)', () => {
+  const at = (hour: number, minute: number) =>
+    `2026-10-01T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000Z`
+  const OPERATOR = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  const asAdministrator = (reason: string, name = 'Operator One') => ({
+    name,
+    asAdministrator: true,
+    reason,
+    token: null,
+  })
+  const LEAK = 'Rotating a key that leaked'
+  const by = (
+    type: string,
+    detail: unknown,
+    when: string,
+    actor: unknown = asAdministrator(LEAK),
+  ): HistoryEntry => ({ ...entry(type, detail, when), actor })
+  const administrator = (reason = LEAK, name = 'Operator One') => ({ name, reason })
+
+  it('a line that says who acted (switched off, someone taken off) names the administrator as the platform does, and their reason; who stays the kept members’', () => {
+    const entries = [
+      by('project.archived', { via: 'session', userId: OPERATOR }, at(17, 1)),
+      by('member.removed', { memberId: BOB, userId: OPERATOR }, at(17, 2), {
+        ...asAdministrator('Bob asked to leave'),
+      }),
+    ]
+    expect(linesOf(entries, MEMBERS, null)).toEqual([
+      {
+        id: entries[1]!.id,
+        at: at(17, 2),
+        happening: { kind: 'member-removed', userId: BOB, by: OPERATOR },
+        who: null,
+        whom: 'Bob Helper',
+        administrator: administrator('Bob asked to leave'),
+      },
+      {
+        id: entries[0]!.id,
+        at: at(17, 1),
+        happening: { kind: 'switched-off', by: OPERATOR },
+        who: null,
+        whom: null,
+        administrator: administrator(),
+      },
+    ])
+  })
+
+  it('an act no line says (a secret set, an agent let in): one line of its own, the administrator worked on it, and why', () => {
+    const set = by(
+      'app_secret.set',
+      { name: 'API_KEY', environment: 'production' },
+      at(17, 1),
+    )
+    expect(linesOf([set], MEMBERS, null)).toEqual([
+      {
+        id: `${set.id}:administrator`,
+        at: at(17, 1),
+        happening: { kind: 'worked-on' },
+        who: null,
+        whom: null,
+        administrator: administrator(),
+      },
+    ])
+  })
+
+  it('one act’s later events (the same administrator and reason, within the hour of the last) are that one line; another reason, another administrator, or an hour on, is another', () => {
+    const entries = [
+      by('instance.provisioning', { environment: 'staging' }, at(17, 1)),
+      by('instance.starting', { environment: 'staging' }, at(17, 3)),
+      by('instance.healthy', healthy('staging', I1, R1), at(17, 50)),
+      by('build.started', {}, at(18, 45)),
+      by('app_secret.set', { name: 'API_KEY' }, at(18, 46), asAdministrator('A new key')),
+      by(
+        'app_secret.set',
+        { name: 'API_KEY' },
+        at(18, 47),
+        asAdministrator(LEAK, 'Operator Two'),
+      ),
+      by('build.succeeded', {}, at(19, 46)),
+    ]
+    const lines = linesOf(entries, MEMBERS, null)
+    expect(
+      lines.map((line) => [line.at, line.happening.kind, line.administrator]),
+    ).toEqual([
+      [at(19, 46), 'worked-on', administrator()],
+      [at(18, 47), 'worked-on', administrator(LEAK, 'Operator Two')],
+      [at(18, 46), 'worked-on', administrator('A new key')],
+      [at(17, 1), 'worked-on', administrator()],
+    ])
+  })
+
+  it('a line that says who acted begins its act: what follows from it, the same administrator and reason, is that line', () => {
+    const entries = [
+      by('project.archived', { via: 'session', userId: OPERATOR }, at(17, 1)),
+      by('instance.retiring', { instanceId: I1 }, at(17, 2)),
+      by('instance.retired', { instanceId: I1 }, at(17, 4)),
+    ]
+    expect(linesOf(entries, MEMBERS, null).map((line) => line.happening.kind)).toEqual([
+      'switched-off',
+    ])
+  })
+
+  it('a line said whoever acted (a new version reached the students) stays as it is; the administrator’s act is its own line, said first', () => {
+    const entries = [
+      entry('project.launched', { releaseId: R1, instanceId: I1 }, at(17, 0)),
+      by('instance.healthy', healthy('production', I2, R2), at(17, 30)),
+    ]
+    const lines = linesOf(entries, MEMBERS, at(17, 0))
+    expect(
+      lines.map((line) => [line.id, line.happening.kind, line.administrator]),
+    ).toEqual([
+      [entries[1]!.id, 'reached-students', null],
+      [`${entries[1]!.id}:administrator`, 'worked-on', administrator()],
+      [entries[0]!.id, 'went-live', null],
+    ])
+  })
+
+  it('an administrator acting as a member, a person’s agent, or nobody: no administrator, and no line of their own', () => {
+    const member = {
+      name: 'Alice Owner',
+      asAdministrator: false,
+      reason: null,
+      token: null,
+    }
+    const agent = {
+      name: 'Operator One',
+      asAdministrator: false,
+      reason: null,
+      token: { id: 't-1', name: 'Fixer' },
+    }
+    const entries = [
+      by('project.archived', { via: 'session', userId: ALICE }, at(17, 1), member),
+      by('app_secret.set', { name: 'API_KEY' }, at(17, 2), agent),
+      by('app_secret.set', { name: 'API_KEY' }, at(17, 3), null),
+    ]
+    expect(linesOf(entries, MEMBERS, null)).toEqual([
+      {
+        id: entries[0]!.id,
+        at: at(17, 1),
+        happening: { kind: 'switched-off', by: ALICE },
+        who: 'Alice Owner',
+        whom: null,
+        administrator: null,
+      },
+    ])
+  })
+
+  it('an actor sent wrongly (no reason, no name, not true, not an object) is no administrator, never a crash', () => {
+    const entries = [
+      by('app_secret.set', {}, at(17, 1), { ...asAdministrator(LEAK), reason: null }),
+      by('app_secret.set', {}, at(17, 2), { ...asAdministrator(LEAK), reason: '' }),
+      by('app_secret.set', {}, at(17, 3), { ...asAdministrator(LEAK), name: '' }),
+      by('app_secret.set', {}, at(17, 4), {
+        ...asAdministrator(LEAK),
+        asAdministrator: 'yes',
+      }),
+      by('app_secret.set', {}, at(17, 5), 'Operator One'),
+      by('app_secret.set', {}, at(17, 6), [asAdministrator(LEAK)]),
+    ]
+    expect(linesOf(entries, MEMBERS, null)).toEqual([])
+  })
+
+  it('an event kept before version 8, with no actor, says what it said', () => {
+    const archived = entry(
+      'project.archived',
+      { via: 'session', userId: OPERATOR },
+      at(17, 1),
+    )
+    expect(linesOf([archived], MEMBERS, null)).toEqual([
+      {
+        id: archived.id,
+        at: at(17, 1),
+        happening: { kind: 'switched-off', by: OPERATOR },
+        who: null,
+        whom: null,
+        administrator: null,
+      },
     ])
   })
 })

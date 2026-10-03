@@ -374,10 +374,25 @@ export type Happening =
   | { kind: 'renamed'; from: string; to: string; by: string | null }
   | { kind: 'unreachable'; from: string }
   | { kind: 'answering-again'; from: string; to: string }
+  /**
+   * The adoption note's question 10: a platform administrator who is not a member worked on the app
+   * in a way no other line says (a secret set, its code changed, an agent let in…). `linesOf`'s
+   * alone, one per act, its line's `administrator` saying who and why; no event reads as it.
+   */
+  | { kind: 'worked-on' }
+
+/**
+ * The adoption note's question 10 (Rich, 2026-10-03: yes): a platform administrator who is not a
+ * member, acting with an owner's capability (`EventFrame.actor.asAdministrator`), named as the
+ * platform names them, and the reason they gave, as they typed it.
+ */
+export type Administrator = { name: string; reason: string }
 
 /**
  * A line: a happening, when, who did it (`by`) and, for a member's line, whom it was about
- * (`userId`), each by name from the kept members, else null (*"someone"*).
+ * (`userId`), each by name from the kept members, else null (*"someone"*); and, when a platform
+ * administrator who is not a member did it, who and why (`administrator`, else null), which the
+ * page says in place of `who`.
  */
 export type Line = {
   id: string
@@ -385,6 +400,7 @@ export type Line = {
   happening: Happening
   who: string | null
   whom: string | null
+  administrator: Administrator | null
 }
 
 /** F6 Task 7: an app, as a need or a line names it. */

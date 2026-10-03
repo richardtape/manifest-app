@@ -153,6 +153,24 @@ describe('each event once (Decision 15)', () => {
     expect(w.counts().reconnected).toBe(1)
   })
 
+  it('hands over who acted as the platform sent it (EventFrame.actor; the adoption note’s question 10), and nothing when a frame names nobody', async () => {
+    vi.useFakeTimers()
+    const w = watching()
+    const actor = {
+      name: 'Operator One',
+      asAdministrator: true,
+      reason: 'Rotating a key that leaked',
+      token: null,
+    }
+    w.connections[0]!.replay([
+      { ...(event(1) as object), actor } as unknown as StreamFrame,
+      { ...(event(2) as object), actor: null } as unknown as StreamFrame,
+      READY,
+    ])
+    await w.watch.ready
+    expect(w.events.map((e) => e.actor)).toEqual([actor, null])
+  })
+
   it('each replay is reported once handed over (F6): every event it carried, in order, and whether this watch had handed any over already', async () => {
     vi.useFakeTimers()
     const w = watching()

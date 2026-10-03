@@ -46,9 +46,20 @@ export function howLongWords(from: string, to: string): string {
     : `${counted(hours, 'hour')} and ${counted(rest, 'minute')}`
 }
 
-/** One line of what happened, in our words; who did it where our server could name them. */
+/**
+ * One line of what happened, in our words; who did it where our server could name them. A platform
+ * administrator who is not a member (the adoption note's question 10) is named in their place, and
+ * the reason they gave follows the line.
+ */
 export function lineWords(line: Line, timeZone?: string): string {
-  const { happening: h, who } = line
+  const { administrator } = line
+  if (administrator === null) return sentenceOf(line, line.who, timeZone)
+  const sentence = sentenceOf(line, l.administrator(administrator.name), timeZone)
+  return sentence === '' ? '' : l.said(sentence, administrator.reason)
+}
+
+function sentenceOf(line: Line, who: string | null, timeZone?: string): string {
+  const { happening: h } = line
   const whom = line.whom ?? l.someone
   switch (h.kind) {
     case 'went-live':
@@ -89,6 +100,9 @@ export function lineWords(line: Line, timeZone?: string): string {
       return l.unreachable
     case 'answering-again':
       return l.answering(howLongWords(h.from, h.to))
+    // Our server sends it with its administrator alone.
+    case 'worked-on':
+      return who === null ? '' : l.workedOn(who)
   }
   // A happening from a newer server: said as nothing rather than wrongly.
   void timeZone

@@ -1100,26 +1100,22 @@ describe('the migration (F6b sitting 5, the review’s I2: every watch id we wer
     return file
   }
 
-  it('is version 7', () => {
-    expect(VERSION).toBe(7)
-  })
-
-  it('opens a version 6 file at version 7: every row kept, and `watched` made, empty (the current watch is still read from watch_tokens)', () => {
+  it('opens a version 6 file at the current version: every row kept, and `watched` made, empty (the current watch is still read from watch_tokens)', () => {
     const file = f6bFile()
     const before = dumpAll(file)
     expect(Object.keys(before)).not.toContain('watched')
     const store = openStore(file)
     cleanups.push(() => store.close())
-    expect(pragmaOf(file, 'user_version')).toBe(7)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     const after = dumpAll(file)
     for (const table of Object.keys(before)) expect(after[table]).toBe(before[table])
     expect(after['watched']).toBe('[]')
     expect(store.watchOf(PROJECT)?.tokenId).toBe(WATCH)
   })
 
-  it('a new file is version 7, with `watched`; a watch kept is noted there by its id and expiry, never its token', () => {
+  it('a new file has `watched`; a watch kept is noted there by its id and expiry, never its token', () => {
     const { store, file } = fresh()
-    expect(pragmaOf(file, 'user_version')).toBe(7)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     store.rememberPerson(ALICE)
     store.putWatch({
       projectId: PROJECT,
@@ -1134,5 +1130,65 @@ describe('the migration (F6b sitting 5, the review’s I2: every watch id we wer
     ])
     expect(dumpAll(file)['watched']).not.toContain('SEALED')
     expect(store.historyOf(PROJECT)).toEqual([])
+  })
+})
+
+describe('the migration (the adoption note’s question 10: who acted, kept with each event)', () => {
+  const PROJECT = '33333333-3333-4333-8333-333333333333'
+  const ACTOR = {
+    name: 'Operator One',
+    asAdministrator: true,
+    reason: 'Rotating a key that leaked',
+    token: null,
+  }
+  /** What version 7 left behind: `history` without `actor`, an event kept. */
+  function v7File(): string {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    const store = openStore(file)
+    store.addHistory({
+      id: 'e-1',
+      projectId: PROJECT,
+      at: '2026-10-02T10:00:00.000Z',
+      type: 'project.archived',
+      detail: { userId: 'u-1' },
+    })
+    store.close()
+    execOn(file, 'alter table history drop column actor; pragma user_version = 7;')
+    return file
+  }
+
+  it('is version 8', () => {
+    expect(VERSION).toBe(8)
+  })
+
+  it('opens a version 7 file at version 8: every row kept, and an event kept before names nobody', () => {
+    const file = v7File()
+    const before = dumpAll(file)
+    const store = openStore(file)
+    cleanups.push(() => store.close())
+    expect(pragmaOf(file, 'user_version')).toBe(8)
+    const after = dumpAll(file)
+    for (const table of Object.keys(before))
+      if (table !== 'history') expect(after[table]).toBe(before[table])
+    expect(store.historyOf(PROJECT)).toEqual([
+      {
+        id: 'e-1',
+        projectId: PROJECT,
+        at: '2026-10-02T10:00:00.000Z',
+        type: 'project.archived',
+        detail: { userId: 'u-1' },
+      },
+    ])
+    store.addHistory({
+      id: 'e-2',
+      projectId: PROJECT,
+      at: '2026-10-02T11:00:00.000Z',
+      type: 'project.restored',
+      detail: { userId: 'u-1' },
+      actor: ACTOR,
+    })
+    expect(store.historyOf(PROJECT)[1]?.actor).toEqual(ACTOR)
   })
 })

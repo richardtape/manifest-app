@@ -26,6 +26,7 @@ const line = (id: string, at: string): Line => ({
   happening: { kind: 'signed-off', releaseId: 'r' },
   who: null,
   whom: null,
+  administrator: null,
 })
 const oursWith = (history: Ours['history']) => ({ history }) as unknown as Ours
 
@@ -54,6 +55,28 @@ describe('the history page', () => {
     expect(page.indexOf(gap)).toBeLessThan(page.indexOf('1 October'))
     expect(page.trim().endsWith(h.from('18 September'))).toBe(true)
     expect(machineryIn(page)).toEqual([])
+  })
+
+  it('a platform administrator’s act (the adoption note’s question 10): who, that they are one, and the reason they gave', async () => {
+    const answer = {
+      from: '2026-09-18T16:00:00.000Z',
+      gaps: [],
+      lines: [
+        {
+          ...line('a:administrator', '2026-10-01T18:00:00.000Z'),
+          happening: { kind: 'worked-on' } as const,
+          administrator: { name: 'Operator One', reason: 'Rotating a key that leaked' },
+        },
+      ],
+    }
+    render(
+      <History ours={oursWith(async () => answer)} project={project} timeZone={TZ} />,
+    )
+    expect(
+      await screen.findByText(
+        'Operator One, a Manifest administrator, worked on it, and said: ‘Rotating a key that leaked’',
+      ),
+    ).toBeTruthy()
   })
 
   it('a gap whose end is itself a line (minors m65): the gap below that line, not above it', async () => {

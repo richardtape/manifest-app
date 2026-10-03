@@ -44,6 +44,7 @@ const context = (patch: Partial<Parameters<typeof emailsFor>[1]> = {}) => ({
   origin: ORIGIN,
   at: FROM,
   id: 'e0000001',
+  administrator: null,
   ...patch,
 })
 
@@ -327,6 +328,50 @@ describe('the words: plain text in our words (C3)', () => {
       context(),
     )[0]!
     expect(removed.subject).toBe('Reading responses: someone was taken off it')
+  })
+
+  it('a platform administrator who is not a member (the adoption note’s question 10, Rich 2026-10-03: the emails too): named where a member would be, and their reason', () => {
+    const OPERATOR = 'ffffffff-ffff-4fff-8fff-ffffffffffff'
+    const administrator = { name: 'Operator One', reason: 'Bob asked to leave' }
+    const body = (happening: Happening) =>
+      emailsFor(happening, context({ administrator }))[0]!.text.split('\n')[0]
+    expect(body({ kind: 'member-removed', userId: BOB, by: OPERATOR })).toBe(
+      "Operator One, a Manifest administrator, took Bob Helper off Reading responses, and said: ‘Bob asked to leave’. Who's on it is on its page:",
+    )
+    expect(body({ kind: 'member-removed', userId: STRANGER, by: OPERATOR })).toBe(
+      "Operator One, a Manifest administrator, took someone off Reading responses, and said: ‘Bob asked to leave’. Who's on it is on its page:",
+    )
+    expect(
+      body({
+        kind: 'member-added',
+        userId: BOB,
+        role: 'collaborator',
+        previousRole: null,
+        by: OPERATOR,
+      }),
+    ).toBe(
+      "Operator One, a Manifest administrator, added Bob Helper to Reading responses, as a helper, and said: ‘Bob asked to leave’. Who's on it is on its page:",
+    )
+    expect(
+      body({
+        kind: 'member-added',
+        userId: BOB,
+        role: 'owner',
+        previousRole: 'collaborator',
+        by: OPERATOR,
+      }),
+    ).toBe(
+      "Operator One, a Manifest administrator, made Bob Helper an owner of Reading responses, and said: ‘Bob asked to leave’. They were a helper. Who's on it is on its page:",
+    )
+    // Every owner is told: the administrator is none of them.
+    expect(
+      sentTo(
+        emailsFor(
+          { kind: 'member-removed', userId: BOB, by: OPERATOR },
+          context({ administrator }),
+        ),
+      ),
+    ).toEqual(OWNERS)
   })
 
   // Rich's word, 2026-10-02: the bodies as written, with three tidy-ups (A, B and C).

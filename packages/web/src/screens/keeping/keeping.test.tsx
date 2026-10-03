@@ -75,6 +75,7 @@ describe('Since you were last here (Since)', () => {
     happening: { kind: 'signed-off', releaseId: 'r' },
     who: null,
     whom: null,
+    administrator: null,
     app: on,
   })
 

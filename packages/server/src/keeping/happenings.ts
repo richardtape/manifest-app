@@ -1,4 +1,4 @@
-import type { Happening, Line } from '../api/progress.js'
+import type { Administrator, Happening, Line } from '../api/progress.js'
 import type { HistoryEntry, KeptMember } from '../store/keeping.js'
 
 /**
@@ -123,19 +123,53 @@ function nameOf(members: KeptMember[], userId: string | null): string | null {
   return members.find((member) => member.userId === userId)?.displayName ?? null
 }
 
-/** Decision 13: who acted, for the happenings a person does (an answer's `by` is UBC's office). */
-export function actorOf(happening: Happening): string | null {
+/** Decision 13's happenings: a person does them, and their line says who. */
+type Done = Extract<
+  Happening,
+  { kind: 'member-added' | 'member-removed' | 'switched-off' | 'switched-on' | 'renamed' }
+>
+function saysWho(happening: Happening): happening is Done {
   switch (happening.kind) {
     case 'member-added':
     case 'member-removed':
     case 'switched-off':
     case 'switched-on':
     case 'renamed':
-      return happening.by
+      return true
     default:
-      return null
+      return false
   }
 }
+
+/** Decision 13: who acted, for the happenings a person does (an answer's `by` is UBC's office). */
+export function actorOf(happening: Happening): string | null {
+  return saysWho(happening) ? happening.by : null
+}
+
+/**
+ * THE ADOPTION NOTE'S QUESTION 10 (Rich, 2026-10-03): a platform administrator who is not a member,
+ * acting with an owner's capability, as the platform sent it (`EventFrame.actor`: `asAdministrator`,
+ * and the reason the platform requires then). Their name is the platform's, never read from the kept
+ * members. A member, an agent, nobody, an event kept before version 8, or a shape we do not know:
+ * null.
+ */
+export function administratorOf(entry: HistoryEntry): Administrator | null {
+  const actor = entry.actor
+  if (typeof actor !== 'object' || actor === null || Array.isArray(actor)) return null
+  const { name, asAdministrator, reason } = actor as Detail
+  const named = text(name)
+  const why = text(reason)
+  return asAdministrator === true && named !== undefined && why !== undefined
+    ? { name: named, reason: why }
+    : null
+}
+
+/**
+ * One administrator's act is one line (Rich: *"one line per act"*): the platform names who started
+ * the work on every event it publishes later (a deploy's instances, a build's end), so their events
+ * with the same name and reason within this long of the last are the one act.
+ */
+const ONE_ACT_MS = 60 * 60_000
 
 const whomOf = (happening: Happening): string | null =>
   happening.kind === 'member-added' || happening.kind === 'member-removed'
@@ -165,24 +199,47 @@ export function linesOf(
 
   const lines: Line[] = []
   let serving: string | null = null
+  /** The question 10's acts: each administrator's and reason's last event, by its time. */
+  const acts = new Map<string, number>()
   for (const entry of entries) {
-    const happening = happeningOf(entry)
-    if (happening === null) continue
-    if (happening.kind === 'went-live') {
+    let happening = happeningOf(entry)
+    if (happening?.kind === 'went-live') {
       serving = text(detailOf(entry).releaseId) ?? serving
-    } else if (happening.kind === 'reached-students') {
+    } else if (happening?.kind === 'reached-students') {
       const before = serving
       serving = happening.releaseId
-      if (!isLive(entry.at) || before === null || before === happening.releaseId) continue
-    } else if (happening.kind === 'change-failed' && !isLive(entry.at)) {
-      continue
+      if (!isLive(entry.at) || before === null || before === happening.releaseId)
+        happening = null
+    } else if (happening?.kind === 'change-failed' && !isLive(entry.at)) {
+      happening = null
     }
+    // A line that says who did it names the administrator; any other act of theirs is a line of its
+    // own, once per act, said before what it led to.
+    const administrator = administratorOf(entry)
+    const theirs = happening !== null && administrator !== null && saysWho(happening)
+    if (administrator !== null) {
+      const act = `${administrator.name}\n${administrator.reason}`
+      const at = Date.parse(entry.at)
+      const last = acts.get(act)
+      acts.set(act, at)
+      if (!theirs && !(last !== undefined && at - last <= ONE_ACT_MS))
+        lines.push({
+          id: `${entry.id}:administrator`,
+          at: entry.at,
+          happening: { kind: 'worked-on' },
+          who: null,
+          whom: null,
+          administrator,
+        })
+    }
+    if (happening === null) continue
     lines.push({
       id: entry.id,
       at: entry.at,
       happening,
       who: nameOf(members, actorOf(happening)),
       whom: nameOf(members, whomOf(happening)),
+      administrator: theirs ? administrator : null,
     })
   }
   return lines.reverse()

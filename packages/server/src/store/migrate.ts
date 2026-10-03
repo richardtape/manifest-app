@@ -16,11 +16,13 @@ import type { DatabaseSync } from 'node:sqlite'
  *   `schema.sql` makes.
  * - 7: F6b sitting 5 (the review's I2). `watched`, the id of every watch token we were handed, is a
  *   new table, which `schema.sql` makes: the current one is still `watch_tokens`'.
+ * - 8: the adoption note's question 10 (`EventFrame.actor`). `history` gains `actor`, who acted, as
+ *   the platform sent it; an event kept before names nobody.
  *
  * `schema.sql` runs first, and makes a new file's tables as they are now. Only an existing
  * table keeps the definition it was made with, which is what this corrects.
  */
-export const VERSION = 7
+export const VERSION = 8
 
 /**
  * The one definition of `conversations`, read out of `schema.sql` itself, so the rebuild can
@@ -54,6 +56,12 @@ export function migrate(db: DatabaseSync, schema: string): void {
     for (const column of ['email', 'here_at', 'last_here'])
       if (!columns.some((has) => has.name === column))
         db.exec(`alter table persons add column ${column} text`)
+  }
+  if (version < 8) {
+    // A new file's history already has it (schema.sql); version 7's does not.
+    const columns = db.prepare('pragma table_info(history)').all() as { name: string }[]
+    if (!columns.some((column) => column.name === 'actor'))
+      db.exec('alter table history add column actor text')
   }
   if (version < VERSION) db.exec(`pragma user_version = ${VERSION}`)
 }

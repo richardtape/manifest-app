@@ -489,6 +489,7 @@ function harness(options: Options, file?: string, store0?: Store) {
       subject: 'project:x',
       detail,
       at: new Date().toISOString(),
+      actor: null,
     })
   }
 

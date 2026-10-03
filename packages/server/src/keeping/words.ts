@@ -46,6 +46,9 @@ export function howLong(from: string, to: string): string {
 
 const roleWords = { owner: 'an owner', collaborator: 'a helper' } as const
 
+/** The question 10: an administrator's reason, as they typed it, after what they did (the page's words). */
+const said = (reason: string | null) => (reason === null ? '' : `, and said: ‘${reason}’`)
+
 /** The four a token is refused and asks a person about (D24), with the app in each; ours. */
 const ACTIONS: Record<string, (app: string) => string> = {
   'members:manage': (app) => `change who's on ${app}`,
@@ -67,6 +70,11 @@ export const mailWords = {
     asked: (app: string) => `You're getting this because you asked us to work on ${app}.`,
   },
   someone: 'Someone',
+  /**
+   * The adoption note's question 10 (Rich, 2026-10-03, through `manifest-94`: *"the emails too"*): a
+   * platform administrator who is not a member, named where a member would be; the page's words.
+   */
+  administrator: (name: string) => `${name}, a Manifest administrator,`,
   changeFailed: {
     subject: (app: string) => `${app}: a change didn't go live`,
     body: (app: string, at: string) =>
@@ -132,13 +140,14 @@ export const mailWords = {
       who: string | null,
       whom: string | null,
       role: 'owner' | 'collaborator',
+      reason: string | null = null,
     ) =>
       // Neither named (Rich, C): what happened, never "Someone added someone".
       `${
         who === null && whom === null
           ? `Someone was added to ${app}`
           : `${who ?? 'Someone'} added ${whom ?? 'someone'} to ${app}`
-      }, as ${roleWords[role]}. Who's on it is on its page:`,
+      }, as ${roleWords[role]}${said(reason)}. Who's on it is on its page:`,
   },
   roleChanged: {
     subject: (app: string, whom: string | null, role: 'owner' | 'collaborator') =>
@@ -149,22 +158,28 @@ export const mailWords = {
       whom: string | null,
       role: 'owner' | 'collaborator',
       before: 'owner' | 'collaborator',
+      reason: string | null = null,
     ) =>
       `${
         who === null && whom === null
-          ? `Someone is now ${roleWords[role]} of ${app}.`
-          : `${who ?? 'Someone'} made ${whom ?? 'someone'} ${roleWords[role]} of ${app}.`
-      } They were ${roleWords[before]}. Who's on it is on its page:`,
+          ? `Someone is now ${roleWords[role]} of ${app}`
+          : `${who ?? 'Someone'} made ${whom ?? 'someone'} ${roleWords[role]} of ${app}`
+      }${said(reason)}. They were ${roleWords[before]}. Who's on it is on its page:`,
   },
   removed: {
     subject: (app: string, whom: string | null) =>
       `${app}: ${whom ?? 'someone'} was taken off it`,
-    body: (app: string, who: string | null, whom: string | null) =>
+    body: (
+      app: string,
+      who: string | null,
+      whom: string | null,
+      reason: string | null = null,
+    ) =>
       `${
         who === null && whom === null
-          ? `Someone was taken off ${app}.`
-          : `${who ?? 'Someone'} took ${whom ?? 'someone'} off ${app}.`
-      } Who's on it is on its page:`,
+          ? `Someone was taken off ${app}`
+          : `${who ?? 'Someone'} took ${whom ?? 'someone'} off ${app}`
+      }${said(reason)}. Who's on it is on its page:`,
   },
   finished: {
     subject: (app: string) => `${app}: we've finished`,

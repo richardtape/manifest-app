@@ -23,6 +23,8 @@ const P1 = '11111111-1111-4111-8111-111111111111'
 const P2 = '22222222-2222-4222-8222-222222222222'
 const ALICE = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const BOB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+/** A platform administrator who is not a member (the adoption note’s question 10). */
+const OPERATOR = 'ffffffff-ffff-4fff-8fff-ffffffffffff'
 const DAY = 86_400_000
 const HOUR = 3_600_000
 const ORIGIN = 'http://127.0.0.1:7105'
@@ -53,12 +55,14 @@ const event = (
   n: number,
   type = 'build.started',
   detail: unknown = {},
+  actor: unknown = null,
 ): ProjectEvent => ({
   id: `e0000000-0000-4000-8000-${String(n).padStart(12, '0')}`,
   type,
   subject: 'project:x',
   detail,
   at: new Date(Date.UTC(2026, 9, 1, 9, 0) + n * 60_000).toISOString(),
+  actor,
 })
 
 type Handlers = Parameters<ProjectStream['watch']>[2]
@@ -434,8 +438,21 @@ describe('events: written once, as the platform sent them (Decision 1)', () => {
         at: event(1).at,
         type: 'project.launched',
         detail: { releaseId: 'r-1' },
+        actor: null,
       },
     ])
+  })
+
+  it('keeps who acted with each, as sent (the adoption note’s question 10): an administrator and their reason', async () => {
+    const t = await watched()
+    const actor = {
+      name: 'Operator One',
+      asAdministrator: true,
+      reason: 'Rotating a key that leaked',
+      token: null,
+    }
+    t.handlers.event(event(5, 'app_secret.set', { name: 'API_KEY' }, actor))
+    expect(t.store.historyOf(P1).map((entry) => entry.actor)).toEqual([actor])
   })
 
   it.each(['member.added', 'member.removed'])('%s re-reads the members', async (type) => {
@@ -784,6 +801,28 @@ describe('the emails (Task 5: D3, once each)', () => {
       },
     ])
     expect(t.store.members(P1)).toEqual([member(ALICE), carol])
+  })
+
+  it('member.removed by a platform administrator who is not a member (the adoption note’s question 10, Rich: the emails too): each owner told who, and why', async () => {
+    const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+    t.w.members.set(P1, [member(ALICE), carol])
+    const operator = {
+      name: 'Operator One',
+      asAdministrator: true,
+      reason: 'Bob asked to leave',
+      token: null,
+    }
+    t.handlers.event(
+      event(5, 'member.removed', { memberId: BOB, userId: OPERATOR }, operator),
+    )
+    await settle()
+    expect(t.sent.map(({ to }) => to)).toEqual([
+      'alice@example.test',
+      'carol@example.test',
+    ])
+    expect(t.sent[0]!.text).toContain(
+      'Operator One, a Manifest administrator, took Bob Helper off Reading responses, and said: ‘Bob asked to leave’.',
+    )
   })
 
   describe('their agent’s question (F6b Task 12, Decision 14)', () => {

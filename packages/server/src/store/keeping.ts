@@ -50,6 +50,12 @@ export interface HistoryEntry {
   at: string
   type: string
   detail: unknown
+  /**
+   * Who acted, as the platform sent it (`EventFrame.actor`: an `EventActor`, or null when nobody's
+   * request did; the adoption note's question 10). Absent from ours, and from an event kept before
+   * version 8.
+   */
+  actor?: unknown
 }
 
 /** One email per happening and recipient (D3). A happening starts with its project id. */
@@ -328,7 +334,7 @@ export function keepingStatements(
     addHistory(entry) {
       const { changes } = db
         .prepare(
-          `insert into history (id, project_id, at, type, detail) values (?, ?, ?, ?, ?)
+          `insert into history (id, project_id, at, type, detail, actor) values (?, ?, ?, ?, ?, ?)
            on conflict (id) do nothing`,
         )
         .run(
@@ -337,6 +343,7 @@ export function keepingStatements(
           entry.at,
           entry.type,
           JSON.stringify(entry.detail),
+          entry.actor === undefined ? null : JSON.stringify(entry.actor),
         )
       return changes === 1
     },
@@ -344,7 +351,7 @@ export function keepingStatements(
     historyOf(projectId) {
       const rows = db
         .prepare(
-          'select id, project_id, at, type, detail from history where project_id = ? order by at, rowid',
+          'select id, project_id, at, type, detail, actor from history where project_id = ? order by at, rowid',
         )
         .all(projectId) as {
         id: string
@@ -352,6 +359,7 @@ export function keepingStatements(
         at: string
         type: string
         detail: string
+        actor: string | null
       }[]
       return rows.map((row) => ({
         id: row.id,
@@ -359,6 +367,7 @@ export function keepingStatements(
         at: row.at,
         type: row.type,
         detail: JSON.parse(row.detail) as unknown,
+        ...(row.actor === null ? {} : { actor: JSON.parse(row.actor) as unknown }),
       }))
     },
 

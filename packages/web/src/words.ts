@@ -641,6 +641,15 @@ export const words = {
       renamedBy: (who: string, from: string) => `${who} renamed it from ${from}`, // ours
       unreachable: "Your students couldn't reach it", // ✓
       answering: (howLong: string) => `Answering again. It was down for ${howLong}.`, // ✓
+      /**
+       * The adoption note's question 10, Rich's words (2026-10-03, through `manifest-94`): a platform
+       * administrator who is not a member, named as the platform names them in place of who did it
+       * (*"Operator One, a Manifest administrator, switched it off"*); an act of theirs no other line
+       * says; and the reason they gave, as they typed it, after the line.
+       */
+      administrator: (name: string) => `${name}, a Manifest administrator,`, // Rich's (Q10)
+      workedOn: (who: string) => `${who} worked on it`, // Rich's (Q10)
+      said: (line: string, reason: string) => `${line}, and said: ‘${reason}’`, // Rich's (Q10)
     },
     /** The needs-you band (design §2): each line names the app and the thing, with its button. */
     band: {

@@ -154,6 +154,7 @@ const eventOf = (type: string, detail: unknown, at = new Date()): ProjectEvent =
   subject: 'project:x',
   detail,
   at: at.toISOString(),
+  actor: null,
 })
 
 // ---- Mailpit: our messages, by this run's mark ----

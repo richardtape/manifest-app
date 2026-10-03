@@ -206,6 +206,7 @@ const emit = (projectId: string, type: string, detail: unknown) =>
     subject: 'project:x',
     detail,
     at: new Date().toISOString(),
+    actor: null,
   } satisfies ProjectEvent)
 
 // ---- Mailpit, by this run's mark ----

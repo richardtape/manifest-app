@@ -1,4 +1,4 @@
-import type { Conversation, Happening } from '../api/progress.js'
+import type { Administrator, Conversation, Happening } from '../api/progress.js'
 import type { EmailKind, KeptApp, KeptMember, Outgoing } from '../store/keeping.js'
 import { actorOf, type WaitingQuestion } from './happenings.js'
 import { mailWords as w } from './words.js'
@@ -16,6 +16,8 @@ type Context = {
   origin: string
   at: string
   id: string
+  /** The adoption note's question 10: a platform administrator who is not a member did it. */
+  administrator: Administrator | null
 }
 
 /** An email's words, before it has a recipient: what it says, and the one page it links to. */
@@ -26,7 +28,14 @@ const nameOf = (members: KeptMember[], userId: string | null) =>
     ? null
     : (members.find((member) => member.userId === userId)?.displayName ?? null)
 
-function said(happening: Happening, { app, members, at, id }: Context): Said | null {
+function said(
+  happening: Happening,
+  { app, members, at, id, administrator }: Context,
+): Said | null {
+  // The question 10 (Rich: the emails too): an administrator is named where a member would be.
+  const whoOf = (by: string | null) =>
+    administrator === null ? nameOf(members, by) : w.administrator(administrator.name)
+  const reason = administrator?.reason ?? null
   const name = app.name
   const overview = ''
   const goingLive = '/going-live'
@@ -78,7 +87,7 @@ function said(happening: Happening, { app, members, at, id }: Context): Said | n
       }
     }
     case 'member-added': {
-      const who = nameOf(members, happening.by)
+      const who = whoOf(happening.by)
       const whom = nameOf(members, happening.userId)
       const { role, previousRole } = happening
       return {
@@ -87,23 +96,23 @@ function said(happening: Happening, { app, members, at, id }: Context): Said | n
         ...(previousRole === null
           ? {
               subject: w.added.subject(name, whom),
-              body: w.added.body(name, who, whom, role),
+              body: w.added.body(name, who, whom, role, reason),
             }
           : {
               subject: w.roleChanged.subject(name, whom, role),
-              body: w.roleChanged.body(name, who, whom, role, previousRole),
+              body: w.roleChanged.body(name, who, whom, role, previousRole, reason),
             }),
         page: overview,
       }
     }
     case 'member-removed': {
-      const who = nameOf(members, happening.by)
+      const who = whoOf(happening.by)
       const whom = nameOf(members, happening.userId)
       return {
         kind: 'people',
         what: id,
         subject: w.removed.subject(name, whom),
-        body: w.removed.body(name, who, whom),
+        body: w.removed.body(name, who, whom, reason),
         page: overview,
       }
     }

@@ -139,12 +139,15 @@ create table if not exists watch_tokens (
 );
 
 -- What the keeper saw, as the platform sent it, and its own outages and gaps (F6 Decision 1).
+-- `actor` (version 8): who acted, as the platform sent it (JSON, `null` included); SQL null for ours
+-- and for an event kept before.
 create table if not exists history (
   id text primary key,
   project_id text not null,
   at text not null,
   type text not null,
-  detail text not null
+  detail text not null,
+  actor text
 );
 create index if not exists history_by_project on history (project_id, at);
 

@@ -19,6 +19,9 @@ import { PLATFORM_TIMEOUT_MS } from './refusal.js'
  * platform's `createdAt`, so a replay keeps when things happened), and **each replay, reported once
  * handed over**: the ids it carried and whether this watch had handed any of them over already. A
  * replay that reaches back to what was seen leaves no gap; one that does not may (FE-7).
+ *
+ * **And who acted** (`EventFrame.actor`, the platform's Task 10; the adoption note's question 10), as
+ * sent, for the keeper's history: a platform administrator who is not a member says so, and why.
  */
 export type ProjectEvent = {
   id: string
@@ -27,6 +30,8 @@ export type ProjectEvent = {
   detail: unknown
   /** When the platform recorded it. */
   at: string
+  /** Who acted, as the platform sent it (`EventActor`, or null when nobody's request did). */
+  actor: unknown
 }
 
 /** One replay, as it was sent: every event it carried, in order, seen before or not. */
@@ -140,6 +145,7 @@ export function platformStream(
               subject: frame.subject,
               detail: frame.machineDetail,
               at: frame.createdAt,
+              actor: frame.actor,
             })
           },
         })

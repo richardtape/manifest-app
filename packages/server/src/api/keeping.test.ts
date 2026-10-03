@@ -439,9 +439,23 @@ function keep(
   t.store.putMembers(projectId, members)
 }
 let n = 0
-function happened(t: T, projectId: string, type: string, detail: unknown, at: string) {
+function happened(
+  t: T,
+  projectId: string,
+  type: string,
+  detail: unknown,
+  at: string,
+  actor?: unknown,
+) {
   const id = `h${String(++n).padStart(4, '0')}`
-  t.store.addHistory({ id, projectId, at, type, detail })
+  t.store.addHistory({
+    id,
+    projectId,
+    at,
+    type,
+    detail,
+    ...(actor === undefined ? {} : { actor }),
+  })
   return id
 }
 const signedOff = (t: T, projectId: string, at: string) =>
@@ -821,6 +835,7 @@ describe('GET /api/since (design §2: Since you were last here)', () => {
       happening: { kind: 'signed-off', releaseId: 'r-1' },
       who: null,
       whom: null,
+      administrator: null,
     })
   })
 
@@ -874,6 +889,30 @@ describe('GET /api/apps/:projectId/history (design §2: Everything)', () => {
         expect.objectContaining({ id: first }),
       ],
     })
+  })
+
+  it('a platform administrator’s act, as the platform sent it (the adoption note’s question 10): who and why, read again after a restart', async () => {
+    const t = setUp()
+    keep(t, PROJECT, [memberOf(ALICE)])
+    const actor = {
+      name: 'Operator One',
+      asAdministrator: true,
+      reason: 'Rotating a key that leaked',
+      token: null,
+    }
+    const when = ago(HOUR)
+    const id = happened(t, PROJECT, 'app_secret.set', { name: 'API_KEY' }, when, actor)
+    const { lines } = (await t.ask('GET', url())).json()
+    expect(lines).toEqual([
+      {
+        id: `${id}:administrator`,
+        at: when,
+        happening: { kind: 'worked-on' },
+        who: null,
+        whom: null,
+        administrator: { name: 'Operator One', reason: 'Rotating a key that leaked' },
+      },
+    ])
   })
 
   it('the lines read the kept app’s launch (S3): a healthy after it is a new version', async () => {
