@@ -1045,6 +1045,20 @@ describe('working on it together (F6b D3, Task 2)', () => {
     })
   })
 
+  it('an owner we never heard named before is remembered by her Stop: never "Someone" (minors m78)', async () => {
+    const s = setUp(AT_BUILD)
+    together(s)
+    // As if we had never heard her name: what personName says for nobody.
+    s.store.rememberPerson({ ...ALICE, displayName: 'Someone' })
+    const bobs = await bobsRound(s)
+    await post(s, bobs.id, 'stop')
+    await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
+    expect(roundOf(s.store, bobs.id)?.stopped?.by).toEqual({
+      id: ALICE.id,
+      name: ALICE.displayName,
+    })
+  })
+
   it("a helper's Stop on another's conversation is 404, and the round works on", async () => {
     const s = setUp(AT_BUILD)
     together(s)

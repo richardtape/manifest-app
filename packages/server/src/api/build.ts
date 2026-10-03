@@ -229,6 +229,9 @@ export function registerBuild(
         pieceOf(store, conversation.id).kind === 'first'
       )
         return refuse(reply, 409, 'CONVERSATION_STATE')
+      // Who pressed it is named on the round from our persons (minors m78): heard here, never
+      // "Someone" for an owner whose page never read the band.
+      store.rememberPerson(who.person)
       endWork({ store, hub, rounds, line }, conversation, {
         by: who.person.id,
         why: 'stopped',
