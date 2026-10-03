@@ -840,6 +840,8 @@ describe('their agent’s questions, at the top (F6b Task 12; Decision 16; (S1: 
     open(s)
     await press(within(await firstCard()).getByRole('button', { name: q.no }))
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe(q.saidNo))
+    // m119 (Rich, 2026-10-03 ~14:42 PDT): the agent learns it at its next try, never "told".
+    expect(q.saidNo).toBe("You said no. It'll find out next time it tries.")
     await waitFor(() =>
       expect(cards()?.querySelectorAll('.agents__question')).toHaveLength(1),
     )

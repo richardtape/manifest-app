@@ -1556,7 +1556,8 @@ export const words = {
       ownerAnswers: 'An owner answers this.',
       /** Ours: what the answer did, said in the page's status. */
       saidYes: 'You said yes. It can try that one request once.',
-      saidNo: 'You said no, and it has been told.',
+      /** m119, Rich's words (2026-10-03): the agent learns it at its next try. */
+      saidNo: "You said no. It'll find out next time it tries.",
       stopped: 'It has stopped waiting.',
       couldnt: "We couldn't answer it just now. It's still waiting.",
     },
