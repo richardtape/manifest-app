@@ -200,7 +200,8 @@ export function openAiCompatible(options: {
     baseUrl,
     key,
     model,
-    fetch: send = fetch,
+    // m37: the global at the moment it asks, never the one when the model was made.
+    fetch: send = (input, init) => globalThis.fetch(input, init),
     deadlines = ASKING_DEADLINES,
     onAnswer,
   } = options

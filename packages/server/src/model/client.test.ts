@@ -184,6 +184,29 @@ describe('openAiCompatible: the request', () => {
   })
 })
 
+describe('openAiCompatible: its fetch (m37)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('m37: the global fetch is the one at the moment it asks, never the one when the model was made', async () => {
+    // A closed port: the fetch taken at making would be refused, and the stub never asked.
+    const model = openAiCompatible({
+      baseUrl: 'http://127.0.0.1:9/v1',
+      key: KEY,
+      model: 'default-chat-large',
+    })
+    const asked: string[] = []
+    vi.stubGlobal('fetch', async (url: string) => {
+      asked.push(url)
+      return new Response('{}', { status: 503 })
+    })
+    await model.complete('intake', Guess, MESSAGES).catch(() => undefined)
+    expect(asked.length).toBeGreaterThan(0)
+    expect(new Set(asked)).toEqual(new Set(['http://127.0.0.1:9/v1/chat/completions']))
+  })
+})
+
 describe('openAiCompatible: the answer', () => {
   it('a valid answer is parsed and typed', async () => {
     const { baseUrl } = await gateway([said(GOOD)])
