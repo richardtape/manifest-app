@@ -11,6 +11,11 @@ export interface ChoiceProps {
   type?: 'radio' | 'checkbox'
   name?: string
   label?: string
+  /**
+   * Ours (minors m116): the id of a label already on the page, as visible text, which names the
+   * group instead of `label`, so a screen reader hears it once.
+   */
+  labelledBy?: string
   options?: ChoiceOption[]
   /** Radio only; undefined is nothing chosen yet. Checkboxes carry `checked` per option. */
   value?: string | undefined
@@ -30,7 +35,9 @@ export function Choice(props: ChoiceProps) {
     <div
       className={cx('mf-choices', props.className)}
       role={type === 'radio' ? 'radiogroup' : 'group'}
-      aria-label={props.label}
+      {...(props.labelledBy === undefined
+        ? { 'aria-label': props.label }
+        : { 'aria-labelledby': props.labelledBy })}
     >
       {options.map((o, i) => {
         const on = type === 'radio' ? o.value === props.value : !!o.checked

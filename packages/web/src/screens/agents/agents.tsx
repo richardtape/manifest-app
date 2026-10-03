@@ -601,11 +601,13 @@ export function Agents({
               onChange={(event) => setName(event.target.value)}
               {...(count === undefined ? {} : { count })}
             />
-            <p className="mf-field__label">{m.may}</p>
+            <p className="mf-field__label" id="agents-may">
+              {m.may}
+            </p>
             <Choice
               type="checkbox"
               name="agents-may"
-              label={m.may}
+              labelledBy="agents-may"
               options={MINTABLE.map((capability) => ({
                 title: CAPABILITY_WORDS[capability]!,
                 value: capability,
@@ -620,10 +622,12 @@ export function Agents({
                 })
               }
             />
-            <p className="mf-field__label">{m.long}</p>
+            <p className="mf-field__label" id="agents-long">
+              {m.long}
+            </p>
             <Choice
               name="agents-days"
-              label={m.long}
+              labelledBy="agents-long"
               value={String(days)}
               options={DAYS.map((n) => ({ title: m.days(n), value: String(n) }))}
               onChange={(value) => setDays(Number(value))}

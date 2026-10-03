@@ -536,6 +536,20 @@ describe('Let an agent of your own in (Review Focus 4)', () => {
     ).toEqual([m.days(7), m.days(30), m.days(90)])
   })
 
+  it('each group is named by its visible label, never a second copy of it (minors m116)', async () => {
+    open(stage())
+    await screen.findByRole('heading', { name: m.title })
+    for (const [role, said] of [
+      ['group', m.may],
+      ['radiogroup', m.long],
+    ] as const) {
+      const group = screen.getByRole(role, { name: said })
+      expect(group.hasAttribute('aria-label')).toBe(false)
+      const label = document.getElementById(group.getAttribute('aria-labelledby') ?? '')
+      expect(label?.textContent).toBe(said)
+    }
+  })
+
   it('Make it waits for a name and something it may do', async () => {
     open(stage())
     await screen.findByRole('heading', { name: m.title })
