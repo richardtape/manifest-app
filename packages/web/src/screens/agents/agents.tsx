@@ -131,8 +131,8 @@ export function Agents({
   const [name, setName] = useState('')
   const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set())
   const [days, setDays] = useState<number>(30)
-  /** An answer given here: the second sign-in's line has done its work. */
-  const [answered, setAnswered] = useState(false)
+  /** A press made here, an answer or any other (m107): the second sign-in's line has done its work. */
+  const [pressed, setPressed] = useState(false)
   /** The question a [Yes, once] left for the second sign-in (the whole-branch review's I2). */
   const [asked] = useState(() => (then === 'agents' ? askedOf(project.slug) : null))
   // Back from signing in again: said once, and `then` taken out of the address without a
@@ -212,6 +212,7 @@ export function Agents({
   })
 
   const begin = (press: Pressing) => {
+    setPressed(true)
     setSaid(undefined)
     setStatus(null)
     setPressing(press)
@@ -306,7 +307,7 @@ export function Agents({
         if (live.current) void ensureWatch(platform, ours, project, new Date())
       }, RECHECK_MS)
     }
-    setAnswered(true)
+    setPressed(true)
     setSaid(undefined)
     setStatus(
       answer === 'yes'
@@ -399,7 +400,7 @@ export function Agents({
         <TroubleNotice trouble={loaded.stale} onRetry={retry} />
       ) : null}
       {/* The second sign-in's line, card or none (the whole-branch review's I2). */}
-      {loaded.state === 'ready' && back && !answered ? (
+      {loaded.state === 'ready' && back && !pressed ? (
         <p className="body">{words.goingLive.letIn.again}</p>
       ) : null}
       {loaded.state === 'ready' ? (
