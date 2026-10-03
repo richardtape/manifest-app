@@ -1445,6 +1445,12 @@ FE-46"*): carried now, and F6b's moment 17 is designed against it.*
   tokens on it are revoked, their open event streams on it close (`4401` a token's…)"*): a switch-off, a delete, an expiry,
   a revocation, and **taking the token's minter off the app** all close the stream `4401`, alike, and the event that says
   what changed (`project.archived`, `member.removed`) never reaches it. The token can read nothing afterwards.
+- **Measured on 7100** (F6b sitting 1, M3, `manifest-app-30`, 2026-10-02, manifest `d5c76d5`): taking someone off closes
+  their token's stream **`4401` with the reason *"the token was revoked"*** (the same as revoking it by hand) and their
+  session's stream **`4404` *"no longer a member of the project"***, both about 2 ms before `member.removed` is published.
+  With our watch theirs, our keeper wrote `keeping.stopped` and kept them as a member; **the next member's hand-over replayed
+  `member.removed`** into our history and corrected the kept members. So the close does carry a reason, but a removal and a
+  revocation read alike (a switch-off's and a delete's reasons are not measured). Our stream reads the code alone.
 - **What we would call:** nothing new: we would read **why** in the close (`4401` with a reason: *switched off*, *deleted*,
   *expired*, *revoked*, *its minter taken off the project*), or receive the event before the close.
 - **What is missing, and what it costs:**
@@ -1486,6 +1492,9 @@ operations). Written, not carried: for Rich.*
 - **What we do meanwhile** (F6b's Decision 4): our page keeps the minter of every token **it** mints; for any other token
   it shows **[Revoke]**, and a `404` says *"Only the person who made it can revoke it."*. Honest, but only for tokens made
   through Manifest's own pages.
+- **Measured on 7100** (F6b sitting 1, M5, 2026-10-02): a helper's `listTokens` lists every minter's tokens (an owner's
+  agent and our *Keeping watch* included, revoked ones with `revokedAt`), with no minter; **an owner revoking a helper's
+  token is `404 NOT_FOUND`** as much as a helper revoking an owner's: only the minter, whatever the role.
 - **Options:**
   - **(a) Recommended:** `Token.mintedBy { userId, displayName }` (the minter is already the row's `userId`); and the same
     on `PendingAction` (or its token's `mintedBy` through `listTokens`).
@@ -1510,10 +1519,57 @@ rule which is right.*
   helper whose own agent asks to add a member cannot answer it, which the docs say they may.
 - **What we build meanwhile** (F6b's Decisions 14 and Task 12): on the code: an owner answers; a helper reads *"An owner
   answers this."*; the email goes to the owners. Sitting 1 measures it (M4).
+- **Measured on 7100** (F6b sitting 1, `manifest-app-30`, 2026-10-02, manifest `d5c76d5`): **the code's rule holds**. A
+  helper's confirm and reject are `403 FORBIDDEN` (*"role 'collaborator' may not 'members:manage'"*, before any step-up),
+  **even for a question from the helper's own agent**; an owner who did not mint the token answers it (`200`).
 - **Options:**
   - (a) The code is right: correct the docs and the remedy (*"a person who may do it themselves answers"*).
   - (b) The docs are right: require the minter as well (and the minter's capability).
 - **When:** the platform's next text pass, or a sitting, at Rich's word.
+
+### FE-51 — An agent's retry after a yes: the hint says the same Idempotency-Key, the platform matches the body
+
+*Found 2026-10-02, measured on 7100 in F6b's sitting 1 (`manifest-app-30`, manifest `d5c76d5`, contract 1.5.0). Written,
+not carried: for Rich, and the platform's to rule which is right.*
+
+- **Screen and moment:** their agent's question (F6b's *Agents*, its card): *"Yes lets it try that one request once."*
+- **What the platform says** ✓: `TOKEN_ACTION_PENDING`'s hint, *"Retry the identical request — same body, same
+  Idempotency-Key — once they have; the confirmation grants it exactly one retry."*
+- **What the platform does** (measured): after an owner's confirm, the token's retry with **another** `Idempotency-Key`
+  passed (`201`, `consumedAt` set), and the retry with the **original** key then opened a **new** pending action. While a
+  question waits, any key answers the same pending action. The match is the token, the method, the path and the body.
+- **Why it matters:** little to us (our page never retries for an agent). An agent that follows the hint and keeps its first
+  key works; one that replays its original key after another client's retry asks the person again.
+- **Options:**
+  - (a) The code is right: the hint says *"the identical request (the same body)"*, and drops the key.
+  - (b) The hint is right: the confirmation is bound to the original key too.
+- **When:** the platform's next text pass, at Rich's word. Nothing of ours waits on it.
+
+### FE-52 — A revoked agent's question stays open, and a yes to it does nothing
+
+*Found 2026-10-02, measured on 7100 in F6b's sitting 1 (`manifest-app-30`, manifest `d5c76d5`, contract 1.5.0). Written,
+not carried: for Rich.*
+
+- **Screen and moment:** *Agents* and F6's band (*"Reading responses: your agent is asking something."*): a question from an
+  agent that has since been revoked, whether by its minter, by a removal (a person taken off has every token revoked, M3), or
+  from the console.
+- **What we would call:** `listPendingActions` and the `pending_action.*` events on our watch token's stream.
+- **What is missing** (measured): **a revoked token's pending actions stay `pending`** until answered or until their 24
+  hours run out. **An owner may still confirm one** (`STEP_UP_REQUIRED`, then `200 confirmed`), and nothing follows: the
+  token's retry is `401 UNAUTHENTICATED`, and `consumedAt` stays `null`. **No event says a token was revoked** (no
+  `token.revoked`), so our keeper cannot tell that a question can no longer be acted on.
+- **Why it matters:** the band says an agent is asking something for up to a day after the agent is gone, and a person who
+  answers *yes* is told nothing went wrong while nothing happened.
+- **What we build meanwhile** (F6b's Decision 16, **(S1: M4)**): *Agents*' card asks only about a question whose token is
+  still active (`listTokens`: not revoked, not expired); our own **[Revoke]** first answers *no* to that agent's waiting
+  questions, so their `.rejected` ends the band's need. *Residual:* a token revoked anywhere else keeps its question in the
+  band until its 24 hours end.
+- **Options:**
+  - **(a) Recommended:** revoking a token (or its expiry) ends its pending actions (`state: 'expired'`, or `rejected` with a
+    reason the platform words) with their event.
+  - (b) A `token.revoked` event (`{ tokenId, by }`), so a front-end can drop them itself.
+  - (c) Leave it: our residual stays.
+- **When:** any platform sitting; nothing of F6b waits on it.
 
 ## Not a gap: decisions that are Rich's
 

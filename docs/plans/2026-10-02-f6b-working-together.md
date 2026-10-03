@@ -133,7 +133,11 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
   (an owner's: a collaborator is `403 FORBIDDEN`) and **a step-up within ten minutes** (`403 STEP_UP_REQUIRED`); a token's
   request becomes a pending action. Refusals: `MEMBER_USER_NOT_FOUND` and `MEMBER_USER_AMBIGUOUS` (`400`),
   `MEMBER_MAY_NOT_BUILD`, `PROJECT_LAST_OWNER`, `PROJECT_ARCHIVED` (`409`). `Member` is `{ userId, puid, cwlLogin: string |
-  null, displayName, email, role }`.
+  null, displayName, email, role }`. **(S1: M3)** measured as read, and: the step-up returns `302` to `returnTo` exactly;
+  one step-up covers every members change for ten minutes; **`removeMember` of someone not on the app (or a made-up id) is
+  `200` with the list unchanged**, no refusal and no event; the last owner adding themself as a helper is
+  `PROJECT_LAST_OWNER` too; a helper reads the members (`200`), a stranger gets `404`. **In `member.added` and
+  `member.removed`, `userId` is the one who did it and `memberId` the one it is about** (our keeper reads them so).
 - **Removing someone** (FE-11, `project-reads.ts:581-663`): their tokens on the project revoked, their tokens' streams
   closed **`4401`**, their own browser streams **`4404`**, their agent sessions ended, then `member.removed { memberId,
   tokensRevoked, sessionsEnded, via, userId, tokenId }`. **A stream of a token they minted closes before `member.removed`
@@ -144,7 +148,9 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
   does not exist. `mintToken`: `expiresInDays` 1–365; **eleven capabilities may be minted** (`project:read`,
   `project:write`, `source:write`, `secret:write`, `output:read`, `agent:session`, `build:create`, `release:create`,
   `release:deploy`, `launch:draft`, `approval:request`); D24's privileged four and the five person-only ones are `400
-  TOKEN_CAPABILITY_FORBIDDEN`. **No `token.revoked` event exists.**
+  TOKEN_CAPABILITY_FORBIDDEN`. **No `token.revoked` event exists.** **(S1: M5)** measured: a helper's `listTokens` lists
+  every minter's; **an owner's `revokeToken` of a helper's token is `404` too** (only the minter, whatever the role); a
+  helper may mint an agent's token (`201`); a token's `mintToken` is `403 TOKEN_CREDENTIAL_REFUSED`.
 - **Pending actions** (D24): `listPendingActions` (a person sees all; a token its own), `confirmPendingAction` (**asks a
   step-up**), `rejectPendingAction` (`{ reason }`, **1–500 characters, required**; never a step-up). `PendingAction` is `{
   id, projectId, tokenId, action, state: pending | confirmed | rejected | expired, method, path, bodySha256, summary,
@@ -153,6 +159,12 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
   **Who may answer:** the code lets **anyone holding the action's capability** answer (`pending-actions.ts:90`: for
   `members:manage` and `release:promote`, an owner); the docs say **its minter** (**FE-50**). `pending_action.created {
   pendingActionId, tokenId, action }`, `.confirmed` and `.rejected` reach **any `project:read` stream**: our watch token's.
+  **(S1: M4)** measured: the events reach our watch and our keeper writes them; `.confirmed` and `.rejected` also carry
+  `resolvedBy` (a person id), `.rejected` the `reason`. **The code's rule holds (FE-50)**: a helper's confirm and reject
+  are `403 FORBIDDEN`, **even for their own agent's question**; an owner who did not mint it answers. `listPendingActions`
+  takes **no `?state=`** (`400`): filter `pending` on the page. A watch token's list is `[]` (its own only). The retry after a
+  yes is matched by the body, not the key (**FE-51**). **A revoked token's questions stay `pending`, and a yes to one does
+  nothing** (**FE-52**; Decision 16).
 - **A change after launch.** `createCommit`'s `CommitOutcome.spec.sensitiveDiff` is `{ sensitive: boolean, fields:
   string[] }`, measured **against the newest valid manifest** (one commit's delta); the platform's seven
   (`spec/diff.ts`): `services`, `auth.attributes`, `egress.allow`, `resources`, `data.classification`, `ai.models`,
@@ -227,7 +239,9 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
    line or planning is set aside; their conversation tokens are dropped and their `minted` rows forgotten. **Their own
    conversations on that app become `404` to them** (they are no longer a member: the platform's rule, ours too), and
    readable by the members, ended. *Residual* (FE-48's): until a member's page hands a new watch, a removed watch-minter is
-   still a kept member here, and reads as one.
+   still a kept member here, and reads as one. **(S1: M3)** seen live, both ways: with our watch the remover's, our keeper
+   heard `member.removed` and dropped them; with our watch theirs, it wrote `keeping.stopped` and kept them, and **the next
+   member's hand-over replayed `member.removed`** and dropped them.
 6. **"Stopped by"** is the run's (Task 2): `RunDetail.stopped: { by: string; why: 'stopped' | 'removed' } | null` (a person
    id; JSON, no migration), and `RoundView.stopped: { name: string; why: 'stopped' | 'removed' } | null`. The page says
    *"Stopped by Alex."* only when the one who stopped is not the conversation's own person.
@@ -269,7 +283,17 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
     token's question**, so the summary and the true expiry are the card's, read in the person's session). The token's name,
     for the email, is ours when our page minted it (`minted.name`), else *"An agent"*. **Emailed once to the app's owners** (they may answer `members:manage` and `release:promote`; FE-50), as F6's
     **`waiting`** kind (D3's four kinds stand: a question for them is *your work is waiting*), keyed by the pending action.
-    **Not to the minter as such** (FE-49: we cannot know them).
+    **Not to the minter as such** (FE-49: we cannot know them). **(S1: M4)** measured: the event carries no expiry
+    (`pending_action.created { action, tokenId, pendingActionId }`), the platform's `expiresAt` is its `createdAt` plus 24
+    hours, and a watch token's `listPendingActions` is `[]`.
+16. **A question from an agent that can no longer act is not asked** **(S1: M4, ours)**. The platform keeps a revoked
+    token's questions `pending` for their 24 hours, and a yes to one does nothing (FE-52). So *Agents*' card lists a
+    `pending` question only when its token is still active (`listTokens`: not revoked, not expired), and **our
+    [Revoke] first answers *no*** to that token's waiting questions (`rejectPendingAction`, *"This agent was revoked."*), so
+    their `.rejected` ends the band's need. *Residual:* a token revoked elsewhere (the console, a removal, which revokes the
+    person's tokens) keeps its need in the band until its 24 hours end, with no card behind it. *Rejected:* a card with
+    **[No]** alone for a revoked agent (a question nobody can act on, asked anyway); our keeper reading `listTokens` (a
+    person's session only: the watch token cannot, and no event says when to).
 15. **Text kept across a step-up** (Task 6): *People*'s typed name and role, in `sessionStorage` under
     `manifest-app.people.<projectId>`, written on `STEP_UP_REQUIRED` and read once (removed) on return, as trying-out keeps
     its release id. **A secret is never stored anywhere** (Task 11): a page left after **[Make it]** loses it, as the words
@@ -744,8 +768,9 @@ export function Agents(props: { platform: Platform; ours: Ours; project: Schemas
     conversation, or with the app."* and **no [Revoke]**; **theirs**: the name, what it may do in words, *"Last used …"* /
     *"Never used"*, *"Stops working …"*.
   - **[Revoke]:** on a token we minted for `me` (Decision 4), and on any token we did not mint (FE-49); one minted by
-    someone else here: *"Only the person who made it can revoke it."* and no press; **a `404` at the press says the same**;
-    a success re-reads the list.
+    someone else here: *"Only the person who made it can revoke it."* and no press; **a `404` at the press says the same**
+    (**(S1: M5)**: an owner's press on a helper's token is `404` too); a success re-reads the list. **Before the revoke,
+    [Revoke] answers *no* to that token's `pending` questions** (Decision 16, **(S1: M4)**), then revokes.
   - **Let an agent of your own in:** a name; each mintable capability a checkbox in words; 7, 30 or 90 days; **[Make it]**
     → `mintToken` with exactly what was chosen, then `ours.keepAgent({ tokenId, name, expiresAt })` **with no secret** (Review
     Focus 4); the secret shown **once**, in mono, **[Copy]**, *"This is the only time we can show it. Keep it somewhere
@@ -785,14 +810,17 @@ export const ACTION_WORDS: Record<string, (app: string) => string>   // the four
     `.confirmed`, `.rejected`, or `expiresAt` passed → the need gone (Review Focus 5: no event needed for expiry).
   - **The band:** *"Reading responses: your agent is asking something."* **[Agents]**; **on a switched-off app it goes**
     (`needsStillTrue` keeps only questions of ours; a switch-off revokes every token, so nothing can be confirmed).
-  - **The card** (top of *Agents*, from `listPendingActions`, `pending` only): *"Your agent 'Claude Code' asked to change
+  - **The card** (top of *Agents*, from `listPendingActions`, `pending` only, filtered on the page: the operation takes no
+    `?state=` **(S1: M4)**; **and only a question whose token is still active**, Decision 16): *"Your agent 'Claude Code' asked to change
     who's on Reading responses."* (its name joined from `listTokens`; `null` → *"An agent"*); *"It didn't say who. If you're
     not sure, say no."*; *"Yes lets it try that one request once."*; *"It stops waiting at 4:12pm."*; **[Yes, once]** ·
     **[No]**, *"Tell it why"* (a textarea, `FieldCount` to 500, never `maxLength`).
   - **[Yes, once]:** `confirmPendingAction`; `STEP_UP_REQUIRED` → F5's `StepUpCard` to `…/agents?then=agents`, back *"You're
     signed in again."* and the same card; **[No]:** `rejectPendingAction` with the words typed, or *"No reason given."*
-    (Decision 13); **`PENDING_ACTION_RESOLVED`:** *"It has stopped waiting."* and the list re-read; **a helper:** *"An owner
-    answers this."*, no presses (FE-50: **(S1: M4)**).
+    (Decision 13); **`PENDING_ACTION_RESOLVED`:** *"It has stopped waiting."* and the list re-read (**(S1: M4)**: the platform
+    answers it when someone has already answered, *"this pending action was already confirmed"*; the words are Rich's to
+    sharpen); **a helper:** *"An owner answers this."*, no presses (FE-50 **(S1: M4)**: a helper's confirm and reject are
+    `403 FORBIDDEN` **even for their own agent's question**, before any step-up).
   - `machineryIn` empty over the four actions and an unknown one.
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** an email to a helper (red); an expired question still in
   the band (red); `reject` with an empty reason (red). Each restored. **Walk it.**

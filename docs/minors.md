@@ -256,6 +256,12 @@ six Important and one Minor re-graded Important fixed test-first in `3912ff3`, t
 | m95 | The review's M10 | `MEMBER_USER_NOT_FOUND` says `app.manifest.internal` in plain prose; C3 and the design show a hostname in mono. | `packages/web/src/words.ts` (`people.refused`), drawn by `people.tsx`. | S | faculty-visible |
 | m96 | The review's M12 | BuildingScreen's `send` would mint and hand over on `TOKEN_MISSING` for any press, an owner's Stop on another's included; safe today only because Stop never answers it. Guard the branch for another's. | `packages/web/src/screens/building/building.tsx` (`send`). | S | robustness |
 
+**From F6b sitting 1's measurements on 7100** (`manifest-app-30`, 2026-10-02, M3; the plan's entry *Sitting 1*).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m97 | M3, seen live | The history names people from the members we keep **now**, so once someone is taken off, every line about them (their adding, their new role, their removal) loses their name: *"Test Instructor took someone off it"*, *"… added someone"*. Seen in `/api/apps/:id/history` while `colleague` was off the app; their name came back when they were added again. Keep each person's name with the happening (or a name kept for former members), as F6 sitting 5's *"Alice took Bob off it"* meant. | `packages/server/src/keeping/happenings.ts` (`linesOf` → `nameOf(members, …)`); `emails.ts`'s `nameOf` reads the same members. | S | faculty-visible |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed
