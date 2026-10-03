@@ -54,7 +54,7 @@ moments **17 and 18**, and *Throughout*'s **An agent of their own**.
 
 | Sitting | Tasks | Delivers | Status |
 |---|---|---|---|
-| 1 | 1 | **The measurements** that reading could not settle (M1–M5, below), on 7100 in the platform's window, at Rich's word, **with two people**. **Alone.** Sittings 2 and 3 may run before it (they need no platform); 4 and 5 after it | not started |
+| 1 | 1 | **The measurements** that reading could not settle (M1–M5, below), on 7100 in the platform's window, at Rich's word, **with two people**. **Alone.** Sittings 2 and 3 may run before it (they need no platform); 4 and 5 after it | **done 2026-10-02** (`manifest-app-30`, edge mode, in `manifest-96`'s window): M1–M5 on `f6b-measure-1`, launched; the plan corrected **(S1)**; FE-51, FE-52, m97, Decision 16. *What executing this plan found*, its entry |
 | 2 | 2, 3, 4 | **Our server:** sharing (§3); the token ids kept (D5), store version 6; the keeper's removals (§2's last part) | **done 2026-10-02** (`manifest-app-b8`, mock mode): `a751003`, `2e3a21a`, `144d513`; the review's I1 and I3 `2169b13`; a flake `32887f1`. 2386 tests twice; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 3 | 5, 6, 7 | **The page:** the platform's six new calls, *People* and *Agents* in the rail; *People* (moment 18); working on it together (§3) | **done 2026-10-02** (`manifest-app-b8`, mock mode): m77 `9502d7c`; `005a552`, `1559bc6`, `842a403`; the review's fixes `3912ff3`. 2476 tests twice; walks of *People* and of two people on one app at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 4 | 8, 9, 10 | **A change after launch** (moment 17): the kind of change; the new detail's stop and **[Leave it out]**; *Waiting to reach your students* | not started |
@@ -113,7 +113,7 @@ here** (each in `words.ts`, or `keeping/words.ts` for the email):
 | *People* | *(you)* · **Owner** · **Helper** · **[Add them]** · *"Adding…"* · **[Make owner]** · **[Make helper]** · **[Take off]** · *"Taking them off…"* · *"We couldn't change who's on it just now. Nothing has changed."* |
 | Together | *"<Name> was taken off <App>. Their work on it stopped."* (a removed member's conversation) · *"<Name> · <title>"* (the list's row) |
 | The kind of change | an unknown sensitive field: *"something reviewed at launch"* · the round's end: *"Ready on your draft address. <the kind>"* |
-| A new detail | each detail in words (Decision 9): *"their name"*, *"their first name"*, *"their last name"*, *"their email"*, *"whether they're a student or staff"*, *"their student number"*; an unknown one: *"a new detail about the people who sign in"* · **[Leave it out]**'s change, its first words: *"Leave <detail> out of '<title>': UBC's identity team hasn't agreed to share it."* |
+| A new detail | each detail in words (Decision 9): *"their name"*, *"their first name"*, *"their last name"*, *"their email"*, *"whether they're a student or staff"*, *"their student number"* (**(S1: M1)**: only *first name* (`givenName`), *last name* (`sn`), *email* (`mail`) and *student or staff* (`eduPersonAffiliation`) can arise; the platform refuses the rest at the commit); an unknown one: *"a new detail about the people who sign in"* · **[Leave it out]**'s change, its first words: *"Leave <detail> out of '<title>': UBC's identity team hasn't agreed to share it."* |
 | *Agents*: what a token may do | *read the app* · *change its settings* · *change its code* · *set its secrets* · *read what it printed* · *use AI on your allowance* · *build it* · *make a version* · *put a version on the draft or trying-out address* · *draft its launch records* · *ask for a Manifest administrator's sign-off*; an unknown one by its name · *"Last used <when>"* / *"Never used"* · *"Stops working <day>"* · **[Make it]** · *"7 days"*, *"30 days"*, *"90 days"* · *"How an agent uses it"* |
 | Their agent's question: the action | *change who's on <App>* (`members:manage`) · *let your students have a new version* (`release:promote`) · *read one of its secrets* (`secret:read`) · *change how much it may use* (`quota:set`); an unknown one: the platform's `summary`, as it says it |
 | Their agent's question: no reason given | **[No]** with *"Tell it why"* left empty sends *"No reason given."* (the platform asks for one: Decision 13) |
@@ -173,14 +173,31 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
   (the release serving staging). `deploy` to production asks **`release:promote`** (an owner's), **a step-up**, and
   `ready`; refusals `RELEASE_REESCALATED` (only the approval missing), `RELEASE_PRODUCTION_GATE_UNAVAILABLE`,
   `RELEASE_NOT_STAGED` (`409`, with `error.launchReadiness`). `requestApproval` serves a launched app's release that changes
-  a sensitive field (`409 APPROVAL_NOT_NEEDED` otherwise).
+  a sensitive field (`409 APPROVAL_NOT_NEEDED` otherwise). **(S1: M2)** measured end to end with a conversation token:
+  each commit's `sensitiveDiff` is that commit's alone (`egress.allow`; a README `{ false, [] }`; `egress.allow` again);
+  before the change `baselineReleaseId` is `null`; on trying-out `reescalated: true`, `sensitiveFields: ['egress.allow']`,
+  `admin-approval` `unmet`; **the owner's production deploy asks the step-up first, then answers `409 RELEASE_REESCALATED`**;
+  the owner's `requestApproval` is `200` with no step-up (`approval.requested` on the stream; `admin-approval`'s `since` is
+  the ask's time); after the administrator's approval `ready: true`, `reescalated: false`, **but `sensitiveFields` keeps
+  `['egress.allow']`**, before and after the press: **`reescalated` is the signal, never `sensitiveFields` alone**. The
+  conversation token's own production deploy is `403 TOKEN_ACTION_PENDING` (`release:promote`: a question for an owner);
+  our round never makes it.
 - **M1, read** (`releases/build.ts:179`, `:239-258`, `:325-341`): a manifest asking for a CWL attribute that production's
   **registered** registration (`registeredAt` set) lacks fails **every** build, the sandbox's included: **not** `startBuild`'s
   answer (it was `202`), but the build `failed` and **`build.failed` with `machineDetail.code:
   'SPEC_ATTRIBUTE_NOT_REGISTERED'`**, and the attributes only in a free-text `reason`. `auth.attributes` is free strings (no
-  catalogue on the platform).
+  catalogue on the platform). **(S1: M1) Measured, and one line corrected: there IS a catalogue.** A commit asking an
+  attribute outside the platform's five (`ubcEduCwlPuid`, `mail`, `givenName`, `sn`, `eduPersonAffiliation`) is refused at
+  the commit, `422 SPEC_INVALID` with `details[].code` `SPEC_ATTRIBUTE_NOT_WHITELISTED` (*"uid" is not a releasable UBC
+  attribute*), and nothing is written. A whitelisted attribute that production did not register is the build's failure,
+  as read: the commit `201`, `startBuild` `202`, the build `failed` within a second, and **`build.failed` reaches the
+  conversation token's stream with `machineDetail { code: 'SPEC_ATTRIBUTE_NOT_REGISTERED', reason, buildId }`**.
+  **`getLaunchRecords` answers the conversation token** (`200`): the field is **`iamRegistration.registeredAttributes`**
+  (production's, `registeredAt` set). The readiness's `iam-registration` item reads `unmet` for such a release at once.
 
 ### What sitting 1 still measures (M1–M5)
+
+*Measured 2026-10-02 (sitting 1): each answer is in its line above and below, marked **(S1)**, and in the entry *Sitting 1*.*
 
 1. **M1.** On a launched app with production registered: a commit adding `sn` to `auth.attributes`; `build.failed`'s
    `machineDetail.code` **on the conversation token's stream**; `getLaunchRecords` with **the conversation's token** (its
@@ -257,9 +274,12 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
 9. **The new detail** (Task 9): a build failure whose `build.failed.machineDetail.code` is
    **`SPEC_ATTRIBUTE_NOT_REGISTERED`** stops the round at once (never three tries: no retry can pass), as a new needs kind
    **`detail`** with **`details: string[]`**, the attributes **our committed manifest asks for minus production's
-   registered ones** (`getLaunchRecords` with the conversation's token; **(S1: M1)** its field). **Never parsed from the
-   free-text `reason`.** Words per attribute (*Words proposed*); an unknown one, *"a new detail about the people who sign
-   in"*, never its name (C3).
+   registered ones** (`getLaunchRecords` with the conversation's token; **(S1: M1)** its field is
+   `iamRegistration.registeredAttributes`, readable with that token). **Never parsed from the free-text `reason`.** Words
+   per attribute (*Words proposed*); an unknown one, *"a new detail about the people who sign in"*, never its name (C3).
+   **(S1: M1)** only the platform's five can reach a build (any other is refused at the commit, `SPEC_INVALID`, which the
+   round already meets as a refused commit), so the words need only `mail`, `givenName`, `sn` and `eduPersonAffiliation`
+   (`ubcEduCwlPuid` is always registered); the generic words stay for a sixth the platform adds.
 10. **[Leave it out]** (Task 9, until FE-47): **a new change conversation on the app**, seeded with our words (*"Leave
     <detail> out of '<title>': …"*), planned and agreed first (moment 8, as F5's *Talk it through* is), and the stuck one set
     aside (readable). *Rejected:* a message to the stuck round (the plan agreed would no longer be what is built: D3 of F4,
@@ -732,7 +752,8 @@ export function NewVersion(props: { platform: Platform; ours: Ours; project: Sch
   trying-out address. Your students have the version from 18 September."*); **self-serve, an owner:** F5's press (its
   step-up to `?then=new-version`, its stations, *"Your students have the version from 3 October."*); **a helper:** *"An
   owner lets your students have it."*, no press; **re-escalated:** the fields in words (Task 8's `SENSITIVE_WORDS`) and
-  F5b's **[Ask a Manifest administrator to sign this off]** (its note, its asked row), no deploy press; **another item
+  F5b's **[Ask a Manifest administrator to sign this off]** (its note, its asked row), no deploy press (**(S1: M2)**: read
+  `reescalated`, never `sensitiveFields`, which stays non-empty after the approval and the press); **another item
   unmet:** its row's words and **[Going live]**; **a failed deploy:** *"Your students still have the version from 18
   September."* and F5's **[What went wrong]**; `RELEASE_REESCALATED` met at the press: the panel read again;
   `machineryIn` empty.
@@ -1045,3 +1066,52 @@ tier and closing tests (`manifest-5a`), then **closed at `d5c76d5`: the launch p
   ready; the router's `/agents` draws the unknown page until then; mock mode mints one token id for everything.
 - **The machine:** our server in **mock mode**, restarted for each acceptance run; the walks' databases kept in `.data/`
   (`app-f6b-s3-walks.sqlite`, `app-f6b-s3-walks-2.sqlite`, with the seeded second person).
+
+### 2026-10-02 — Sitting 1: the measurements on 7100 (Task 1) (session `manifest-app-30`, edge mode, natively)
+
+**At Rich's word** (*"Go: F6b sitting 1"*; the walk types the laptop IdP's test passwords; F5b's sitting 1 its own,
+later). **The window was `manifest-96`'s** (the platform's new session, no work of its own: no restart, tier, verify,
+truncation or cleanup until we closed it). 7100: `37b223d`, real GitHub, its database empty at the start. Our server in
+**edge mode** for the sitting (the mock-mode database kept as `app-before-f6b-s1.sqlite`, restored at the close).
+**Operator's admin grant:** `manifest-96`'s permission classifier refused it; **Rich ran it himself** (the second time with
+the script's absolute path: the first ran where the script is not, and never reached the database). Neither session
+routed around the refusal. M3–M5 ran while it waited (`52a1717`).
+
+- **The app:** `f6b-measure-1` (instructor's; **a real private repository, `Manifest-local-dev/f6b-measure-1`, for Rich to
+  delete**), made, built, on trying-out, then launched by the walk's `launch` (records, the owner's dry run, the sign-off,
+  the owner's press): live at 04:32Z, then its second version (M2) live at 04:36Z. Left live; our *Keeping watch* the one
+  active token on it.
+- **M1** (Decision 9, Task 9): **one line of the plan was wrong**: `auth.attributes` is **not** free strings: the platform
+  accepts five (`ubcEduCwlPuid`, `mail`, `givenName`, `sn`, `eduPersonAffiliation`) and refuses any other **at the commit**
+  (`422 SPEC_INVALID`, `SPEC_ATTRIBUTE_NOT_WHITELISTED`). The proof-app starter asks all five, so the unregistered detail
+  was made by **the registration** (recorded without `sn`, then the round's commit adding it): the commit `201`, the
+  build `failed` at once, and **`build.failed` on the conversation token's stream with `machineDetail { code:
+  'SPEC_ATTRIBUTE_NOT_REGISTERED', reason, buildId }`**; **`getLaunchRecords` answers the conversation token**, its field
+  **`iamRegistration.registeredAttributes`**. Put back after.
+- **M2** (Decisions 8 and 11, Task 10), end to end: each commit's `sensitiveDiff` is its own (`egress.allow`; a README
+  none; `egress.allow` again); on trying-out `reescalated`, `admin-approval` unmet; **the owner's press: the step-up first,
+  then `409 RELEASE_REESCALATED`**; the owner's `requestApproval` `200`, no step-up; the administrator's approval (its own
+  step-up); the press again `200`. **`sensitiveFields` stays `['egress.allow']` after the approval and the press**: the
+  panel reads `reescalated`. The conversation token's production deploy is a pending action (`release:promote`).
+- **M3** (Decision 5, Task 4, *People*): the step-up returns to `?then=people` exactly; every refusal's code and hint as the
+  design words them; **`removeMember` of a non-member is `200`, unchanged**; in `member.*`, `userId` is who did it and
+  `memberId` whom. **FE-48 seen live**: a removal closes the person's token stream `4401` (*"the token was revoked"*) and
+  session stream `4404` before `member.removed`; with our watch theirs, our keeper wrote `keeping.stopped`, and **the next
+  member's hand-over replayed `member.removed`** and dropped them. *People* matches every code measured.
+- **M4** (Decisions 13, 14, Task 12): `TOKEN_ACTION_PENDING` and the pending action as read; the events reach our watch and
+  our history (`.confirmed`/`.rejected` with `resolvedBy`); a watch token's list is `[]`; no `?state=` filter. **FE-50:
+  the code's rule**: a helper cannot answer, **even their own agent's question**; an owner answers any. The owner's confirm
+  asks a step-up, a reject never; a reason is required. **FE-51** (new): the retry after a yes is matched by its body, not
+  the key the hint names. **FE-52** (new): a revoked agent's question stays `pending` and a yes to it does nothing:
+  **Decision 16** (ours) asks only about an active agent's, and our [Revoke] answers *no* first.
+- **M5** (Decision 4, Task 11): a helper lists every minter's tokens; **only the minter revokes, an owner included**
+  (`404`). FE-49 as written.
+- **Found:** **m97** (ours, seen live): the history names people from today's members, so someone taken off becomes
+  *"someone"* in every line about them. **FE-51, FE-52** (written, not carried). The platform's `why` mixes a Vancouver
+  date (*"asked … on October 2, 2026"*) with UTC ones (*"approved it on 2026-10-03"*): its text; we draw our own.
+- **The plan corrected**, each marked **(S1)**: *What the contract says* (members, tokens, pending actions, a change after
+  launch, M1's catalogue), Decisions 5, 9, 14 and the new 16, Tasks 10, 11 and 12, *Words proposed* (a new detail).
+  **Sittings 4 and 5 are unblocked**; nothing measured moves sitting 2's or 3's code but m97.
+- **For Rich:** delete `Manifest-local-dev/f6b-measure-1` when he wishes (with `keep-walk-1002` and `f6-watch`);
+  Decision 16 (ours); FE-51 and FE-52; the *"It has stopped waiting."* words (`PENDING_ACTION_RESOLVED` means someone
+  else answered); m97.

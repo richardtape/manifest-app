@@ -1538,6 +1538,9 @@ not carried: for Rich, and the platform's to rule which is right.*
 - **What the platform does** (measured): after an owner's confirm, the token's retry with **another** `Idempotency-Key`
   passed (`201`, `consumedAt` set), and the retry with the **original** key then opened a **new** pending action. While a
   question waits, any key answers the same pending action. The match is the token, the method, the path and the body.
+  **✓ in the code** (`manifest-96`, 2026-10-02): `tokens/pending.ts`'s `resolutionFor()` matches token, method, path and
+  `bodySha256`, no key; the confirm route's own description says *"same token, method, path and body"*
+  (`api/routes/pending-actions.ts:282`); only the hint (`api/errors.ts:391`) names the key.
 - **Why it matters:** little to us (our page never retries for an agent). An agent that follows the hint and keeps its first
   key works; one that replays its original key after another client's retry asks the person again.
 - **Options:**
@@ -1557,7 +1560,10 @@ not carried: for Rich.*
 - **What is missing** (measured): **a revoked token's pending actions stay `pending`** until answered or until their 24
   hours run out. **An owner may still confirm one** (`STEP_UP_REQUIRED`, then `200 confirmed`), and nothing follows: the
   token's retry is `401 UNAUTHENTICATED`, and `consumedAt` stays `null`. **No event says a token was revoked** (no
-  `token.revoked`), so our keeper cannot tell that a question can no longer be acted on.
+  `token.revoked`), so our keeper cannot tell that a question can no longer be acted on. **✓ in the code** (`manifest-96`,
+  2026-10-02): the revoke paths (`tokens/repository.ts`) never touch `pending_actions`; the confirm checks only the row's
+  `state` (`pending-actions.ts:113`), never the token's `revokedAt`; a revoked token never retries (`tokens/actor.ts:79`).
+  The platform session passes it to Rich as a faculty-ready candidate.
 - **Why it matters:** the band says an agent is asking something for up to a day after the agent is gone, and a person who
   answers *yes* is told nothing went wrong while nothing happened.
 - **What we build meanwhile** (F6b's Decision 16, **(S1: M4)**): *Agents*' card asks only about a question whose token is
