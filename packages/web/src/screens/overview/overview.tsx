@@ -20,6 +20,7 @@ import { KIND } from '../preview/preview.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { asServed, audienceWords, beforeLaunch } from '../your-apps/model.js'
 import { Band } from './band.js'
+import { NewVersion } from './new-version.js'
 import { ForYourStudents, handOver, type Handed } from './students.js'
 import { StartForStudents, SwitchBackOn, Switching } from './switching.js'
 
@@ -50,6 +51,11 @@ type Seen = {
    * back on and not running yet (S1: M4), so *Start it for your students* is offered.
    */
   studentsGone: boolean
+  /**
+   * F6b Task 10: the live address of a launched app that is running, for *Waiting to reach your
+   * students*; null otherwise.
+   */
+  production: Schemas['Environment'] | null
 }
 
 /** F6 Task 9: our server's needs and lines for the app, each lost alone, never the page's wait. */
@@ -140,6 +146,7 @@ async function read(
     goingLive,
     launched,
     studentsGone,
+    production: launched && running ? (students ?? null) : null,
     rows: TABS.flatMap((tab) => {
       const found = of(tab)
       if (found === undefined) return []
@@ -259,6 +266,8 @@ export function Overview({
     setLoaded({ state: 'loading' })
     setAttempt((n) => n + 1)
   }, [])
+  // F6b Task 10: the students have a new version: read again, quietly, the page left standing.
+  const readQuietly = useCallback(() => setAttempt((n) => n + 1), [])
 
   const slug = encodeURIComponent(project.slug)
   const audience = audienceWords(project.audience)
@@ -363,6 +372,20 @@ export function Overview({
           ) : null}
           {loaded.seen.handed === null ? null : (
             <ForYourStudents name={project.name} handed={loaded.seen.handed} />
+          )}
+          {loaded.seen.production === null ? null : (
+            <NewVersion
+              platform={platform}
+              ours={ours}
+              project={project}
+              production={loaded.seen.production}
+              role={role}
+              arrived={back === 'new-version'}
+              expire={expire}
+              now={now}
+              timeZone={timeZone}
+              onChanged={readQuietly}
+            />
           )}
           {loaded.seen.band === null ? null : (
             <Band slug={project.slug} band={loaded.seen.band} />

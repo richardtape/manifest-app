@@ -80,6 +80,8 @@ type Phase =
       serving: Said
       /** Nothing serves the live address: "Nothing reached your students" is true. */
       empty: boolean
+      /** F6b Task 10, after a launch: the day of the version the students still have. */
+      still: string | null
       attempt: string
       incidentId: string | null
     }
@@ -103,6 +105,7 @@ export function LetStudentsIn({
   project,
   ready,
   launched,
+  afterLaunch = false,
   candidate,
   production,
   back,
@@ -121,6 +124,12 @@ export function LetStudentsIn({
   ready: boolean
   /** Whether the page has heard the app is launched (the project, or the checklist). */
   launched: boolean
+  /**
+   * F6b TASK 10 (Decision 11): A NEW VERSION FOR A LAUNCHED APP, from the Overview's *Waiting to reach
+   * your students*: a launch is no reason to send nothing, a failure leaves the students the version
+   * they had, and the second sign-in comes back to the Overview (`?then=new-version`).
+   */
+  afterLaunch?: boolean
   /** Its candidate, as the page last read it, and its day. */
   candidate: Sent | null
   /** The live address, as the page read it. */
@@ -167,7 +176,7 @@ export function LetStudentsIn({
   // HEARD LAUNCHED WHILE UNSURE, OR AFTER A START THAT NEVER ANSWERED (the final review's M3): it
   // is live, and the card says so, never "we couldn't see how it ended" beside it.
   useEffect(() => {
-    if (!launched) return
+    if (!launched || afterLaunch) return
     setPhase((p) =>
       p.at === 'unsure' || p.at === 'failed' ? { at: 'landed', sent: p.sent } : p,
     )
@@ -244,7 +253,7 @@ export function LetStudentsIn({
     let listed: Set<string>
     try {
       const readiness = await platform.getLaunchReadiness(project.id)
-      if (readiness.launched) return launchedMeanwhile()
+      if (readiness.launched && !afterLaunch) return launchedMeanwhile()
       if (!readiness.ready || readiness.candidateReleaseId === null) return gate()
       sent = {
         releaseId: readiness.candidateReleaseId,
@@ -309,7 +318,7 @@ export function LetStudentsIn({
   const notStaged = async (sent: Sent) => {
     try {
       const readiness = await platform.getLaunchReadiness(project.id)
-      if (readiness.launched) return launchedMeanwhile()
+      if (readiness.launched && !afterLaunch) return launchedMeanwhile()
       const releaseId = readiness.candidateReleaseId
       if (!readiness.ready || releaseId === null || releaseId === sent.releaseId)
         return gate()
@@ -414,6 +423,7 @@ export function LetStudentsIn({
   const neverAnswered = async (sent: Sent, attemptId: string) => {
     let serving: Said = { words: words.facts.cantTell, tone: 'neutral' }
     let empty = false
+    let still: string | null = null
     let incident: Schemas['Incident'] | undefined
     try {
       const [environments, found] = await Promise.all([
@@ -425,7 +435,8 @@ export function LetStudentsIn({
         // Before a first launch nothing is served there: a dry run's instance taken down again
         // (the platform's 5b), or this attempt itself, which the platform names when no route
         // serves one (its fallback), is nothing reaching their students.
-        const served = asServed(named, false)
+        // After a launch, the version the students had is what the address serves (F6b Task 10).
+        const served = asServed(named, afterLaunch)
         const there =
           served.instance?.id === attemptId ? { ...served, instance: null } : served
         const release =
@@ -434,6 +445,7 @@ export function LetStudentsIn({
             : await platform.getRelease(there.instance.releaseId).catch(() => undefined)
         serving = servingFact(there, release, timeZone)
         empty = there.instance === null
+        still = release === undefined ? null : whenOf(release.createdAt, now(), timeZone)
       }
       incident = found
     } catch (error) {
@@ -445,6 +457,7 @@ export function LetStudentsIn({
       sent,
       serving,
       empty,
+      still,
       attempt: words.preview.facts.failed(
         found === undefined ? null : agoWords(new Date(found.createdAt), now(), timeZone),
       ),
@@ -471,6 +484,8 @@ export function LetStudentsIn({
     )
   }
   const offered = phase.at === 'offer' || phase.at === 'changed' || phase.at === 'reading'
+  const nv = words.overview.newVersion
+  const button = afterLaunch ? nv.button : l.button
   const noticeCard =
     notice === undefined ? null : (
       <div role="alert">
@@ -480,7 +495,7 @@ export function LetStudentsIn({
       </div>
     )
   return (
-    <section className="trying-out going-live__live" aria-label={l.button}>
+    <section className="trying-out going-live__live" aria-label={button}>
       {noticeCard}
       {offered ? (
         <>
@@ -506,7 +521,7 @@ export function LetStudentsIn({
                 )
               }
             >
-              {l.button}
+              {button}
             </Button>
           </div>
         </>
@@ -532,7 +547,14 @@ export function LetStudentsIn({
           </p>
         </>
       ) : null}
-      {phase.at === 'landed' ? (
+      {phase.at === 'landed' && afterLaunch ? (
+        <>
+          <Stations instance={{ state: 'healthy' }} name={l.stationsLabel} />
+          <p className="going-live__landed" role="status">
+            {nv.landed(phase.sent.when)}
+          </p>
+        </>
+      ) : phase.at === 'landed' ? (
         <>
           <Stations instance={{ state: 'healthy' }} name={l.stationsLabel} />
           <p className="going-live__landed" role="status">
@@ -567,7 +589,11 @@ export function LetStudentsIn({
             // The footnote promises a version still answering: only true when one is.
             {...(phase.serving.tone === 'steady' ? {} : { foot: null })}
           />
-          {phase.empty ? <p className="body-lead">{l.nothingReached}</p> : null}
+          {afterLaunch ? (
+            <p className="body-lead">{nv.still(phase.still)}</p>
+          ) : phase.empty ? (
+            <p className="body-lead">{l.nothingReached}</p>
+          ) : null}
           {phase.incidentId === null ? null : (
             <WhatWentWrong
               platform={platform}
@@ -587,7 +613,14 @@ export function LetStudentsIn({
         />
       ) : null}
       {phase.at === 'step-up' ? (
-        <StepUpCard returnTo={`/apps/${slug}/going-live?then=live`} aboutStudents />
+        <StepUpCard
+          returnTo={
+            afterLaunch
+              ? `/apps/${slug}?then=new-version`
+              : `/apps/${slug}/going-live?then=live`
+          }
+          aboutStudents
+        />
       ) : null}
     </section>
   )

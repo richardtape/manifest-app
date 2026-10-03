@@ -60,6 +60,8 @@ type World = {
   rows: typeof ROWS | null | 'refused'
   /** The versions cannot be read: nothing dates the one live. */
   releaseRefused: boolean
+  /** The checklist beside, as it reads after a launch (F6b Task 10). */
+  readiness: Partial<Schemas['LaunchReadiness']>
 }
 
 function stage(world: Partial<World> = {}) {
@@ -68,6 +70,7 @@ function stage(world: Partial<World> = {}) {
     launched: true,
     rows: ROWS,
     releaseRefused: false,
+    readiness: {},
     ...world,
   }
   const calls: [string, ...unknown[]][] = []
@@ -129,6 +132,7 @@ function stage(world: Partial<World> = {}) {
     getLaunchReadiness: answer('getLaunchReadiness', () => ({
       ...fixtures.LAUNCH_READINESS,
       launched: w.launched,
+      ...w.readiness,
     })),
     getLaunchRecords: answer('getLaunchRecords', () => fixtures.LAUNCH_RECORDS),
     getApproval: answer('getApproval', () => null),
@@ -364,5 +368,25 @@ describe('launched while this page’s lookup still says not (sitting 3’s carr
     await act(async () => undefined)
     expect(screen.queryByRole('region', { name: words.preview.tabs.students })).toBeNull()
     expect(s.called('agreedRows')).toEqual([])
+  })
+})
+
+describe('waiting to reach your students, on the Overview (F6b Task 10)', () => {
+  const PANEL = 'Waiting to reach your students'
+  const NEWER = '88888888-8888-4888-8888-888888888882'
+
+  it('a newer version on trying-out than the students have: the panel, said to whoever reads it', async () => {
+    await open(stage({ readiness: { ready: true, candidateReleaseId: NEWER } }))
+    const panel = await screen.findByRole('region', { name: PANEL })
+    expect(
+      within(panel).getByText(/ is on your trying-out address\. Your students have /),
+    ).toBeTruthy()
+    expect(machineryIn(wordsOf(panel))).toEqual([])
+  })
+
+  it('the students have the version on trying-out: no panel', async () => {
+    await open()
+    await handOver()
+    expect(screen.queryByRole('region', { name: PANEL })).toBeNull()
   })
 })

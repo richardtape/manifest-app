@@ -305,11 +305,12 @@ describe('the band: before your students can use it (Decision 3, moment 10; F5bâ
     expect(s.called('getLaunchRecords')).toEqual([])
   })
 
-  it('launched: no band, nothing of it read, and For your students leads', async () => {
+  it('launched: no band, no records read, and For your students leads', async () => {
     const s = await open(`/apps/${SLUG}`, stage({ launchedAt: LAUNCHED }))
     const list = await ready()
     expect(band()).toBeNull()
-    expect(s.called('getLaunchReadiness')).toEqual([])
+    // The checklist is read once, by Waiting to reach your students alone (F6b Task 10).
+    await waitFor(() => expect(s.called('getLaunchReadiness')).toHaveLength(1))
     expect(s.called('getLaunchRecords')).toEqual([])
     const students = screen.getByRole('region', { name: words.preview.tabs.students })
     // It leads: before the addresses.

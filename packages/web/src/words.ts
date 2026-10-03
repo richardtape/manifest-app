@@ -745,6 +745,28 @@ export const words = {
     },
   },
   overview: {
+    /**
+     * F6b TASK 10: WAITING TO REACH YOUR STUDENTS (moment 17; the design's §1, approved by Rich).
+     * `when` is "18 September, 3:12pm" or "today, 3:12pm" (moment 9's), null when undated (ours).
+     */
+    newVersion: {
+      title: 'Waiting to reach your students',
+      facts: (trying: string | null, students: string | null) =>
+        `${trying === null ? 'A newer version' : `The version from ${trying}`} is on your trying-out address. Your students have ${students === null ? 'an earlier one' : `the version from ${students}`}.`,
+      button: 'Let your students have this version',
+      helper: 'An owner lets your students have it.',
+      landed: (when: string | null) =>
+        when === null
+          ? 'Your students have this version now.'
+          : `Your students have the version from ${when}.`,
+      still: (when: string | null) =>
+        when === null
+          ? 'Your students still have the version they had.'
+          : `Your students still have the version from ${when}.`,
+      /** Ours: another item unmet, said where Going live says which. */
+      unmet: 'Before your students can have it, something on Going live needs doing.',
+      goingLive: 'Going live',
+    },
     /** Ours: the address rows' name, for a screen reader: no count, since fewer may be drawn (m1). */
     addresses: 'Its addresses',
     band: {

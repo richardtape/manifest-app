@@ -915,26 +915,42 @@ doesn't tell them yet that it's waiting"* goes.
 
 **They see:** moments 8, 6 and 9, unchanged: a conversation, the work, the draft, then the trying-out address.
 Then one more step, and one sentence decides how long it takes.
-- **Before building**, the conversation says which kind of change this is, from the dry run:
+- **While it is built** (F6b, as built: the round keeps each commit's sensitive fields, and the work panel says the
+  kind as soon as a commit names one, and again at the round's end beside *"Ready on your draft address."*; on a
+  launched app only):
   - **Most changes**: *"Once you've tried it, this can go straight to your students."*
-  - **A change to something reviewed at launch**: *"This change needs an administrator's look before it reaches
-    your students, because it changes <what it keeps / who it learns about / what it can reach / which AI it
-    asks / how much room it gets / how sensitive its data is / what it's built on>."* That is §7's seven
-    sensitive fields, in words. Moment 13's wait follows.
-  - **A new detail about the people who sign in** (a new CWL attribute): also *"…and UBC's identity team must
-    agree to share it first. That takes weeks."* That is a change request to the production registration: a
-    clock again (moment 10).
-- **Then** **[Let your students have this version]**, with step-up (moment 14's card and flow). The students'
-  address keeps the old version until the new one answers: the two facts, throughout.
+  - **A change to something reviewed at launch**: *"This change needs a Manifest administrator's look before it
+    reaches your students, because it changes <what it keeps / who it learns about / what it can reach / which AI
+    it asks / how much room it gets / how sensitive its data is / what it's built on>."* That is §7's seven
+    sensitive fields, in words; one we do not know is *"something reviewed at launch"*.
+  - **A new detail about the people who sign in** (a CWL attribute UBC has not registered for the live app): every
+    build fails until UBC registers it, so the round stops at once, needing them: *"This change needs <their last
+    name> from UBC's identity team, and they must agree to share it first. That may take several days."* (Rich's F5
+    rule: never *"weeks"*). **Asking for it goes through the Manifest team (LTIC) once the platform lands FE-47**;
+    until then *"Manifest can't ask for it for you yet."* and **[Leave it out]** alone: a new change, agreed first,
+    without that detail, and the stuck one stopped. (The platform accepts five details at all; any other is refused
+    at the commit: F6b sitting 1, M1.)
+- **Then, on the app's Overview, *"Waiting to reach your students"***, while the version on trying-out is not the
+  one the students have: *"The version from 3 October is on your trying-out address. Your students have the version
+  from 18 September."*
+  - **Self-serve**: **[Let your students have this version]**, an owner's, with step-up (moment 14's card and flow,
+    back to the Overview); a helper reads *"An owner lets your students have it."*
+  - **Re-escalated**: what changed, in the words above, and F5b's *[Ask a Manifest administrator to sign this off]*;
+    once approved, the press. (Moment 13's wait.)
+  - **Anything else unmet**: said, with *[Going live]*.
+  The students' address keeps the old version until the new one answers: the two facts, throughout.
 
 **Fed by:**
-- `createCommit`'s dry run: `spec.sensitiveDiff`.
-- `getLaunchReadiness` after launch: `launched`, `reescalated`, `sensitiveFields`, and the self-serve
-  `admin-approval`.
+- `createCommit`: `spec.sensitiveDiff.fields`, each commit's own, kept as the round's union.
+- `build.failed`'s `machineDetail.code` `SPEC_ATTRIBUTE_NOT_REGISTERED`; `getSpec` (what the manifest asks) and
+  `getLaunchRecords` (what production registered), with the conversation's token.
+- `getLaunchReadiness` after launch: `launched`, `reescalated` (never `sensitiveFields` alone: it stays after an
+  approval), `candidateReleaseId`, and the self-serve `admin-approval`; `requestApproval`.
 - `deploy` to production, with step-up.
 
 **If it goes wrong:** as moments 9 and 14. **The students' version is never taken away by a change that fails**
-(§13: *"Deploying a release never takes down the one it replaces"*), and every screen says so.
+(§13: *"Deploying a release never takes down the one it replaces"*), and every screen says so: *"Your students still
+have the version from 18 September."*
 
 **They wait:** minutes, or days when it re-escalates.
 

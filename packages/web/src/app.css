@@ -949,6 +949,16 @@
 .overview__students .body-small {
   margin: 0;
 }
+/* F6b Task 10: Waiting to reach your students, laid out as For your students is. */
+.overview__new-version {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.overview__new-version .heading,
+.overview__new-version > .body-lead {
+  margin: 0;
+}
 .overview__students-message {
   display: flex;
   flex-direction: column;
