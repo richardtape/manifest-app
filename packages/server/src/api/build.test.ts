@@ -13,7 +13,7 @@ import type { ProjectStream } from '../platform/stream.js'
 import { storeTrace } from '../runtime/trace.js'
 import { openStore, type Conversation, type Store } from '../store/db.js'
 import { scratchDir } from '../store/testing.js'
-import { createHub, publishState, type Hub } from './events.js'
+import { createHub, publishState, stateFrame, type Hub } from './events.js'
 import { pieceOf } from './piece-state.js'
 import type { AppConversation, Progress } from './progress.js'
 import { roundOf } from './round-state.js'
@@ -703,6 +703,7 @@ describe('the line on the building routes (F4 Task 6, Review Focus 1)', () => {
       environment: null,
       dryRun: null,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -1096,8 +1097,32 @@ describe('working on it together (F6b D3, Task 2)', () => {
       const bobs = state === 'waiting' ? changeOf(s, BOB, 'waiting', 'B.') : holder
       expect((await post(s, bobs.id, 'stop')).status).toBe(202)
       expect(s.store.getConversation(bobs.id, BOB.id)?.state).toBe('set-aside')
+      // Who set it aside, and why, kept with its piece of work (the sitting 3 review's I3).
+      expect(pieceOf(s.store, bobs.id).stopped).toEqual({ by: ALICE.id, why: 'stopped' })
+      expect(
+        stateFrame(s.store, s.store.conversationById(bobs.id)!, s.hub.busy),
+      ).toMatchObject({
+        piece: {
+          stopped: { by: { id: ALICE.id, name: ALICE.displayName }, why: 'stopped' },
+        },
+      })
     },
   )
+
+  it('a change set aside, then asked again: its new piece of work carries no stop', async () => {
+    const s = setUp()
+    together(s)
+    const bobs = changeOf(s, BOB, 'plan-ready')
+    await post(s, bobs.id, 'stop')
+    expect(pieceOf(s.store, bobs.id).stopped).not.toBeNull()
+    s.store.addMessage(bobs.id, 'person', {
+      kind: 'asked',
+      change: 2,
+      words: 'Again.',
+      fix: null,
+    })
+    expect(pieceOf(s.store, bobs.id).stopped).toBeNull()
+  })
 
   it("an owner's GET /api/needs holds no question of a helper's (design §3: the band stays its own person's)", async () => {
     const s = setUp()
@@ -1198,6 +1223,7 @@ describe('working on it together (F6b D3, Task 2)', () => {
       why: 'removed',
     })
     expect(s.store.conversationById(bobsNext.id)?.state).toBe('set-aside')
+    expect(pieceOf(s.store, bobsNext.id).stopped).toEqual({ by: BOB.id, why: 'removed' })
     expect([s.tokens.get(bobs.id), s.tokens.get(bobsNext.id)]).toEqual([
       undefined,
       undefined,

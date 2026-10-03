@@ -4,15 +4,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import type { Then } from '../../router.js'
+import { navigate, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { PressNotice } from '../change/notice.js'
 import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
+import { ensureWatch } from '../keeping/watch.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import { StepUpCard } from '../trying-out/parts.js'
 import { refusalWords, whoOf } from './model.js'
 
 const p = words.people
+/** FE-48's page half: our server hears a watch closed a little after the removal answers. */
+const RECHECK_MS = 5_000
 
 type Role = Schemas['Member']['role']
 type Loaded =
@@ -58,13 +61,14 @@ const codeOf = (error: unknown): string | null => {
  */
 export function People({
   platform,
+  ours,
   project,
   me,
   then,
   expire,
 }: {
   platform: Platform
-  /** Unused here: People is the platform's alone (D5). Kept for the page's one shape. */
+  /** Only for our watch, looked at again after someone is taken off (FE-48's page half). */
   ours: Ours
   project: Schemas['Project']
   me: Pick<Schemas['Me'], 'id'>
@@ -84,7 +88,14 @@ export function People({
   const [confirming, setConfirming] = useState<string | null>(null)
   const [said, setSaid] = useState<Said>()
   const [stepUp, setStepUp] = useState(false)
-  const [takenOff, setTakenOff] = useState<string | null>(null)
+  /** What the last press did, said in the page's status (always in the page: the review's I4). */
+  const [status, setStatus] = useState<string | null>(null)
+  /** Where the focus goes once the page is drawn again: a row's first or last button, or the status. */
+  const [focusOn, setFocusOn] = useState<
+    { userId: string; which: 'first' | 'last' } | 'status' | null
+  >(null)
+  const actions = useRef(new Map<string, HTMLDivElement>())
+  const statusRef = useRef<HTMLParagraphElement>(null)
   const { at: addAt, back: focusAdd } = useFocusBack<HTMLDivElement>()
   const confirmRef = useRef<HTMLParagraphElement>(null)
   const live = useRef(true)
@@ -130,12 +141,23 @@ export function People({
     if (confirming !== null) confirmRef.current?.focus()
   }, [confirming])
 
+  // THE FOCUS FOLLOWS THE PRESS (the review's I4): back on a row's button, or on what is now true.
+  useEffect(() => {
+    if (focusOn === null) return
+    setFocusOn(null)
+    if (focusOn === 'status') return statusRef.current?.focus()
+    const buttons = actions.current.get(focusOn.userId)?.querySelectorAll('button')
+    const button =
+      focusOn.which === 'first' ? buttons?.[0] : buttons?.[buttons.length - 1]
+    button?.focus()
+  })
+
   /** Before a press: what an earlier one said goes. */
   const begin = (press: Pressing) => {
     setPressed(true)
     setSaid(undefined)
     setStepUp(false)
-    setTakenOff(null)
+    setStatus(null)
     setPressing(press)
   }
 
@@ -164,8 +186,13 @@ export function People({
 
   const add = async () => {
     begin({ kind: 'add' })
+    let added: Schemas['Member']
     try {
-      await platform.addMember(project.id, { ...whoOf(typed), role }, crypto.randomUUID())
+      added = await platform.addMember(
+        project.id,
+        { ...whoOf(typed), role },
+        crypto.randomUUID(),
+      )
     } catch (error) {
       if (didNotGo(error, 'addMember') === 'step-up') {
         try {
@@ -179,6 +206,7 @@ export function People({
     if (!live.current) return
     setPressing(null)
     setTyped('')
+    setStatus(p.added(added.displayName, project.name))
     readAgain()
   }
 
@@ -191,11 +219,15 @@ export function People({
         crypto.randomUUID(),
       )
     } catch (error) {
-      didNotGo(error, 'addMember')
+      if (didNotGo(error, 'addMember') === 'said')
+        setFocusOn({ userId: member.userId, which: 'first' })
       return
     }
     if (!live.current) return
     setPressing(null)
+    setStatus(
+      to === 'owner' ? p.madeOwner(member.displayName) : p.madeHelper(member.displayName),
+    )
     readAgain()
   }
 
@@ -206,13 +238,24 @@ export function People({
     } catch (error) {
       didNotGo(error, 'removeMember')
       setConfirming(null)
+      setFocusOn({ userId: member.userId, which: 'last' })
       return
     }
     if (!live.current) return
+    // Taken off themselves: the app is no longer theirs to see.
+    if (member.userId === me.id) return navigate('/')
     setPressing(null)
     setConfirming(null)
-    setTakenOff(p.takenOff(member.displayName, project.name))
+    setStatus(p.takenOff(member.displayName, project.name))
+    setFocusOn('status')
     readAgain()
+    // FE-48'S PAGE HALF (the review's I5): if they minted our watch, our server lost it as they
+    // went, and nothing tells it who left. Our watch looked at again now, and once more in a
+    // moment (our server hears the closing a little after): a new one reads the members afresh.
+    void ensureWatch(platform, ours, project, new Date())
+    setTimeout(() => {
+      if (live.current) void ensureWatch(platform, ours, project, new Date())
+    }, RECHECK_MS)
   }
 
   const members = loaded.state === 'ready' ? loaded.members : []
@@ -251,11 +294,13 @@ export function People({
                       ? member.email
                       : `${member.email} · ${p.login(member.cwlLogin)}`}
                   </p>
-                  {owner && !you ? (
+                  {owner ? (
                     confirming === member.userId ? (
                       <div className="people__confirm">
                         <p className="body" ref={confirmRef} tabIndex={-1}>
-                          {p.confirmTakeOff(member.displayName, project.name)}
+                          {you
+                            ? p.confirmLeave(project.name)
+                            : p.confirmTakeOff(member.displayName, project.name)}
                         </p>
                         <div className="describe__actions">
                           <Button
@@ -263,35 +308,51 @@ export function People({
                             disabled={busy}
                             onClick={() => void remove(member)}
                           >
-                            {here('remove') ? p.takingOff : p.takeOffConfirm}
+                            {here('remove')
+                              ? p.takingOff
+                              : you
+                                ? p.leave
+                                : p.takeOffConfirm}
                           </Button>
                           <Button
                             kind="secondary"
                             disabled={busy}
-                            onClick={() => setConfirming(null)}
+                            onClick={() => {
+                              setConfirming(null)
+                              setFocusOn({ userId: member.userId, which: 'last' })
+                            }}
                           >
                             {p.keep}
                           </Button>
                         </div>
                       </div>
                     ) : (
-                      <div className="describe__actions">
-                        <Button
-                          kind="secondary"
-                          disabled={busy}
-                          onClick={() =>
-                            void changeRole(
-                              member,
-                              member.role === 'owner' ? 'collaborator' : 'owner',
-                            )
-                          }
-                        >
-                          {here('role')
-                            ? p.changing
-                            : member.role === 'owner'
-                              ? p.makeHelper
-                              : p.makeOwner}
-                        </Button>
+                      <div
+                        className="describe__actions"
+                        ref={(element) => {
+                          if (element === null) actions.current.delete(member.userId)
+                          else actions.current.set(member.userId, element)
+                        }}
+                      >
+                        {/* Their own row: Take off alone (an owner leaves; the design's hand-over). */}
+                        {you ? null : (
+                          <Button
+                            kind="secondary"
+                            disabled={busy}
+                            onClick={() =>
+                              void changeRole(
+                                member,
+                                member.role === 'owner' ? 'collaborator' : 'owner',
+                              )
+                            }
+                          >
+                            {here('role')
+                              ? p.changing
+                              : member.role === 'owner'
+                                ? p.makeHelper
+                                : p.makeOwner}
+                          </Button>
+                        )}
                         <Button
                           kind="ghostDanger"
                           disabled={busy}
@@ -310,11 +371,10 @@ export function People({
             })}
           </ul>
           <p className="body">{p.roles}</p>
-          {takenOff === null ? null : (
-            <p className="body" role="status">
-              {takenOff}
-            </p>
-          )}
+          {/* In the page before anything is said, so a screen reader hears it arrive (I4). */}
+          <p className="body people__status" role="status" ref={statusRef} tabIndex={-1}>
+            {status ?? ''}
+          </p>
           {back && !pressed ? (
             <p className="body">{words.goingLive.letIn.again}</p>
           ) : null}

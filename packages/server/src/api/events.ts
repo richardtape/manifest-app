@@ -113,7 +113,21 @@ export function stateFrame(
     piece:
       conversation.projectId === null
         ? null
-        : { kind: piece.kind, change: piece.change, asked: piece.asked },
+        : {
+            kind: piece.kind,
+            change: piece.change,
+            asked: piece.asked,
+            stopped:
+              piece.stopped === null
+                ? null
+                : {
+                    by: {
+                      id: piece.stopped.by,
+                      name: store.personName(piece.stopped.by),
+                    },
+                    why: piece.stopped.why,
+                  },
+          },
     line: lineOf(store, conversation, busy),
   }
 }

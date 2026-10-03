@@ -1286,6 +1286,13 @@ export const words = {
     confirmTakeOff: (who: string, app: string) =>
       `Take ${who} off ${app}? Their work on it stops.`,
     takenOff: (who: string, app: string) => `${who}'s work on ${app} has stopped.`,
+    /** Ours: what an add or a role change did, said in the page's status (the review's I4). */
+    added: (who: string, app: string) => `${who} can work on ${app} now.`,
+    madeOwner: (who: string) => `${who} is an owner now.`,
+    madeHelper: (who: string) => `${who} is a helper now.`,
+    /** Ours: an owner taking themselves off (the design's hand-over: add an owner, then leave). */
+    confirmLeave: (app: string) => `Take yourself off ${app}? Your work on it stops.`,
+    leave: 'Take me off',
     couldnt: "We couldn't change who's on it just now. Nothing has changed.",
     refused: {
       MEMBER_USER_NOT_FOUND:
@@ -1317,6 +1324,10 @@ export const words = {
     paused: (who: string) => `Paused, waiting for ${who}`,
     needs: (who: string) => `Needs ${who}`,
     asked: (who: string) => `What ${who} asked for`,
+    /** Ours: what a round needs of its person, to a colleague: theirs to read and answer. */
+    waitsFor: (who: string) => `It's waiting for ${who}.`,
+    onlyTheyKnow: (count: number, who: string) =>
+      count === 1 ? `One thing only ${who} knows` : `Two things only ${who} knows`,
   },
   /** §24's two answers, in words. */
   audience: {

@@ -2,6 +2,7 @@ import type { Line } from '../build/line.js'
 import type { Rounds } from '../build/round.js'
 import type { Conversation, Store } from '../store/db.js'
 import { publishState, type Hub } from './events.js'
+import { pieceOf, type SetAside } from './piece-state.js'
 
 /** A round that may still be running: Stop reaches it while it works (F3 Task 9). */
 const RUNNING = new Set(['building', 'paused'])
@@ -31,16 +32,25 @@ export function endWork(
     return true
   }
   if (!NOT_STARTED.has(conversation.state)) return false
+  // A change set aside says who, and why (the sitting 3 review's I3): kept by its change.
+  const setAside = () => {
+    store.addMessage(conversation.id, 'we', {
+      kind: 'set-aside',
+      change: pieceOf(store, conversation.id).change,
+      ...stopped,
+    } satisfies SetAside)
+    return store.setState(conversation.id, 'set-aside')
+  }
   if (conversation.state === 'waiting') {
     const roundStopped = store.latestRun(conversation.id)?.status === 'stopped'
     publishState(
       hub,
       store,
-      store.setState(conversation.id, roundStopped ? 'building' : 'set-aside'),
+      roundStopped ? store.setState(conversation.id, 'building') : setAside(),
     )
     return true
   }
-  publishState(hub, store, store.setState(conversation.id, 'set-aside'))
+  publishState(hub, store, setAside())
   line.released(conversation.projectId)
   return true
 }

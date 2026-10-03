@@ -38,6 +38,18 @@ export interface Asked {
 /** F6 Decision 9: when the live address stopped answering, and when it answered again. */
 export type Outage = { from: string; to: string }
 
+/**
+ * F6b: A PIECE OF WORK SET ASIDE BY A STOP (`work-end.ts`): who (a person id), and why: a Stop, its
+ * own person's (*Not now*, *Leave the line*) or an owner's; or its person taken off the app. Kept
+ * as one of our messages, by the change it set aside; a change asked after it carries none.
+ */
+export interface SetAside {
+  kind: 'set-aside'
+  change: number
+  by: string
+  why: 'stopped' | 'removed'
+}
+
 export interface Piece {
   kind: 'first' | 'change' | 'fix'
   change: number
@@ -49,6 +61,8 @@ export interface Piece {
   dryRun: DryRunEvidence | null
   /** An outage's fix: its two moments (F6 Decision 9); null for anything else. */
   outage: Outage | null
+  /** F6b: set aside by a Stop, who and why; null otherwise (the sitting 3 review's I3). */
+  stopped: { by: string; why: 'stopped' | 'removed' } | null
 }
 
 /** The latest change asked, whole; a conversation with none is on its first piece. */
@@ -61,14 +75,27 @@ export function pieceOf(store: Store, conversationId: string): Piece {
     environment: null,
     dryRun: null,
     outage: null,
+    stopped: null,
   }
   for (const { body } of store.listMessages(conversationId)) {
     const said = body as { kind?: unknown }
+    if (said.kind === 'set-aside') {
+      const aside = body as SetAside
+      if (aside.change === piece.change)
+        piece = { ...piece, stopped: { by: aside.by, why: aside.why } }
+      continue
+    }
     if (said.kind !== 'asked') continue
     const asked = body as Asked
     if (asked.change !== piece.change) {
       const fix = asked.fix
-      const none = { asked: [], incidentId: null, dryRun: null, outage: null }
+      const none = {
+        asked: [],
+        incidentId: null,
+        dryRun: null,
+        outage: null,
+        stopped: null,
+      }
       piece =
         fix === null
           ? { ...none, kind: 'change', change: asked.change, environment: null }

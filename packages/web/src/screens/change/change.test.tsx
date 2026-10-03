@@ -75,7 +75,7 @@ const INTAKE: Intake = {
   blueprint: null,
   project: PROJECT,
 }
-const PIECE: PieceView = { kind: 'change', change: 1, asked: [WORDS] }
+const PIECE: PieceView = { kind: 'change', change: 1, asked: [WORDS], stopped: null }
 const CHANGE: PlanView = {
   studentsSee: 'One page listing the weeks. Each response shows how many words it has.',
   youSee: 'Every response for a week on one page. Each shows its word count.',
@@ -536,7 +536,7 @@ describe("the change's plan: \"Here's what we'd change\" (Rich: agree the change
       { state: 'plan-ready', title: 'First build' },
       {
         plan: { version: 1, plan: { ...CHANGE, changed: [] } },
-        piece: { kind: 'first', change: 0, asked: [] },
+        piece: { kind: 'first', change: 0, asked: [], stopped: null },
       },
     )
     await screen.findByRole('heading', { name: "Here's what we'd build" })
@@ -786,6 +786,92 @@ describe('working on it together (F6b Task 7)', () => {
     await press(await screen.findByRole('button', { name: words.building.stop }))
     expect(s.called('stop')).toEqual([['c-2']])
     expect(screen.queryByRole('button', { name: 'Yes, change it' })).toBeNull()
+  })
+
+  it('another’s plan, its questions: only they know them, and no invitation to correct it (the review’s I1)', async () => {
+    const s = await conversation(stage({ members: AS_HELPER }))
+    s.state(
+      { ...sams, state: 'plan-ready', title: 'Word count' },
+      { plan: { version: 1, plan: CHANGE } },
+    )
+    await screen.findByRole('heading', { name: "Here's what we'd change" })
+    expect(
+      screen.getByText(t.onlyTheyKnow(CHANGE.onlyYouKnow.length, SAM.name)),
+    ).toBeTruthy()
+    expect(screen.getByText(CHANGE.onlyYouKnow[0]!.ask)).toBeTruthy()
+    expect(text()).not.toMatch(/only you know/i)
+    expect(screen.queryByText(words.plan.lead)).toBeNull()
+  })
+
+  it('another’s waiting change: what they asked for, never "What you asked for" (the review’s I1)', async () => {
+    const s = await conversation(stage({ members: AS_OWNER }))
+    s.state(sams, { line: { place: 1, holder: null } })
+    expect(await screen.findByText(t.asked(SAM.name))).toBeTruthy()
+    expect(screen.queryByText(words.change.asked)).toBeNull()
+  })
+
+  it('another’s plan, a token refused on its stream: the page mints and hands over nothing (the review’s I6)', async () => {
+    const s = await conversation(stage({ members: AS_OWNER }))
+    s.state({ ...sams, state: 'planning', title: 'Word count' })
+    await screen.findByText(t.started(SAM.name))
+    s.say({ kind: 'refusal', code: 'TOKEN_REFUSED', reference: 'ABCD-1234' })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(s.called('mintToken')).toEqual([])
+    expect(s.called('handProject')).toEqual([])
+    expect(s.called('plan')).toEqual([])
+  })
+
+  it('another’s app being made: the plan is not asked for from this page (the review’s I6)', async () => {
+    const s = stage({ members: AS_OWNER })
+    s.platform.watchProject = () => ({ ready: Promise.resolve(), close: () => undefined })
+    await conversation(s)
+    s.state({ ...sams, state: 'making', title: 'First build' })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(s.called('plan')).toEqual([])
+  })
+
+  it.each([
+    [
+      'an owner set it aside',
+      {
+        by: { id: 'c0000000-0000-4000-8000-0000000000a1', name: 'Alex Owner' },
+        why: 'stopped' as const,
+      },
+      'Stopped by Alex Owner.',
+    ],
+    ['its person was taken off', { by: SAM, why: 'removed' as const }, null],
+  ])(
+    'set aside because %s: the page says so (the review’s I3)',
+    async (_, stopped, said) => {
+      const s = await conversation(stage({ members: AS_OWNER }))
+      const removed = stopped.why === 'removed'
+      s.state(
+        { ...(removed ? sams : {}), state: 'set-aside' },
+        { piece: { ...PIECE, stopped } },
+      )
+      expect(
+        await screen.findByText(said ?? t.removed(SAM.name, PROJECT.name)),
+      ).toBeTruthy()
+    },
+  )
+
+  it('set aside by its own person (Not now, Leave the line): nothing more is said', async () => {
+    const s = await conversation()
+    s.state(
+      { state: 'set-aside' },
+      {
+        piece: {
+          ...PIECE,
+          stopped: { by: { id: ME.id, name: ME.displayName }, why: 'stopped' },
+        },
+      },
+    )
+    await screen.findByText(words.change.setAside)
+    expect(screen.queryByText(t.stoppedBy(ME.displayName))).toBeNull()
   })
 
   it('another’s plan being written: no Carry on of theirs', async () => {

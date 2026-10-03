@@ -45,12 +45,20 @@ function usePress(expire: () => void) {
   return { send, notice }
 }
 
-/** What they asked for this piece of work, each in their words. */
-function Asked({ piece }: { piece: PieceView | null }): ReactNode {
+/** What they asked for this piece of work, each in their words; whose, when not the reader's. */
+function Asked({
+  piece,
+  theirs = null,
+}: {
+  piece: PieceView | null
+  theirs?: Theirs
+}): ReactNode {
   if (piece === null || piece.asked.length === 0) return null
   return (
     <section className="waiting__asked">
-      <h2 className="subheading">{w.asked}</h2>
+      <h2 className="subheading">
+        {theirs === null ? w.asked : words.together.asked(theirs.name)}
+      </h2>
       <ul>
         {piece.asked.map((asked, i) => (
           <li key={i}>{asked}</li>
@@ -144,7 +152,7 @@ export function WaitingScreen({
           </div>
         ) : null}
       </Card>
-      <Asked piece={piece} />
+      <Asked piece={piece} theirs={theirs} />
       {theirs === null ? (
         <MessageBox
           id="waiting-message"
@@ -187,9 +195,20 @@ export function SetAsideScreen({
       {notice}
       <Card tone="plain" className="waiting__card">
         <StateChip state="notyet" label={w.conversations.setAside} />
+        {/* Who set it aside, when it was not its own person (the sitting 3 review's I3). */}
+        {piece?.stopped == null ? null : piece.stopped.why === 'removed' ? (
+          <p className="body-lead">
+            {words.together.removed(
+              piece.stopped.by.name,
+              intake.project?.name ?? conversation.title,
+            )}
+          </p>
+        ) : piece.stopped.by.id === conversation.personId ? null : (
+          <p className="body-lead">{words.together.stoppedBy(piece.stopped.by.name)}</p>
+        )}
         <p className="body-lead">{w.setAside}</p>
       </Card>
-      <Asked piece={piece} />
+      <Asked piece={piece} theirs={theirs} />
       {theirs === null ? (
         <MessageBox
           id="set-aside-message"

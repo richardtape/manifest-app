@@ -1744,6 +1744,64 @@ describe('another person’s conversation, read by a member (F6b Task 7)', () =>
     expect(screen.queryByText(t.stoppedBy(ME.displayName))).toBeNull()
   })
 
+  it('their messages and answers are theirs by name, never "You" (the review’s I1)', async () => {
+    const s = stage({}, { members: AS_HELPER })
+    await open(s)
+    s.state(round(), sams, [
+      { kind: 'message', round: 1, text: 'Bigger, please.', at: '2026-09-28T16:10:00Z' },
+      {
+        kind: 'answer',
+        round: 1,
+        ask: 'When does it close?',
+        text: 'At the deadline.',
+        at: '2026-09-28T16:11:00Z',
+      },
+    ])
+    await screen.findByText('Bigger, please.')
+    expect(screen.getAllByText(SAM.name).length).toBeGreaterThanOrEqual(2)
+    expect(screen.queryByText(words.building.thread.you)).toBeNull()
+  })
+
+  it('built, a question left unanswered: what we went with, never "Only Sam can answer this." (the review’s I2)', async () => {
+    const s = stage({}, { members: AS_HELPER })
+    await open(s)
+    s.state(
+      round(
+        { status: 'done', questions: [{ ...question, default: 'At the deadline' }] },
+        ALL_DONE,
+      ),
+      { ...sams, state: 'built' },
+    )
+    await screen.findByText(t.started(SAM.name))
+    expect(
+      screen.getByText(words.building.question.wentWith('At the deadline')),
+    ).toBeTruthy()
+    expect(screen.queryByText(t.onlyThey(SAM.name))).toBeNull()
+  })
+
+  it.each([
+    ['the checkpoint', { kind: 'checkpoint' as const, capUsd: 2, monthLeftUsd: 9.6 }],
+    ['the month spent', { kind: 'month' as const, resetsAt: null }],
+    ['the model withdrawn', { kind: 'withdrawn' as const }],
+  ])(
+    '%s, read by a colleague: whose wait it is, never their allowance or a press they lack (the review’s I1)',
+    async (_, needs) => {
+      const s = stage({}, { members: AS_HELPER })
+      await open(s)
+      s.state(
+        round({
+          status: 'needs-you',
+          needs,
+          cost: { conversationUsd: 0.4, monthLeftUsd: 9.6, resetsAt: null },
+        }),
+        sams,
+      )
+      expect(await screen.findByText(t.waitsFor(SAM.name))).toBeTruthy()
+      expect(wordsShown()).not.toMatch(/you have this month|Your AI allowance|Carry on/)
+      expect(wordsShown()).not.toMatch(/left this month/)
+    },
+  )
+
   it('its person taken off the app: said so, to whoever reads it, and nothing to press', async () => {
     const s = stage({}, { members: AS_OWNER })
     await open(s)

@@ -455,7 +455,7 @@ export function PlanScreen({
         <h1 className="page-title">{name}</h1>
         <StartedBy theirs={theirs} />
         <h2 className="moment">{change ? words.change.planTitle : words.plan.title}</h2>
-        <p className="body-lead">{words.plan.lead}</p>
+        {theirs === null ? <p className="body-lead">{words.plan.lead}</p> : null}
         {noticeCard}
         {rows}
         {/* Said only when something is left as agreed: never about nothing. */}
@@ -474,7 +474,10 @@ export function PlanScreen({
         ) : null}
         {theirs !== null && shown.onlyYouKnow.length > 0 ? (
           // Another's: what it asks them, to read; only they answer (F6b D3).
-          <Card tone="waiting" title={words.plan.onlyYouKnow(shown.onlyYouKnow.length)}>
+          <Card
+            tone="waiting"
+            title={words.together.onlyTheyKnow(shown.onlyYouKnow.length, theirs.name)}
+          >
             <ul className="plan__assumed">
               {shown.onlyYouKnow.map((q) => (
                 <li key={q.id}>{q.ask}</li>

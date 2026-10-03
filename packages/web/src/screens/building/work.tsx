@@ -108,7 +108,8 @@ export function Work({
       ? null
       : words.building.cost(
           cost.conversationUsd === null ? null : money(cost.conversationUsd),
-          cost.monthLeftUsd === null ? null : money(cost.monthLeftUsd),
+          // What is left this month is its person's allowance, not a colleague's (F6b D3).
+          cost.monthLeftUsd === null || whose !== null ? null : money(cost.monthLeftUsd),
         )
   return (
     <section className="building__work" aria-label={words.building.workLabel}>
@@ -130,6 +131,7 @@ export function Work({
           round={round}
           presses={presses}
           stoppedBy={stoppedBy}
+          whose={whose}
           now={now}
           timeZone={timeZone}
         />

@@ -248,6 +248,12 @@ function needCard(
   }
 }
 
+/** A need that waits on someone other than its person: said as it is, to whoever reads it. */
+const waitsOnOthers = (needs: Exclude<Needs, { kind: 'token' }>): boolean =>
+  needs.kind === 'unreachable' ||
+  needs.kind === 'cannot' ||
+  (needs.kind === 'refused' && (needs.code === SIGN_IN_REFUSED || ADMIN.has(needs.code)))
+
 /**
  * WHAT A ROUND NEEDS OF THEM, ONE CARD (F3 Task 11): each `Needs` in the walk-through's words,
  * a problem's with its reference, and a stopped or interrupted round's own. A token needs
@@ -257,6 +263,7 @@ export function RoundNeeds({
   round,
   presses,
   stoppedBy = null,
+  whose = null,
   now,
   timeZone,
 }: {
@@ -267,10 +274,22 @@ export function RoundNeeds({
    * by Alex."*, or its person taken off the app, said instead of the card.
    */
   stoppedBy?: { said: string; removed: boolean } | null
+  /**
+   * F6b D3: the conversation's person, when the reader is someone else. What it needs of its
+   * person is theirs to read and answer (their allowance, their Carry on): a colleague reads whose
+   * wait it is. A wait on someone else (Manifest, an administrator, the model) is said as it is.
+   */
+  whose?: string | null
   now: () => Date
   timeZone: string | undefined
 }) {
   if (round === null) return null
+  const theirs = (presses: Presses) =>
+    whose === null ? null : (
+      <NeedsCard tone="attention" said={words.together.waitsFor(whose)} reference={null}>
+        {stopHere(presses)}
+      </NeedsCard>
+    )
   if (round.status === 'stopped')
     return stoppedBy?.removed === true ? (
       <NeedsCard tone="plain" said={stoppedBy.said} reference={null} />
@@ -284,7 +303,8 @@ export function RoundNeeds({
         {carryOn(presses)}
       </NeedsCard>
     )
-  if (round.status === 'interrupted') return <Interrupted presses={presses} />
+  if (round.status === 'interrupted')
+    return theirs(presses) ?? <Interrupted presses={presses} />
   const needs = round.needs
   if (needs === null || needs.kind === 'token') return null
   // A round needs them while it waits; once built, only what it could not add is said.
@@ -293,5 +313,6 @@ export function RoundNeeds({
     !(round.status === 'done' && needs.kind === 'cannot')
   )
     return null
+  if (whose !== null && !waitsOnOthers(needs)) return theirs(presses)
   return needCard(needs, round.reference, presses, now, timeZone)
 }

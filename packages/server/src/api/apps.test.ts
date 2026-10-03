@@ -255,6 +255,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       environment: null,
       dryRun: null,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -320,6 +321,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       environment: 'staging',
       dryRun: null,
       outage: null,
+      stopped: null,
     })
     expect(s.store.getConversation(made.id, ALICE.id)?.state).toBe('building')
   })
@@ -347,6 +349,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       environment: 'production',
       dryRun: EVIDENCE,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -373,6 +376,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
       environment: 'production',
       dryRun: null,
       outage: OUTAGE,
+      stopped: null,
     })
   })
 

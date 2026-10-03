@@ -108,11 +108,20 @@ function stage(
   }
 }
 
+/** Our server's watch, as `ensureWatch` reads it after a removal (the review's I5). */
+const kept: [string, ...unknown[]][] = []
+const OURS = {
+  keeping: (projectId: string) => {
+    kept.push(['keeping', projectId])
+    return new Promise(() => undefined)
+  },
+} as unknown as Ours
+
 function open(s: ReturnType<typeof stage>, then: Then = null, me = ME) {
   return render(
     <People
       platform={s.platform}
-      ours={{} as Ours}
+      ours={OURS}
       project={PROJECT}
       me={me}
       then={then}
@@ -132,7 +141,10 @@ const rowOf = async (name: string) =>
   (await screen.findByText(name)).closest('li') as HTMLElement
 const text = () => document.body.textContent ?? ''
 
-beforeEach(() => sessionStorage.clear())
+beforeEach(() => {
+  sessionStorage.clear()
+  kept.length = 0
+})
 afterEach(() => {
   cleanup()
   sessionStorage.clear()
@@ -248,8 +260,9 @@ describe('adding someone, or changing their role (addMember)', () => {
       { puid: SAM.puid, role: 'owner' },
       { puid: DANA.puid, role: 'collaborator' },
     ])
+    // Their own row: Take off alone (the design's way to hand it over: add an owner, then leave).
     const alex = within(await rowOf('Alex Owner'))
-    expect(alex.queryByRole('button')).toBeNull()
+    expect(alex.getAllByRole('button').map((b) => b.textContent)).toEqual([p.takeOff])
   })
 })
 
@@ -412,5 +425,84 @@ describe('refusals, by code (design §2): each says what is still true', () => {
     fireEvent.change(screen.getByLabelText(p.add.field), { target: { value: 'kim' } })
     await press(button(p.add.button))
     expect(s.expire).toHaveBeenCalled()
+  })
+})
+
+describe('the focus, and what each press is said to have done (the review’s I4)', () => {
+  it('Keep them gives the focus back to Take off', async () => {
+    open(stage())
+    const sam = within(await rowOf('Sam Helper'))
+    await press(sam.getByRole('button', { name: p.takeOff }))
+    await press(button(p.keep))
+    expect(document.activeElement).toBe(sam.getByRole('button', { name: p.takeOff }))
+  })
+
+  it('taken off: the focus on what is now true, a status already in the page', async () => {
+    open(stage())
+    const status = await screen.findByRole('status')
+    await press(
+      within(await rowOf('Sam Helper')).getByRole('button', { name: p.takeOff }),
+    )
+    await press(button(p.takeOffConfirm))
+    await waitFor(() =>
+      expect(status.textContent).toBe(p.takenOff('Sam Helper', PROJECT.name)),
+    )
+    expect(document.activeElement).toBe(status)
+  })
+
+  it('added, or a role changed: said in the status', async () => {
+    const s = stage()
+    open(s)
+    const status = await screen.findByRole('status')
+    fireEvent.change(screen.getByLabelText(p.add.field), { target: { value: 'kim' } })
+    await press(button(p.add.button))
+    await waitFor(() =>
+      expect(status.textContent).toBe(p.added('Sam Helper', PROJECT.name)),
+    )
+    await press(
+      within(await rowOf('Sam Helper')).getByRole('button', { name: p.makeOwner }),
+    )
+    await waitFor(() => expect(status.textContent).toBe(p.madeOwner('Sam Helper')))
+  })
+
+  it('a row’s press that did not go through: the focus back on its button', async () => {
+    open(stage({ add: [{ status: 400, code: 'REQUEST_INVALID' }] }))
+    const make = within(await rowOf('Sam Helper')).getByRole('button', {
+      name: p.makeOwner,
+    })
+    await press(make)
+    await screen.findByRole('alert')
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        within(screen.getByText('Sam Helper').closest('li')!).getByRole('button', {
+          name: p.makeOwner,
+        }),
+      ),
+    )
+  })
+})
+
+describe('after taking someone off, our watch is looked at again (the review’s I5: FE-48’s page half)', () => {
+  it('our server is asked whether it still watches the app', async () => {
+    open(stage())
+    await press(
+      within(await rowOf('Sam Helper')).getByRole('button', { name: p.takeOff }),
+    )
+    await press(button(p.takeOffConfirm))
+    await waitFor(() => expect(kept).toEqual([['keeping', PROJECT.id]]))
+  })
+})
+
+describe('an owner taking themselves off (the design’s hand-over: add an owner, then leave)', () => {
+  it('asked in their words, sent with their own id, then Your apps', async () => {
+    const s = stage()
+    open(s)
+    await press(
+      within(await rowOf('Alex Owner')).getByRole('button', { name: p.takeOff }),
+    )
+    expect(screen.getByText(p.confirmLeave(PROJECT.name))).toBeTruthy()
+    await press(button(p.leave))
+    expect(s.called('removeMember').map((c) => c[1])).toEqual([ME.id])
+    await waitFor(() => expect(window.location.pathname).toBe('/'))
   })
 })

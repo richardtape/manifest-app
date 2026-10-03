@@ -51,6 +51,7 @@ describe('pieceOf', () => {
       environment: null,
       dryRun: null,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -78,6 +79,7 @@ describe('pieceOf', () => {
       environment: null,
       dryRun: null,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -98,6 +100,7 @@ describe('pieceOf', () => {
       environment: 'staging',
       dryRun: null,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -120,6 +123,7 @@ describe('pieceOf', () => {
       environment: 'production',
       dryRun: null,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -146,6 +150,7 @@ describe('pieceOf', () => {
       environment: 'production',
       dryRun,
       outage: null,
+      stopped: null,
     })
   })
 
@@ -167,6 +172,7 @@ describe('pieceOf', () => {
       environment: 'production',
       dryRun: null,
       outage,
+      stopped: null,
     })
   })
 })

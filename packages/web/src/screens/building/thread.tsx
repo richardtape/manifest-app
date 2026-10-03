@@ -10,27 +10,38 @@ type Question = RoundView['questions'][number]
 /** The platform refuses a secret under 6 characters (F3 M1): said before it is sent. */
 const SECRET_LEAST = 6
 
-/** Theirs, marked in words: never by colour or side alone. */
-function Theirs({ children }: { children: React.ReactNode }) {
+/**
+ * Theirs, marked in words: never by colour or side alone. `who`: *"You"*, or the conversation's
+ * person by name when the reader is someone else (F6b D3).
+ */
+function Theirs({ who, children }: { who: string; children: React.ReactNode }) {
   return (
     <li className="said said--theirs">
-      <span className="said__who">{words.building.thread.you}</span>
+      <span className="said__who">{who}</span>
       {children}
     </li>
   )
 }
 
-function SaidItem({ said, timeZone }: { said: Said; timeZone: string | undefined }) {
+function SaidItem({
+  said,
+  who = words.building.thread.you,
+  timeZone,
+}: {
+  said: Said
+  who?: string
+  timeZone: string | undefined
+}) {
   switch (said.kind) {
     case 'message':
       return (
-        <Theirs>
+        <Theirs who={who}>
           <p className="said__text">{said.text}</p>
         </Theirs>
       )
     case 'answer':
       return (
-        <Theirs>
+        <Theirs who={who}>
           <p className="said__ask">{said.ask}</p>
           <p className="said__text">{said.text ?? words.building.thread.secretGiven}</p>
         </Theirs>
@@ -230,15 +241,20 @@ export function Thread({
             <p className="said__text">{description}</p>
           </li>
           {thread.map((said, i) => (
-            <SaidItem key={i} said={said} timeZone={timeZone} />
+            <SaidItem key={i} said={said} who={theirs} timeZone={timeZone} />
           ))}
         </ol>
-        {open.map((question) => (
-          <Card key={question.id} tone="waiting">
-            <p className="body-lead">{question.ask}</p>
-            <p className="body">{words.together.onlyThey(theirs)}</p>
-          </Card>
-        ))}
+        {/* Only while one may still be answered: after, what we went with, as its person reads it. */}
+        {open.map((question) =>
+          talking ? (
+            <Card key={question.id} tone="waiting">
+              <p className="body-lead">{question.ask}</p>
+              <p className="body">{words.together.onlyThey(theirs)}</p>
+            </Card>
+          ) : question.default === null ? null : (
+            <WentWith key={question.id} ask={question.ask} fallback={question.default} />
+          ),
+        )}
       </section>
     )
   return (

@@ -60,6 +60,11 @@ export interface PieceView {
   change: number
   /** Their words for it, in order; ours for a fix. */
   asked: string[]
+  /**
+   * F6b: set aside by a Stop: who (by id and name) and why, its own person's included (the page
+   * says so only when it was someone else, or a removal). Null otherwise.
+   */
+  stopped: { by: { id: string; name: string }; why: 'stopped' | 'removed' } | null
 }
 
 /** F4 Decision 5: where a waiting conversation is in its app's line. */
