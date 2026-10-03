@@ -394,6 +394,23 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     ).toBeTruthy()
   })
 
+  it('the gate refuses the press: no press offered again while the panel reads again (minors m102)', async () => {
+    let reads = 0
+    const s = stage(SELF_SERVE, {
+      getLaunchReadiness: () =>
+        ++reads <= 2 ? Promise.resolve(SELF_SERVE) : new Promise(() => undefined),
+      deploy: () => Promise.reject(refused(409, 'RELEASE_REESCALATED')),
+    })
+    draw(s)
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    await waitFor(() => expect(reads).toBe(3))
+    await act(async () => undefined)
+    expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
+  })
+
   it('the gate refuses the press (RELEASE_REESCALATED): the panel reads again, and asks instead', async () => {
     let reads = 0
     const s = stage(() => (++reads <= 2 ? SELF_SERVE : REESCALATED), {

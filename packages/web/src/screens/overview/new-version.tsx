@@ -119,6 +119,14 @@ export function NewVersion({
 
   const readAgain = useCallback(() => setAttempt((n) => n + 1), [])
   const onHold = useCallback((hold: boolean) => setHeld(hold), [])
+  // The gate said it is not ready: no press while the checklist is read again, as Going live
+  // (minors m102).
+  const onGate = useCallback(() => {
+    setReading((r) =>
+      r === null ? r : { ...r, readiness: { ...r.readiness, ready: false } },
+    )
+    setAttempt((n) => n + 1)
+  }, [])
 
   if (reading === null) return null
   const { readiness } = reading
@@ -144,7 +152,7 @@ export function NewVersion({
       now={now}
       timeZone={timeZone}
       onHold={onHold}
-      onGate={readAgain}
+      onGate={onGate}
       onLanded={onChanged}
       onChanged={readAgain}
     />
