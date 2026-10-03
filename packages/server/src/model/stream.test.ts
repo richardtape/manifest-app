@@ -128,6 +128,11 @@ describe('chunksOf: each event, its words, its model and its usage', () => {
     ])
   })
 
+  it('a chunk carrying "error": null is words, not an error (minors m33)', async () => {
+    const chunks = await all(body(event({ ...delta('ok'), error: null }), DONE))
+    expect(chunks.map((c) => c.content)).toEqual(['ok'])
+  })
+
   it('stops at [DONE], whatever follows', async () => {
     const chunks = await all(body(event(delta('z')), DONE, event(delta('after'))))
     expect(chunks.map((c) => c.content)).toEqual(['z'])

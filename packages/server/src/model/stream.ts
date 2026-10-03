@@ -37,8 +37,9 @@ function chunkOf(data: string): Chunk {
   // FE-34: LiteLLM answers a provider's `422` as `200` with `null`: the request refused, never
   // a gateway out of reach (the platform's sitting 4). Its F8 (b) would send the 422 itself.
   if (body === null) throw new ModelError('MODEL_ANSWER_INVALID', REFUSED_AS_NULL)
-  // The gateway's own error mid-answer. Never its words: they can carry anything.
-  if (typeof body !== 'object' || body.error !== undefined)
+  // The gateway's own error mid-answer. Never its words: they can carry anything. An `"error":
+  // null` is no error (minors m33): LiteLLM omits nulls today, but nothing promises it.
+  if (typeof body !== 'object' || (body.error !== undefined && body.error !== null))
     throw new ModelError('MODEL_UNREACHABLE')
   const delta = body.choices?.[0]?.delta
   const content = delta?.content
