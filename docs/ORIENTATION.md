@@ -23,7 +23,7 @@ half (Rich on `app.` in edge mode) is owed at F5b sitting 1. **F1–F6 and F4a, 
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **Minors, a fourth time** ([`minors.md`](./minors.md)): its last dated entry (2026-10-03, `app-minors-3`) lists the S ones *not reached* with no decision found (m5, m6, m9, m11, m13, m16, m28, m35, m36, m40, m41, m43, m46, m67, m70, m81, m82, m84, m94, m98, m108); **m131 has no decision-free fix** (its entry: it waits with m130 for Rich); m12 and m101 are small tasks of their own | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
+  | 1 | **Minors, a fourth time** ([`minors.md`](./minors.md)): its last dated entry (2026-10-03, `app-minors-3`) lists the S ones *not reached* with no decision found (m5, m6, m9, m11, m13, m16, m28, m35, m36, m40, m41, m43, m46, m67, m70, m81, m82, m84, m94, m98, m108); **m130 and m131 wait on FE-53** (Rich's word, 2026-10-03); m12 and m101 are small tasks of their own | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
   | 2 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`) | Blocked | Rich's word and a 7100 window (*"After platform sitting 2"*, which is closed; the `__Host-` adoption, which is done); people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
   | 3 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
   | 4 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open (F6b is executed) |
@@ -213,10 +213,15 @@ half (Rich on `app.` in edge mode) is owed at F5b sitting 1. **F1–F6 and F4a, 
 - **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)): moments 10–15, Rich's own
   app live on 7100 (*Class check-ins*, 2026-10-01 03:45Z). The platform's truncations have since removed it from 7100.
 - **Open for Rich:**
-  - **The 1.6.0 adoption's** (`research/2026-10-01-faculty-ready-adoption.md`, *Part one*): **its question 11, answered ours**:
-    a faculty member is shown our reference alone, whose row names the platform's request; never the platform's UUID (the
-    platform's guide says *"show it to the person"*; C3 and F2's Decision 11 say how). No new words. And its Decision 2:
-    our copy of the platform's reset rules is said only when the platform states no time.
+  - **Decided by Rich, 2026-10-03, ~12:45 PDT** (manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4; relayed by
+    `manifest-94`; recorded in the adoption note, `minors.md` and `api-findings.md`): **question 9 confirmed** (a plain cookie
+    beside `__Host-` ignored), **question 11 confirmed** (our reference alone, never the platform's UUID), **question 10 YES**
+    (an owner told in *what happened* that a platform administrator acted on their app, and the reason they gave: the sentence
+    is new words, his), **m129's words** (*"<Name>'s agent '<name>'"* for another's agent; *"Your agent '<name>'"* for the
+    reader's own), **m130: FE-53** (the question's `expiresAt` on `pending_action.created`, placed with FE-5 after
+    faculty-ready; m130 and m131 close when it lands), **m17, m83, m110, m66 accepted as made**.
+  - **The 1.6.0 adoption's** (`research/2026-10-01-faculty-ready-adoption.md`, *Part one*): its Decision 2: our copy of the
+    platform's reset rules is said only when the platform states no time.
   - **F6b sitting 6's** (its entry): **m120** (a helper offered no sign-off ask after launch: sitting 4's ruling rests on a
     premise the platform's authz answers the other way), **m123** (the change planner wrote *"environment variables
     provided by the platform"* into a plan, on 7100), m121–m122; the review's I1 and I2 fixed with no new words (I2 says
@@ -229,11 +234,9 @@ half (Rich on `app.` in edge mode) is owed at F5b sitting 1. **F1–F6 and F4a, 
     **m107–m119**, m109 (a helper's band) and m119 (*"…it has been told."*) his words.
   - **FE-49 and FE-50 placed by Rich in the faculty-ready plan, and landed** (`Token.mintedBy`, `0d5a743`; FE-50's words,
     `e355d10`); FE-46, FE-47 and FE-5 after it.
-  - **The faculty-ready adoption, part three's** (the note's *Part three*): its four decisions, ours (the maker's name from
-    `listMembers` read with the page; `pending_action.expired` says nothing of its own; the question card's *"Your agent"*
-    unchanged; a token made elsewhere keeps the band's day); **m129** (words for another's agent on the card and in the
-    email) and **m130** (whether to ask the platform for a question's expiry on `pending_action.created`); **m131** waits with
-    m130 (the minors sitting of 2026-10-03 found no fix that needs no decision: its entry).
+  - **The faculty-ready adoption, part three's** (the note's *Part three*): its decisions, ours (the maker's name from
+    `listMembers` read with the page; `pending_action.expired` says nothing of its own; a token made elsewhere keeps the
+    band's day until FE-53). m129 and m130 decided (above).
   - **F6b sitting 4's** (its entry): its words marked *ours* (the detail words, *"Manifest can't ask for it for you yet."*,
     **[Leave it out]** and its change's words, *Waiting to reach your students*'s facts and lines, the press's after-launch
     three, *"something reviewed at launch"*); its rulings (a helper is offered no ask; the versions' days with a time);

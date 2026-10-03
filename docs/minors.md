@@ -244,9 +244,9 @@ decision.
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
 | m128 | The adoption's reading | `close-out.sh`'s mock probe (`:212`) sends `manifest_session=mock-session` by name, right for the mock (loopback http keeps the plain name) but the only session name in `scripts/` not derived from its origin. Harmless while the mock is http; say why in a comment, or derive it, when Rich reviews the script. | `scripts/close-out.sh`. | S | code |
-| m129 | The faculty-ready adoption, part three | The question card on *Agents* and the owners' email say *"Your agent '<name>'"* for an agent another member made (an owner answering a helper's agent's question): untrue to that reader. `Token.mintedBy` now says whose (and our `minted` row's person, for the email). New words are Rich's: e.g. *"<Name>'s agent '<name>'"* when it is not the reader's. | `packages/web/src/screens/agents/question.tsx` (`q.yourAgent`), `packages/server/src/keeping/words.ts` (`agentAsks.body`). | S | faculty-visible |
-| m130 | The faculty-ready adoption, part three | The platform now caps a question at its token's expiry, and our band and email cap it only for an agent our page let in (its kept expiry): for a token made elsewhere (the console, an API mint) the band can say *"your agent is asking something"* after the question ended by time, until its day is out, with no card behind it (the card reads the platform's own `expiresAt`). The keeper cannot read that token's expiry (`listTokens` is a person's; the event carries none). Ask the platform to put `expiresAt` on `pending_action.created` (a finding, FE-n, at Rich's word), or leave it. | `packages/server/src/keeping/happenings.ts` (`questionsOf`). | S | faculty-visible |
-| m131 | The faculty-ready adoption, part three (its review) | The question's wait is capped by the expiry our page handed over for an agent (`POST …/agents`'s `expiresAt`, the first kept for an id standing): a member who kept someone else's token id with an early expiry would end that token's band need and shorten the email's *"It stops waiting at …"*. The card on *Agents* stays right (the platform's own `expiresAt`). m122's kind: our server cannot check a member's word against `listTokens`. Accept it, or keep the expiry only from a mint our page saw (the page's `mintToken` answer is the only source today). | `packages/server/src/keeping/happenings.ts` (`tokenEndsOf`), `api/minted.ts` (`POST …/agents`). | S | robustness |
+| m129 | The faculty-ready adoption, part three | The question card on *Agents* and the owners' email say *"Your agent '<name>'"* for an agent another member made (an owner answering a helper's agent's question): untrue to that reader. `Token.mintedBy` now says whose (and our `minted` row's person, for the email). New words are Rich's: e.g. *"<Name>'s agent '<name>'"* when it is not the reader's. **Rich's words (2026-10-03, ~12:45 PDT; manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4): *"<Name>'s agent '<name>'"* where the agent is not the reader's own; *"Your agent '<name>'"* stays for the reader's own.** | `packages/web/src/screens/agents/question.tsx` (`q.yourAgent`), `packages/server/src/keeping/words.ts` (`agentAsks.body`). | S | faculty-visible |
+| m130 | The faculty-ready adoption, part three | The platform now caps a question at its token's expiry, and our band and email cap it only for an agent our page let in (its kept expiry): for a token made elsewhere (the console, an API mint) the band can say *"your agent is asking something"* after the question ended by time, until its day is out, with no card behind it (the card reads the platform's own `expiresAt`). The keeper cannot read that token's expiry (`listTokens` is a person's; the event carries none). Ask the platform to put `expiresAt` on `pending_action.created` (a finding, FE-n, at Rich's word), or leave it. **Rich (2026-10-03, ~12:45 PDT; manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4): ask it. Filed as FE-53** (`api-findings.md`), placed with FE-5 after the faculty-ready plan; **open until FE-53 lands**, then the band and the email read the platform's end. | `packages/server/src/keeping/happenings.ts` (`questionsOf`). | S | faculty-visible |
+| m131 | The faculty-ready adoption, part three (its review) | The question's wait is capped by the expiry our page handed over for an agent (`POST …/agents`'s `expiresAt`, the first kept for an id standing): a member who kept someone else's token id with an early expiry would end that token's band need and shorten the email's *"It stops waiting at …"*. The card on *Agents* stays right (the platform's own `expiresAt`). m122's kind: our server cannot check a member's word against `listTokens`. Accept it, or keep the expiry only from a mint our page saw (the page's `mintToken` answer is the only source today). **Rich (2026-10-03, ~12:45 PDT; manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4): FE-53 gives it its fix** (the platform's expiry read, never a member's word): **closes when FE-53 lands**, open until then. | `packages/server/src/keeping/happenings.ts` (`tokenEndsOf`), `api/minted.ts` (`POST …/agents`). | S | robustness |
 
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
@@ -290,7 +290,7 @@ decision.
 | **m52**: F5 sitting 6 (first half), own review M7 (ledger 320) | One `Idempotency-Key` per dry-run press not pinned | `5d17915` |
 | **m53**: F5 sitting 6 (first half), own review M6 (ledger 319) | `check-going-live.sh`'s check 2 did not say what it leaves to `round.test.ts` | `73fc63d` |
 | **m65**: F6's whole-branch review, M2 | A history gap drawn one line too high when its end is a line | `a947482` |
-| **m66**: F6's whole-branch review, M3 | A watch token minted for a failed hand-over left alive | `1540110`, `aebba1c` (our server asked once; revoked unless it kept it: the review) |
+| **m66**: F6's whole-branch review, M3 | A watch token minted for a failed hand-over left alive | `1540110`, `aebba1c` (our server asked once; revoked unless it kept it: the review); accepted by Rich, 2026-10-03 |
 | **m71**: F6's whole-branch review, M8 | `close-out.sh`'s `watchers()` matched a sibling worktree's server | `6d49ae9` |
 | **m72**: `manifest-app-minors`' walk, 2026-10-02 | `read-only.ts` red on *"the walk wrote nothing"* (the shell's watch mint) | `bbc7141` (37/38 before, 38/38 after) |
 | **m74**: `manifest-app-verify`'s self-test run | The self-test's bare Chrome pid lost under `FORCE_COLOR` (52/53, a Chrome left) | `5611b11` (53/53 under `FORCE_COLOR=1`) |
@@ -304,7 +304,7 @@ decision.
 | **m96**: F6b sitting 3's review, M12 | `TOKEN_MISSING` would mint and hand over for another's conversation | `07203e4` |
 | **m100**: F6b sitting 4's review, M4 | A new-detail stop kept an earlier try's note | `1d24d29` |
 | **m102**: F6b sitting 4's review, M8 | After the gate refused, the old reading offered the press again for a moment | `429c933`, `962a1d8` (nothing in the press's place until a reading lands: the review's Important 2) |
-| **m110**: F6b sitting 5's review, Minor 5 | *Done* on the key's card moved the focus to an empty status | `b319882` (the section's heading) |
+| **m110**: F6b sitting 5's review, Minor 5 | *Done* on the key's card moved the focus to an empty status | `b319882` (the section's heading); accepted by Rich, 2026-10-03 |
 | **m113**: F6b sitting 5's review, Minor 8 | `?then=agents` stayed in the address | `87e5c5b` |
 | **m115**: F6b sitting 5's review, Minor 10 | The mint test's *"(yours)"* comment, never asserted | `9e0a3df` |
 | **m116**: F6b sitting 5's review, Minor 11 | *What may it do?* and *How long should it last?* heard twice | `1ed1f02` (`Choice`'s `labelledBy`, ours) |
@@ -313,7 +313,7 @@ decision.
 | The platform's Task 13, met mid-sitting, **m127** | Our Token fixtures named the mock's person as every token's maker | `5e656e4` |
 | **m126**: the 1.6.0 adoption | A start refused for the month said the allowance from a cached budget read, and the round made a spent month the session's checkpoint | `8743428` (the platform's `error.limit`) |
 | **m122**: F6b sitting 6's review, M3 | A member's word claimed a token id: its *watch* half (an outside token noted under *Our agents*) | `44793b5`, `1b12316` (the secret must name the id; its *agents* half: `5e656e4`) |
-| **m83**: F6b sitting 2's review, M7 | A conversation's token id handed over unchecked against its secret | `0168092` (an absent id is still not read from the secret: its entry) |
+| **m83**: F6b sitting 2's review, M7 | A conversation's token id handed over unchecked against its secret | `0168092` (an absent id is still not read from the secret: its entry); accepted by Rich, 2026-10-03 |
 | **m18**: F3 sitting 7, review (ledger 213) | The cost line at *built* stale: nothing read it after the round | `2763335` (m36's lag stays) |
 | **m37**: F5 sitting 2, review (ledger 42) | The model's `fetch` taken when the model was made | `b9ddb64` |
 | **m15**: F5 sitting 6 (first half), whole-branch review (ledger 302) | *Trying out*'s never-answered facts named the failed attempt as serving | `74f6097` |
@@ -321,7 +321,7 @@ decision.
 | **m93**: F6b sitting 3's review, M7 | People never read its list again after a refusal that meant it moved | `68413d6` |
 | **m49**: F5 sitting 4, review (ledger 184) | `students.test`'s *nothing sent* heard only `fetch` | `e0a029d` |
 | **m86**: F6b sitting 2's review, M10 | A stale comment, `STOPPED_FROM` twice, `endWork`'s unread boolean, `MOMENT` stricter than the contract | `03d5098` |
-| **m17**: F5 sitting 3, review (ledger 116) | A failed quiet re-read replaced *Going live*'s good page and filed a report at every tab switch | `0a874e9` |
+| **m17**: F5 sitting 3, review (ledger 116) | A failed quiet re-read replaced *Going live*'s good page and filed a report at every tab switch | `0a874e9`; accepted by Rich, 2026-10-03 |
 | **m31**: F5 sitting 2, review (ledger 37) | A refusal whose body stalled was said as a stall | `52591d8` |
 | **m32**: F5 sitting 2, review (ledger 40) | A 2xx with no body waited out the first-word deadline | `460ccc8` |
 | **m10**: F5 sitting 5, review M2 (ledger 240) | *"You're signed in again."* said again after a gate refusal | `8daf66c` (the Overview's panel too) |
@@ -491,7 +491,8 @@ on 7102 still runs the fixtures it read before contract 1.6.0 landed**: restarti
 twice** (2651 at F6b's close: 38 new), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, all clean.
 
 **For Rich:** nothing to decide. Told here: m110's focus target (the section's heading) and m66's *"asked once more"* are
-routine choices of ours, each a line to change; m95 and m116 change no word and no accessible name.
+routine choices of ours, each a line to change; m95 and m116 change no word and no accessible name. **Accepted by Rich as made**
+(2026-10-03, ~12:45 PDT; manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4).
 
 **Skipped, and why:**
 
@@ -621,7 +622,7 @@ for a fresh one was refused twice tonight), against our mock restarted at 08:54 
 stays in mock mode (pid 9809's watcher throughout); no Vitest of ours left running.
 
 **For Rich:** nothing to decide. Told: m17 (a quiet read's failure says nothing on the page) and m83 (an absent id not read
-from the secret), each a line to change.
+from the secret), each a line to change. **Accepted by Rich as made** (2026-10-03, ~12:45 PDT; manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4).
 
 **Skipped, and why:**
 
@@ -630,7 +631,7 @@ from the secret), each a line to change.
   (`listTokens` is a session's); keeping an expiry only from a mint our page saw needs the agent's key sent to our server
   (F6b's Review Focus 4: never a secret on `POST …/agents`); and m130's finding (the expiry on the event) is Rich's word.
   Task 10's `EventFrame.actor` names a person by display name only, too weak to match a kept row. Open; accept it, or decide
-  m130.
+  m130. *(Rich decided m130 the same day: FE-53; m131 closes when it lands.)*
 - **m45**: reading the checklist of an app whose draft serves nothing goes past F5 Decision 3's rule (*"the only ones whose
   checklist is read"*): a decision's edge.
 - **m101**: its second half (the landed moment kept under its heading, hiding a later version) needs the press's landed

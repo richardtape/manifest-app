@@ -330,7 +330,7 @@ announced Docker tier and closing test runs, as now.
   error chunk with code `'500'` stays `MODEL_UNREACHABLE`. If it is a non-200 before the body, `client.test.ts:288` holds it
   and nothing changes. *Negative control:* drop the code check: red. The real witness is the platform's Docker case; we
   cannot provoke a provider's `422` on 7100 at will.
-- **§26 (Task 10):** nothing to build unless Rich asks for it (open question 10).
+- **§26 (Task 10):** nothing to build unless Rich asks for it (open question 10). **He did, 2026-10-03: yes.**
 
 **8. The walk, on 7100.** After 7100 restarts on Task 5 and steps 3–5 are in, with our server in edge mode on 7105:
 1. Rich signs in on `app.`: DevTools shows `__Host-manifest_session` (`Secure`, `Path=/`, no `Domain`); our page knows him.
@@ -371,9 +371,14 @@ Then the five scripts in mock mode, as every sitting ends.
 9. **"Two are none"** was his word (FE-28 (b), 2026-09-28). With `__Host-`, should our `whoIs` ignore a plain
    `manifest_session` beside it, as the platform does (Decision 8), or keep refusing two of any name? Keeping it lets a
    sibling app still sign a person out of our app by tossing a plain cookie.
+   **Answered by Rich, 2026-10-03** (manifest's `docs/superpowers/2026-09-30-decisions.md`, 2026-10-03 ~12:45 PDT, item 4, relayed by `manifest-94`): **ignored**, as we decided it (*Part two*, Decision 1). Confirmed, closed.
 10. **`EventFrame.actor`:** do we tell an owner, in *what happened* (F6), that an administrator acted on their app, and why?
     Or not at all?
+    **Answered by Rich, 2026-10-03** (manifest's `docs/superpowers/2026-09-30-decisions.md`, 2026-10-03 ~12:45 PDT, item 4, relayed by `manifest-94`): **YES.** *"The faculty front-end tells an owner, in what happened, that
+    a platform administrator acted on their app, and the reason they gave (EventFrame.actor). Faculty never see the platform's
+    raw stream, so this is how §26's 'shown to the project's people' reaches them."* The sentence itself is new words, Rich's.
 11. **FE-30:** we record the platform's id with our reference, and never show the UUID to a faculty member (C3). Confirm.
+    **Answered by Rich, 2026-10-03** (manifest's `docs/superpowers/2026-09-30-decisions.md`, 2026-10-03 ~12:45 PDT, item 4, relayed by `manifest-94`): **confirmed** (*Part one*, Decision 1). Closed.
 12. **Does the edge rewrite?** No line of the app's site handles a cookie, and no task of the plan touches the Caddyfile.
     We would ask the platform to keep it so.
 13. **Does the mock change?** Its cookie does not. Its envelopes, its limit facts, its examples and its knowledge pack do
@@ -465,7 +470,7 @@ optional (answer 2), so none of our three-argument constructions moved.
    a second line with the UUID (machinery to a faculty member, and two references to quote); replacing our reference with the
    platform's id (a problem of ours, or nothing answering, has no platform id, and the person would meet two kinds of reference).
    *Cost to change:* `SupportReference` takes an optional id and one sentence, Rich's. **This is open question 11 above,
-   answered our way; Rich confirms or changes it.**
+   answered our way; confirmed by Rich, 2026-10-03.**
 2. **The platform's `resetsAt` first; our copy of its two rules only when it states none.** When the platform says `null` (the
    gateway reported no reset) or sends no limit, the sentence still says when, from the contract's own rule (the next Vancouver
    midnight; the first of the month, 00:00 UTC), as before: Rich asked that a person always hear when. The daily limit's
@@ -552,7 +557,7 @@ nobody (the second notice). Answer 1's recommendation (b) is what we built.
    two of the name read. Reason: a sibling app can set only the plain name; keeping it fatal would let any app on the zone sign
    a person out of ours, which is what the rename exists to stop. *Rejected:* counting both names (that denial of service);
    reading either name (FE-28's harm through our door). *Cost to change:* one filter in `identity.ts`'s `sessionIn`, and two
-   tests. **Rich confirms or changes it.**
+   tests. **Confirmed by Rich, 2026-10-03** (open question 9).
 2. **Edge mode asks through the edge** (answer 1's (b)), not 7100 with a client option (a) or a platform change (c). It needs
    our server to trust the edge's CA: `pnpm dev` runs with `--use-system-ca`, and the System keychain holds *Caddy Local
    Authority - 2026 ECC Root* (measured: the proof below ran with `--use-system-ca` and no `NODE_EXTRA_CA_CERTS`). *Cost to
@@ -652,11 +657,15 @@ before (a round's `token` need, `round.ts`; the stream's refusal, `stream.ts`; t
    the switch-off's), and a question is a need, never a line of the history (Task 12). Someone looking at a card that ends
    meanwhile still reads *"It has stopped waiting."* at their press (`PENDING_ACTION_RESOLVED`). **No new words.**
 3. **The question card still says *"Your agent '<name>'"*** to an owner for a helper's agent, as before; `mintedBy` now lets us
-   say whose, but the words are Rich's (m129).
+   say whose, but the words are Rich's (m129). **Rich's words, 2026-10-03:** *"<Name>'s agent '<name>'"* where the agent is not
+   the reader's own; *"Your agent '<name>'"* stays for the reader's own.
 4. **A token we did not mint** (the console's, an API mint) **keeps the band's and the email's day** (we cannot read its
    expiry: `listTokens` is a person's call, and the event carries none): the card on *Agents* reads the platform's capped
    `expiresAt` and is right; the band may say it a little longer (m130; and the expiry a member hands over is trusted, m131). *Rejected:* the keeper reading every question
-   (`getPendingAction` refuses the watch token another token's question, S1: M4).
+   (`getPendingAction` refuses the watch token another token's question, S1: M4). **Rich, 2026-10-03: ask the platform**
+   (m130): the asking token's `expiresAt` on `pending_action.created`, filed as **FE-53** (`api-findings.md`), placed with FE-5,
+   after the faculty-ready plan. When it lands, the band and the email read the platform's own end for every question, and
+   m131 goes with it (no member's word read).
 
 **Negative controls** (`controls.py` in the sitting's scratchpad; each a mutation, its named tests watched red, restored and
 checked by hash): *Agents*' maker read as nobody's (`Row.minter`'s id `''`: 15 red, `model.test.ts` and `agents.test.tsx`); the
@@ -682,3 +691,7 @@ for an agent's expiry caps its question here: m122's kind, written).
 **Owed / open:** m129 (the card's and the email's *"Your agent"* for someone else's agent: Rich's words), m130 (the band's day for
 a token we did not mint), m131 (the expiry a member hands over is trusted), m122's *watch* half (a watch hand-over's id
 unchecked). Nothing on 7100.
+*Since* (Rich, 2026-10-03 ~12:45 PDT, item 4 of manifest's decisions of that day): **m129's words given** (*"<Name>'s agent
+'<name>'"* for another's agent; *"Your agent '<name>'"* for the reader's own); **m130: ask the platform**, filed as **FE-53**
+(the asking token's `expiresAt` on `pending_action.created`), placed with FE-5 after the faculty-ready plan; **m131 closes when
+FE-53 lands**, open until then; m122's watch half closed by the third minors sitting (`minors.md`).
