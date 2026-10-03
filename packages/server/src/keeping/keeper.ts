@@ -3,10 +3,17 @@ import type { ProjectEvent, ProjectStream, Replay, Watch } from '../platform/str
 import type { Watching } from '../platform/watching.js'
 import { chipOf } from '../api/apps.js'
 import type { Hub } from '../api/events.js'
+import { pieceOf } from '../api/piece-state.js'
 import type { Chip, Conversation, Happening } from '../api/progress.js'
 import type { Store } from '../store/db.js'
 import type { HistoryEntry, KeptApp, KeptMember } from '../store/keeping.js'
-import { emailsFor, questionEmails, waitingEmail } from './emails.js'
+import {
+  emailsFor,
+  questionEmails,
+  stoppedEmail,
+  waitingEmail,
+  type StoppedWhy,
+} from './emails.js'
 import { administratorOf, happeningOf, questionsOf, tokenEndsOf } from './happenings.js'
 import { deliver, deliverUnfinished, type Mailer } from './mail.js'
 import {
@@ -117,6 +124,25 @@ const A_DAY_MS = 86_400_000
 const HOUR_MS = 3_600_000
 /** D6: how often each live address is looked at. */
 const MINUTE_MS = 60_000
+/**
+ * MINORS m76: how long a *we need you* waits before it goes, so that a switch-off, a deletion or a
+ * removal heard meanwhile says why the work stopped instead (m69). The platform revokes the
+ * round's token before it tells our stream, so the round usually ends first.
+ */
+const HOLD_MS = 60_000
+
+/** A *we need you* held (m76): all its email needs, kept now, for a deletion forgets the rows. */
+interface Held {
+  conversation: Conversation
+  runId: string
+  app: KeptApp
+  to: string
+  /** The app's first build (`PieceView.kind`): *"Building …"*. */
+  first: boolean
+  /** When it was held, in the keeper's clock. */
+  since: number
+  timer: ReturnType<typeof setTimeout>
+}
 
 /** One open stream, and its token, in memory only. */
 interface Open {
@@ -171,6 +197,13 @@ export function createKeeper({
   let removed: (projectId: string, personId: string) => void = () => undefined
   /** Someone taken off whose ending threw, by app: tried again at its next members read (m79). */
   const unended = new Map<string, Set<string>>()
+  /** Each *we need you* held a minute, by its run (m76). */
+  const held = new Map<string, Held>()
+  /**
+   * Who took themselves off (People), by app and person: told nothing of the work it stopped
+   * (Decision 13: nobody is told what they did). Forgotten once a members read lists them again.
+   */
+  const leftBy = new Set<string>()
   /** A stream replaced or closed says nothing more: only the current one is heard. */
   const isCurrent = (projectId: string, one: Open) => open.get(projectId) === one
 
@@ -267,6 +300,7 @@ export function createKeeper({
       .filter((kept) => !on(kept.userId))
       .map((kept) => kept.userId)
     store.putMembers(projectId, members)
+    for (const member of members) leftBy.delete(`${projectId} ${member.userId}`)
     const again = [...(unended.get(projectId) ?? [])].filter(
       (userId) => !on(userId) && !gone.includes(userId),
     )
@@ -353,6 +387,137 @@ export function createKeeper({
       waitingEmail(which, { app, conversation, to, origin, key }),
       wait,
     )
+  }
+
+  /**
+   * MINORS m76: a *we need you* held a minute, with what it needs to say why instead: the app and
+   * the address kept now, for a deletion forgets them. Held once per run.
+   */
+  function hold(conversation: Conversation, runId: string): void {
+    if (conversation.projectId === null || held.has(runId)) return
+    const app = store.app(conversation.projectId)
+    const to = store.personEmail(conversation.personId)
+    if (app === undefined || to === undefined) return
+    const first = pieceOf(store, conversation.id).kind === 'first'
+    const timer = setTimeout(() => release(runId), HOLD_MS)
+    timer.unref?.()
+    held.set(runId, {
+      conversation,
+      runId,
+      app,
+      to,
+      first,
+      since: now().getTime(),
+      timer,
+    })
+  }
+
+  /**
+   * The minute is up (or the keeper stops: decided then, never lost). Why it stopped, if the app or
+   * its people say so (m69); else *we need you*, if it still does and no page of theirs holds it.
+   */
+  function release(runId: string): void {
+    const one = held.get(runId)
+    if (one === undefined) return
+    held.delete(runId)
+    clearTimeout(one.timer)
+    const { conversation, app, to, first } = one
+    if (hub.watched(conversation.id, conversation.personId)) return
+    const why = stoppedBecause(one)
+    if (why === 'nobody') return
+    if (why !== null)
+      return void deliver(
+        store,
+        mailer,
+        stoppedEmail(why, {
+          app,
+          conversation,
+          first,
+          to,
+          origin,
+          key: `${app.projectId}:${why}:${runId}`,
+        }),
+        wait,
+      )
+    const current = store.getConversation(conversation.id, conversation.personId)
+    const run = store.latestRun(conversation.id)
+    if (current === undefined || run?.id !== runId) return
+    if (chipOf(current, run, hub.busy(current.id)) !== 'attention') return
+    void deliver(
+      store,
+      mailer,
+      waitingEmail('needs-you', {
+        app,
+        conversation: current,
+        to,
+        origin,
+        key: `${app.projectId}:needs-you:${runId}`,
+      }),
+      wait,
+    )
+  }
+
+  /**
+   * MINORS m69, m76: why a held piece of work stopped, by what we keep now. The app forgotten is a
+   * deletion; its person no longer among the members, taken off (or gone by their own word:
+   * `nobody`); its history's last switch, off. Our own watch stopped in that minute with nothing
+   * else heard (FE-48: we cannot tell why) is `nobody` too, never a wrong *we need you*.
+   */
+  function stoppedBecause({ conversation, since }: Held): StoppedWhy | 'nobody' | null {
+    const projectId = conversation.projectId!
+    const app = store.app(projectId)
+    if (app === undefined) return 'deleted'
+    const { personId } = conversation
+    const members = store.members(projectId)
+    if (members.length > 0 && !members.some((member) => member.userId === personId))
+      return leftBy.has(`${projectId} ${personId}`) ? 'nobody' : 'taken-off'
+    const history = store.historyOf(projectId)
+    const switched = history
+      .filter(
+        (entry) => entry.type === 'project.archived' || entry.type === 'project.restored',
+      )
+      .at(-1)
+    // The stream's word first: a refused token's read of the app cannot follow a switch-off.
+    const off =
+      switched === undefined
+        ? app.state === 'archived'
+        : switched.type === 'project.archived'
+    if (off) return 'switched-off'
+    const watchStopped = history.some(
+      (entry) =>
+        entry.type === 'keeping.stopped' && Date.parse(entry.at) >= since - HOLD_MS,
+    )
+    return watchStopped ? 'nobody' : null
+  }
+
+  /**
+   * MINORS m69: a deletion heard while work is under way on the app: its person told now, while
+   * the rows still say whose it is (its round ends after, on rows already gone).
+   */
+  function deletedUnderWay(projectId: string): void {
+    const app = store.app(projectId)
+    if (app === undefined) return
+    for (const conversation of store.conversationsOn(projectId)) {
+      const run = store.latestRun(conversation.id)
+      const going = run?.status === 'working' || run?.status === 'paused'
+      if (run === undefined || !going || !hub.busy(conversation.id)) continue
+      if (hub.watched(conversation.id, conversation.personId)) continue
+      const to = store.personEmail(conversation.personId)
+      if (to === undefined) continue
+      void deliver(
+        store,
+        mailer,
+        stoppedEmail('deleted', {
+          app,
+          conversation,
+          first: pieceOf(store, conversation.id).kind === 'first',
+          to,
+          origin,
+          key: `${projectId}:deleted:${run.id}`,
+        }),
+        wait,
+      )
+    }
   }
 
   /** Decision 8: launched, switched on, with an address, and its token kept. */
@@ -534,6 +699,7 @@ export function createKeeper({
   }
 
   function forget(projectId: string): void {
+    deletedUnderWay(projectId)
     open.get(projectId)?.watch?.close()
     open.delete(projectId)
     unended.delete(projectId)
@@ -565,6 +731,8 @@ export function createKeeper({
     },
 
     stop() {
+      // m76: a held *we need you* is decided now, never lost to a stop (F6 Review Focus 1).
+      for (const runId of [...held.keys()]) release(runId)
       clearInterval(scanning)
       scanning = undefined
       clearInterval(looking)
@@ -622,16 +790,16 @@ export function createKeeper({
       const run = store.latestRun(conversation.id)
       // A round of work (F3's "You can leave"); the intake's and the plan's are watched as they go.
       if (run === undefined) return
-      waitingOn(
-        conversation,
-        (chip) =>
-          conversation.state === 'built'
-            ? 'finished'
-            : chip === 'attention'
-              ? 'needs-you'
-              : null,
-        (why) => `${why}:${run.id}`,
-      )
+      if (conversation.state === 'built')
+        return waitingOn(
+          conversation,
+          () => 'finished',
+          (why) => `${why}:${run.id}`,
+        )
+      // Waiting on them, or stopped by their removal (F6b Decision 5): held a minute (m76).
+      const removed = run.status === 'stopped' && run.detail?.stopped?.why === 'removed'
+      if (removed || chipOf(conversation, run, hub.busy(conversation.id)) === 'attention')
+        hold(conversation, run.id)
     },
 
     outage: outageOf,
@@ -643,6 +811,7 @@ export function createKeeper({
     left(projectId, personId) {
       const kept = store.members(projectId)
       if (!kept.some((member) => member.userId === personId)) return false
+      leftBy.add(`${projectId} ${personId}`)
       keepMembers(
         projectId,
         kept.filter((member) => member.userId !== personId),

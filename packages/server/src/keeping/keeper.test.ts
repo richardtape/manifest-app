@@ -186,6 +186,7 @@ function setUp(
   const sent: { to: string; subject: string; text: string }[] = []
   /** Conversations a page holds the stream of, and those with work in flight. */
   const pages = new Set<string>()
+  const working = new Set<string>()
   const keeper = createKeeper({
     store,
     key,
@@ -194,7 +195,10 @@ function setUp(
     now: () => clock,
     mailer: { send: async (message) => void sent.push(message) },
     origin: ORIGIN,
-    hub: { watched: (id, personId) => pages.has(`${id} ${personId}`), busy: () => false },
+    hub: {
+      watched: (id, personId) => pages.has(`${id} ${personId}`),
+      busy: (id) => working.has(id),
+    },
     wait: async () => undefined,
     probe: p.probe,
     probing: options.probing ?? true,
@@ -210,6 +214,7 @@ function setUp(
     p,
     sent,
     pages,
+    working,
     later: (ms: number) => (clock = new Date(clock.getTime() + ms)),
     now: () => clock,
   }
@@ -1256,24 +1261,46 @@ describe('your work is waiting (Decision 14)', () => {
     detail: null,
   })
 
-  /** Alice's conversation on the kept app, in this state, its run in this status. */
+  /**
+   * Their conversation on the kept app (Alice's unless said), in this state, its run in this
+   * status; a first build unless it is a change they asked for.
+   */
   async function waiting(
     state: 'built' | 'building',
     status: Run['status'],
-    options: { kept?: boolean } = {},
+    options: { kept?: boolean; person?: string; change?: boolean } = {},
   ) {
     const t = setUp()
-    t.store.rememberPerson({
-      id: ALICE,
-      displayName: 'Alice Instructor',
-      email: 'alice@example.test',
-    })
+    for (const id of [ALICE, BOB])
+      t.store.rememberPerson({
+        id,
+        displayName: member(id).displayName,
+        email: member(id).email,
+      })
     if (options.kept !== false) await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
-    const made = t.store.createConversation(ALICE, 'Add a word count.')
+    const made = t.store.createConversation(options.person ?? ALICE, 'Add a word count.')
     const conversation = t.store.setState(made.id, state, { projectId: P1 })
+    if (options.change === true)
+      t.store.addMessage(conversation.id, 'person', {
+        kind: 'asked',
+        change: 1,
+        words: 'Add a word count.',
+        fix: null,
+      })
     t.store.saveRun(runOf(conversation.id, status))
+    // The first replay over: what is heard after it is news (the app's past otherwise).
+    t.open()[0]?.handlers.replayed!({ ids: [], overlapped: false })
     return { ...t, conversation }
   }
+
+  /** m76: a *we need you* waits a minute, so what stopped the work is heard first. */
+  const HOLD = 60_000
+  const aMinute = async () => {
+    await vi.advanceTimersByTimeAsync(HOLD)
+    await settle()
+  }
+  const told = (t: { sent: { to: string; subject: string }[] }) =>
+    t.sent.map(({ to, subject }) => ({ to, subject }))
 
   it('built, with no page holding it: we have finished, to the person, once per run', async () => {
     const t = await waiting('built', 'done')
@@ -1288,37 +1315,199 @@ describe('your work is waiting (Decision 14)', () => {
     )
   })
 
-  it('waiting on them: we need you', async () => {
-    const t = await waiting('building', 'needs-you')
-    t.keeper.workEnded(t.conversation)
-    await settle()
-    expect(t.sent.map(({ subject }) => subject)).toEqual([
-      'Reading responses: we need you',
-    ])
-  })
+  describe('a we need you, held a minute (m69, m76: Rich, "A different email")', () => {
+    // Only the hold's timer is faked: the keeper's own waits and `settle` stay real.
+    beforeEach(() => void vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }))
+    afterEach(() => void vi.useRealTimers())
 
-  it('a round stopped because its person was taken off the app: nothing (F6b Review Focus 1)', async () => {
-    const t = await waiting('building', 'stopped')
-    t.store.saveRun({
-      ...runOf(t.conversation.id, 'stopped'),
-      detail: {
-        ...NO_DETAIL,
-        stopped: { by: ALICE, why: 'removed' },
-      },
+    it('waiting on them: we need you, a minute later, once', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.workEnded(t.conversation)
+      t.keeper.workEnded(t.conversation)
+      await settle()
+      expect(t.sent).toEqual([])
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'alice@example.test', subject: 'Reading responses: we need you' },
+      ])
     })
-    t.keeper.workEnded(t.conversation)
-    await settle()
-    expect(t.sent).toEqual([])
-  })
 
-  it('a colleague’s page holding its stream: its own person is still told, and only they (F6b D3, the review’s I1)', async () => {
-    const t = await waiting('building', 'needs-you')
-    t.pages.add(`${t.conversation.id} ${BOB}`)
-    t.keeper.workEnded(t.conversation)
-    await settle()
-    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
-      { to: 'alice@example.test', subject: 'Reading responses: we need you' },
-    ])
+    it.each([
+      [
+        false,
+        'Reading responses: your change stopped',
+        'Your change to Reading responses',
+      ],
+      [true, 'Reading responses: building it stopped', 'Building Reading responses'],
+    ])(
+      'switched off while it worked (a first build: %s): it stopped because the app was switched off, never we need you',
+      async (first, subject, opening) => {
+        const t = await waiting('building', 'needs-you', { change: !first })
+        t.keeper.workEnded(t.conversation)
+        t.open()[0]!.handlers.event(event(5, 'project.archived'))
+        await aMinute()
+        expect(told(t)).toEqual([{ to: 'alice@example.test', subject }])
+        expect(t.sent[0]!.text).toContain(
+          `${opening} stopped because the app was switched off.`,
+        )
+        expect(t.sent[0]!.text).toContain(
+          `${ORIGIN}/apps/reading-responses/conversations/${t.conversation.id}`,
+        )
+      },
+    )
+
+    it('the switch-off heard before the work ended: the same', async () => {
+      const t = await waiting('building', 'needs-you', { change: true })
+      t.open()[0]!.handlers.event(event(5, 'project.archived'))
+      await settle()
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'alice@example.test', subject: 'Reading responses: your change stopped' },
+      ])
+    })
+
+    it('switched off, then on again before the work ended: we need you, as before', async () => {
+      const t = await waiting('building', 'needs-you', { change: true })
+      t.open()[0]!.handlers.event(event(5, 'project.archived'))
+      t.open()[0]!.handlers.event(event(6, 'project.restored'))
+      await settle()
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(t.sent.map(({ subject }) => subject)).toEqual([
+        'Reading responses: we need you',
+      ])
+    })
+
+    it('deleted after the work ended: it stopped because the app was deleted, with no link', async () => {
+      const t = await waiting('building', 'needs-you', { change: true })
+      t.keeper.workEnded(t.conversation)
+      t.keeper.forget(P1)
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'alice@example.test', subject: 'Reading responses: your change stopped' },
+      ])
+      expect(t.sent[0]!.text).toContain(
+        'Your change to Reading responses stopped because the app was deleted.',
+      )
+      expect(t.sent[0]!.text).not.toMatch(/https?:\/\//)
+    })
+
+    it('deleted while it works: told at once, before its rows are forgotten, and once', async () => {
+      const t = await waiting('building', 'working')
+      t.working.add(t.conversation.id)
+      t.keeper.forget(P1)
+      await settle()
+      expect(told(t)).toEqual([
+        { to: 'alice@example.test', subject: 'Reading responses: building it stopped' },
+      ])
+      expect(t.sent[0]!.text).toContain(
+        'Building Reading responses stopped because the app was deleted.',
+      )
+      // Its round ends after, on rows already gone: nothing more.
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(t.sent).toHaveLength(1)
+    })
+
+    it('deleted while nothing works on it: nobody told', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.forget(P1)
+      await aMinute()
+      expect(t.sent).toEqual([])
+    })
+
+    it('taken off while it worked, the removal heard within the minute: it stopped because they were taken off, with no link', async () => {
+      const t = await waiting('building', 'needs-you', { person: BOB, change: true })
+      t.keeper.workEnded(t.conversation)
+      t.w.members.set(P1, [member(ALICE)])
+      t.open()[0]!.handlers.event(
+        event(5, 'member.removed', { memberId: BOB, userId: ALICE }),
+      )
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'bob@example.test', subject: 'Reading responses: your change stopped' },
+      ])
+      expect(t.sent[0]!.text).toContain(
+        'Your change to Reading responses stopped because you were taken off the app. Its owners can add you again.',
+      )
+      expect(t.sent[0]!.text).not.toMatch(/https?:\/\//)
+    })
+
+    it('taken off, the removal heard first (F6b Decision 5 ended it): the same, replacing F6b Review Focus 1’s nothing', async () => {
+      const t = await waiting('building', 'stopped', { person: BOB })
+      t.store.saveRun({
+        ...runOf(t.conversation.id, 'stopped'),
+        detail: { ...NO_DETAIL, stopped: { by: BOB, why: 'removed' } },
+      })
+      t.w.members.set(P1, [member(ALICE)])
+      t.open()[0]!.handlers.event(
+        event(5, 'member.removed', { memberId: BOB, userId: ALICE }),
+      )
+      await settle()
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'bob@example.test', subject: 'Reading responses: building it stopped' },
+      ])
+    })
+
+    it('someone who left by their own word: nothing (Decision 13: nobody is told what they did)', async () => {
+      const t = await waiting('building', 'stopped', { person: BOB })
+      t.store.saveRun({
+        ...runOf(t.conversation.id, 'stopped'),
+        detail: { ...NO_DETAIL, stopped: { by: BOB, why: 'removed' } },
+      })
+      expect(t.keeper.left(P1, BOB)).toBe(true)
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(t.sent).toEqual([])
+    })
+
+    it('our watch stopped in that minute and nothing else heard (FE-48: we cannot tell why): nothing', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.workEnded(t.conversation)
+      t.refuse(t.open()[0]!)
+      await aMinute()
+      expect(t.sent).toEqual([])
+    })
+
+    it('back on its page within the minute: nothing (they are watching)', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.workEnded(t.conversation)
+      t.pages.add(`${t.conversation.id} ${ALICE}`)
+      await aMinute()
+      expect(t.sent).toEqual([])
+    })
+
+    it('carried on within the minute: nothing (it no longer needs them)', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.workEnded(t.conversation)
+      t.store.saveRun(runOf(t.conversation.id, 'working'))
+      t.working.add(t.conversation.id)
+      await aMinute()
+      expect(t.sent).toEqual([])
+    })
+
+    it('a colleague’s page holding its stream: its own person is still told, and only they (F6b D3, the review’s I1)', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.pages.add(`${t.conversation.id} ${BOB}`)
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'alice@example.test', subject: 'Reading responses: we need you' },
+      ])
+    })
+
+    it('the keeper stopped within the minute: decided then, never lost (F6 Review Focus 1)', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.workEnded(t.conversation)
+      t.keeper.stop()
+      await settle()
+      expect(t.sent.map(({ subject }) => subject)).toEqual([
+        'Reading responses: we need you',
+      ])
+    })
   })
 
   it('a page holding its stream: nothing (they are watching)', async () => {

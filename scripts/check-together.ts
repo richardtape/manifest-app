@@ -611,7 +611,8 @@ try {
     `${store.conversationById(dans.id)?.state}, ${danRecorded.length} set-aside (${danRecorded.map((r) => r.why).join(', ')}); Sam's ${setAsides(samsNext.id).length}`,
   )
 
-  // 11. Nobody taken off is emailed anything, in the whole run.
+  // 11. Nobody taken off is emailed anything, in the whole run: theirs here were changes set aside,
+  //     never a round under way (one that was is told why it stopped: m69, m76, the keeper's tests).
   const all = await mailSettled(3)
   const toRemoved = all.filter((m) =>
     m.To.some((t) => t.Address === SAM.email || t.Address === DAN.email),

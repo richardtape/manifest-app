@@ -253,3 +253,43 @@ export function waitingEmail(
     text: textOf(body, link, w.lastLine.asked(name)),
   }
 }
+
+/** MINORS m69, m76: why their work stopped, when it was not for them to answer. */
+export type StoppedWhy = 'switched-off' | 'deleted' | 'taken-off'
+
+/**
+ * MINORS m69, m76 (Rich, 2026-10-03: *"A different email"*): to the person whose work it was, in
+ * place of *"we need you"*: the app was switched off or deleted, or they were taken off it, said
+ * plainly. Only a switched-off app's conversation is linked: a deleted app has no pages, and
+ * someone taken off reads none.
+ */
+export function stoppedEmail(
+  why: StoppedWhy,
+  context: {
+    app: KeptApp
+    conversation: Conversation
+    /** The app's first build (`PieceView.kind` `first`): *"Building …"*. */
+    first: boolean
+    to: string
+    origin: string
+    key: string
+  },
+): Outgoing {
+  const { app, conversation, first, to, origin, key } = context
+  const said = first ? w.stopped.first : w.stopped.change
+  const body = said[why](app.name)
+  const lastLine = w.lastLine.asked(app.name)
+  const text =
+    why === 'switched-off'
+      ? textOf(
+          body,
+          appPage(origin, app, `/conversations/${encodeURIComponent(conversation.id)}`),
+          lastLine,
+        )
+      : `${body}\n\n${lastLine}`
+  return {
+    key: { kind: 'waiting', happening: key, recipient: to },
+    subject: said.subject(app.name),
+    text,
+  }
+}

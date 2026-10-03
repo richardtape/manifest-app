@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { machineryIn } from '../../../web/src/screens/machinery.js'
 import type { Conversation, Happening } from '../api/progress.js'
 import type { EmailKind, KeptApp, KeptMember, Outgoing } from '../store/keeping.js'
-import { emailsFor, questionEmails, waitingEmail } from './emails.js'
+import {
+  emailsFor,
+  questionEmails,
+  stoppedEmail,
+  waitingEmail,
+  type StoppedWhy,
+} from './emails.js'
 
 /**
  * F6 TASK 5: THE EMAILS (D3), pure. Who is emailed what for one happening, and the words: plain
@@ -442,6 +448,82 @@ describe('the words: plain text in our words (C3)', () => {
 
   it('waitingEmail is the person’s, keyed as asked', () => {
     expect(waiting('needs-you').key).toEqual({
+      kind: 'waiting',
+      happening: `${P}:k`,
+      recipient: 'alice@ubc.ca',
+    })
+  })
+})
+
+describe('stoppedEmail: why their work stopped, plainly, never "we need you" (m69, m76: Rich’s words, 2026-10-03)', () => {
+  const LAST = "You're getting this because you asked us to work on Reading responses."
+  const LINK = `${ORIGIN}/apps/reading-responses/conversations/${conversation.id}`
+  const stopped = (why: StoppedWhy, first: boolean) =>
+    stoppedEmail(why, {
+      app: APP,
+      conversation,
+      first,
+      to: 'alice@ubc.ca',
+      origin: ORIGIN,
+      key: `${P}:k`,
+    })
+
+  it.each([
+    [
+      'switched-off',
+      false,
+      'Reading responses: your change stopped',
+      `Your change to Reading responses stopped because the app was switched off. You can read where we got to in the conversation:\n\n${LINK}\n\n${LAST}`,
+    ],
+    [
+      'deleted',
+      false,
+      'Reading responses: your change stopped',
+      `Your change to Reading responses stopped because the app was deleted.\n\n${LAST}`,
+    ],
+    [
+      'taken-off',
+      false,
+      'Reading responses: your change stopped',
+      `Your change to Reading responses stopped because you were taken off the app. Its owners can add you again.\n\n${LAST}`,
+    ],
+    [
+      'switched-off',
+      true,
+      'Reading responses: building it stopped',
+      `Building Reading responses stopped because the app was switched off. You can read where we got to in the conversation:\n\n${LINK}\n\n${LAST}`,
+    ],
+    [
+      'deleted',
+      true,
+      'Reading responses: building it stopped',
+      `Building Reading responses stopped because the app was deleted.\n\n${LAST}`,
+    ],
+    [
+      'taken-off',
+      true,
+      'Reading responses: building it stopped',
+      `Building Reading responses stopped because you were taken off the app. Its owners can add you again.\n\n${LAST}`,
+    ],
+  ] as const)(
+    '%s (a first build: %s): its subject and words',
+    (why, first, subject, text) => {
+      const one = stopped(why, first)
+      expect(one.subject).toBe(subject)
+      expect(one.text).toBe(text)
+      expect(machineryIn(`${one.subject}\n${one.text.replace(LINK, '')}`)).toEqual([])
+      for (const id of [P, ALICE]) expect(one.text).not.toContain(id)
+    },
+  )
+
+  it('only a switched-off app’s conversation is linked: a deleted app has no pages, and someone taken off reads none', () => {
+    expect(stopped('switched-off', false).text.match(/https?:\/\//g)).toHaveLength(1)
+    expect(stopped('deleted', false).text).not.toMatch(/https?:\/\//)
+    expect(stopped('taken-off', false).text).not.toMatch(/https?:\/\//)
+  })
+
+  it('is the person’s, keyed as asked', () => {
+    expect(stopped('taken-off', true).key).toEqual({
       kind: 'waiting',
       happening: `${P}:k`,
       recipient: 'alice@ubc.ca',

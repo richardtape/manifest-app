@@ -202,6 +202,30 @@ export const mailWords = {
       `We stopped working on "${title}" for ${app}, because we need you. What we're asking is in the conversation:`,
   },
   /**
+   * MINORS m69, m76 (Rich, 2026-10-03, ~14:51 PDT; a first build's words ~14:52): why their work
+   * stopped, said plainly in place of *"we need you"*: the app switched off or deleted, or they were
+   * taken off it. A first build says *"Building …"*; a change, and our fix, *"Your change to …"*.
+   */
+  stopped: {
+    change: {
+      subject: (app: string) => `${app}: your change stopped`,
+      'switched-off': (app: string) =>
+        `Your change to ${app} stopped because the app was switched off. You can read where we got to in the conversation:`,
+      deleted: (app: string) =>
+        `Your change to ${app} stopped because the app was deleted.`,
+      'taken-off': (app: string) =>
+        `Your change to ${app} stopped because you were taken off the app. Its owners can add you again.`,
+    },
+    first: {
+      subject: (app: string) => `${app}: building it stopped`,
+      'switched-off': (app: string) =>
+        `Building ${app} stopped because the app was switched off. You can read where we got to in the conversation:`,
+      deleted: (app: string) => `Building ${app} stopped because the app was deleted.`,
+      'taken-off': (app: string) =>
+        `Building ${app} stopped because you were taken off the app. Its owners can add you again.`,
+    },
+  },
+  /**
    * F6b TASK 12 (Decision 14; the plan's *Words proposed*): their agent's question, to each owner.
    * The action is said with the app in it (never "<app>'s"), so the body does not name it twice.
    */
