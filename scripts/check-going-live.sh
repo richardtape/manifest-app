@@ -196,6 +196,10 @@ else
 fi
 
 # Stop the first: the dry run's fix starts by itself, and its round reads no incident (it left none).
+# Check 2 proves the fix is kept with what the dry run saw and reads no incident; it does NOT prove
+# those details reach the lead's view (mock mode's lead never says what it read): round.test.ts's
+# "a dry run's fix reads no incident: its view says the dry run signed nobody in…" holds that
+# (minors m53).
 call POST "/api/conversations/$C1/stop" '{}'
 STOPPED=$STATUS
 C2_TITLE=$(frame "$C2" | jq -r .conversation.title)
