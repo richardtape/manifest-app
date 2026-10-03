@@ -217,10 +217,12 @@ function stage(
       })
     },
   } as unknown as Platform
+  // As our server does: an agent's id kept is listed as theirs, by its maker, at the next read.
+  let kept = options.kept ?? KEPT
   const ours = {
     minted: (projectId: string) => {
       calls.push(['minted', projectId])
-      return Promise.resolve(options.kept ?? KEPT)
+      return Promise.resolve(kept)
     },
     keeping: (projectId: string) => {
       calls.push(['keeping', projectId])
@@ -231,7 +233,15 @@ function stage(
       made: { tokenId: string; name: string; expiresAt: string },
     ) => {
       calls.push(['keepAgent', projectId, made])
-      return answered(next('keepAgent'), () => undefined)
+      return answered(next('keepAgent'), () => {
+        kept = {
+          ...kept,
+          agents: [
+            ...kept.agents,
+            { tokenId: made.tokenId, by: { id: ME.id, name: ME.displayName } },
+          ],
+        }
+      })
     },
   } as unknown as Ours
   const expire = vi.fn()
@@ -626,8 +636,10 @@ describe('Let an agent of your own in (Review Focus 4)', () => {
     expect(screen.getByText(m.how)).toBeTruthy()
     expect(screen.getByText(`${location.origin}/v1`)).toBeTruthy()
     expect(screen.getByText(`${location.origin}/v1/docs/agents`)).toBeTruthy()
-    // The new one is listed, as theirs, (yours) once our server keeps its id.
-    await rowOf('My agent')
+    // The new one is listed, as theirs, (yours) once our server keeps its id (minors m115).
+    await waitFor(async () =>
+      expect(within(await rowOf('My agent')).getByText(a.theirs.yours)).toBeTruthy(),
+    )
     expect(stored().join('\n')).not.toContain('mft_')
     unmount()
     open(s)
