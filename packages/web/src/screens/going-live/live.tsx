@@ -251,6 +251,8 @@ export function LetStudentsIn({
     setPhase({ at: 'reading' })
     let sent: Sent
     let listed: Set<string>
+    // m42: a refusal is reported under the read that met it.
+    let reading = 'getLaunchReadiness'
     try {
       const readiness = await platform.getLaunchReadiness(project.id)
       if (readiness.launched && !afterLaunch) return launchedMeanwhile()
@@ -261,11 +263,12 @@ export function LetStudentsIn({
       }
       // Trying-out changed while they were here (moment 14): name the new one, and ask.
       if (sent.releaseId !== named) return changed(sent)
+      reading = 'listInstances'
       listed = new Set(
         (await platform.listInstances(production.id)).instances.map((i) => i.id),
       )
     } catch (error) {
-      return didNotGo(error, 'getLaunchReadiness')
+      return didNotGo(error, reading)
     }
     if (!live.current) return
     setPhase({ at: 'putting', sent, instance: null })

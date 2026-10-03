@@ -791,6 +791,22 @@ describe('when it goes wrong (moment 14)', () => {
     )
   })
 
+  it("m42: the press's own read of the instances refused is reported as listInstances, never as getLaunchReadiness; nothing sent", async () => {
+    const s = await open(stage())
+    const button = await letIn()
+    s.world.failing = ['listInstances']
+    await press(button)
+    const alert = await screen.findByRole('alert')
+    expect(within(alert).getByText(t.couldnt)).toBeTruthy()
+    const reports = fetched
+      .filter((f) => f.url === '/api/problems')
+      .map((f) => JSON.parse(f.body) as Record<string, unknown>)
+    expect(reports).toEqual([
+      expect.objectContaining({ code: 'INTERNAL', operation: 'listInstances' }),
+    ])
+    expect(s.called('deploy')).toEqual([])
+  })
+
   it('a press that does not go through: said with a reference, reported once, and the button again', async () => {
     const s = await open(stage())
     await pressed(s)
