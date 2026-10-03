@@ -25,4 +25,8 @@ while F1 was still unexecuted, and its sitting 1 corrects it to whatever F1 and 
 is no plan of ours: **part one, contract 1.6.0, adopted** (FE-30's request id kept beside our reference, FE-29's limit facts on
 moment 3; FE-31, FE-50, FE-51 move nothing; overnight, mock mode, its record in
 [`../research/2026-10-01-faculty-ready-adoption.md`](../research/2026-10-01-faculty-ready-adoption.md), *Part one*); **part
-two, the `__Host-` cookies** (the platform's `7b85326`), next, and before any sitting on 7100 (F5b sitting 1).
+two, the `__Host-` cookies, adopted** (the platform's `7b85326` and `d4291dd`: our `whoIs` reads the origin's cookie name and
+asks through the edge; every script's session check exact; proved on 7100 headlessly as `instructor`; overnight, mock mode,
+the same note's *Part two*; Rich's click on `app.` in edge mode is owed at F5b sitting 1); **part three, the platform's sitting
+4** (Task 13: `Token.mintedBy`, `pending_action.expired`, [Revoke] without its reject step), next, after its close-out: only a
+fixture fix is in (`5d17771`).

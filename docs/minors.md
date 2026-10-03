@@ -278,6 +278,14 @@ fixed*, below); m126 is open.
 |---|---|---|---|---|---|
 | m126 | The adoption's reading | After a start refused `AGENT_BUDGET_EXHAUSTED` (the budget read just before said there was money: seconds stale), moment 5's allowance says the amount and reset from that read, and the round reads the budget again; the refusal's own `error.limit` (`amountUsd`, `resetsAt`) is the platform's fresher word. The same gateway fact, seconds apart. | `packages/server/src/api/plan.ts` (`write`), `build/round.ts` (`fromError`). | S | faculty-visible (rarely) |
 
+**From the `__Host-` adoption** (2026-10-03, overnight, mock mode; the same note, *Part two*): both open, neither needing a
+decision.
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m127 | The platform's Task 13, met mid-sitting | Our two hand-built Token fixtures name the mock's own person as **every** token's maker, the ones standing for someone else's agent included (`5d17771`, the minimal fix that kept typecheck green). Nothing reads `mintedBy` yet; when *Agents* does (ORIENTATION's next-job row 1), make each fixture's maker true, or a test of *"Made by"* passes on a lie. | `packages/web/src/screens/agents/agents.test.tsx`, `model.test.ts` (`token`). | S | code |
+| m128 | The adoption's reading | `close-out.sh`'s mock probe (`:212`) sends `manifest_session=mock-session` by name, right for the mock (loopback http keeps the plain name) but the only session name in `scripts/` not derived from its origin. Harmless while the mock is http; say why in a comment, or derive it, when Rich reviews the script. | `scripts/close-out.sh`. | S | code |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed

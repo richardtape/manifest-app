@@ -512,3 +512,87 @@ after was gated on the flag.
   origin Manifest serves, *"NOT the control plane's own port"*, names our `whoIs` as the client a replay to the port signs out,
   and pins the port's name (`__Host-manifest_session`) in its `auth.test.ts`. Its sitting 3 closed at `f6b9ee8`.
 - Steps 3–6 above stand; step 2 (this part) is done, and `check-slice.sh:78`'s pattern held (`requestId` comes last).
+
+---
+
+## Part two, adopted: the `__Host-` cookies — 2026-10-03 (the `__Host-` adoption sitting, overnight, mock mode)
+
+*Spawned by `manifest-3d`, the night's coordinator, at Rich's night plan (manifest's `docs/superpowers/2026-09-30-decisions.md`,
+2026-10-03 ~01:10 PDT: *"the __Host- cookie adoption once sitting 3 lands"*). Against manifest `f6b9ee8` (the faculty-ready
+sitting 3's close: Task 5 `7b85326`, its review's `d4291dd`), with the platform's sitting 4 (`plat-s4`) running beside us; every
+Vitest run of ours gated on its flag. Our server in mock mode throughout. Its notices: `notice-cookies-s3.md`, both.*
+
+**What landed** (still **1.6.0**): on an https origin the three cookies are `__Host-manifest_session`, `__Host-manifest_login`
+and `__Host-manifest_stepup`, Secure, `Path=/` (login and step-up moved from `/auth`), no `Domain`; a plain `manifest_session`
+there is not read (the platform's Decision 8). Loopback http keeps the plain names, so the mock and our mock mode are unchanged
+by design. `sessionCookieFor(baseUrl)` names the cookie by the scheme of `baseUrl`, **an origin Manifest serves, never 7100's own
+port** (`d4291dd`): the platform judges a request to the bare port as the console's https origin and reads `__Host-` there,
+while the client, reading `http:`, sends the plain name. So our edge-mode `whoIs`, replaying to `http://127.0.0.1:7100`, found
+nobody (the second notice). Answer 1's recommendation (b) is what we built.
+
+**What we built**, test-first, one commit each:
+- `39b4a0b` (server): **`whoIs(cookieHeader, config, fetch?)`** reads `sessionCookieFor(config.origin)` alone (where the browser
+  reached us: `__Host-manifest_session` through the edge, `manifest_session` in mock mode) and asks at **`Config.sessionOrigin`**,
+  a new field: `https://app.manifest.internal` in edge mode (through the edge, where scheme and Host agree, so the client
+  forwards `__Host-`), `http://127.0.0.1:7102` in mock mode. `platformOrigin` stays the address of every call with a token.
+  `whoIs` takes the config, not an address, so neither caller (`/api/me`, the guard) can pass the wrong one. Its tests run every
+  case in both modes; edge mode's https request reaches a fake through the client's own `fetch`, which records the address the
+  client ASKED. The test platform (`api/testing.ts`) reads the plain name **exactly** (it is an http origin, as the mock is);
+  `AS_ALICE`…`AS_DANA` are the `__Host-` name a browser sends us; `check-together.ts` the same.
+- `68bbbcb` (scripts): every `check-*.sh` reads curl's jar by its name field (`jar_holds`, `$6`), never a substring, under
+  `$APP`'s scheme's name; `check-slice.sh` sends its nonsense session under that name in both modes, and says why step 7 cannot
+  tell the names apart. The walk's `signIn` is signed in only by `sessionCookie(app)` (was `/manifest_session$/`, either name);
+  its jar carries `__Host-manifest_login` across the three hops as it is (it keeps any name and ignores `Path`). The walk's
+  self-test: 55 (two new).
+- `7ef6bea`: our server's start line names where `whoIs` asks.
+
+**Decided here (ours), with what changing course costs:**
+1. **A plain `manifest_session` beside `__Host-manifest_session` is ignored, not "two are none"** (the note's question 9,
+   answered our way, after the platform's own Decision 8, which Rich approved for the platform). Rich's FE-28 (b) stands for
+   two of the name read. Reason: a sibling app can set only the plain name; keeping it fatal would let any app on the zone sign
+   a person out of ours, which is what the rename exists to stop. *Rejected:* counting both names (that denial of service);
+   reading either name (FE-28's harm through our door). *Cost to change:* one filter in `identity.ts`'s `sessionIn`, and two
+   tests. **Rich confirms or changes it.**
+2. **Edge mode asks through the edge** (answer 1's (b)), not 7100 with a client option (a) or a platform change (c). It needs
+   our server to trust the edge's CA: `pnpm dev` runs with `--use-system-ca`, and the System keychain holds *Caddy Local
+   Authority - 2026 ECC Root* (measured: the proof below ran with `--use-system-ca` and no `NODE_EXTRA_CA_CERTS`). *Cost to
+   change:* `SESSION.edge` in `config.ts`.
+3. **The test platform is an http Manifest origin and reads the plain name**: the API tests' configs ask it as their
+   `sessionOrigin`. Edge mode's exact forward (`https://app.manifest.internal/v1/me`, exactly `__Host-manifest_session=S`) is
+   held by `identity.test.ts` and `readConfig`'s tests (*"the name we read is the one we forward"*). *Rejected:* an https fake
+   (a certificate and a CA per test process), or a `fetch` threaded through `Config` into ten route modules.
+
+**Negative controls**, each a mutation in a script in the sitting's scratchpad (`controls.py`), watched red, restored and
+checked by hash: `whoIs` reading the plain name too (4 red); the name read from the asked origin instead of ours (8, in
+`guard.test.ts`: `identity.test.ts` cannot see it, since the two agree in every real config, which `app.test.ts` holds); asking
+7100 itself (4); two of *any* session name none (6); the test platform unanchored again (1); `AS_ALICE` plain (15); edge
+mode's `sessionOrigin` 7100 in `config.ts` (3). The scripts: the jar asked for `__Host-` in mock mode (`check-slice` step 4
+red); the old substring check shown green on a jar holding only `__Host-` and the new one red (`jar-control.sh`); the walk's old
+suffix check back (the self-test 54/55).
+
+**Proved on 7100** (`plat-s3`'s `d4291dd`, at `manifest-3d`'s word and Rich's standing yes for the laptop IdP's test passwords;
+the flag FREE; headless, from Node, `instructor`; nothing created; `proof.mts` in the scratchpad, no value or password printed):
+hop 1 (`/auth/login`) set `__Host-manifest_login` (`Max-Age=600; Path=/; HttpOnly; Secure; SameSite=None`); the ACS
+(`/auth/saml/callback`) set `__Host-manifest_session` (`Max-Age=43200; Path=/; HttpOnly; Secure; SameSite=Lax`, no `Domain`)
+and cleared the login cookie; `/v1/me` through the edge answered *Test Instructor*; **our `whoIs` with `readConfig({})` (edge)**
+answered that person, by `/v1/me`'s id, nobody for the same value under the plain name, and the `__Host-` person with a plain
+one beside it; the old request (7100 itself, the plain name) `401`; 7100 itself with `__Host-` `200`; the plain name through
+the edge `401`. Sign-out cleared the cookie (`Max-Age=0; Path=/; Secure`); the value still answered `200` afterwards, as the
+spec's Phase 1 divergence says it will (§20: stateless sessions, *"a session cannot be revoked before its own expiry"*). Our
+server stayed in mock mode: the proof imported `whoIs` into a Node process of its own.
+
+**The gates at the close** (on the final code tree, `5d17771`): `pnpm test` **2742 tests, 106 files, twice** (2722 before: 20
+new), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, all clean; the walk's self-test 55/55; **the seven acceptance scripts
+in mock mode**, in ORIENTATION's order, against our mock restarted on Task 13's fixture: `check-seeing` 8, `check-going-live`
+8, `check-slice` 8, `check-describing` 18, `check-building` 12, `check-together` 10 and 13, `check-keeping` 8 and 12, every one
+passing (and `check-seeing` and `check-slice` once more each, before). **On the dev database as it was**, not a fresh one:
+stopping our server's tree was refused by the session's classifier (*Interfere With Workloads*, as ORIENTATION §7 warns), so a
+fresh-database run is Rich's or an allowed session's. Stopping and restarting our mock on 7102 was allowed.
+
+**Still owed** (§8 of this note's test-first order): Rich's own click on `app.` with our server in edge mode (DevTools shows
+`__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out); and `MODE=edge
+bash scripts/check-slice.sh` against our server in edge mode. Both at the next sitting on 7100 (F5b sitting 1), which is no
+longer blocked by this.
+
+**Beside it, the platform's Task 13** (sitting 4, in its working tree at 05:27): `Token.mintedBy` required turned our typecheck
+red at two hand-built fixtures; the minimal fix only (`5d17771`), at `manifest-3d`'s word. Using it is the next sitting's.
