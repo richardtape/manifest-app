@@ -131,14 +131,21 @@ export function BuildingScreen({
     })
   }
 
-  /** A press, sent; without a token held, one is handed over and the press sent again, once. */
+  /**
+   * A press, sent; without a token held, one is handed over and the press sent again, once. Only
+   * on their own conversation: a token is never minted for another's (minors m96: an owner's Stop
+   * needs none today, and a page that did would hand its own person's token to someone else's).
+   */
   const send = async (operation: string, call: () => Promise<void>) => {
     setNotice(undefined)
     const again = () => void send(operation, call)
     try {
       await call()
     } catch (error) {
-      if (!(error instanceof OurRefusal && error.code === 'TOKEN_MISSING'))
+      if (
+        theirs !== null ||
+        !(error instanceof OurRefusal && error.code === 'TOKEN_MISSING')
+      )
         return failed(error, operation, again)
       let step = 'mintToken'
       try {

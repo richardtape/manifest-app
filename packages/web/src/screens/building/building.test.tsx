@@ -1725,6 +1725,20 @@ describe('another person’s conversation, read by a member (F6b Task 7)', () =>
     expect(s.called('handProject')).toEqual([])
   })
 
+  it('an owner’s Stop answered TOKEN_MISSING mints nothing for another’s conversation: said as not done (minors m96)', async () => {
+    const s = stage(
+      { stop: () => new OurRefusal('TOKEN_MISSING', 409) },
+      { members: AS_OWNER },
+    )
+    await open(s)
+    s.state(round(), sams)
+    await press(await screen.findByRole('button', { name: words.building.stop }))
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(s.called('mintToken')).toEqual([])
+    expect(s.called('handProject')).toEqual([])
+    expect(s.called('stop')).toHaveLength(1)
+  })
+
   it('their own, stopped by an owner: "Stopped by Alex Owner.", and Carry on is still theirs', async () => {
     const s = stage({}, { members: AS_HELPER })
     await open(s)
