@@ -217,13 +217,24 @@ export function createKeeper({
   /**
    * THE MEMBERS, KEPT WHOLE (F6 Decision 3), and anyone kept before and not now taken off here,
    * once (F6b Decision 5): only someone we kept is ended, so a second read ends nobody again.
+   * Each ending is its own (minors m79): one that throws is said on the operator's log and kept,
+   * so the next read ends them again, and never stops the others.
    */
   function keepMembers(projectId: string, members: KeptMember[]): void {
     const gone = store
       .members(projectId)
       .filter((kept) => !members.some((member) => member.userId === kept.userId))
     store.putMembers(projectId, members)
-    for (const member of gone) removed(projectId, member.userId)
+    const unended: KeptMember[] = []
+    for (const member of gone) {
+      try {
+        removed(projectId, member.userId)
+      } catch (error) {
+        console.error(error)
+        unended.push(member)
+      }
+    }
+    if (unended.length > 0) store.putMembers(projectId, [...members, ...unended])
   }
 
   /** D3: each owner told once, by the kept app and members. */

@@ -988,6 +988,31 @@ describe('someone taken off the app: their work here ends, once (F6b Task 4, Dec
     expect(t.removed).toEqual([[P1, BOB]])
   })
 
+  it('ending one person’s work throws (minors m79): the others are still ended, and that one is kept to be ended at the next read', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+    let failing = true
+    t.keeper.onRemoved((projectId, personId) => {
+      if (failing && personId === BOB) throw new Error('database is locked')
+      t.removed.push([projectId, personId])
+    })
+    t.w.members.set(P1, [member(ALICE)])
+    t.handlers.reconnected()
+    await settle()
+    expect(t.removed).toEqual([[P1, carol.userId]])
+    expect(error).toHaveBeenCalledTimes(1)
+    expect(t.store.members(P1).map((m) => m.userId)).toEqual([ALICE, BOB])
+    failing = false
+    t.handlers.reconnected()
+    await settle()
+    expect(t.removed).toEqual([
+      [P1, carol.userId],
+      [P1, BOB],
+    ])
+    expect(t.store.members(P1)).toEqual([member(ALICE)])
+    error.mockRestore()
+  })
+
   it('a re-read that lists nobody (minors m80): ignored, every app has an owner; nobody ended, the members kept', async () => {
     const t = await live()
     t.w.members.set(P1, [])
