@@ -69,6 +69,8 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Landed, the faculty-ready plan's sitting 6, Task 10** (manifest `beb4827`..`efcaaeb`; read by the third minors sitting, not adopted then) | — | §26: who acted on a project, and an administrator's reason | **Still 1.6.0, 143 codes**: `EventFrame.actor` (`{ name, asAdministrator, reason, token } \| null`, required), `Manifest-Admin-Reason` on 24 operations, `400 ADMIN_REASON_REQUIRED`. **Adopted 2026-10-03** (`e8072e2`, the adoption note's *Part four*, at Rich's yes to question 10): an administrator who is not a member named in *what happened* and the people emails, with the reason they gave. Our server sends no reason (it acts for members alone) |
 | **Decided by Rich, 2026-10-03, ~12:45 PDT** (manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4; relayed by `manifest-94`, the day's coordinator) | **FE-53** | An agent's question names no end (`expiresAt` on `pending_action.created`) | **Ask the platform** (our m130); additive; **placed with FE-5** (the same file, `tokens/pending.ts`), after the faculty-ready plan. It gives m131 its fix too. Beside it, ours confirmed: the adoption note's question 9 (a plain cookie beside `__Host-` ignored), question 11 (our reference shown, never the platform's id), and **question 10, yes**: an owner told in *what happened* that a platform administrator acted on their app, and the reason they gave (`EventFrame.actor`) |
 | **Decided by Rich, 2026-10-03, ~13:45 PDT** (relayed by `manifest-94`) | **FE-44**, **FE-45** | The load rehearsal; a *removed* state | **FE-44 (a):** the platform builds §24's load rehearsal as a plan of its own, after FE-46/47/5 and before FE-32; no earlier warning. **FE-45 (a):** `archived` → `removed`, the owner's, person-only; only an administrator lists, restores or deletes it for good; after the vulnerability database. Nothing of ours changes yet |
+| **Decided by Rich, 2026-10-03, ~14:48 PDT** (relayed by `manifest-94`, after `manifest-app-f6` checked the premise) | **FE-54** | A change's sensitive fields can only be added up commit by commit, so an addition and its own removal never cancel (m104) | **Ask the platform (a)**: a commit's sensitive change against the last approved release, the gate's own; additive, no spec action; **the platform's FE-46/47/5 plan's Task 2b, sitting 2** (contract `1.7.0`, `SpecValidation.sensitiveSinceApproved`). m104 stays open; the work panel keeps over-saying (Decision 8 allows it) until it lands. Over (b) our own copy of the rule, and (c) [Leave it out]'s removal alone |
+| **Decided by Rich, 2026-10-03, 15:09 PDT** (relayed by `manifest-94`, from `manifest-app-5a`'s closing note) | **FE-53**, widened | An agent our page did not let in is *"an agent"* to its own maker on the band and in the email, while *Agents* says *"Your agent"* | **Yes, alongside FE-53**: `pending_action.created` also carries **`tokenMintedBy`**, the asking token's minter (as `Token.mintedBy` names it), beside `expiresAt` and `tokenExpiresAt`; the platform's FE-46/47/5 plan's Task 2 |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -1680,6 +1682,47 @@ faculty-ready plan**. Filed by `manifest-app-5a`.*
 - **When it lands:** `questionsOf` reads the event's `expiresAt` first, the day only for an older event without one, and no
   kept expiry at all (`tokenEndsOf` goes): **m130 and m131 close.**
 - **When:** with FE-5, after the faculty-ready plan (Rich's placement).
+- **Widened by Rich, 2026-10-03, 15:09 PDT** (relayed by `manifest-94`, from `manifest-app-5a`'s closing note): the same event
+  also carries **`tokenMintedBy`**, the asking token's minter. The platform's plan (manifest
+  `docs/superpowers/plans/2026-10-03-fe46-fe47-fe5.md`, Task 2) names three fields: `expiresAt` (the question's own, never later
+  than its token's), `tokenExpiresAt` and `tokenMintedBy`. **When it lands**, the band and the owners' email say *"Your agent"* to
+  the maker of an agent made outside our page (m129's words), as *Agents* already does by `Token.mintedBy`.
+
+### FE-54 — A change's sensitive fields can't be judged against what is live, only added up commit by commit
+
+*Found 2026-10-03 by `manifest-app-f6`, checking m104's premise before building Rich's *"Judge the net change"* (14:42 PDT),
+reading manifest at `21dc368` (contract 1.6.0). **Decided by Rich, 2026-10-03, ~14:48 PDT** (relayed by `manifest-94`): ask
+the platform; additive, no spec action; **placed in the platform's FE-46/47/5 plan as Task 2b, sitting 2** (contract `1.7.0`).*
+
+- **Screen and moment:** F6b's work panel (moment 17, `screens/building/kind.ts`'s `kindWords`): whether a change after
+  launch *"can go straight to your students once tried"* or *"needs a Manifest administrator's look… because it changes…"*.
+  Above all **[Leave it out]**'s own conversation (m104): its commit removes the detail the first change added, so the
+  page says it needs a look while the platform will let it through.
+- **What we would call:** what we call today. `createCommit`'s `spec.sensitiveDiff.fields` for each of the round's commits
+  (`platform/source.ts`), added up over the conversation's runs since launch (`api/round-state.ts`'s `sensitiveOf`, by
+  `api/sensitive.ts`'s `unionOf`).
+- **What is missing** ✓ (`openapi.json`'s `SensitiveDiff`, *"against the project's newest VALID one"*; manifest
+  `control-plane/src/launch/gate.ts`, `launch/readiness.ts`'s `releaseApprovalItem`, `spec/diff.ts`'s
+  `sensitiveFieldsBetween` over `sensitiveViewOfRelease`): **nothing reads a change against the last approved release before
+  it is released.** A commit's `sensitiveDiff` is one commit's change, field names only, so an addition and its removal can't
+  cancel. `getSpec` reads only the newest valid manifest, and no operation reads the live version's. `getLaunchReadiness`'s
+  `sensitiveFields` and `reescalated` are the gate's own verdict, but only for the release already serving staging, which a
+  round's change does not have yet (the Overview's *Waiting to reach your students*, `new-version.tsx`, reads them already).
+  The gate compares two releases' **frozen, resolved** production configs (blueprint defaults, the production override, and
+  `resources` counted only when they rise).
+- **Why it matters:** the page over-says, so a faculty member is told to expect an administrator's look that never comes
+  (Decision 8 allows over-saying, never under-saying). Every [Leave it out] does it.
+- **Rejected:** (b) our own copy of the rule, reading `manifest.yaml` at the live version's commit and at `HEAD` with a new YAML
+  dependency. It would be a third statement of the gate's rule, blind to the blueprint's defaults and the frozen config, so it
+  could under-say (*"straight to your students"* where the gate asks). (c) Not counting [Leave it out]'s own removal: if the
+  first change also touched another sensitive field, the new conversation would read self-serve while the net change still
+  needs a look.
+- **Asked** (Rich's word; the shape is the platform's): a commit's sensitive change **against the last approved release**,
+  computed by the gate's own function. The platform's Task 2b proposes `SpecValidation.sensitiveSinceApproved: string[] |
+  null` (so on `CommitOutcome.spec` too), `null` before any approval, beside `sensitiveDiff`, which keeps its meaning.
+- **When it lands:** the round keeps the newest commit's `sensitiveSinceApproved` rather than adding up `sensitiveDiff`
+  (`round.ts`'s `d.sensitive`; `round-state.ts`'s `sensitiveOf`), and `kindWords` reads it: **m104 closes.**
+- **What we do meanwhile:** the union, as today; m104 stays open.
 
 ## Not a gap: decisions that are Rich's
 
