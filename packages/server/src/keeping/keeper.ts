@@ -135,6 +135,13 @@ interface Open {
    * replay can hold the answer too.
    */
   asking: HistoryEntry[]
+  /** Members reads begun, counted (minors m81). */
+  membersAsked: number
+  /**
+   * A members read numbered this or lower is not believed (minors m81): it began before a member
+   * event we heard since, or before a read already kept, so it may put back someone taken off.
+   */
+  membersBelieved: number
 }
 
 const NOT_WATCHING = { watching: false, until: null, tokenId: null, mintedBy: null }
@@ -186,6 +193,8 @@ export function createKeeper({
       held: new Set(),
       first,
       asking: [],
+      membersAsked: 0,
+      membersBelieved: 0,
     }
     open.set(projectId, one)
     one.watch = stream.watch(token, projectId, {
@@ -219,6 +228,8 @@ export function createKeeper({
       return
     }
     if (event.type === 'project.deleted') return forget(projectId)
+    // A members read begun before this event may not know it (minors m81).
+    if (READS_MEMBERS.has(event.type)) one.membersBelieved = one.membersAsked
     if (READS_APP.has(event.type)) void refresh(projectId, one, 'app')
     if (event.type === 'pending_action.created' && !one.first) {
       if (replayed) one.asking.push(entry)
@@ -491,7 +502,11 @@ export function createKeeper({
         if (isCurrent(projectId, one) && app.projectId === projectId) store.putApp(app)
       }
       if (what !== 'app') {
+        const asked = ++one.membersAsked
         const members = await watching.members(one.token, projectId)
+        // Answered after a newer one, or after a member event it began before: not believed.
+        if (asked <= one.membersBelieved) return
+        one.membersBelieved = asked
         // Every app has an owner, so a read that lists nobody is not believed: it would end
         // everyone's work (minors m80). The next read says again.
         if (isCurrent(projectId, one) && members.length > 0)

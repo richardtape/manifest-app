@@ -101,6 +101,8 @@ function fakeWatching() {
   const members = new Map<string, KeptMember[]>()
   /** Holds every read until released, to race two hands. */
   let gate: Promise<void> | undefined
+  /** Members reads answered in an order of the test's own, each when it resolves (m81). */
+  const answers: Promise<KeptMember[]>[] = []
   const watching: Watching = {
     async app(token, projectId) {
       calls.push(`app ${token} ${projectId}`)
@@ -113,6 +115,8 @@ function fakeWatching() {
     async members(token, projectId) {
       calls.push(`members ${token} ${projectId}`)
       if (gate !== undefined) await gate
+      const answer = answers.shift()
+      if (answer !== undefined) return answer
       return members.get(projectId) ?? []
     },
   }
@@ -121,6 +125,12 @@ function fakeWatching() {
     calls,
     reads,
     members,
+    /** The next members read waits for the answer this gives. */
+    answerLater() {
+      let answer: (members: KeptMember[]) => void = () => undefined
+      answers.push(new Promise((resolve) => (answer = resolve)))
+      return (members: KeptMember[]) => answer(members)
+    },
     hold() {
       let release: () => void = () => undefined
       gate = new Promise((resolve) => (release = resolve))
@@ -479,6 +489,26 @@ describe('events: written once, as the platform sent them (Decision 1)', () => {
     t.handlers.event(event(3, type))
     await settle()
     expect(t.store.app(P1)).toEqual(changed)
+  })
+
+  it('two members reads answered out of order (minors m81): the older answer never puts back someone the newer one took off', async () => {
+    const t = await watched()
+    const first = t.w.answerLater()
+    const second = t.w.answerLater()
+    t.handlers.event(
+      event(10, 'member.added', {
+        memberId: BOB,
+        role: 'collaborator',
+        previousRole: null,
+        userId: ALICE,
+      }),
+    )
+    t.handlers.event(event(11, 'member.removed', { memberId: BOB, userId: ALICE }))
+    second([member(ALICE)])
+    await settle()
+    first([member(ALICE), member(BOB, 'collaborator')])
+    await settle()
+    expect(t.store.members(P1)).toEqual([member(ALICE)])
   })
 
   it('another event re-reads nothing', async () => {
