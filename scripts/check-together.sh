@@ -75,6 +75,10 @@ body() { tr -d '\n' < "$BODY" | cut -c1-200; }
 ok() { passed=$((passed + 1)); echo "ok   $1  $2"; }
 no() { failed=$((failed + 1)); echo "FAIL $1  $2: $3"; }
 uuid() { uuidgen | tr 'A-Z' 'a-z'; }
+# named ID WHAT: a token whose secret names its id, as the platform's does (`mft_<id>_<secret>`):
+# our hand-overs refuse an id the secret does not name (m122, m83). The mock accepts any Bearer, and
+# answers one fixed token id to every mint, so a run names ids of its own.
+named() { printf 'mft_%s_together_check_%s' "$(printf '%s' "$1" | tr -d '-')" "$2"; }
 
 # sql QUERY: rows as JSON, read behind the store's back.
 sql() {
@@ -128,7 +132,7 @@ half_one() {
   call POST "/v1/projects/$PROJECT/tokens" \
     '{"name":"Keeping watch","capabilities":["project:read","output:read"],"expiresInDays":365}'
   WATCH_ID=$(uuid)
-  MINTED=$(jq -c --arg id "$WATCH_ID" '{token: .secret, tokenId: $id, expiresAt: .token.expiresAt}' "$BODY")
+  MINTED=$(jq -c --arg id "$WATCH_ID" --arg t "$(named "$WATCH_ID" watch)" '{token: $t, tokenId: $id, expiresAt: .token.expiresAt}' "$BODY")
   SECRET=$(jq -r '.secret // empty' "$BODY")
   call POST "/api/apps/$PROJECT/keeping" "$MINTED"
   HANDED="$STATUS $(jq -c '{watching, kept}' "$BODY")"
