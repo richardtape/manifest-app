@@ -988,6 +988,15 @@ describe('someone taken off the app: their work here ends, once (F6b Task 4, Dec
     expect(t.removed).toEqual([[P1, BOB]])
   })
 
+  it('a re-read that lists nobody (minors m80): ignored, every app has an owner; nobody ended, the members kept', async () => {
+    const t = await live()
+    t.w.members.set(P1, [])
+    t.handlers.reconnected()
+    await settle()
+    expect(t.removed).toEqual([])
+    expect(t.store.members(P1)).toEqual([member(ALICE), member(BOB, 'collaborator')])
+  })
+
   it('a re-read that still lists everyone: nothing ended', async () => {
     const t = await live()
     t.handlers.reconnected()

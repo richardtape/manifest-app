@@ -424,7 +424,10 @@ export function createKeeper({
       }
       if (what !== 'app') {
         const members = await watching.members(one.token, projectId)
-        if (isCurrent(projectId, one)) keepMembers(projectId, members)
+        // Every app has an owner, so a read that lists nobody is not believed: it would end
+        // everyone's work (minors m80). The next read says again.
+        if (isCurrent(projectId, one) && members.length > 0)
+          keepMembers(projectId, members)
       }
     } catch {
       // A refused token's stream says so itself; anything else is read again at the next event
