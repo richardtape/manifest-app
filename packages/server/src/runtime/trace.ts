@@ -32,9 +32,17 @@ export type TraceEntry =
       named: string | null
     }
 
+/**
+ * AN ENTRY AS IT IS READ BACK (m38): a model call's row written before F5 sitting 2 has no
+ * `received`, so a reader is made to say what it does without one.
+ */
+export type ListedEntry =
+  | (Omit<Extract<TraceEntry, { kind: 'model' }>, 'received'> & { received?: Received })
+  | Exclude<TraceEntry, { kind: 'model' }>
+
 export interface Trace {
   record(runId: string, entry: TraceEntry): void
-  list(runId: string): (TraceEntry & { at: string })[]
+  list(runId: string): (ListedEntry & { at: string })[]
 }
 
 /** Over the store's own trace table, which refuses anything shaped like a credential. */
@@ -42,6 +50,6 @@ export function storeTrace(store: Store): Trace {
   return {
     record: (runId, entry) => store.recordTrace(runId, entry),
     list: (runId) =>
-      store.listTrace(runId).map(({ at, entry }) => ({ ...(entry as TraceEntry), at })),
+      store.listTrace(runId).map(({ at, entry }) => ({ ...(entry as ListedEntry), at })),
   }
 }
