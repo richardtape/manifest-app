@@ -169,6 +169,47 @@ describe('writeChange', () => {
     expect(model.calls).toHaveLength(1)
   })
 
+  /** m123's own, from the walk on 7100 (the laptop's plan model wrote it into a plan). */
+  const MACHINERY_ASSUMED = {
+    ...ANSWER,
+    assumed: [
+      ...CURRENT.assumed,
+      'The count is permitted by the environment variables provided by the platform',
+    ],
+  }
+
+  it('machinery in what we assumed (m123, Rich: "Re-ask once"): asked once more, the same words, and its answer kept', async () => {
+    const model = scripted({ change: [MACHINERY_ASSUMED, ANSWER] })
+    const change = await writeChange(model, INPUT)
+    expect(change.assumed).toEqual(CURRENT.assumed)
+    expect(machineryIn(change.assumed.join(' '))).toEqual([])
+    expect(model.calls).toHaveLength(2)
+    expect(model.calls[1]!.messages).toEqual(model.calls[0]!.messages)
+  })
+
+  it('machinery again after asking once more: kept as it wrote it, never a third ask', async () => {
+    const again = {
+      ...MACHINERY_ASSUMED,
+      assumed: ['A word count fits within the container we run it in'],
+    }
+    const model = scripted({ change: [MACHINERY_ASSUMED, again] })
+    expect((await writeChange(model, INPUT)).assumed).toEqual(again.assumed)
+    expect(model.calls).toHaveLength(2)
+  })
+
+  it('asking once more refused: the first answer is kept, never lost to it', async () => {
+    const invalid = { ...ANSWER, title: 'Word count on staging' }
+    const model = scripted({ change: [MACHINERY_ASSUMED, invalid, invalid] })
+    expect((await writeChange(model, INPUT)).assumed).toEqual(MACHINERY_ASSUMED.assumed)
+    expect(model.calls).toHaveLength(2)
+  })
+
+  it('no machinery in what we assumed: asked once', async () => {
+    const model = scripted({ change: [ANSWER] })
+    await writeChange(model, INPUT)
+    expect(model.calls).toHaveLength(1)
+  })
+
   it('a question about the change itself is asked', async () => {
     const asks = [
       { id: 'where', ask: 'Should students see their own count while they write?' },

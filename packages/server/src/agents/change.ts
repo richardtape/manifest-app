@@ -1,6 +1,7 @@
 import { z } from 'zod/v4'
+import { machineryIn } from '../../../web/src/screens/machinery.js'
 import { guards } from '../build/guards.js'
-import type { Check, Message, Model } from '../model/client.js'
+import { ModelError, type Check, type Message, type Model } from '../model/client.js'
 import {
   changedRows,
   checked,
@@ -122,12 +123,14 @@ export async function writeChange(
     { role: 'system', content: CHANGE_PROMPT },
     { role: 'user', content: parts.filter((part) => part !== '').join('\n\n') },
   ]
-  const answer = await model.complete(
-    'change',
-    ChangeAnswer,
-    messages,
-    checkedAgainst(input.settled.map((s) => s.ask)),
-  )
+  const ask = () =>
+    model.complete(
+      'change',
+      ChangeAnswer,
+      messages,
+      checkedAgainst(input.settled.map((s) => s.ask)),
+    )
+  const answer = await askAgainForMachinery(await ask(), ask)
   const plan = {
     ...answer,
     title: answer.title.trim(),
@@ -186,4 +189,23 @@ export function dayOf(at: Date): string {
     year: 'numeric',
     timeZone: 'America/Vancouver',
   }).format(at)
+}
+
+/**
+ * MINORS m123 (Rich, 2026-10-03: *"Re-ask once"*): machinery in what we assumed (C3; on 7100 the
+ * plan model wrote *"…the environment variables provided by the platform"*) is asked once more, the
+ * same words, as a refused answer is re-asked. That answer is kept as it wrote it, never asked a
+ * third time; one the model refuses keeps the first, never lost to it.
+ */
+async function askAgainForMachinery(
+  first: z.infer<typeof ChangeAnswer>,
+  ask: () => Promise<z.infer<typeof ChangeAnswer>>,
+): Promise<z.infer<typeof ChangeAnswer>> {
+  if (machineryIn(first.assumed.join('\n')).length === 0) return first
+  try {
+    return await ask()
+  } catch (error) {
+    if (error instanceof ModelError) return first
+    throw error
+  }
 }
