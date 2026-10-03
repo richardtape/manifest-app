@@ -206,6 +206,22 @@ describe('POST /api/apps/:projectId/agents: an agent of their own, its id alone 
   })
 
   it.each([
+    ['no seconds', '2026-11-01T21:00Z'],
+    ['seconds and no fraction', '2026-11-01T21:00:00Z'],
+    ['a fraction of nine digits', '2026-11-01T21:00:00.123456789Z'],
+  ])(
+    "m86: an expiry the contract's date-time allows, with %s, is kept as sent: 201",
+    async (_, expiresAt) => {
+      const s = setUp()
+      const answer = await s.keepAgent({ ...AGENT, expiresAt })
+      expect(answer.statusCode).toBe(201)
+      expect(s.store.mintedOn(PROJECT)).toEqual([
+        expect.objectContaining({ tokenId: AGENT_ID, expiresAt }),
+      ])
+    },
+  )
+
+  it.each([
     ['a secret', { ...AGENT, secret: 'mft_0123_abcd' }],
     ['a token', { ...AGENT, token: 'mft_0123_abcd' }],
     ['no id', { name: AGENT.name, expiresAt: AGENT.expiresAt }],
@@ -213,6 +229,11 @@ describe('POST /api/apps/:projectId/agents: an agent of their own, its id alone 
     ['no name', { tokenId: AGENT_ID, expiresAt: AGENT.expiresAt }],
     ['a name shaped like a credential', { ...AGENT, name: 'mft_0123_abcd' }],
     ['an expiry that is no moment', { ...AGENT, expiresAt: 'next month' }],
+    [
+      'an expiry with an offset, not Z',
+      { ...AGENT, expiresAt: '2026-11-01T21:00:00+01:00' },
+    ],
+    ['an expiry with no time', { ...AGENT, expiresAt: '2026-11-01' }],
   ])('with %s is 400 AGENT_INVALID, and nothing is kept', async (_, body) => {
     const s = setUp()
     const answer = await s.keepAgent(body)

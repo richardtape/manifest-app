@@ -9,7 +9,7 @@ import { guard } from './guard.js'
 import { pieceOf, type Asked } from './piece-state.js'
 import { LIMITS } from './progress.js'
 import { mayAct, mayStop, reachable } from './sharing.js'
-import { endWork } from './work-end.js'
+import { endWork, STOPPABLE } from './work-end.js'
 import type { Work } from './work.js'
 
 /**
@@ -66,8 +66,6 @@ function answerOf(body: unknown): { questionId: string; words: string } | undefi
 
 /** What a round that is not working may be carried on from (Task 8's statuses). */
 const CARRIED_ON = new Set(['interrupted', 'stopped', 'needs-you'])
-/** Where Stop reaches: a round, a wait in the line, a change planned or planning. */
-const STOPPED_FROM = ['building', 'paused', 'waiting', 'planning', 'plan-ready']
 
 export function registerBuild(
   app: FastifyInstance,
@@ -221,7 +219,9 @@ export function registerBuild(
       if (!empty(request.body)) return refuse(reply, 400, 'STOP_INVALID')
       const conversation = reachable(store, request.params.id, who.person.id, mayStop)
       if (conversation === undefined) return refuse(reply, 404, 'NOT_FOUND')
-      if (!STOPPED_FROM.includes(conversation.state))
+      // Where Stop reaches: a round, a wait in the line, a change planned or planning (m86: the
+      // sets `endWork` itself keeps).
+      if (!STOPPABLE.has(conversation.state))
         return refuse(reply, 409, 'CONVERSATION_STATE')
       // Not now: only a change is set aside; the first plan has nothing to go back to.
       if (

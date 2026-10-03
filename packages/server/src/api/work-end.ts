@@ -8,6 +8,8 @@ import { pieceOf, type SetAside } from './piece-state.js'
 const RUNNING = new Set(['building', 'paused'])
 /** A change not yet under way: Stop sets it aside (*Not now*, *Leave the line*). */
 const NOT_STARTED = new Set(['waiting', 'planning', 'plan-ready'])
+/** Every state Stop ends something in: the route refuses the rest before this (m86). */
+export const STOPPABLE: ReadonlySet<string> = new Set([...RUNNING, ...NOT_STARTED])
 
 /**
  * STOP'S BODY (F3 Task 9, F4 Decision 5), shared by Stop, an owner's Stop on another's
@@ -18,20 +20,20 @@ const NOT_STARTED = new Set(['waiting', 'planning', 'plan-ready'])
  * - **Waiting in the line:** a stopped round goes back to its Stop; a change is set aside.
  * - **Planned, or planning:** set aside, and the app freed. The first plan's *Not now* is refused
  *   by the route before this: it has nothing to go back to.
- * Anything else has no work to end: nothing happens. `true` when it ended something.
+ * Anything else has no work to end: nothing happens.
  */
 export function endWork(
   deps: { store: Store; hub: Hub; rounds: Rounds; line: Line },
   conversation: Conversation,
   stopped: { by: string; why: 'stopped' | 'removed' },
-): boolean {
+): void {
   const { store, hub, rounds, line } = deps
   if (RUNNING.has(conversation.state)) {
     rounds.stop(conversation, stopped)
     line.released(conversation.projectId)
-    return true
+    return
   }
-  if (!NOT_STARTED.has(conversation.state)) return false
+  if (!NOT_STARTED.has(conversation.state)) return
   // A change set aside says who, and why (the sitting 3 review's I3): kept by its change.
   const setAside = () => {
     store.addMessage(conversation.id, 'we', {
@@ -48,9 +50,8 @@ export function endWork(
       store,
       roundStopped ? store.setState(conversation.id, 'building') : setAside(),
     )
-    return true
+    return
   }
   publishState(hub, store, setAside())
   line.released(conversation.projectId)
-  return true
 }

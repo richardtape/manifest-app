@@ -42,8 +42,8 @@ export interface Store extends KeepingStatements, MintedStatements {
   getConversation(id: string, personId: string): Conversation | undefined
   /**
    * ANY PERSON'S CONVERSATION, for `api/sharing.ts` to judge (F6b D3): a route that reads one
-   * answers it only to someone whose standing may read it, and every change still asks
-   * `getConversation`.
+   * answers it only to someone whose standing may read it, and every change asks it too
+   * (`reachable(…, mayAct)`, or `mayStop` for Stop).
    */
   conversationById(id: string): Conversation | undefined
   /** Their name as we last heard it (`persons`), for the page to say who; else "Someone". */

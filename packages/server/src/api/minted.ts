@@ -19,8 +19,11 @@ const refuse = (reply: FastifyReply, status: number, code: string) =>
   reply.code(status).send({ error: { code } })
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-/** A moment in UTC, as the platform writes `Token.expiresAt`. */
-const MOMENT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/
+/**
+ * A moment in UTC, as the contract's `Token.expiresAt` allows it: seconds and their fraction
+ * optional, `Z` only (m86); a date `Date.parse` cannot read is still refused.
+ */
+const MOMENT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?Z$/
 
 /** A token id handed over beside a secret: absent, or an id. Undefined when it is neither. */
 export function tokenIdOf(value: unknown): string | null | undefined {
@@ -59,7 +62,10 @@ const AGENT = z
       .min(1)
       .max(64)
       .refine((name) => !CREDENTIAL.test(name)),
-    expiresAt: z.string().regex(MOMENT),
+    expiresAt: z
+      .string()
+      .regex(MOMENT)
+      .refine((moment) => !Number.isNaN(Date.parse(moment))),
   })
   .strict()
 
