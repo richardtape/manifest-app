@@ -69,7 +69,7 @@ try {
   process.exit(1)
 }
 console.log(
-  `manifest-app (${config.mode}) on http://127.0.0.1:${config.port}, asking ${config.platformOrigin}`,
+  `manifest-app (${config.mode}) on http://127.0.0.1:${config.port}, asking ${config.platformOrigin}, who at ${config.sessionOrigin}`,
 )
 
 // The keeper's streams closed with the server. A ceiling, so an open EventSource never holds a
