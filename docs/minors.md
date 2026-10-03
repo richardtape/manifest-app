@@ -145,14 +145,7 @@ could end it from the person's session in the browser, or leave it. It spends no
 
 ## Found since, not from a plan's entry
 
-| ID | From | The minor | Where it is today | Size | Affects |
-|---|---|---|---|---|---|
-| m62 | The faculty-ready adoption note ([`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md), §5), 2026-10-01 | A provider's refusal streamed as an error event mid-answer is said as *"We can't reach the model"* (`MODEL_UNREACHABLE`), not as a refusal. ORIENTATION's *"ours reads both"* for F8 holds for a non-streamed `422` and for `200` `null` only. The platform's faculty-ready Task 6 may send it this way: its `[M3]` decides. | `packages/server/src/model/stream.ts:41-42` reads any `error` chunk as `MODEL_UNREACHABLE` (held by `stream.test.ts:138`). | S | faculty-visible |
-
-**m62.** Test first in `stream.test.ts`, from `[M3]`'s recorded streamed answer: an error chunk carrying the provider's
-`422` is `MODEL_ANSWER_INVALID`, and `:138`'s chunk with code `'500'` stays `MODEL_UNREACHABLE` (the control already
-there). Negative control: drop the code check, and the new case goes red. `stream.ts` is in `packages/server/src`, so it
-waits for F6 sitting 4 to close.
+*m62, the one minor here, **no longer applies** (2026-10-03): see* No longer applies.
 
 **From the final verification pass** (`manifest-app-verify`, report only, on `main` at `4135da8`, 2026-10-02 00:42 PDT:
 green; nothing it found costs the demo).
@@ -266,8 +259,7 @@ reviewer over `7a85693..f14a877`; its two Important and two minors re-graded Imp
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
 | m120 | The review's M1 | After launch, a helper on a re-escalated version reads *"An owner lets your students have it."*: no sign-off ask, no *"asked … waiting N days"*, no refusal's reason. Sitting 4's ruling (*a helper is offered no ask*) rests on a premise the platform answers the other way: its `COLLABORATOR` keeps `approval:request` (`projects/authz.ts`), and before launch *Going live*'s `SignOff` has no role gate. Draw `SignOff` for any member, or at least its row. For Rich. | `packages/web/src/screens/overview/new-version.tsx`. | S | faculty-visible |
-| m121 | The review's M2 | A question's band line outlives its agent on F6b's own paths: a helper revoking their agent (their reject is `403`, FE-50, swallowed); an owner taking someone off (the platform revokes their tokens; FE-52 keeps the questions pending). Every member's band says *"your agent is asking something"* for up to a day, [Agents] showing no card. Decision 16's residual, now common: People could answer *no* to a removed person's questions after the removal (an owner may). | `packages/server/src/api/keeping.ts` (`needsOn`), `screens/people/people.tsx`. | S | faculty-visible |
-| m122 | The review's M3 | A member's word claims a token id (m83's kind, two more doors): `POST …/agents` takes any id seen in `listTokens`, and a watch hand-over's `current` branch notes `handed.tokenId` unchecked. The real maker of an outside token then reads *"Made by <claimant>"* and no [Revoke]. Check the id against the secret on a hand-over; the agents route until FE-49's `Token.mintedBy`. | `packages/server/src/api/minted.ts`, `keeping/keeper.ts` (`hand`). | S | code |
+| m122 | The review's M3 | A member's word claims a token id: **its *agents* half closed** (the faculty-ready adoption, part three, `5e656e4`: *Agents* names a maker from the platform's `Token.mintedBy`, never from our kept ids, so a claimant is no one's maker; `POST …/agents` still takes any id, which now costs only the keeper's email naming that agent by the claimant's word). **Its *watch* half stays:** a watch hand-over's `current` branch notes `handed.tokenId` unchecked, so a member could have an outside token listed under *Our agents* (no [Revoke]). Check the id against the secret on a hand-over. | `packages/server/src/keeping/keeper.ts` (`hand`). | S | code |
 | m123 | The walk on 7100 | The change planner, on the laptop's plan model (`default-chat`), wrote machinery into a plan's *Things we assumed*: *"permitted by the environment variables provided by the platform"*, *"our existing deployment limits"*, *"web scraping capability"* (C3). The model's prose, shown as it wrote it; nothing of ours checks a plan's words. Re-ask once when `machineryIn` finds any (as a refused answer is re-asked), or say less of the assumptions. F4's planner, not F6b's. | `packages/server/src/agents/change.ts` (the prompt), `api/plan.ts` (no check). | S | faculty-visible |
 
 **From the 1.6.0 adoption** (2026-10-03, overnight, mock mode; `research/2026-10-01-faculty-ready-adoption.md`, *Part one*): read
@@ -283,8 +275,10 @@ decision.
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m127 | The platform's Task 13, met mid-sitting | Our two hand-built Token fixtures name the mock's own person as **every** token's maker, the ones standing for someone else's agent included (`5d17771`, the minimal fix that kept typecheck green). Nothing reads `mintedBy` yet; when *Agents* does (ORIENTATION's next-job row 1), make each fixture's maker true, or a test of *"Made by"* passes on a lie. | `packages/web/src/screens/agents/agents.test.tsx`, `model.test.ts` (`token`). | S | code |
 | m128 | The adoption's reading | `close-out.sh`'s mock probe (`:212`) sends `manifest_session=mock-session` by name, right for the mock (loopback http keeps the plain name) but the only session name in `scripts/` not derived from its origin. Harmless while the mock is http; say why in a comment, or derive it, when Rich reviews the script. | `scripts/close-out.sh`. | S | code |
+| m129 | The faculty-ready adoption, part three | The question card on *Agents* and the owners' email say *"Your agent '<name>'"* for an agent another member made (an owner answering a helper's agent's question): untrue to that reader. `Token.mintedBy` now says whose (and our `minted` row's person, for the email). New words are Rich's: e.g. *"<Name>'s agent '<name>'"* when it is not the reader's. | `packages/web/src/screens/agents/question.tsx` (`q.yourAgent`), `packages/server/src/keeping/words.ts` (`agentAsks.body`). | S | faculty-visible |
+| m130 | The faculty-ready adoption, part three | The platform now caps a question at its token's expiry, and our band and email cap it only for an agent our page let in (its kept expiry): for a token made elsewhere (the console, an API mint) the band can say *"your agent is asking something"* after the question ended by time, until its day is out, with no card behind it (the card reads the platform's own `expiresAt`). The keeper cannot read that token's expiry (`listTokens` is a person's; the event carries none). Ask the platform to put `expiresAt` on `pending_action.created` (a finding, FE-n, at Rich's word), or leave it. | `packages/server/src/keeping/happenings.ts` (`questionsOf`). | S | faculty-visible |
+| m131 | The faculty-ready adoption, part three (its review) | The question's wait is capped by the expiry our page handed over for an agent (`POST …/agents`'s `expiresAt`, the first kept for an id standing): a member who kept someone else's token id with an early expiry would end that token's band need and shorten the email's *"It stops waiting at …"*. The card on *Agents* stays right (the platform's own `expiresAt`). m122's kind: our server cannot check a member's word against `listTokens`. Accept it, or keep the expiry only from a mint our page saw (the page's `mintToken` answer is the only source today). | `packages/server/src/keeping/happenings.ts` (`tokenEndsOf`), `api/minted.ts` (`POST …/agents`). | S | robustness |
 
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
@@ -347,6 +341,8 @@ decision.
 | **m115**: F6b sitting 5's review, Minor 10 | The mint test's *"(yours)"* comment, never asserted | `9e0a3df` |
 | **m116**: F6b sitting 5's review, Minor 11 | *What may it do?* and *How long should it last?* heard twice | `1ed1f02` (`Choice`'s `labelledBy`, ours) |
 | **m118**: F6b sitting 5's review, Minor 13 | `q.didntSay[action]` read without `Object.hasOwn` | `1f91fe3` |
+| The review's M2 (F6b sitting 5), **m121** | A question's band line outlives its agent (a helper's revoke, a removal) | the platform's `0d5a743` (FE-52: `pending_action.expired` on a revoke, a removal, a switch-off), read by `questionsOf` since sitting 5; held by `d6037d8` |
+| The platform's Task 13, met mid-sitting, **m127** | Our Token fixtures named the mock's person as every token's maker | `5e656e4` |
 
 ### 2026-10-02 — m1–m4, m14, m19 and m63 fixed at Rich's word (`manifest-app-minors`, overnight, mock mode only)
 
@@ -518,12 +514,12 @@ routine choices of ours, each a line to change; m95 and m116 change no word and 
   words), m117 (words for a refused clipboard), m119, m120, m123; m73 (the gap's time words).
 - **Needs 7100:** m92 and m111 (a visually hidden name on People's and Agents' buttons changes their accessible names:
   `together-7100.ts` presses *Take off* by its text, so only a walk on 7100 re-proves it).
-- **Waits on the platform:** m62 (its faculty-ready Task 1's `[M3]` decides the form), m122 (the agents route until
-  FE-49's `Token.mintedBy`), m64 (its half in the mock's fixed `expiresAt`).
+- **Waits on the platform:** m64 (its half in the mock's fixed `expiresAt`). *(m62 no longer applies, m122's agents
+  half closed: the faculty-ready adoption, part three, 2026-10-03.)*
 - **Larger than a minor tonight (M or L):** m20–m24, m54–m61, m68, m97; m106 (the focus needs a ref through `Work` and
   `RoundNeeds`: a small task of its own).
 - **Not reached** (S, no decision found): m5, m6, m9–m13, m15–m18, m27–m29, m31, m32, m35–m43, m45, m46, m49, m57, m67,
-  m70, m81–m84, m86, m93, m94, m98, m99, m101, m103, m105, m108, m114, m121. m13's premise wants a second look (a re-read
+  m70, m81–m84, m86, m93, m94, m98, m99, m101, m103, m105, m108, m114 (m121 since fixed by the platform's FE-52). m13's premise wants a second look (a re-read
   after the not-open signal may be wanted), and m86's *MOMENT* item needs the contract's date-time read again first.
 
 ### 2026-10-03 — m124 and m125, found and fixed by the 1.6.0 adoption (overnight, mock mode)
@@ -538,7 +534,22 @@ routine choices of ours, each a line to change; m95 and m116 change no word and 
 
 Each test-first, its controls watched red (the sitting's record has them). The gates at the close: the adoption's record.
 
+### 2026-10-03 — the faculty-ready adoption, part three (overnight, mock mode): m62, m121, m127 closed; m122 half; m129–m131 found
+
+- **m127** (`5e656e4`): every Token fixture's maker true to its story, now that *Agents* reads `mintedBy`.
+- **m122**, its *agents* half (`5e656e4`): a maker is the platform's `Token.mintedBy`, never our kept word; its *watch* half
+  stays open (its row).
+- **m121** fixed by the platform's FE-52 (`0d5a743`): a revoke, a removal or a switch-off publishes `pending_action.expired`,
+  which the band read as an end since F6b sitting 5; held now at the API for every cause (`d6037d8`).
+- **m62** no longer applies (F8, `5effd5e`; `f84c6bf` holds the platform's exact `422`).
+- **Found:** m129 (*"Your agent"* for another's agent: Rich's words), m130 (the band's day for a token made elsewhere: a finding,
+  Rich's word), m131 (a member's word for an agent's expiry: m122's kind; its review's).
+
+The record: `research/2026-10-01-faculty-ready-adoption.md`, *Part three*.
+
 ## No longer applies
+
+- **m62** (the faculty-ready adoption note, §5): *a provider's refusal streamed as an error event mid-answer is said as unreachable*. The platform's F8 (`5effd5e`) sends a provider's `422` as an HTTP `422` with a JSON body **before any stream begins**, and `client.ts` reads the status before the stream (`MODEL_ANSWER_INVALID`, held by `client.test.ts` with the platform's exact body, as a streamed request's: `f84c6bf`). An error chunk mid-stream is now only the gateway's own, which `MODEL_UNREACHABLE` says truly.
 
 - **F5 sitting 6 (first half), whole-branch review, Minor 5** (ledger 282): *check 2 of a dry run's fix that was never
   built*. Overtaken the same sitting: Rich said *"Build it now"*, the press was built (`71fceba`), and check 2 now runs

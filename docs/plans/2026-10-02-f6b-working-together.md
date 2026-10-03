@@ -253,7 +253,10 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
    replaced stays active on the platform (one minted by another member is left to expire; a revoke can fail), so our
    server also keeps **every watch id it was handed** (store **version 7**, `watched`: ids and expiries, never one it did
    not read the project with), and `…/minted` lists each as ours until it expires. *Residual:* a dev database moved aside
-   knows no older id (sitting 6's edge mode: revoke leftover *Keeping watch* tokens before the click).
+   knows no older id (sitting 6's edge mode: revoke leftover *Keeping watch* tokens before the click). **(The faculty-ready
+   adoption, part three, 2026-10-03:** FE-49 landed as `Token.mintedBy` (manifest `0d5a743`); *Agents* names every maker from
+   it, and our server no longer answers who made an agent. The ids, an agent's name and expiry stay: ours are told from
+   theirs by them, and the keeper names an agent and caps its question's wait with them.**)**
 5. **A removed member's work ends here** (Task 4) on either signal: `member.removed` on the stream, **or a members re-read
    (a hand-over, a reconnect, the boot) that no longer lists someone we kept** (FE-48: removing our watch's minter closes the
    stream before the event). Their rounds stop as *Stop* does, recorded `{ why: 'removed' }`; a conversation waiting in the
@@ -327,7 +330,11 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
     their `.rejected` ends the band's need. **(S5: the review's I1) Only once the revoke succeeds**, never first: a revoke
     refused (`404`: only its maker may, measured in S1: M5) had left its question refused in the person's name with an
     untrue reason, and the agent working; the platform answers a reject of a revoked token's question (S1's tidy-up). *Residual:* a token revoked elsewhere (the console, a removal, which revokes the
-    person's tokens) keeps its need in the band until its 24 hours end, with no card behind it. *Rejected:* a card with
+    person's tokens) keeps its need in the band until its 24 hours end, with no card behind it. **(The faculty-ready
+    adoption, part three, 2026-10-03:** FE-52 landed (manifest `0d5a743`): a revoke, a removal or a switch-off ends the
+    token's questions at once, `pending_action.expired`, which the band already read as an end; **our [Revoke] answers *no*
+    no more** (each reject would be `409 PENDING_ACTION_RESOLVED`), and the residual is gone. The card's check on the token
+    stays, for what is read between the two.**)** *Rejected:* a card with
     **[No]** alone for a revoked agent (a question nobody can act on, asked anyway); our keeper reading `listTokens` (a
     person's session only: the watch token cannot, and no event says when to).
 15. **Text kept across a step-up** (Task 6): *People*'s typed name and role, in `sessionStorage` under

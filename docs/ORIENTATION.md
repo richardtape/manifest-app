@@ -4,15 +4,15 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-03, ~06:00 PDT: **the `__Host-` adoption, part two, closed** (overnight, mock mode, spawned by
-`manifest-3d`): **the platform's `__Host-` cookies are adopted** (`39b4a0b`, `68bbbcb`, `7ef6bea`): `whoIs` reads our origin's
-cookie name alone and **asks through the edge** in edge mode (`Config.sessionOrigin`, `https://app.manifest.internal`), every
-script's session check is exact, and **it was proved on 7100 headlessly** (`instructor`, nothing created); its record is
-[`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md)'s *Part two*. Contract 1.6.0
-(part one) adopted. **F1–F6 and F4a, F6b executed**; our server in **mock mode**. The platform's faculty-ready **sitting 4**
-(`plat-s4`: Tasks 6, 8, 13) **is running**: its Task 13 (`Token.mintedBy` required, `pending_action.expired`) sits in manifest's
-working tree, and our gates were kept green by a fixture fix only (`5d17771`); **adopting it is the next sitting's** (row 1).
-**Holds and frees come through `manifest-3d`**, the night's coordinator, Rich asleep)*:
+**Where things stand** *(2026-10-03, ~06:50 PDT: **the faculty-ready adoption, part three, closed** (overnight, mock mode, spawned
+by `manifest-3d`): **the platform's sitting 4 is adopted** (manifest `0d5a743`, Task 13; `5effd5e`, F8): ***Agents* names every
+maker by `Token.mintedBy`** (*(yours)* and [Revoke] on the reader's own, the console's too; *"Made by <name>"* from `listMembers`
+on anyone else's) and our server answers no maker; **[Revoke] answers no question** (the platform ends them, FE-52);
+`pending_action.expired` held at the API and in `check-together.ts`; a question's wait capped at its token's end where we know it;
+F8 held, **m62 no longer applies**. Its record: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md)'s
+*Part three*. **All three parts of the faculty-ready adoption are in**; part two's clicked half (Rich on `app.` in edge mode) is owed
+at F5b sitting 1. **F1–F6 and F4a, F6b executed**; our server in **mock mode**. **Holds and frees come through `manifest-3d`**, the
+night's coordinator, Rich asleep)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
@@ -23,25 +23,24 @@ working tree, and our gates were kept green by a fixture fix only (`5d17771`); *
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **The faculty-ready adoption, part three: the platform's sitting 4** (Task 13, FE-49 and FE-52: *Agents* names each maker from `Token.mintedBy` and drops our kept ids where they only stood for it, closing m122; `pending_action.expired` read as `.created`/`.confirmed`/`.rejected` are; [Revoke] without its reject step, Decision 16's workaround; Task 6, F8: a streamed `422` arrives as a `422` before any stream, so check m62 is moot) | After the platform's sitting 4 closes, at `manifest-3d`'s or Rich's word (mock mode) | its close-out commit and notice (`notice-s4.md` in the coordinator's scratchpad has Tasks 6 and 13) | [`api-findings.md`](./api-findings.md)'s row *"Landing, the faculty-ready plan's sitting 4, Task 13"*; only `5d17771`'s fixture fix is in |
-  | 2 | **Minors, again** ([`minors.md`](./minors.md)): its dated entry 2026-10-03 lists the S ones *not reached* and needing no decision; **m126** (the 1.6.0 adoption's) needs none | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
-  | 3 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`) | Blocked | Rich's word and a 7100 window (*"After platform sitting 2"*, which is closed; the `__Host-` adoption, which is done); people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
-  | 4 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
-  | 5 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open (F6b is executed) |
+  | 1 | **Minors, again** ([`minors.md`](./minors.md)): its dated entries 2026-10-03 list the S ones *not reached* and needing no decision; **m126** (the 1.6.0 adoption's), **m122**'s watch half and **m131** need none; **m129** and **m130** are Rich's (words; a finding) | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
+  | 2 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`) | Blocked | Rich's word and a 7100 window (*"After platform sitting 2"*, which is closed; the `__Host-` adoption, which is done); people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
+  | 3 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
+  | 4 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open (F6b is executed) |
 
   - **First, always:** `ListAgents` (`manifest-3d` coordinates tonight: holds and frees come through it; tell it and the
     platform's live session your name and ports, and **run no Vitest while a HOLD stands**: read the flag file
     `manifest-3d` names before **every** run, and gate the run on it, never `cat` beside it), `pgrep -fl vitest`, Step 0
-    (contract **1.6.0**, 72 operations, 142 codes, adopted, its `__Host-` cookie names too; the platform's sitting 4 adds
-    `Token.mintedBy` and `pending_action.expired` without a bump).
+    (contract **1.6.0**, 72 operations, 142 codes, adopted: its `__Host-` cookie names, and the platform's sitting 4's
+    `Token.mintedBy` and `pending_action.expired`, added without a bump, at manifest `0d5a743`).
 - **DOING A SITTING ON 7100** (F5b's sitting 1 next; the steps F6's walk and F6b's sittings 1 and 6 proved, gathered from
   §2, §7 and the plans):
   1. **Rich's word, every time.** If a platform session is live, ask it for a window: no restart of the control plane, no
      test tier, no `make verify`, and our Vitest held in its windows. If none is live, Rich's word is the window. Never
      run anything in `/Users/rich/Developer/manifest`: read it.
-  2. **7100 now:** truncated by the platform's faculty-ready sittings, restored by its sitting 3 on `d4291dd` (the `__Host-`
-     cookies), and its sitting 4 running: **operator is no administrator, and `f6b-measure-1` is gone** (its repository stays
-     on GitHub, Rich's to remove). **Every restart of the control plane signs everyone out.** Read the latest close-out
+  2. **7100 now:** truncated by the platform's faculty-ready sittings, again at its sitting 4's close (its Docker tier, the
+     morning of 2026-10-03, then its control plane restarted on Task 13 and its review's fix, `d8ce094`): **operator is no
+     administrator, and `f6b-measure-1` is gone** (its repository stays on GitHub, Rich's to remove). **Every restart of the control plane signs everyone out.** Read the latest close-out
      before planning a walk.
   3. **Our server to edge mode, and say so:**
      - stop the mock-mode tree by pid (§7);
@@ -74,6 +73,15 @@ working tree, and our gates were kept green by a fixture fix only (`5d17771`); *
   7. **Before a click on an app our fresh database never saw** (F6b sitting 6): moving `app.sqlite` aside forgets every id
      our page minted before, so *Agents* would list old tokens under *Your agents*: **`together-7100.ts tidy` revokes every
      active token our server does not know, as its minter**.
+- **The faculty-ready adoption, part three, DONE** (2026-10-03, overnight, mock mode, spawned by `manifest-3d`; the record:
+  `research/2026-10-01-faculty-ready-adoption.md`, *Part three*): `5e656e4` (***Agents* by `Token.mintedBy`**: `rowsOf(tokens, kept,
+  members, now)`, `Row.minter` always the platform's; `listMembers` read with the page; `KeptTokens.agents` ids alone, its `by`
+  dropped: m122's agents half, m127), `2755283` (**[Revoke] answers no question**: Decision 16's reject step gone with *"This agent was
+  revoked."*), `d6037d8` (**`pending_action.expired`** held for every cause at `/api/needs` and in `check-together.ts`'s check 8; **a
+  question waits no longer than its token** where we kept its end, `tokenEndsOf`, in the band and the owners' email), `f84c6bf` (F8's
+  `422` with the platform's exact body, a streamed request's; m62 no longer applies). **Ours, for Rich:** no new words; m129
+  (*"Your agent"* for another's agent) and m130 (the band's day for a token made elsewhere); m131 found by its review. 2752 tests twice; the seven
+  acceptance scripts in mock mode on the dev database as it was; our mock restarted on `d8ce094`'s rebuilt contract.
 - **The `__Host-` adoption, part two, DONE** (2026-10-03, overnight, mock mode, spawned by `manifest-3d`; the record:
   `research/2026-10-01-faculty-ready-adoption.md`, *Part two*): `39b4a0b` (**`whoIs(cookie, config)`** reads
   `sessionCookieFor(config.origin)` alone, `__Host-manifest_session` through the edge and the plain name in mock mode; a plain
@@ -209,15 +217,19 @@ working tree, and our gates were kept green by a fixture fix only (`5d17771`); *
     a secret and an amount, *Tell it why*'s hint, the answers' lines, the email's action words); its rulings (the revoke
     confirmed in place; *How an agent uses it* as two addresses, not a link; unknowns in mono; nothing ticked, 30 days);
     **m107–m119**, m109 (a helper's band) and m119 (*"…it has been told."*) his words.
-  - **FE-49 and FE-50 placed by Rich in the faculty-ready plan** (`Token.mintedBy: Uuid`, its Task 13; FE-50's words, its
-    Task 12); FE-46, FE-47 and FE-5 after it.
+  - **FE-49 and FE-50 placed by Rich in the faculty-ready plan, and landed** (`Token.mintedBy`, `0d5a743`; FE-50's words,
+    `e355d10`); FE-46, FE-47 and FE-5 after it.
+  - **The faculty-ready adoption, part three's** (the note's *Part three*): its four decisions, ours (the maker's name from
+    `listMembers` read with the page; `pending_action.expired` says nothing of its own; the question card's *"Your agent"*
+    unchanged; a token made elsewhere keeps the band's day); **m129** (words for another's agent on the card and in the
+    email) and **m130** (whether to ask the platform for a question's expiry on `pending_action.created`).
   - **F6b sitting 4's** (its entry): its words marked *ours* (the detail words, *"Manifest can't ask for it for you yet."*,
     **[Leave it out]** and its change's words, *Waiting to reach your students*'s facts and lines, the press's after-launch
     three, *"something reviewed at launch"*); its rulings (a helper is offered no ask; the versions' days with a time);
     **m98–m106**, m104 (*[Leave it out]* over-says the kind) his to decide.
-  - **F6b sitting 1's** (its entry): **Decision 16** (ours: *Agents* asks only about an active agent's question, and our
-    [Revoke] answers *no* to its waiting ones, *"This agent was revoked."*, **once revoked**: S5); **FE-51** and **FE-52**
-    (placed in the faculty-ready plan); **m97**; *"It has stopped waiting."* for `PENDING_ACTION_RESOLVED`, which means someone else answered.
+  - **F6b sitting 1's** (its entry): **Decision 16** (ours: *Agents* asks only about an active agent's question; its [Revoke]
+    answering *no* went when FE-52 landed, the adoption's part three); **FE-51** and **FE-52** (landed, the faculty-ready
+    plan's sittings 2 and 4); **m97**; *"It has stopped waiting."* for `PENDING_ACTION_RESOLVED`, which means someone else answered.
   - **F6b sittings 2 and 3's** (their entries): **m76** (someone taken off mid-round is usually emailed *we need you*
     first; the fix is m69's own, his to choose: a departure from the plan's Review Focus 1); someone added since our last
     read of the members meets 404 on their own new change for a moment (m82); **sitting 3's words marked ours** (People's

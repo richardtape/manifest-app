@@ -1113,14 +1113,18 @@ and you'll come straight back here."* Their agent keeps working.
     D5): the page hands each id over as it mints, never the secret;
   - **theirs**, minted on this screen: the prototype's *Agents* screen, with its secret shown once.
     What each may do is said in words, and **[Revoke]** is offered where it can work: only the person who
-    made a token may revoke it (FE-49), and a revoke first answers *no* to anything that agent is still
-    waiting on (F6b Decision 16).
+    made a token may revoke it, and **the platform names who did** (`Token.mintedBy`, FE-49): *"(yours)"*
+    and **[Revoke]** on the reader's own, *"Made by <name>"* on anyone else's. A revoke ends anything that
+    agent was still waiting on, in the same act (the platform's, FE-52; until it landed our [Revoke]
+    answered *no* to each, F6b Decision 16).
 - **Their agent is held to the same four limits**, and when it asks for one of them, a question appears for a
   person: the prototype's *Queue* screen, reached from the needs-you band. **Built (F6b):** the question is a
   card at the top of *Agents*; F6's band says *"<App>: your agent is asking something."* to everyone on the app,
   and each owner is emailed once. **An owner answers** (the platform's rule; a helper reads *"An owner answers
   this."*): **[Yes, once]** behind the second sign-in, **[No]** with their words or *"No reason given."*. A
-  question from an agent that can no longer act is not asked (F6b Decision 16).
+  question from an agent that can no longer act is not asked (F6b Decision 16): its agent revoked, its maker
+  taken off, or the app switched off, the platform ends it at once (`pending_action.expired`, FE-52) and the
+  band forgets it; it never outlives its agent's own end, where we know that end (an agent let in here).
 - **The question says what it can**: *"Your agent '<token's name>' asked to add a member to this project."*
   - The platform does not store WHO it wanted to add (**FE-5**), so the card says that too: *"It didn't say
     who. If you're not sure, say no."*

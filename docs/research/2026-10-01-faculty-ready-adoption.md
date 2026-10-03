@@ -596,3 +596,89 @@ longer blocked by this.
 
 **Beside it, the platform's Task 13** (sitting 4, in its working tree at 05:27): `Token.mintedBy` required turned our typecheck
 red at two hand-built fixtures; the minimal fix only (`5d17771`), at `manifest-3d`'s word. Using it is the next sitting's.
+
+---
+
+## Part three, adopted: the platform's sitting 4 (Task 13, FE-49 and FE-52; Task 6, F8) — 2026-10-03 (overnight, mock mode)
+
+*Spawned by `manifest-3d`, the night's coordinator, at Rich's night plan (manifest's `docs/superpowers/2026-09-30-decisions.md`,
+2026-10-03 ~01:10 PDT). Against manifest **`0d5a743`** (Task 13, committed 05:35) and its review's fix **`d8ce094`** (descriptions
+only in `packages/contract`, the mock untouched; nothing moving after it, read at 06:45; the platform's sitting 4 closed at `3d7d38c`), with Task 6 at `5effd5e`; the platform's sitting 4 (`plat-s4`) closing beside us, its
+HOLD (05:38–06:37) waited out before any Vitest of ours. Our server in mock mode throughout; 7100 untouched. Its notice:
+`notice-s4.md`, *Task 6* and *Task 13*.*
+
+**What landed** (still **1.6.0**, additive): `Token.mintedBy: Uuid`, required (*"Only they may revoke it"*), on `listTokens`,
+`mintToken`'s `token` and `revokeToken`'s answer; the mock's `TOKEN` names its own person. `pending_action.expired`
+(`{ pendingActionId, tokenId, action, cause: token_revoked | member_removed | project_archived, by }`), one per question,
+published after a person's act ended the token, **never when a question simply runs out of time**. `revokeToken` (and a
+member's removal) ends the token's waiting questions in the same transaction. **A question's `expiresAt` is capped at its
+token's.** Task 6 (F8): a provider's `422` answers `422` with a JSON body, **a streamed request before any stream begins**.
+
+**What we built**, test-first, one commit each:
+- `5e656e4` (web, server): ***Agents* names each maker by `Token.mintedBy`** against `getMe`'s id: *(yours)* and **[Revoke]** on the
+  reader's own, wherever it was made (the console's too); anyone else's *"Made by <name>"* (`listMembers`, now read with the
+  page) and *"Only the person who made it can revoke it."*, no press; a maker the list does not name, no name. **Dropped**: our
+  server's answer of who made an agent (`KeptTokens.agents[].by`, read from the `minted` row's person and `persons`): it stood
+  only for FE-49, and a member's word could name someone else as an outside token's maker (m122's *agents* half). **Kept**:
+  the `minted` rows themselves and every id (*Our agents* are told from theirs by them, which `mintedBy` cannot do: our page
+  mints them all in the person's own session); an agent row's **name** (the keeper's email names the agent: the watch token
+  cannot `listTokens`), its **expiry** (below), its **person** (a removal forgets their rows, Decision 5); `…/minted`'s
+  `agents` as ids alone (the walk's `tidy` keeps them). m127: every fixture's maker true to its story.
+- `2755283` (web): **[Revoke] without its reject step** (Decision 16's workaround): a revoke is said and the list read again; the
+  platform has already ended that agent's questions, so the re-read finds none waiting (each reject would now be `409
+  PENDING_ACTION_RESOLVED`). *"This agent was revoked."* (the reason sent to the agent) is gone with it.
+- `d6037d8` (server): **`pending_action.expired` as the platform sends it**, every cause: our keeper writes every event to history,
+  and the band's questions already counted `.expired` as an end (sitting 5 wrote it ahead, for FE-52's option (a)); now held
+  at the API (`/api/needs`, for owner and helper) and in `check-together.ts`'s check 8 (run by `check-together.sh`: a question of
+  Sam's agent, then its `.expired`, gone from both bands; its check 7 of `check-together.sh` reads an agent's id alone now). **A question waits no longer than its token, where we know the token's end**: the band's
+  need and the owners' email said *its day* (the event carries no expiry, S1: M4); for an agent our page let in, the kept
+  expiry now caps it (`tokenEndsOf`), as the platform does.
+- `f84c6bf` (server, tests): F8's `422` held with the platform's exact body, and as a **streamed** request's (our model calls all
+  stream): `client.ts` already read the status before the stream, so **m62 no longer applies**.
+
+**The review's fix** (`d8ce094`, ~06:15): an ask whose token is ended between authenticating and recording its question now
+answers `401` and records no question; once a person ends a token, every call it makes (`getPendingAction` included) is `401`,
+while the person sees the question `expired`. **Nothing of ours meets it:** no agent of ours asks with a token for the four
+(our server calls no `promoteRelease`, `addMember`, `setQuota` or secret read: ours never asks), and a token's `401` reads as
+before (a round's `token` need, `round.ts`; the stream's refusal, `stream.ts`; the plan's, `plan.ts`).
+
+**Decided here (ours), with what changing course costs:**
+1. **The maker's name from `listMembers`, read with the page** (a fourth read in its `Promise.all`; its refusal is the page's,
+   as the other three). *Rejected:* our server naming makers from its kept members (a copy of the platform's list, stale by
+   design); `useRole`'s read lifted to share (app-level plumbing for one name). *Cost to change:* one read and `rowsOf`'s third
+   argument.
+2. **`pending_action.expired` says nothing of its own on our pages.** Its sentence names who acted, but each act is said where
+   it is done (the revoke's *"Revoked. It can't do anything on <App> now."*, People's *"<Name>'s work on <App> has stopped."*,
+   the switch-off's), and a question is a need, never a line of the history (Task 12). Someone looking at a card that ends
+   meanwhile still reads *"It has stopped waiting."* at their press (`PENDING_ACTION_RESOLVED`). **No new words.**
+3. **The question card still says *"Your agent '<name>'"*** to an owner for a helper's agent, as before; `mintedBy` now lets us
+   say whose, but the words are Rich's (m129).
+4. **A token we did not mint** (the console's, an API mint) **keeps the band's and the email's day** (we cannot read its
+   expiry: `listTokens` is a person's call, and the event carries none): the card on *Agents* reads the platform's capped
+   `expiresAt` and is right; the band may say it a little longer (m130; and the expiry a member hands over is trusted, m131). *Rejected:* the keeper reading every question
+   (`getPendingAction` refuses the watch token another token's question, S1: M4).
+
+**Negative controls** (`controls.py` in the sitting's scratchpad; each a mutation, its named tests watched red, restored and
+checked by hash): *Agents*' maker read as nobody's (`Row.minter`'s id `''`: 15 red, `model.test.ts` and `agents.test.tsx`); the
+members not passed to `rowsOf` (2 red: *"Made by"*, and the made-elsewhere test); a reject sent again after a revoke (3 red); `.expired`
+out of `ANSWERED` (5 red: `happenings.test.ts` 2, `keeping.test.ts` 3; and `check-together.ts`'s check 8 red, 12 of 13); the cap
+ignored in `questionsOf` (3 red: one each in `happenings`, `keeping`, `keeper`); the keeper passing no ends (1), `needsOn` passing
+none (1). The review's note stands: the revoke test's last card count is held by `askingOf`'s own token check too, so what holds
+`2755283` is `rejectPendingAction` called never and the one re-read.
+
+**The gates at the close** (on the final code tree, `f84c6bf`): `pnpm test` **2752 tests, 106 files, twice** (2742 before: 10
+new), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, all clean; **the seven acceptance scripts in mock mode**, in ORIENTATION's
+order, against our mock restarted at 06:40 (the contract's dist rebuilt from `d8ce094`): `check-seeing` 8, `check-going-live` 8,
+`check-slice` 8, `check-describing` 18, `check-building` 12, `check-together` 10 and 13, `check-keeping` 8 and 12, every one
+passing, **on the dev database as it was** (stopping our server's tree is the classifier's to refuse, ORIENTATION §7: not
+tried). Our server on 7105 runs this code (`tsx watch` reloaded it); no restart owed.
+
+**A fresh read-only review** (a spawned agent, during the HOLD, nothing run): no defect in the product code; it found two test
+setups that would have failed on the store's foreign key (`minted.person_id` names a remembered person: fixed before the first
+run), `check-together.sh`'s check 7 still reading the dropped `by` (fixed in `5e656e4`), two stale comments (fixed), two
+places this record named the wrong script (fixed), the walk-through over-saying the cap (fixed), and **m131** (a member's word
+for an agent's expiry caps its question here: m122's kind, written).
+
+**Owed / open:** m129 (the card's and the email's *"Your agent"* for someone else's agent: Rich's words), m130 (the band's day for
+a token we did not mint), m131 (the expiry a member hands over is trusted), m122's *watch* half (a watch hand-over's id
+unchecked). Nothing on 7100.
