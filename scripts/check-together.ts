@@ -289,6 +289,8 @@ const keeper = createKeeper({
   probing: false,
 })
 const app = buildServer(config, () => undefined, { store, hub, keeper })
+// Asked in-process, never listening: the keeper starts here, as a server's does when it listens (m70).
+keeper.start()
 
 /** One person's request, with their session and, for a change, our Origin. */
 async function ask(

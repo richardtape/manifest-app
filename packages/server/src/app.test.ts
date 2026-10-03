@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify'
 import { afterEach, describe, expect, it } from 'vitest'
 import { buildServer, type WebHandler } from './app.js'
 import { readConfig, type Config } from './config.js'
+import { idleKeeper, type Keeper } from './keeping/keeper.js'
 import { openStore } from './store/db.js'
 
 /**
@@ -138,6 +139,47 @@ describe('readConfig', () => {
     expect(() => readConfig({ MANIFEST_APP_MODE: 'production' })).toThrow(
       /MANIFEST_APP_MODE/,
     )
+  })
+})
+
+describe('the keeper: started only by a server that holds its port (minors m70)', () => {
+  it('not when built, nor when ready; once it listens, once; stopped when it closes', async () => {
+    const said: string[] = []
+    const keeper: Keeper = {
+      ...idleKeeper,
+      start: () => void said.push('start'),
+      stop: () => void said.push('stop'),
+    }
+    const store = openStore(':memory:')
+    const app = buildServer(mock('http://127.0.0.1:9'), () => undefined, {
+      store,
+      keeper,
+    })
+    await app.ready()
+    expect(said).toEqual([])
+    await app.listen({ host: '127.0.0.1', port: 0 })
+    expect(said).toEqual(['start'])
+    await app.close()
+    store.close()
+    expect(said).toEqual(['start', 'stop'])
+  })
+
+  it('a second server refused its port (an idle watcher of §7) never starts one', async () => {
+    const first = await serve(mock('http://127.0.0.1:9'))
+    const said: string[] = []
+    const keeper: Keeper = { ...idleKeeper, start: () => void said.push('start') }
+    const store = openStore(':memory:')
+    const app = buildServer(mock('http://127.0.0.1:9'), () => undefined, {
+      store,
+      keeper,
+    })
+    closers.push(async () => {
+      await app.close()
+      store.close()
+    })
+    const port = Number(new URL(first.base).port)
+    await expect(app.listen({ host: '127.0.0.1', port })).rejects.toThrow(/EADDRINUSE/)
+    expect(said).toEqual([])
   })
 })
 
