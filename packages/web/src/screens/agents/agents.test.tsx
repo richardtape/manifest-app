@@ -136,7 +136,9 @@ function stage(
     confirm?: Answer[]
     mint?: Answer[]
     keepAgent?: Answer[]
-    listTokens?: Answer
+    listTokens?: Answer | Answer[]
+    /** The revoke refused, though the platform revoked it (`revokeToken`'s 503 after revoking). */
+    revokedAnyway?: boolean
   } = {},
 ) {
   const calls: [string, ...unknown[]][] = []
@@ -158,7 +160,12 @@ function stage(
   const platform = {
     listTokens: (projectId: string) => {
       calls.push(['listTokens', projectId])
-      return answered(options.listTokens ?? 'ok', () => tokens)
+      const list = Array.isArray(options.listTokens)
+        ? options.listTokens
+        : [options.listTokens ?? 'ok']
+      const turn = turns['listTokens'] ?? 0
+      turns['listTokens'] = turn + 1
+      return answered(list[Math.min(turn, list.length - 1)]!, () => tokens)
     },
     listPendingActions: (projectId: string) => {
       calls.push(['listPendingActions', projectId])
@@ -184,6 +191,10 @@ function stage(
     },
     revokeToken: (tokenId: string, key: string) => {
       calls.push(['revokeToken', tokenId, key])
+      if (options.revokedAnyway)
+        tokens = tokens.map((t) =>
+          t.id === tokenId ? { ...t, revokedAt: NOW.toISOString() } : t,
+        )
       return answered(next('revoke'), () => {
         tokens = tokens.map((t) =>
           t.id === tokenId ? { ...t, revokedAt: NOW.toISOString() } : t,
@@ -396,33 +407,35 @@ describe('[Revoke] (Decision 4; FE-49; (S1: M5))', () => {
     )
   })
 
-  it('answers no to what that agent still waits on, then revokes it; the list read again', async () => {
+  it('revokes it, then answers no to what that agent still waits on; the list read again (the review’s I1)', async () => {
     const s = stage()
     open(s)
     const mine = within(await rowOf('Claude Code'))
     await press(mine.getByRole('button', { name: a.theirs.revoke }))
     await press(mine.getByRole('button', { name: a.theirs.revokeConfirm }))
-    // Only its own question, only the one still waiting; then the revoke.
-    expect(s.called('rejectPendingAction').map(([id, reason]) => [id, reason])).toEqual([
-      [QUESTIONS[0]!.id, a.theirs.answer],
-    ])
     expect(s.called('revokeToken').map(([id]) => id)).toEqual([MINE.id])
-    const order = s.calls.map((c) => c[0])
-    expect(order.indexOf('rejectPendingAction')).toBeLessThan(
-      order.indexOf('revokeToken'),
+    // Only its own question, only the one still waiting, and only once it is revoked.
+    await waitFor(() =>
+      expect(s.called('rejectPendingAction').map(([id, reason]) => [id, reason])).toEqual(
+        [[QUESTIONS[0]!.id, a.theirs.answer]],
+      ),
     )
-    // The page's own read, then the revoke's, before its answer.
+    const order = s.calls.map((c) => c[0])
+    expect(order.indexOf('revokeToken')).toBeLessThan(
+      order.indexOf('rejectPendingAction'),
+    )
+    // The page's own read, then one after the revoke, before its answer.
     expect(
       order
-        .slice(0, order.indexOf('rejectPendingAction'))
+        .slice(order.indexOf('revokeToken'), order.indexOf('rejectPendingAction'))
         .filter((c) => c === 'listPendingActions'),
-    ).toHaveLength(2)
+    ).toHaveLength(1)
     await waitFor(() => expect(listed('Claude Code')).toBe(false))
     expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name))
     expect(s.called('listTokens').length).toBe(2)
   })
 
-  it('a question it could not answer (a helper, or answered meanwhile) never holds the revoke', async () => {
+  it('a question it could not answer once revoked (a helper, or answered meanwhile): still said revoked', async () => {
     const s = stage({ reject: [{ status: 403, code: 'FORBIDDEN' }] })
     open(s, 'helper')
     const mine = within(await rowOf('Claude Code'))
@@ -430,19 +443,22 @@ describe('[Revoke] (Decision 4; FE-49; (S1: M5))', () => {
     await press(mine.getByRole('button', { name: a.theirs.revokeConfirm }))
     expect(s.called('revokeToken').map(([id]) => id)).toEqual([MINE.id])
     await waitFor(() => expect(listed('Claude Code')).toBe(false))
+    expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name))
   })
 
-  it('refused 404 at the press: only the person who made it can revoke it, and it is still listed', async () => {
+  it('refused 404 at the press: only the person who made it can revoke it; no question answered for it; the list read again (the review’s I1)', async () => {
     const s = stage({ revoke: [{ status: 404, code: 'NOT_FOUND' }] })
     open(s)
     const other = within(await rowOf('from the console'))
     await press(other.getByRole('button', { name: a.theirs.revoke }))
     await press(other.getByRole('button', { name: a.theirs.revokeConfirm }))
     expect((await screen.findByRole('alert')).textContent).toContain(a.theirs.onlyMinter)
+    expect(s.called('rejectPendingAction')).toEqual([])
+    await waitFor(() => expect(s.called('listTokens').length).toBe(2))
     expect(listed('from the console')).toBe(true)
   })
 
-  it('anything else: we couldn’t, it still works, and a support reference', async () => {
+  it('anything else, and the list read again says it still works: we couldn’t, it still works, a support reference; nothing answered', async () => {
     const s = stage({ revoke: [{ status: 503, code: 'AI_CATALOGUE_DISABLED' }] })
     open(s)
     const mine = within(await rowOf('Claude Code'))
@@ -451,6 +467,45 @@ describe('[Revoke] (Decision 4; FE-49; (S1: M5))', () => {
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain(a.theirs.couldnt)
     expect(alert.textContent).toMatch(/[0-9A-F]{4}-[0-9A-F]{4}/)
+    expect(s.called('rejectPendingAction')).toEqual([])
+    expect(listed('Claude Code')).toBe(true)
+  })
+
+  it('refused, but the list read again says it is revoked (the platform’s 503 after revoking): said revoked, and its questions answered no (the review’s minor 1)', async () => {
+    const s = stage({
+      revoke: [{ status: 503, code: 'AI_CATALOGUE_DISABLED' }],
+      revokedAnyway: true,
+    })
+    open(s)
+    const mine = within(await rowOf('Claude Code'))
+    await press(mine.getByRole('button', { name: a.theirs.revoke }))
+    await press(mine.getByRole('button', { name: a.theirs.revokeConfirm }))
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name)),
+    )
+    expect(screen.queryByRole('alert')).toBeNull()
+    await waitFor(() =>
+      expect(s.called('rejectPendingAction').map(([id]) => id)).toEqual([
+        QUESTIONS[0]!.id,
+      ]),
+    )
+    await waitFor(() => expect(listed('Claude Code')).toBe(false))
+  })
+
+  it('refused, and the list cannot be read again: we can’t tell, said so, never "it still works"', async () => {
+    const s = stage({
+      revoke: [{ status: 503, code: 'AI_CATALOGUE_DISABLED' }],
+      listTokens: ['ok', { status: 503, code: 'UNAVAILABLE' }],
+    })
+    open(s)
+    const mine = within(await rowOf('Claude Code'))
+    await press(mine.getByRole('button', { name: a.theirs.revoke }))
+    await press(mine.getByRole('button', { name: a.theirs.revokeConfirm }))
+    const alert = (await screen.findAllByRole('alert')).find((one) =>
+      one.textContent?.includes(a.theirs.unsure),
+    )
+    expect(alert).toBeTruthy()
+    expect(document.body.textContent).not.toContain(a.theirs.couldnt)
   })
 })
 
@@ -559,6 +614,21 @@ describe('Let an agent of your own in (Review Focus 4)', () => {
     open(s)
     await rowOf('My agent')
     expect(screen.queryByText(SECRET)).toBeNull()
+  })
+
+  it('the list read again after it fails: the key stays, beside what went wrong (the review’s minor 2)', async () => {
+    const s = stage({ listTokens: ['ok', { status: 503, code: 'UNAVAILABLE' }] })
+    open(s)
+    await screen.findByRole('heading', { name: m.title })
+    fill('My agent', ['project:read'])
+    await press(button(m.button))
+    expect(await screen.findByText(SECRET)).toBeTruthy()
+    expect(await screen.findByText(words.refused.body)).toBeTruthy()
+    expect(screen.getByText(SECRET)).toBeTruthy()
+    // What it read before is still drawn, and Try again keeps the key too.
+    expect(listed('Claude Code')).toBe(true)
+    await press(button(words.refused.button))
+    expect(screen.getByText(SECRET)).toBeTruthy()
   })
 
   it('Done puts the key away', async () => {

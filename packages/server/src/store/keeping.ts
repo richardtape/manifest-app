@@ -72,7 +72,16 @@ export interface KeepingStatements {
   members(projectId: string): KeptMember[]
   /** The apps whose kept members include this person. */
   appsOf(personId: string): KeptApp[]
+  /** Kept, and its id noted as ours (`noteWatch`). */
   putWatch(watch: KeptWatch): void
+  /**
+   * F6b (the review's I2): A WATCH TOKEN WE WERE HANDED, BY ITS ID ALONE (`watched`, version 7), so
+   * *Agents* calls it ours until it expires, after a newer one replaces it (one minted by another
+   * member is left to expire; a revoke can fail). Once per id; never the token.
+   */
+  noteWatch(projectId: string, tokenId: string, expiresAt: string, at: string): void
+  /** Every watch id noted on an app, with its expiry. */
+  watchedOn(projectId: string): { tokenId: string; expiresAt: string }[]
   watchOf(projectId: string): KeptWatch | undefined
   watches(): KeptWatch[]
   /** Drops the row only while it still holds this token: a newer one handed meanwhile stays. */
@@ -155,6 +164,19 @@ export function keepingStatements(
       db.exec('rollback')
       throw error
     }
+  }
+
+  /** The review's I2: a watch's id noted as ours, once (see the interface). */
+  const noteWatch: KeepingStatements['noteWatch'] = (
+    projectId,
+    tokenId,
+    expiresAt,
+    at,
+  ) => {
+    db.prepare(
+      `insert into watched (token_id, project_id, expires_at, noted_at) values (?, ?, ?, ?)
+       on conflict (token_id) do nothing`,
+    ).run(tokenId, projectId, expiresAt, at)
   }
 
   return {
@@ -254,6 +276,7 @@ export function keepingStatements(
     },
 
     putWatch(watch) {
+      noteWatch(watch.projectId, watch.tokenId, watch.expiresAt, watch.mintedAt)
       db.prepare(
         `insert into watch_tokens (project_id, token_id, sealed, expires_at, minted_by, minted_at)
          values (?, ?, ?, ?, ?, ?)
@@ -268,6 +291,17 @@ export function keepingStatements(
         watch.mintedBy,
         watch.mintedAt,
       )
+    },
+
+    noteWatch,
+
+    watchedOn(projectId) {
+      const rows = db
+        .prepare(
+          'select token_id, expires_at from watched where project_id = ? order by noted_at, rowid',
+        )
+        .all(projectId) as unknown as { token_id: string; expires_at: string }[]
+      return rows.map((row) => ({ tokenId: row.token_id, expiresAt: row.expires_at }))
     },
 
     watchOf(projectId) {
@@ -402,6 +436,7 @@ export function keepingStatements(
         ).run(projectId, projectId, ':')
         db.prepare('delete from members where project_id = ?').run(projectId)
         db.prepare('delete from watch_tokens where project_id = ?').run(projectId)
+        db.prepare('delete from watched where project_id = ?').run(projectId)
         db.prepare('delete from apps where project_id = ?').run(projectId)
       })
     },

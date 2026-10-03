@@ -1467,6 +1467,9 @@ export const words = {
       revoking: 'Revoking…',
       revoked: (app: string) => `Revoked. It can't do anything on ${app} now.`,
       couldnt: "We couldn't revoke it just now. It still works.",
+      /** Ours: refused, and the list could not be read again to say whether it still works. */
+      unsure:
+        "We couldn't tell whether it was revoked. Look at the list again in a minute.",
       /** Decision 16: what the agent is told of each question it is still waiting on. */
       answer: 'This agent was revoked.',
     },

@@ -78,18 +78,25 @@ export function registerMinted(
       if (!kept(projectId, who.person.id)) return refuse(reply, 404, 'NOT_FOUND')
       const watch = store.watchOf(projectId)
       const minted = store.mintedOn(projectId)
+      // The review's I2: every watch we were handed, until it expires; the current one once.
+      const now = Date.now()
+      const watches = [
+        ...new Set([
+          ...(watch === undefined ? [] : [watch.tokenId]),
+          ...store
+            .watchedOn(projectId)
+            .filter((one) => Date.parse(one.expiresAt) > now)
+            .map((one) => one.tokenId),
+        ]),
+      ]
       const answer: KeptTokens = {
         ours: [
-          ...(watch === undefined
-            ? []
-            : [
-                {
-                  tokenId: watch.tokenId,
-                  purpose: 'watch' as const,
-                  conversationId: null,
-                  title: null,
-                },
-              ]),
+          ...watches.map((tokenId) => ({
+            tokenId,
+            purpose: 'watch' as const,
+            conversationId: null,
+            title: null,
+          })),
           ...minted.flatMap((row) =>
             row.purpose === 'agent'
               ? []

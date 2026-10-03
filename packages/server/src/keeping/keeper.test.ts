@@ -285,6 +285,31 @@ describe('hand: the watch token handed over (Decision 5)', () => {
     expect(t.w.calls.filter((call) => call.includes(TOKEN_B))).toEqual([])
   })
 
+  it('a token kept, or found current after its own token read the project, is noted as ours by its id (the review’s I2); never one we did not check', async () => {
+    const t = setUp()
+    const release = t.w.hold()
+    const both = Promise.all([
+      t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE),
+      t.keeper.hand(P1, handed(TOKEN_B, ID_B), BOB),
+    ])
+    await settle()
+    release()
+    expect((await both).sort()).toEqual(['current', 'kept'])
+    expect(
+      t.store
+        .watchedOn(P1)
+        .map((one) => one.tokenId)
+        .sort(),
+    ).toEqual([ID_A, ID_B].sort())
+    // Handed while ours is good, it is never read: an id it names is not taken as ours (m83's kind).
+    const UNCHECKED = 'c0000000-0000-4000-8000-0000000000cc'
+    expect(await t.keeper.hand(P1, handed('mft_anything', UNCHECKED), ALICE)).toBe(
+      'current',
+    )
+    expect(t.store.watchedOn(P1).map((one) => one.tokenId)).not.toContain(UNCHECKED)
+    expect(JSON.stringify(t.store.watchedOn(P1))).not.toContain('mft_')
+  })
+
   it('with 30 days left the first is still good; with 29, a new one replaces it and its stream', async () => {
     const t = setUp()
     await t.keeper.hand(P1, handed(TOKEN_A, ID_A, 30), ALICE)

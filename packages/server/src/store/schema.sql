@@ -161,6 +161,16 @@ create table if not exists emails (
   primary key (kind, happening, recipient)
 );
 
+-- F6b (sitting 5, the review's I2): EVERY WATCH TOKEN WE WERE HANDED, BY ITS ID ALONE, never the token:
+-- *Agents* calls it ours until it expires, after a newer one replaces it in watch_tokens (one minted by
+-- another member is left to expire, and a revoke can fail).
+create table if not exists watched (
+  token_id text primary key,
+  project_id text not null,
+  expires_at text not null,
+  noted_at text not null
+);
+
 -- F6b D5: THE IDS OF THE TOKENS OUR PAGE MINTS, never a secret: *Agents* tells ours from theirs by them,
 -- and an agent's says who made it (FE-49: the platform's Token names no minter). F6's watch keeps its own
 -- id in watch_tokens. `name` is the token's own name, as minted; an expiry only when the page said one.

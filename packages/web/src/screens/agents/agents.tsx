@@ -14,6 +14,7 @@ import { countOf } from '../limits.js'
 import { CopyButton } from '../preview/try-it-as.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
 import {
+  activeOf,
   around,
   askingOf,
   CAPABILITY_WORDS,
@@ -34,13 +35,14 @@ const DAYS = [7, 30, 90] as const
 type Loaded =
   | { state: 'loading' }
   | { state: 'trouble'; trouble: Trouble }
-  | { state: 'ready'; rows: Row[]; questions: Asking[] }
+  /** `stale`: a read again that failed; what was read before stays drawn (the key with it). */
+  | { state: 'ready'; rows: Row[]; questions: Asking[]; stale?: Trouble }
 /** One press at a time. */
 type Pressing = { kind: 'revoke'; tokenId: string } | { kind: 'make' }
 /** What a press that did not go through says, and where. */
 type Said =
   | { where: 'revoke'; kind: 'words'; text: string }
-  | { where: 'revoke' | 'make'; kind: 'notice'; notice: Notice }
+  | { where: 'revoke' | 'make'; kind: 'notice'; notice: Notice; couldnt: string }
 
 /** A read our server refused is said as the platform's are; its 401 is the shell's. */
 function refusalFrom(error: unknown): Refusal {
@@ -159,7 +161,13 @@ export function Agents({
         if (!current) return
         const refusal = refusalFrom(error)
         if (refusal.kind === 'signed-out') return expire()
-        setLoaded({ state: 'trouble', trouble: refusal })
+        // THE REVIEW'S MINOR 2: a read again that fails never takes away what is drawn: a key just
+        // made is shown only this once.
+        setLoaded((before) =>
+          before.state === 'ready'
+            ? { ...before, stale: refusal }
+            : { state: 'trouble', trouble: refusal },
+        )
       },
     )
     return () => {
@@ -168,7 +176,7 @@ export function Agents({
   }, [platform, ours, project.id, reads, expire])
   const readAgain = useCallback(() => setReads((n) => n + 1), [])
   const retry = useCallback(() => {
-    setLoaded({ state: 'loading' })
+    setLoaded((before) => (before.state === 'ready' ? before : { state: 'loading' }))
     setReads((n) => n + 1)
   }, [])
 
@@ -191,49 +199,79 @@ export function Agents({
     setPressing(press)
   }
 
-  const revoke = async (row: Row) => {
-    const tokenId = row.token.id
-    begin({ kind: 'revoke', tokenId })
-    // DECISION 16 (FE-52): a revoked agent's questions would wait a day for a yes that does nothing.
-    // Answered no first, each in the agent's hearing; one that cannot be (a helper's, FE-50; or
-    // answered meanwhile) never holds the revoke.
+  /**
+   * DECISION 16 (FE-52), ONCE IT IS REVOKED (the review's I1): a revoked agent's questions would wait
+   * a day for a yes that does nothing, so each is answered no. Never before: a revoke refused would
+   * leave its question refused in their name, with a reason that is not true. One that cannot be
+   * answered (a helper's, FE-50; or answered meanwhile) is left; the band forgets it at its expiry.
+   */
+  const answerNo = async (tokenId: string) => {
     try {
       const waiting = (await platform.listPendingActions(project.id)).filter(
         (action) => action.state === 'pending' && action.tokenId === tokenId,
       )
-      for (const action of waiting) {
-        try {
-          await platform.rejectPendingAction(action.id, t.answer, crypto.randomUUID())
-        } catch {
-          // Still waiting: the band forgets it at its expiry.
-        }
-      }
+      for (const action of waiting)
+        await platform
+          .rejectPendingAction(action.id, t.answer, crypto.randomUUID())
+          .catch(() => undefined)
     } catch {
-      // Not read: the revoke goes ahead, and the platform still decides it.
+      // Not read: its questions wait out their day.
     }
-    try {
-      await platform.revokeToken(tokenId, crypto.randomUUID())
-    } catch (error) {
-      if (!live.current) return
-      setPressing(null)
-      setConfirming(null)
-      const refusal = refusalOf(error)
-      if (refusal.kind === 'refused' && refusal.code === 'NOT_FOUND')
-        setSaid({ where: 'revoke', kind: 'words', text: t.onlyMinter })
-      else {
-        const failed = pressFailed(error, 'revokeToken')
-        if (failed.expired) return expire()
-        setSaid({ where: 'revoke', kind: 'notice', notice: failed })
-      }
-      setFocusOn({ tokenId })
-      return
-    }
-    if (!live.current) return
+  }
+
+  const revoked = (tokenId: string) => {
     setPressing(null)
     setConfirming(null)
     setStatus(t.revoked(project.name))
     setFocusOn('status')
-    readAgain()
+    void answerNo(tokenId).then(() => live.current && readAgain())
+  }
+
+  const revoke = async (row: Row) => {
+    const tokenId = row.token.id
+    begin({ kind: 'revoke', tokenId })
+    try {
+      await platform.revokeToken(tokenId, crypto.randomUUID())
+    } catch (error) {
+      if (!live.current) return
+      const refusal = refusalOf(error)
+      if (refusal.kind === 'signed-out') return expire()
+      if (refusal.kind === 'refused' && refusal.code === 'NOT_FOUND') {
+        setPressing(null)
+        setConfirming(null)
+        setSaid({ where: 'revoke', kind: 'words', text: t.onlyMinter })
+        setFocusOn({ tokenId })
+        readAgain()
+        return
+      }
+      // THE REVIEW'S MINOR 1: the platform may have revoked it before refusing (its 503 after
+      // revoking). Read again, and say what is true.
+      let still: boolean | null
+      try {
+        still = (await platform.listTokens(project.id)).some(
+          (token) => token.id === tokenId && activeOf(token, clock.current()),
+        )
+      } catch {
+        still = null
+      }
+      if (!live.current) return
+      if (still === false) return revoked(tokenId)
+      setPressing(null)
+      setConfirming(null)
+      const failed = pressFailed(error, 'revokeToken')
+      if (failed.expired) return expire()
+      setSaid({
+        where: 'revoke',
+        kind: 'notice',
+        notice: failed,
+        couldnt: still === null ? t.unsure : t.couldnt,
+      })
+      setFocusOn({ tokenId })
+      readAgain()
+      return
+    }
+    if (!live.current) return
+    revoked(tokenId)
   }
 
   /** Their agent's question answered, or found no longer waiting: said, and read again. */
@@ -274,7 +312,7 @@ export function Agents({
       setPressing(null)
       const failed = pressFailed(error, 'mintToken')
       if (failed.expired) return expire()
-      setSaid({ where: 'make', kind: 'notice', notice: failed })
+      setSaid({ where: 'make', kind: 'notice', notice: failed, couldnt: m.couldnt })
       focusMake()
       return
     }
@@ -315,7 +353,7 @@ export function Agents({
             <PressNotice
               notice={said.notice}
               name={project.name}
-              couldnt={where === 'make' ? m.couldnt : t.couldnt}
+              couldnt={said.couldnt}
             />
           )}
         </Card>
@@ -327,6 +365,8 @@ export function Agents({
       <h1 className="page-title">{a.title(project.name)}</h1>
       {loaded.state === 'trouble' ? (
         <TroubleNotice trouble={loaded.trouble} onRetry={retry} />
+      ) : loaded.state === 'ready' && loaded.stale !== undefined ? (
+        <TroubleNotice trouble={loaded.stale} onRetry={retry} />
       ) : null}
       {loaded.state === 'ready' ? (
         <>

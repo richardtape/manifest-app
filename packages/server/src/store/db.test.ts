@@ -1058,26 +1058,81 @@ describe('the migration (F6b D5: the token ids our page mints)', () => {
     return file
   }
 
-  it('is version 6', () => {
-    expect(VERSION).toBe(6)
-  })
-
-  it("opens F6's file (version 5) at version 6: every row kept, and `minted` made, empty", () => {
+  it("opens F6's file (version 5) at the current version: every row kept, and `minted` made, empty", () => {
     const file = f6File()
     const before = dumpAll(file)
     expect(Object.keys(before)).not.toContain('minted')
     const store = openStore(file)
     cleanups.push(() => store.close())
-    expect(pragmaOf(file, 'user_version')).toBe(6)
+    expect(pragmaOf(file, 'user_version')).toBe(VERSION)
     const after = dumpAll(file)
     for (const table of Object.keys(before)) expect(after[table]).toBe(before[table])
     expect(after['minted']).toBe('[]')
     expect(store.mintedOn(PROJECT)).toEqual([])
   })
 
-  it('a new file is version 6, with `minted`', () => {
+  it('a new file has `minted`', () => {
     const { file } = fresh()
-    expect(pragmaOf(file, 'user_version')).toBe(6)
     expect(Object.keys(dumpAll(file))).toContain('minted')
+  })
+})
+
+describe('the migration (F6b sitting 5, the review’s I2: every watch id we were handed)', () => {
+  const PROJECT = '22222222-2222-4222-8222-222222222222'
+  const WATCH = '0f000000-0000-4000-8000-00000000000a'
+  /** What F6b's sitting 2 left behind: version 6, everything but `watched`, a watch kept. */
+  function f6bFile(): string {
+    const { dir, remove } = scratchDir()
+    cleanups.push(remove)
+    const file = join(dir, 'app.sqlite')
+    const store = openStore(file)
+    store.rememberPerson(ALICE)
+    store.putWatch({
+      projectId: PROJECT,
+      tokenId: WATCH,
+      sealed: 'v1.AAAA',
+      expiresAt: '2027-10-01T00:00:00.000Z',
+      mintedBy: ALICE.id,
+      mintedAt: '2026-10-02T00:00:00.000Z',
+    })
+    store.close()
+    execOn(file, 'drop table watched; pragma user_version = 6;')
+    return file
+  }
+
+  it('is version 7', () => {
+    expect(VERSION).toBe(7)
+  })
+
+  it('opens a version 6 file at version 7: every row kept, and `watched` made, empty (the current watch is still read from watch_tokens)', () => {
+    const file = f6bFile()
+    const before = dumpAll(file)
+    expect(Object.keys(before)).not.toContain('watched')
+    const store = openStore(file)
+    cleanups.push(() => store.close())
+    expect(pragmaOf(file, 'user_version')).toBe(7)
+    const after = dumpAll(file)
+    for (const table of Object.keys(before)) expect(after[table]).toBe(before[table])
+    expect(after['watched']).toBe('[]')
+    expect(store.watchOf(PROJECT)?.tokenId).toBe(WATCH)
+  })
+
+  it('a new file is version 7, with `watched`; a watch kept is noted there by its id and expiry, never its token', () => {
+    const { store, file } = fresh()
+    expect(pragmaOf(file, 'user_version')).toBe(7)
+    store.rememberPerson(ALICE)
+    store.putWatch({
+      projectId: PROJECT,
+      tokenId: WATCH,
+      sealed: 'v1.SEALED',
+      expiresAt: '2027-10-01T00:00:00.000Z',
+      mintedBy: ALICE.id,
+      mintedAt: '2026-10-02T00:00:00.000Z',
+    })
+    expect(store.watchedOn(PROJECT)).toEqual([
+      { tokenId: WATCH, expiresAt: '2027-10-01T00:00:00.000Z' },
+    ])
+    expect(dumpAll(file)['watched']).not.toContain('SEALED')
+    expect(store.historyOf(PROJECT)).toEqual([])
   })
 })

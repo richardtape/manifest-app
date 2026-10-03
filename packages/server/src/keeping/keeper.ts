@@ -473,8 +473,12 @@ export function createKeeper({
       // The token's own members say who is on it now; ours may be stale (a watch that closed
       // `4401` hears no `member.*` after it). Someone not among them keeps nothing here (I2).
       if (!members.some((member) => member.userId === personId)) return 'stranger'
-      // Review Focus 2: another page's hand may have kept a good one while we read.
-      if (good(projectId)) return 'current'
+      // Review Focus 2: another page's hand may have kept a good one while we read. The review's
+      // I2: this one read the project, so it is ours (its page revokes it, and that can fail).
+      if (good(projectId)) {
+        store.noteWatch(projectId, handed.tokenId, handed.expiresAt, now().toISOString())
+        return 'current'
+      }
       store.putApp(app)
       keepMembers(projectId, members)
       store.putWatch({

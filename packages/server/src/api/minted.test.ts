@@ -146,6 +146,31 @@ describe('GET /api/apps/:projectId/minted: ours, and who made an agent’s (F6b 
     } satisfies KeptTokens)
   })
 
+  it('a watch replaced (the review’s I2): every watch we were handed is ours until it expires, the current one once', async () => {
+    const s = setUp()
+    ours(s)
+    const watch = (tokenId: string, expiresAt: string) =>
+      s.store.putWatch({
+        projectId: PROJECT,
+        tokenId,
+        sealed: 'v1.AAAA',
+        expiresAt,
+        mintedBy: ALICE.id,
+        mintedAt: '2026-10-02T22:00:00.000Z',
+      })
+    const OLDER = '0f000000-0000-4000-8000-0000000000a1'
+    const LAPSED = '0f000000-0000-4000-8000-0000000000a2'
+    const NEWER = '0f000000-0000-4000-8000-0000000000a3'
+    watch(LAPSED, '2026-01-01T00:00:00.000Z')
+    watch(OLDER, '2027-01-01T00:00:00.000Z')
+    watch(NEWER, '2027-10-01T00:00:00.000Z')
+    const watches = ((await s.get(AS_BOB)).json() as KeptTokens).ours
+      .filter((one) => one.purpose === 'watch')
+      .map((one) => one.tokenId)
+      .sort()
+    expect(watches).toEqual([WATCH_ID, OLDER, NEWER].sort())
+  })
+
   it('nothing kept yet: two empty lists', async () => {
     const s = setUp()
     expect((await s.get(AS_ALICE)).json()).toEqual({ ours: [], agents: [] })

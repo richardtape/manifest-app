@@ -14,11 +14,13 @@ import type { DatabaseSync } from 'node:sqlite'
  *   `watch_tokens`, `history` and `emails` are new tables, which `schema.sql` makes.
  * - 6: F6b D5. `minted`, the ids of the tokens our page mints, is a new table, which
  *   `schema.sql` makes.
+ * - 7: F6b sitting 5 (the review's I2). `watched`, the id of every watch token we were handed, is a
+ *   new table, which `schema.sql` makes: the current one is still `watch_tokens`'.
  *
  * `schema.sql` runs first, and makes a new file's tables as they are now. Only an existing
  * table keeps the definition it was made with, which is what this corrects.
  */
-export const VERSION = 6
+export const VERSION = 7
 
 /**
  * The one definition of `conversations`, read out of `schema.sql` itself, so the rebuild can
