@@ -9,6 +9,7 @@ import type { Hub } from './events.js'
 import { guard } from './guard.js'
 import { lineOf, waitsOnPerson } from './line-state.js'
 import { keepConversationToken, tokenIdOf } from './minted.js'
+import { secretNames } from './token-names.js'
 import type { Asked, DryRunEvidence, Outage } from './piece-state.js'
 import { LIMITS, type AppConversation, type Chip } from './progress.js'
 
@@ -118,7 +119,10 @@ function changeOf(
   const tokenId = tokenIdOf(handedId)
   if (tokenId === undefined) return undefined
   const asked = askedOf(rest)
-  return asked === undefined ? undefined : { ...asked, tokenId }
+  if (asked === undefined) return undefined
+  // m83: an id handed over is the one its secret names, or a page bug marks another token ours.
+  if (tokenId !== null && !secretNames(asked.token, tokenId)) return undefined
+  return { ...asked, tokenId }
 }
 
 function askedOf(

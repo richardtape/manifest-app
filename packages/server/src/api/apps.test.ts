@@ -43,6 +43,9 @@ const EVIDENCE = {
 const OUTAGE = { from: '2026-10-01T17:03:00.000Z', to: '2026-10-01T17:07:00.000Z' }
 const GOOD = 'mft_test_x_the_changes_token'
 const SECOND = 'mft_test_x_the_second_changes_token'
+/** A token of PROJECT whose secret names its id, as the platform's does (`mft_<id>_<secret>`: m83). */
+const NAMED_ID = '0f000000-0000-4000-8000-000000000002'
+const NAMED = 'mft_0f000000000040008000000000000002_the_changes_token'
 const STRANGER = 'mft_test_x_another_projects_token'
 const LIAR = 'mft_test_x_answers_another_project'
 const DOWN = 'mft_test_x_the_platform_is_down'
@@ -64,7 +67,7 @@ beforeAll(async () => {
   platform = await fakeControlPlane((seen: Seen) => {
     const bearer = /^Bearer (.+)$/.exec(seen.headers.authorization ?? '')?.[1]
     if (seen.url === `/v1/projects/${PROJECT}`) {
-      if (bearer === GOOD || bearer === SECOND)
+      if (bearer === GOOD || bearer === SECOND || bearer === NAMED)
         return { status: 200, body: project(PROJECT) }
       if (bearer === LIAR) return { status: 200, body: project(ANOTHER) }
       if (bearer === DOWN) return { status: 502, body: undefined }
@@ -1220,7 +1223,7 @@ describe('Talk it through: a change that answers a refusal, and finding it again
 })
 
 describe('a change’s token id, kept beside nothing secret (F6b D5, Task 3)', () => {
-  const TOKEN_ID = '0f000000-0000-4000-8000-000000000002'
+  const TOKEN_ID = NAMED_ID
 
   it.each([
     ['their words', { words: WORDS }],
@@ -1232,7 +1235,7 @@ describe('a change’s token id, kept beside nothing secret (F6b D5, Task 3)', (
     async (_, asked) => {
       const s = setUp()
       first(s, 'built', 'done')
-      const answer = await s.ask({ ...asked, token: GOOD, tokenId: TOKEN_ID })
+      const answer = await s.ask({ ...asked, token: NAMED, tokenId: TOKEN_ID })
       expect(answer.statusCode).toBe(201)
       const change = answer.json() as Conversation
       expect(s.store.mintedOn(PROJECT)).toEqual([
@@ -1253,6 +1256,24 @@ describe('a change’s token id, kept beside nothing secret (F6b D5, Task 3)', (
     expect((await s.ask({ words: WORDS, token: GOOD })).statusCode).toBe(201)
     expect(s.store.mintedOn(PROJECT)).toEqual([])
   })
+
+  it.each([
+    ['an id its secret does not name', NAMED, 'b0000000-0000-4000-8000-000000000002'],
+    ['an id beside a secret that names none', GOOD, TOKEN_ID],
+  ])(
+    'm83: %s is 400 CHANGE_INVALID, and nothing is kept',
+    async (_name, token, tokenId) => {
+      const s = setUp()
+      first(s, 'built', 'done')
+      const answer = await s.ask({ words: WORDS, token, tokenId })
+      expect([answer.statusCode, answer.json()]).toEqual([
+        400,
+        { error: { code: 'CHANGE_INVALID' } },
+      ])
+      expect(s.store.conversationsOn(PROJECT)).toHaveLength(1)
+      expect(s.store.mintedOn(PROJECT)).toEqual([])
+    },
+  )
 
   it('an id that is not one is 400 CHANGE_INVALID, and nothing is kept', async () => {
     const s = setUp()

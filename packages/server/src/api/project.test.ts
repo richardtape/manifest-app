@@ -29,6 +29,9 @@ const FAILED = 'mft_test_x_the_platform_failed'
 const REQUEST_ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
 /** The token of ANOTHER: a second window's project, made at the same time. */
 const SECOND = 'mft_test_x_the_second_windows_token'
+/** A token of PROJECT whose secret names its id, as the platform's does (`mft_<id>_<secret>`: m83). */
+const NAMED_ID = '0f000000-0000-4000-8000-000000000001'
+const NAMED = 'mft_0f000000000040008000000000000001_the_conversations_token'
 
 const project = (id: string) => ({
   id,
@@ -43,7 +46,8 @@ beforeAll(async () => {
   platform = await fakeControlPlane((seen: Seen) => {
     const bearer = /^Bearer (.+)$/.exec(seen.headers.authorization ?? '')?.[1]
     if (seen.url === `/v1/projects/${PROJECT}`) {
-      if (bearer === GOOD) return { status: 200, body: project(PROJECT) }
+      if (bearer === GOOD || bearer === NAMED)
+        return { status: 200, body: project(PROJECT) }
       if (bearer === LIAR) return { status: 200, body: project(ANOTHER) }
       if (bearer === DOWN) return { status: 502, body: undefined }
       if (bearer === FAILED)
@@ -290,11 +294,11 @@ describe('FE-2: what the platform saw from us in this file', () => {
 })
 
 describe('the token’s id, kept beside nothing secret (F6b D5, Task 3)', () => {
-  const TOKEN_ID = '0f000000-0000-4000-8000-000000000001'
+  const TOKEN_ID = NAMED_ID
 
   it('a hand-over naming its token’s id keeps it: the conversation’s, on its app, by its person', async () => {
     const s = await setUp()
-    const answer = await s.hand({ projectId: PROJECT, token: GOOD, tokenId: TOKEN_ID })
+    const answer = await s.hand({ projectId: PROJECT, token: NAMED, tokenId: TOKEN_ID })
     expect(answer.statusCode).toBe(204)
     expect(s.store.mintedOn(PROJECT)).toEqual([
       expect.objectContaining({
@@ -313,6 +317,23 @@ describe('the token’s id, kept beside nothing secret (F6b D5, Task 3)', () => 
     expect((await s.hand({ projectId: PROJECT, token: GOOD })).statusCode).toBe(204)
     expect(s.store.mintedOn(PROJECT)).toEqual([])
   })
+
+  it.each([
+    ['an id its secret does not name', NAMED, 'b0000000-0000-4000-8000-000000000002'],
+    ['an id beside a secret that names none', GOOD, TOKEN_ID],
+  ])(
+    'm83: %s is 400 PROJECT_INVALID, and nothing is kept',
+    async (_name, token, tokenId) => {
+      const s = await setUp()
+      const answer = await s.hand({ projectId: PROJECT, token, tokenId })
+      expect([answer.statusCode, answer.json()]).toEqual([
+        400,
+        { error: { code: 'PROJECT_INVALID' } },
+      ])
+      expect(s.tokens.get(s.conversation.id)).toBeUndefined()
+      expect(s.store.mintedOn(PROJECT)).toEqual([])
+    },
+  )
 
   it('an id that is not one is 400 PROJECT_INVALID, and nothing is kept', async () => {
     const s = await setUp()

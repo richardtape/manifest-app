@@ -7,6 +7,7 @@ import type { Store } from '../store/db.js'
 import { publishState, type Hub } from './events.js'
 import { guard } from './guard.js'
 import { keepConversationToken, tokenIdOf } from './minted.js'
+import { secretNames } from './token-names.js'
 import { mayAct, reachable } from './sharing.js'
 
 /**
@@ -50,6 +51,8 @@ function handedOf(
   if (typeof token !== 'string' || !TOKEN.test(token)) return undefined
   const tokenId = tokenIdOf(b['tokenId'])
   if (tokenId === undefined) return undefined
+  // m83: an id handed over is the one its secret names, or a page bug marks another token ours.
+  if (tokenId !== null && !secretNames(token, tokenId)) return undefined
   return { projectId, token, tokenId }
 }
 

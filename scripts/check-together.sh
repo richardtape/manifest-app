@@ -177,7 +177,10 @@ half_one() {
       answers) json='{"questionId":"q-1","words":"It closes at the deadline."}' ;;
       plan/correction) json='{"correction":"Twelve weeks, not ten."}' ;;
       plan/agree) json='{"version":1,"answers":[]}' ;;
-      project) json=$(jq -nc --arg p "$PROJECT" --arg t "$SECRET" --arg id "$(uuid)" '{projectId: $p, token: $t, tokenId: $id}') ;;
+      project)
+        ID3=$(uuid)
+        json=$(jq -nc --arg p "$PROJECT" --arg t "$(named "$ID3" theirs)" --arg id "$ID3" '{projectId: $p, token: $t, tokenId: $id}')
+        ;;
     esac
     call POST "/api/conversations/$THEIRS/$route" "$json"
     ANSWERED="$ANSWERED $route:$STATUS"
@@ -223,7 +226,7 @@ half_one() {
   # 6. A conversation's token handed over with its id (D5): kept, and listed as ours beside the watch.
   TOKEN_ID=$(uuid)
   call POST "/api/conversations/$MINE/project" \
-    "$(jq -nc --arg p "$PROJECT" --arg t "$SECRET" --arg id "$TOKEN_ID" '{projectId: $p, token: $t, tokenId: $id}')"
+    "$(jq -nc --arg p "$PROJECT" --arg t "$(named "$TOKEN_ID" mine)" --arg id "$TOKEN_ID" '{projectId: $p, token: $t, tokenId: $id}')"
   HANDED_OVER=$STATUS
   call GET "/api/apps/$PROJECT/minted"
   LISTED="$STATUS"

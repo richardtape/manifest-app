@@ -317,6 +317,15 @@ async function ask(
 }
 
 /** Every change route on a conversation, with a body that passes its own check (Decision 2). */
+/**
+ * A token whose secret names its own id, as the platform's does (`mft_<id>_<secret>`): our
+ * hand-overs refuse an id the secret does not name (m122, m83).
+ */
+const named = (what: string) => {
+  const tokenId = randomUUID()
+  return { token: `mft_${tokenId.replaceAll('-', '')}_check_${RUN}_${what}`, tokenId }
+}
+
 const CHANGES = (projectId: string) =>
   [
     ['build', {}],
@@ -325,7 +334,7 @@ const CHANGES = (projectId: string) =>
     ['plan', {}],
     ['plan/correction', { correction: 'Twelve weeks, not ten.' }],
     ['plan/agree', { answers: [] }],
-    ['project', { projectId, token: `mft_check_${RUN}_x`, tokenId: randomUUID() }],
+    ['project', { projectId, ...named('x') }],
   ] as const
 
 /** Each change route on `conversation`, by `who`: what each answered, and whether it changed. */
@@ -369,11 +378,8 @@ console.log(
 try {
   // 1. Alice hands our watch over through our API, as her page does: kept, and the keeper keeps
   //    the app's four members (the members every check below reads).
-  const watchId = randomUUID()
   const handed = await ask(ALICE, 'POST', `/api/apps/${APP.projectId}/keeping`, {
-    // Its secret names its id, as the platform's does (m122): another id is refused.
-    token: `mft_${watchId.replaceAll('-', '')}_check_${RUN}_watch`,
-    tokenId: watchId,
+    ...named('watch'),
     expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(),
   })
   // The first replay of an app never watched is its past: nothing in it is told.
