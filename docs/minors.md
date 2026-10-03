@@ -240,6 +240,22 @@ I1 and I3 fixed test-first the same sitting, its I2 and ten minors here). Lines 
 minute, and at send time say nothing when its run is stopped, or the app's history has `keeping.stopped` (FE-48's `4401`)
 within that minute. Test: a round refused `token`, then the removal heard (the event; FE-48's hand-over): nothing sent.
 
+**From F6b sitting 3's whole-sitting review** (`manifest-app-b8`, 2026-10-02, a fresh reviewer over `a084ca7..842a403`; its
+six Important and one Minor re-graded Important fixed test-first in `3912ff3`, these ten here).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m87 | The review's M1 | `?then=people` stays in the address after the second sign-in, so a reload says *"You're signed in again."* again (Going live and the Overview `remember` it away). | `packages/web/src/screens/people/people.tsx` (`back`). | S | faculty-visible |
+| m88 | The review's M2 | A removed member's conversation keeps *"Only Sam can answer it or carry it on."* above *"Sam was taken off … Their work on it stopped."* When its stop is a removal, say *"Sam started this."* alone. | `packages/web/src/screens/change/together.tsx` (`StartedBy`). | S | faculty-visible |
+| m89 | The review's M3 | The waiting card, another holding the app, drops *"It starts by itself."*, and says *"Sam is working on it"* even when the holder waits on Sam. | `packages/web/src/screens/change/waiting.tsx` (the holder's branch). | S | faculty-visible |
+| m90 | The review's M4 | Another's round needing a token reads *"Working, a few minutes"* with motion, though only its person's page can hand one over: it waits on them. | `packages/web/src/screens/building/model.ts` (`chipOf`'s token case). | S | faculty-visible |
+| m91 | The review's M5 | The owner who pressed Stop reads *"Stopped by <their own name>."*; *"You stopped it."* (words for Rich). | `packages/web/src/screens/building/building.tsx` (`stoppedBy`), `change/waiting.tsx`. | S | faculty-visible |
+| m92 | The review's M6 | People's rows share their buttons' names (*Make owner*, *Take off*): a screen reader's list of buttons cannot tell whose. Add the member's name, visually hidden. | `packages/web/src/screens/people/people.tsx`. | S | accessibility |
+| m93 | The review's M7 | People does not read the list again after a refusal that means it moved (`PROJECT_LAST_OWNER`, *"the other owner left meanwhile"*; `FORBIDDEN` after being made a helper). | `people.tsx` (`didNotGo`'s `'said'`). | S | faculty-visible |
+| m94 | The review's M9 | Another's conversation while its app is made draws *Making it* without who started it. | `packages/web/src/screens/plan/plan.tsx` (`making`). | S | faculty-visible |
+| m95 | The review's M10 | `MEMBER_USER_NOT_FOUND` says `app.manifest.internal` in plain prose; C3 and the design show a hostname in mono. | `packages/web/src/words.ts` (`people.refused`), drawn by `people.tsx`. | S | faculty-visible |
+| m96 | The review's M12 | BuildingScreen's `send` would mint and hand over on `TOKEN_MISSING` for any press, an owner's Stop on another's included; safe today only because Stop never answers it. Guard the branch for another's. | `packages/web/src/screens/building/building.tsx` (`send`). | S | robustness |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed

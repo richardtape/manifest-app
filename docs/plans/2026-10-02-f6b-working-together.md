@@ -56,7 +56,7 @@ moments **17 and 18**, and *Throughout*'s **An agent of their own**.
 |---|---|---|---|
 | 1 | 1 | **The measurements** that reading could not settle (M1–M5, below), on 7100 in the platform's window, at Rich's word, **with two people**. **Alone.** Sittings 2 and 3 may run before it (they need no platform); 4 and 5 after it | not started |
 | 2 | 2, 3, 4 | **Our server:** sharing (§3); the token ids kept (D5), store version 6; the keeper's removals (§2's last part) | **done 2026-10-02** (`manifest-app-b8`, mock mode): `a751003`, `2e3a21a`, `144d513`; the review's I1 and I3 `2169b13`; a flake `32887f1`. 2386 tests twice; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
-| 3 | 5, 6, 7 | **The page:** the platform's six new calls, *People* and *Agents* in the rail; *People* (moment 18); working on it together (§3) | not started |
+| 3 | 5, 6, 7 | **The page:** the platform's six new calls, *People* and *Agents* in the rail; *People* (moment 18); working on it together (§3) | **done 2026-10-02** (`manifest-app-b8`, mock mode): m77 `9502d7c`; `005a552`, `1559bc6`, `842a403`; the review's fixes `3912ff3`. 2476 tests twice; walks of *People* and of two people on one app at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 4 | 8, 9, 10 | **A change after launch** (moment 17): the kind of change; the new detail's stop and **[Leave it out]**; *Waiting to reach your students* | not started |
 | 5 | 11, 12 | ***Agents***: ours and theirs, **[Revoke]**, an agent of their own let in; their agent's questions (the band, the email, the card) | not started |
 | 6 | 13 | **The acceptance:** `scripts/check-together.sh` in mock mode; the whole-branch review; the walk on 7100 with two people; **Rich's click**. **Alone, and last** | not started |
@@ -551,14 +551,14 @@ Route gains { name: 'app-people'; slug: string; then: Then } | { name: 'app-agen
 // app.tsx: the rail's items gain People (icon 'people', '/people') and Agents (icon 'agent', '/agents'), after Going live
 ```
 
-- [ ] **Step 1: Tests, failing first.** Each call against the mock in-process (`api.test.ts`'s `withMock`): **what was
+- [x] **Step 1: Tests, failing first.** Each call against the mock in-process (`api.test.ts`'s `withMock`): **what was
   sent** (method, path, body, `Idempotency-Key`), never what the mock answered; `confirmPendingAction` sends `{}` (the
   contract's `EmptyRequest`); `rejectPendingAction` sends `{ reason }`. The router: `/apps/x/people?then=people` and
   `/apps/x/agents?then=agents` parse, `then` kept only for its page; the rail draws six, *People* and *Agents* after
   *Going live*, the current one marked.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** `removeMember` sending a body (red); `then=people` read on
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** `removeMember` sending a body (red); `then=people` read on
   the Overview (red). Each restored.
-- [ ] **Step 5: Commit** `feat(web): the platform's member, token and question calls, and People and Agents in the rail`.
+- [x] **Step 5: Commit** `feat(web): the platform's member, token and question calls, and People and Agents in the rail`.
 
 ## Task 6: *People* (moment 18) (sitting 3)
 
@@ -579,7 +579,7 @@ export function People(props: { platform: Platform; ours: Ours; project: Schemas
   then: Then; expire: () => void; timeZone?: string }): JSX.Element
 ```
 
-- [ ] **Step 1: Tests, failing first** (a recording `Platform`; jsdom).
+- [x] **Step 1: Tests, failing first** (a recording `Platform`; jsdom).
   - **The list:** each member's name, email, CWL login (absent when `null`), **Owner** / **Helper**, *(you)* beside `me`;
     the roles' sentence once; *"Students aren't on this list. They get in once it's live."*
   - **A helper** reads *"Only an owner can change who's on this list."*: no field, no **[Make …]**, no **[Take off]**.
@@ -594,9 +594,9 @@ export function People(props: { platform: Platform; ours: Ours; project: Schemas
   - **Refusals, by code:** the four (§2), each with what is still true; `PROJECT_ARCHIVED` as F6's `PressNotice`; anything
     else F5's general refusal with its reference. `machineryIn` empty.
   - **Focus:** after a failed press, on the button again (m4's `useFocusBack`).
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** an `@`-less login sent as `email` (red); the storage
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** an `@`-less login sent as `email` (red); the storage
   left after the return (red). Each restored. **Walk it** (1440, 375): the list, add, make owner, take off, a refusal.
-- [ ] **Step 5: Commit** `feat(web): People — who can change it, adding a colleague and what that lets them do, and taking them off (moment 18)`.
+- [x] **Step 5: Commit** `feat(web): People — who can change it, adding a colleague and what that lets them do, and taking them off (moment 18)`.
 
 ## Task 7: Working on it together, on the page (sitting 3)
 
@@ -613,7 +613,7 @@ me: Pick<Schemas['Me'], 'id'>; role: 'owner' | 'helper' | 'unknown'
 // derived on the page: yours = frame.conversation.personId === me.id; mayStop = yours || role === 'owner'
 ```
 
-- [ ] **Step 1: Tests, failing first.**
+- [x] **Step 1: Tests, failing first.**
   - **Conversations** lists everyone's, newest first, each *"Sam · Add a word count"*, yours marked *(you)*.
   - **Another's conversation** (building, paused, built, waiting): *"Sam started this. Only Sam can answer it or carry it
     on."*; **no message box; no [Answer], [Agree], [Carry on], [Try a different way], [Leave the line]**; each question with
@@ -623,9 +623,9 @@ me: Pick<Schemas['Me'], 'id'>; role: 'owner' | 'helper' | 'unknown'
     responses. Their work on it stopped."*
   - **The line:** *"Sam is working on it: Add a word count."* **[See it]** (a link to it); yours, as today.
   - `machineryIn` empty.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the message box drawn for another's (red); **[Stop]** for a
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the message box drawn for another's (red); **[Stop]** for a
   helper (red). Each restored. **Walk it** (two tabs, two people, the mock: one conversation each).
-- [ ] **Step 5: Commit** `feat(web): every member sees every conversation, acts on their own, and an owner can stop one to free the app`.
+- [x] **Step 5: Commit** `feat(web): every member sees every conversation, acts on their own, and an owner can stop one to free the app`.
 
 ## Task 8: The kind of change (moment 17) (sitting 4)
 
@@ -951,3 +951,69 @@ throughout and announced its holds; nothing of ours touched 7100). Executed with
   1.5.0, 72 operations) adopted with no change of ours; our Vitest held across its regeneration at `manifest-5a`'s word.
 - **The machine:** our server in **mock mode** on a fresh dev database (version 6), restarted twice for the acceptance; the
   databases before kept in `.data/`: `app-before-f6b-s2.sqlite` (the session's start), `app-f6b-s2-first-acceptance.sqlite`.
+
+### 2026-10-02 — Sitting 3: the page (Tasks 5, 6, 7) (session `manifest-app-b8`, mock mode, natively)
+
+**At Rich's word** (*"yes, start sitting 3 with the ids for m77"*). The platform's sitting 12 held our Vitest through its
+tier and closing tests (`manifest-5a`), then **closed at `d5c76d5`: the launch path plan is EXECUTED** (contract 1.5.0,
+72; one text-only change, `f619376`; 7100 left empty, on real GitHub). Nothing of ours touched 7100.
+
+- **What landed:**
+  - **`9502d7c`, m77 (Rich's word):** `LineView.holder.by` and `RoundView.stopped.by` carry `{ id, name }`; our server
+    says who stopped any stopped round with a record, and the page judges whose (sitting 2's null for an own Stop goes).
+  - **`005a552`, Task 5:** `Platform`'s `addMember`, `removeMember`, `listTokens`, `listPendingActions`,
+    `confirmPendingAction` (`{}`), `rejectPendingAction` (`{ reason }`), each asserted by what it sent; `/apps/:slug/people`
+    and `/apps/:slug/agents` with their own `then`, the Overview's `new-version`; **People in the rail after Going live;
+    Agents joins it with its page** (sitting 5: no link to an empty page between sittings).
+  - **`1559bc6`, Task 6, *People* (moment 18):** the list (name, email, CWL login when released, Owner or Helper,
+    *(you)*), the roles said once; an owner adds (an `@` an email, else a CWL login), makes owner or helper (`addMember` by
+    PUID), takes someone off (asked in place); a helper reads why not; the second sign-in back at `?then=people` with the
+    form as left; the design's four refusals. Moment 18's sentence FE-11 made untrue, gone from the walk-through.
+  - **`842a403`, Task 7, working together (D3, §3):** the list names who started each, theirs *(you)*; another's
+    conversation read-only under *"Sam started this. Only Sam can answer it or carry it on."* (no box, no answer, no Carry
+    on, Agree, Not quite, Not now or Leave the line; *"Only Sam can answer this."*); an owner's Stop where it holds the
+    app; *"Stopped by Alex."*, a removal's sentence; the line's *"Sam is working on it: …"* and **[See it]**. The page
+    mints and hands over nothing for another's, and leaves its stream's refusals to its own person's page.
+  - **`3912ff3`, the review's fixes** (below).
+- **How it was built:** the tests were written first while the platform held our Vitest; once free, each commit was
+  rebuilt from `HEAD` in order and each task watched red without its implementation, then green, the tree checked byte
+  for byte against the snapshot after. **Controls** (each red, restored): `removeMember` with a body; the Overview reading
+  `then=people`; a login sent as an email; the storage left after the return; the message box drawn for another's; Stop
+  for a helper; and, at the review, each of PlanScreen's two guards removed.
+- **Walks** (Chrome, `scripts/walk/`, 1440 and 375): *People* 33/33 (the list, add, make owner, take off, a refusal;
+  `listMembers` and its changes answered by the walk); **two people on one app** 39/39 (a second person and their
+  conversation seeded into the dev database with the app's kept members: the list, a wait behind them, theirs read as an
+  owner and as a helper, and the owner's Stop through our server saying who). **One defect found and fixed** test-first
+  before Task 7's commit: another's wait was said as *"waiting for you"* / *"Needs you"* / *"What you asked for"*.
+- **The whole-sitting review** (a fresh reviewer, `a084ca7..842a403`): **no Critical**; nothing presses or mints for
+  another's conversation. **Fixed in `3912ff3`, each test-first:**
+  - **I1/I2:** a colleague read sentences meant for the conversation's person (the thread's *"You"*, a plan's *"only
+    you know"* and its lead, a wait's *"What you asked for"*, the needs cards' allowance and Carry on, the cost's *"left
+    this month"*); and a finished conversation's unanswered question said *"Only Sam can answer this."*. Now named for
+    its person (*"It's waiting for Sam."*), and what we went with.
+  - **I3:** a change set aside by an owner's Stop or a removal said nothing of who: **our server now keeps it with the
+    change** (`{ kind: 'set-aside', change, by, why }`, folded into `Piece.stopped` and `PieceView.stopped`), and the
+    page says *"Stopped by Alex."* or the removal's sentence.
+  - **I4:** *People* kept the focus after each press (a row's button again, *Take off* after *Keep them*, the status after
+    a removal), its status in the page from the start, an add and a role change said.
+  - **I5, FE-48's page half:** after a removal, *People* looks at our watch again (`ensureWatch`), now and 5 s later: if
+    the one taken off minted it, a new one reads the members afresh and ends their work here.
+  - **M8, re-graded Important:** an owner may take themselves off (their own row's *Take off*, its own words, then *Your
+    apps*): the design's hand-over is *"an owner adds another owner, then takes themselves off"*, which sitting 3's first
+    ruling had made impossible.
+  - **I6:** PlanScreen's two guards for another's conversation (a refused token on its stream; its app being made)
+    pinned, each control red.
+  - **Ten minors, m87–m96**, in [`minors.md`](../minors.md).
+- **Decided in executing (each in the ledger with its cost):** *Agents* joins the rail with its page; no trying-out press
+  at the end of another's built round (the Preview still has it); an owner's Stop on another's plan only for a change; the
+  conversation page reads the reader's role itself (`/new/<id>` has no app looked up); only the add form is kept across the
+  second sign-in; the list read again after every change.
+- **Words for Rich** (each marked *ours* in `words.ts`): *People*'s *"Add someone"*, *"What they can do"*, *"CWL login
+  <x>"*, *"Changing…"*, *"Take them off"*, *"Keep them"*, *"<Name> can work on <App> now."*, *"<Name> is an owner now."* /
+  *"…a helper now."*, *"Take yourself off <App>? Your work on it stops."*, *"Take me off"*; together's *"Paused, waiting
+  for Sam"*, *"Needs Sam"*, *"What Sam asked for"*, *"It's waiting for Sam."*, *"Two things only Sam knows"*.
+- **For sitting 4** (moment 17): it needs sitting 1's measurements (M1, M2) on 7100, now free at Rich's word. **For
+  sitting 5:** the page's `listTokens`, `listPendingActions`, `confirmPendingAction` and `rejectPendingAction` are
+  ready; the router's `/agents` draws the unknown page until then; mock mode mints one token id for everything.
+- **The machine:** our server in **mock mode**, restarted for each acceptance run; the walks' databases kept in `.data/`
+  (`app-f6b-s3-walks.sqlite`, `app-f6b-s3-walks-2.sqlite`, with the seeded second person).
