@@ -5,6 +5,7 @@ import { mode as MODE, type Mode } from './mode.js'
 import { createOurs, type Ours } from './ours/api.js'
 import type { Platform } from './platform/api.js'
 import { linkTo, navigate, useRoute } from './router.js'
+import { Agents } from './screens/agents/agents.js'
 import { AskForChange } from './screens/change/ask.js'
 import { AppConversations } from './screens/change/conversations.js'
 import { Describing } from './screens/describe/describe.js'
@@ -14,6 +15,7 @@ import { NotOpen, NotOpenHere } from './screens/not-open.js'
 import { Overview } from './screens/overview/overview.js'
 import { Preview } from './screens/preview/preview.js'
 import { useApp } from './screens/preview/use-app.js'
+import { useRole } from './screens/keeping/role.js'
 import { useWatch } from './screens/keeping/watch.js'
 import { History } from './screens/history/history.js'
 import { People } from './screens/people/people.js'
@@ -61,6 +63,7 @@ export function App({
     route.name === 'app-change' ||
     route.name === 'app-history' ||
     route.name === 'app-people' ||
+    route.name === 'app-agents' ||
     route.name === 'conversation'
       ? route.slug
       : undefined
@@ -83,6 +86,14 @@ export function App({
   // F6 TASK 8: ON EVERY APP PAGE, our server's Keeping watch for the app, minted when it has
   // none that works (never for one switched off). Once per app; it never throws or shows.
   useWatch(platform, ours, lookup.state === 'found' ? lookup.project : undefined)
+  // F6b TASK 11: *Agents* says who may answer an agent's question; read on that page alone.
+  const role = useRole(
+    platform,
+    route.name === 'app-agents' && lookup.state === 'found'
+      ? lookup.project.id
+      : undefined,
+    me,
+  )
   // A conversation's project, as its screen reports it: the rail names it once it exists.
   const [talking, setTalking] = useState<{ name: string; slug: string } | null>(null)
   const conversationId = route.name === 'conversation' ? route.id : undefined
@@ -228,7 +239,8 @@ export function App({
     route.name === 'app-conversations' ||
     route.name === 'app-change' ||
     route.name === 'app-history' ||
-    route.name === 'app-people'
+    route.name === 'app-people' ||
+    route.name === 'app-agents'
   )
     page =
       lookup.state === 'trouble' ? (
@@ -282,6 +294,19 @@ export function App({
           then={route.then}
           expire={expire}
           timeZone={timeZone}
+        />
+      ) : route.name === 'app-agents' ? (
+        <Agents
+          key={lookup.project.id}
+          platform={platform}
+          ours={ours}
+          project={lookup.project}
+          me={session.me}
+          role={role}
+          then={route.then}
+          expire={expire}
+          timeZone={timeZone}
+          {...(now === undefined ? {} : { now })}
         />
       ) : route.name === 'app-history' ? (
         <History
@@ -368,25 +393,27 @@ export function App({
                   ? { active: rail.goingLive }
                   : route.name === 'app-people'
                     ? { active: rail.people }
-                    : route.name === 'app-conversations' ||
-                        route.name === 'app-change' ||
-                        (route.name === 'conversation' && route.slug !== undefined)
-                      ? { active: rail.conversations }
-                      : route.name === 'new' || route.name === 'conversation'
-                        ? { active: words.shell.startNew }
-                        : {})}
+                    : route.name === 'app-agents'
+                      ? { active: rail.agents }
+                      : route.name === 'app-conversations' ||
+                          route.name === 'app-change' ||
+                          (route.name === 'conversation' && route.slug !== undefined)
+                        ? { active: rail.conversations }
+                        : route.name === 'new' || route.name === 'conversation'
+                          ? { active: words.shell.startNew }
+                          : {})}
           {...(app === null
             ? {}
             : {
                 projectName: app.name,
-                // F5 Decision 2: the app's pages; F6b's People after Going live, and Agents with its
-                // page (sitting 5).
+                // F5 Decision 2: the app's pages; F6b's People and Agents after Going live.
                 items: [
                   { label: rail.overview, icon: 'overview', path: '' },
                   { label: rail.preview, icon: 'preview', path: '/preview' },
                   { label: rail.conversations, icon: 'talk', path: '/conversations' },
                   { label: rail.goingLive, icon: 'live', path: '/going-live' },
                   { label: rail.people, icon: 'people', path: '/people' },
+                  { label: rail.agents, icon: 'agent', path: '/agents' },
                 ].map(({ label, icon, path }) => ({
                   label,
                   icon,

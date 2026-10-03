@@ -1453,3 +1453,72 @@
 .people__add .heading {
   margin: 0;
 }
+
+/* F6b Task 11: *Agents* (design §4), as *People* is laid out. */
+.agents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.agents__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.app-main .agents__section > p,
+.app-main .agents__section .heading,
+.app-main .agents > p {
+  margin: 0;
+}
+.agents__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.agents__agent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+}
+.app-main .agents__agent p {
+  margin: 0;
+}
+.agents__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.agents__about {
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+.agents__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.agents__made {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.app-main .agents__made p {
+  margin: 0;
+}
+/* The key is one long word: it breaks anywhere rather than run past a phone. */
+.agents__key {
+  word-break: break-all;
+  user-select: all;
+}
+.agents__copy {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

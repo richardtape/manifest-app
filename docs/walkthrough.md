@@ -1109,8 +1109,12 @@ and you'll come straight back here."* Their agent keeps working.
 **An agent of their own.** For the few who run one (spec §1, *Bring your own agent*):
 - ***Agents***, in the project's rail, lists every agent with access:
   - **ours**, one per conversation and one *Keeping watch*, not revocable here: they end with their
-    conversation, or with the app;
+    conversation, or with the app. **We tell ours from theirs by the token ids our server keeps** (F6b
+    D5): the page hands each id over as it mints, never the secret;
   - **theirs**, minted on this screen: the prototype's *Agents* screen, with its secret shown once.
+    What each may do is said in words, and **[Revoke]** is offered where it can work: only the person who
+    made a token may revoke it (FE-49), and a revoke first answers *no* to anything that agent is still
+    waiting on (F6b Decision 16).
 - **Their agent is held to the same four limits**, and when it asks for one of them, a question appears for a
   person: the prototype's *Queue* screen, reached from the needs-you band.
 - **The question says what it can**: *"Your agent '<token's name>' asked to add a member to this project."*

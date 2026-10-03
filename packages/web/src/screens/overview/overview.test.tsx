@@ -391,8 +391,8 @@ describe('the band: before your students can use it (Decision 3, moment 10; F5b�
   })
 })
 
-describe('the rail: Overview · Preview · Conversations · Going live · People (Decision 2; F6b Task 5)', () => {
-  it('names the app, and its five pages: People after Going live (Agents comes with its page, F6b sitting 5)', async () => {
+describe('the rail: Overview · Preview · Conversations · Going live · People · Agents (Decision 2; F6b Tasks 5, 11)', () => {
+  it('names the app, and its six pages: People and Agents after Going live', async () => {
     await open(`/apps/${SLUG}`)
     await ready()
     expect(rail().querySelector('.mf-rail__over')?.textContent).toBe(PROJECT.name)
@@ -402,6 +402,7 @@ describe('the rail: Overview · Preview · Conversations · Going live · People
       [rail_.conversations, `/apps/${SLUG}/conversations`],
       [rail_.goingLive, `/apps/${SLUG}/going-live`],
       [rail_.people, `/apps/${SLUG}/people`],
+      [rail_.agents, `/apps/${SLUG}/agents`],
     ] as const
     // The project's items follow the rail's own two (Your apps, Start something new).
     const items = [...rail().querySelectorAll('a.mf-rail__item')]
@@ -418,6 +419,7 @@ describe('the rail: Overview · Preview · Conversations · Going live · People
     [`/apps/${SLUG}/change`, rail_.conversations],
     [`/apps/${SLUG}/going-live`, rail_.goingLive],
     [`/apps/${SLUG}/people`, rail_.people],
+    [`/apps/${SLUG}/agents`, rail_.agents],
   ])('%s: %s is current', async (path, current) => {
     await open(path)
     await waitFor(() =>

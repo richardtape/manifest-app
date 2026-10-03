@@ -515,17 +515,15 @@ export const words = {
    * any (the plan's *Words proposed for Rich*, approved with it), marked "ours".
    */
   preview: {
-    /**
-     * The rail's project section (F5 Decision 2): four items; People and Agents come with their
-     * plans.
-     */
+    /** The rail's project section (F5 Decision 2): six items, People and Agents after Going live. */
     rail: {
       overview: 'Overview',
       preview: 'Preview',
       conversations: 'Conversations',
       goingLive: 'Going live',
-      /** F6b (design §2): after Going live. *Agents* comes with its page (sitting 5). */
+      /** F6b (design §2, §4): after Going live. */
       people: 'People',
+      agents: 'Agents',
     },
     /** Ours: the switcher's name for a screen reader (SegmentedControl's preview says so). */
     switcherLabel: 'Which address you are looking at',
@@ -1412,6 +1410,85 @@ export const words = {
     waitsFor: (who: string) => `It's waiting for ${who}.`,
     onlyTheyKnow: (count: number, who: string) =>
       count === 1 ? `One thing only ${who} knows` : `Two things only ${who} knows`,
+  },
+  /**
+   * F6b TASK 11: *AGENTS* (design §4, D4, D5; *Throughout*'s *An agent of their own*). Every agent
+   * with access to the app: ours told from theirs by the ids our server keeps, theirs revoked by
+   * whoever made it, and one of their own let in, its key shown once. The design's words, and the
+   * plan's *Words proposed*; the rest marked ours.
+   */
+  agents: {
+    title: (app: string) => `Agents with access to ${app}`,
+    /** What a token may do: the eleven a person may mint, in the platform's order. */
+    capabilities: {
+      'project:read': 'read the app',
+      'project:write': 'change its settings',
+      'source:write': 'change its code',
+      'secret:write': 'set its secrets',
+      'output:read': 'read what it printed',
+      'agent:session': 'use AI on your allowance',
+      'build:create': 'build it',
+      'release:create': 'make a version',
+      'release:deploy': 'put a version on the draft or trying-out address',
+      'launch:draft': 'draft its launch records',
+      'approval:request': "ask for a Manifest administrator's sign-off",
+    } as Record<string, string>,
+    ours: {
+      /** Ours: the section's heading. */
+      title: 'Our agents',
+      conversation: (title: string) => `Working on '${title}'`,
+      /** Ours: a conversation's, before it has a title. */
+      untitled: 'Working on a change',
+      watch: 'Keeping watch',
+      privacy: 'Suggesting privacy answers',
+      end: 'These are ours. They end with their conversation, or with the app.',
+    },
+    theirs: {
+      /** Ours: the section's heading, and when it has none. */
+      title: 'Your agents',
+      none: 'No agent of yours has access to it.',
+      /** Ours: "It may read the app, change its code and build it." */
+      may: (said: string) => `It may ${said}.`,
+      lastUsed: (when: string) => `Last used ${when}`,
+      neverUsed: 'Never used',
+      stops: (day: string) => `Stops working ${day}`,
+      yours: '(yours)',
+      /** Ours: an agent our page made for someone else on the app. */
+      madeBy: (who: string) => `Made by ${who}`,
+      revoke: 'Revoke',
+      onlyMinter: 'Only the person who made it can revoke it.',
+      /** Ours: asked in place first, as *People*'s *Take off* is. */
+      confirm: "Revoke it? It stops working at once, and that can't be undone.",
+      revokeConfirm: 'Revoke it',
+      keep: 'Keep it',
+      revoking: 'Revoking…',
+      revoked: (app: string) => `Revoked. It can't do anything on ${app} now.`,
+      couldnt: "We couldn't revoke it just now. It still works.",
+      /** Decision 16: what the agent is told of each question it is still waiting on. */
+      answer: 'This agent was revoked.',
+    },
+    make: {
+      title: 'Let an agent of your own in',
+      /** Ours, after the prototype's *Token* screen. */
+      name: 'What do you call it?',
+      nameHint: 'Only so you can tell them apart later.',
+      may: 'What may it do?',
+      long: 'How long should it last?',
+      days: (n: number) => `${n} days`,
+      button: 'Make it',
+      making: 'Making it…',
+      couldnt: "We couldn't make it just now. Nothing has changed.",
+      /** Ours: above its key, the one time it is shown. */
+      made: 'Made. Give your agent this key:',
+      once: 'This is the only time we can show it. Keep it somewhere safe.',
+      /** Ours: "Copy" to the eye, "Copy its key" to a screen reader. */
+      copyName: 'its key',
+      how: 'How an agent uses it',
+      /** Ours: what the agent needs besides the key, each followed by an address in mono. */
+      sends: 'It sends the key with every request to Manifest, at',
+      guide: "Its first read is Manifest's guide for agents, at",
+      done: 'Done',
+    },
   },
   /** §24's two answers, in words. */
   audience: {
