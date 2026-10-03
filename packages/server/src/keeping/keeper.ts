@@ -7,7 +7,7 @@ import type { Chip, Conversation, Happening } from '../api/progress.js'
 import type { Store } from '../store/db.js'
 import type { HistoryEntry, KeptApp, KeptMember } from '../store/keeping.js'
 import { emailsFor, questionEmails, waitingEmail } from './emails.js'
-import { happeningOf, questionsOf } from './happenings.js'
+import { happeningOf, questionsOf, tokenEndsOf } from './happenings.js'
 import { deliver, deliverUnfinished, type Mailer } from './mail.js'
 import {
   answerOf,
@@ -258,16 +258,17 @@ export function createKeeper({
 
   /**
    * F6b TASK 12 (Decision 14): their agent's question, once to each owner, its agent named as our
-   * page kept it (`minted`), else none. A question already answered or a day old is not one.
+   * page kept it (`minted`), else none, and when it stops waiting: its day, or its token's end if
+   * we know it and it is sooner (the platform's cap, its faculty-ready Task 13). A question already
+   * answered, a day old, or its token ended, is not one.
    */
   function asked(entry: HistoryEntry): void {
     const app = store.app(entry.projectId)
-    const [question] = questionsOf([entry], now().getTime())
+    const kept = store.mintedOn(entry.projectId)
+    const [question] = questionsOf([entry], now().getTime(), tokenEndsOf(kept))
     if (app === undefined || question === undefined) return
     const tokenName =
-      store
-        .mintedOn(entry.projectId)
-        .find((row) => row.tokenId === question.tokenId && row.purpose === 'agent')
+      kept.find((row) => row.tokenId === question.tokenId && row.purpose === 'agent')
         ?.name ?? null
     const members = store.members(entry.projectId)
     for (const outgoing of questionEmails(question, { app, members, origin, tokenName }))

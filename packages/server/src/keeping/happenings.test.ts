@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { Happening } from '../api/progress.js'
 import type { HistoryEntry, KeptMember } from '../store/keeping.js'
-import { fromOf, gapsOf, happeningOf, linesOf, questionsOf } from './happenings.js'
+import {
+  fromOf,
+  gapsOf,
+  happeningOf,
+  linesOf,
+  questionsOf,
+  tokenEndsOf,
+} from './happenings.js'
 
 /**
  * F6 TASK 4: WHAT HAPPENED, AS A PERSON READS IT. `history` keeps each event as the platform sent
@@ -525,6 +532,50 @@ describe('questionsOf: their agent’s questions still waiting (F6b Task 12, Dec
     expect(questionsOf([asked(Q1), asked(Q2), answered(type, Q1)], soon)).toEqual([
       expect.objectContaining({ pendingActionId: Q2 }),
     ])
+  })
+
+  it('pending_action.expired as the platform sends it (FE-52: cause and by, a person’s act on its token): no longer waiting, whatever the cause', () => {
+    for (const cause of ['token_revoked', 'member_removed', 'project_archived'])
+      expect(
+        questionsOf(
+          [
+            asked(Q1),
+            entry(
+              'pending_action.expired',
+              {
+                pendingActionId: Q1,
+                tokenId: T1,
+                action: 'members:manage',
+                cause,
+                by: 'a0000000-0000-4000-8000-000000000001',
+              },
+              '2026-10-03T17:30:00.000Z',
+            ),
+          ],
+          soon,
+        ),
+      ).toEqual([])
+  })
+
+  it('its token stopping sooner than its day: waiting until then, as the platform caps it (its faculty-ready Task 13)', () => {
+    const ends = tokenEndsOf([
+      { tokenId: T1, expiresAt: '2026-10-03T20:00:00.000Z' },
+      { tokenId: 'other', expiresAt: null },
+    ])
+    expect(questionsOf([asked(Q1)], soon, ends)[0]?.expiresAt).toBe(
+      '2026-10-03T20:00:00.000Z',
+    )
+    expect(
+      questionsOf([asked(Q1)], Date.parse('2026-10-03T20:00:00.000Z'), ends),
+    ).toEqual([])
+    // A token that outlives the day changes nothing; one we do not know, nothing either.
+    const later = tokenEndsOf([{ tokenId: T1, expiresAt: '2026-11-01T00:00:00.000Z' }])
+    expect(questionsOf([asked(Q1)], soon, later)[0]?.expiresAt).toBe(
+      '2026-10-04T17:00:00.000Z',
+    )
+    expect(questionsOf([asked(Q1)], soon, tokenEndsOf([]))[0]?.expiresAt).toBe(
+      '2026-10-04T17:00:00.000Z',
+    )
   })
 
   it('past its day, with no event: no longer waiting (Review Focus 5)', () => {

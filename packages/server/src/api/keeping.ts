@@ -2,7 +2,13 @@ import type { FastifyInstance, FastifyReply } from 'fastify'
 import type { Rounds } from '../build/round.js'
 import type { Config } from '../config.js'
 import type { Person } from '../identity.js'
-import { fromOf, gapsOf, linesOf, questionsOf } from '../keeping/happenings.js'
+import {
+  fromOf,
+  gapsOf,
+  linesOf,
+  questionsOf,
+  tokenEndsOf,
+} from '../keeping/happenings.js'
 import type { Handed, Keeper } from '../keeping/keeper.js'
 import { PlatformRefusal } from '../platform/refusal.js'
 import type { Store } from '../store/db.js'
@@ -181,7 +187,8 @@ export function registerKeeping(
     const failed = changeFailed(kept)
     if (failed !== undefined) needs.push({ kind: 'change-failed', app, ...failed, owner })
     // F6b TASK 12 (Decision 14): their agent's questions, from history, until answered or a day old.
-    for (const question of questionsOf(store.historyOf(kept.projectId), now))
+    const ends = tokenEndsOf(store.mintedOn(kept.projectId))
+    for (const question of questionsOf(store.historyOf(kept.projectId), now, ends))
       needs.push({ kind: 'agent-asks', app, ...question, owner })
     return needs
   }

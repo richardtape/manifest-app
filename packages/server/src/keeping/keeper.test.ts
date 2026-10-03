@@ -9,6 +9,7 @@ import type { KeptApp, KeptMember } from '../store/keeping.js'
 import type { Run } from '../store/runs.js'
 import { createKeeper, type Keeper } from './keeper.js'
 import { KEY_BYTES, seal, unseal } from './seal.js'
+import { clockOf, dayOf } from './words.js'
 
 /**
  * F6 TASK 3: THE KEEPER (D4): one Keeping watch token per app, handed over by a member's page and
@@ -832,6 +833,33 @@ describe('the emails (Task 5: D3, once each)', () => {
       expect(t.store.historyOf(P1).map((entry) => entry.type)).toContain(
         'pending_action.created',
       )
+    })
+
+    it('its agent stopping sooner than the day: the email says when its token ends (the platform’s cap, its faculty-ready Task 13)', async () => {
+      const t = await live()
+      const ends = '2026-10-01T20:00:00.000Z'
+      t.store.rememberPerson({
+        id: ALICE,
+        displayName: 'Alice Instructor',
+        email: 'alice@example.test',
+      })
+      t.store.keepMinted({
+        tokenId: T,
+        projectId: P1,
+        personId: ALICE,
+        purpose: 'agent',
+        conversationId: null,
+        name: 'Claude Code',
+        expiresAt: ends,
+        mintedAt: NOW.toISOString(),
+      })
+      t.handlers.event(created(6))
+      await settle()
+      const day = new Date(Date.parse(created(6).at) + DAY).toISOString()
+      expect(t.sent[0]!.text).toContain(
+        `It stops waiting at ${clockOf(ends)} on ${dayOf(ends)}.`,
+      )
+      expect(t.sent[0]!.text).not.toContain(clockOf(day))
     })
 
     it('an agent our page did not make is "An agent"', async () => {

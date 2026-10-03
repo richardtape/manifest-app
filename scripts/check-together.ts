@@ -505,17 +505,52 @@ try {
     `"${NEED_WORDS}" to ${JSON.stringify(askedTo)}`,
   )
 
-  // 8. Answered: the need is gone.
+  // 8. Answered: the need is gone. And a question of Sam's agent, ended by its revoke (the
+  //    platform's faculty-ready Task 13, FE-52: `pending_action.expired`, its cause and who): gone
+  //    the same, with nobody answering it.
   emit(APP.projectId, 'pending_action.confirmed', { pendingActionId })
   await until(() =>
     store.historyOf(APP.projectId).some((e) => e.type === 'pending_action.confirmed'),
   )
   const answered = [await askingOf(ALICE), await askingOf(SAM)]
+  const revokedQuestion = randomUUID()
+  emit(APP.projectId, 'pending_action.created', {
+    action: 'release:promote',
+    tokenId: samsAgent,
+    pendingActionId: revokedQuestion,
+  })
+  const needOf = async (who: Person) =>
+    ((await ask(who, 'GET', '/api/needs')).json as Needs).needs.find(
+      (n) => n.kind === 'agent-asks' && n.pendingActionId === revokedQuestion,
+    )
+  await until(() =>
+    store
+      .historyOf(APP.projectId)
+      .some(
+        (e) =>
+          e.type === 'pending_action.created' &&
+          (e.detail as { pendingActionId?: string }).pendingActionId === revokedQuestion,
+      ),
+  )
+  const beforeRevoke = await needOf(ALICE)
+  emit(APP.projectId, 'pending_action.expired', {
+    pendingActionId: revokedQuestion,
+    tokenId: samsAgent,
+    action: 'release:promote',
+    cause: 'token_revoked',
+    by: SAM.id,
+  })
+  await until(() =>
+    store.historyOf(APP.projectId).some((e) => e.type === 'pending_action.expired'),
+  )
+  const endedNeeds = [await needOf(ALICE), await needOf(SAM)]
   check(
     8,
-    'answered (pending_action.confirmed): the need gone from every band',
-    answered.every((n) => n === undefined),
-    `Alice ${JSON.stringify(answered[0] ?? null)}; Sam ${JSON.stringify(answered[1] ?? null)}`,
+    'answered (pending_action.confirmed), or its agent revoked (pending_action.expired): the need gone from every band',
+    answered.every((n) => n === undefined) &&
+      beforeRevoke !== undefined &&
+      endedNeeds.every((n) => n === undefined),
+    `confirmed: Alice ${JSON.stringify(answered[0] ?? null)}, Sam ${JSON.stringify(answered[1] ?? null)}; revoked: before ${beforeRevoke === undefined ? 'none' : 'a need'}, after Alice ${JSON.stringify(endedNeeds[0] ?? null)}, Sam ${JSON.stringify(endedNeeds[1] ?? null)}`,
   )
 
   // 9. Sam taken off, by the event: their work ended here, recorded `removed`; their agent's id

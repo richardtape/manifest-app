@@ -643,6 +643,53 @@ describe('GET /api/needs (design §2: the band)', () => {
       },
     )
 
+    it.each(['token_revoked', 'member_removed', 'project_archived'])(
+      'ended by a person’s act on its token (pending_action.expired, %s; FE-52): gone',
+      async (cause) => {
+        const t = setUp()
+        keep(t, PROJECT, [memberOf(ALICE), memberOf(BOB, 'collaborator')])
+        asked(t)
+        expect((await t.ask('GET', '/api/needs')).json().needs).toHaveLength(1)
+        happened(
+          t,
+          PROJECT,
+          'pending_action.expired',
+          {
+            pendingActionId: Q,
+            tokenId: TOKEN,
+            action: 'members:manage',
+            cause,
+            by: ALICE.id,
+          },
+          ago(HOUR / 2),
+        )
+        expect((await t.ask('GET', '/api/needs')).json()).toEqual({ needs: [] })
+        expect((await t.ask('GET', '/api/needs', AS_BOB)).json()).toEqual({ needs: [] })
+      },
+    )
+
+    it('from an agent our page let in that stops working sooner than the day: waiting until its token’s end (the platform’s cap, its faculty-ready Task 13)', async () => {
+      const t = setUp()
+      keep(t, PROJECT, [memberOf(ALICE)])
+      const ends = new Date(Date.now() + 2 * HOUR).toISOString()
+      // A kept row's person is remembered first (persons is its key's table).
+      t.store.rememberPerson(ALICE)
+      t.store.keepMinted({
+        tokenId: TOKEN,
+        projectId: PROJECT,
+        personId: ALICE.id,
+        purpose: 'agent',
+        conversationId: null,
+        name: 'Claude Code',
+        expiresAt: ends,
+        mintedAt: ago(HOUR),
+      })
+      asked(t)
+      expect((await t.ask('GET', '/api/needs')).json()).toEqual({
+        needs: [expect.objectContaining({ kind: 'agent-asks', expiresAt: ends })],
+      })
+    })
+
     it('a day old, with nothing heard since: gone, without an event (Review Focus 5)', async () => {
       const t = setUp()
       keep(t, PROJECT, [memberOf(ALICE)])

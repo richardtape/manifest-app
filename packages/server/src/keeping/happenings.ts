@@ -206,7 +206,12 @@ export function fromOf(entries: HistoryEntry[]): string | null {
 
 /** F6b Decision 14: an agent's question waits a day (the platform's TTL; S1: M4). */
 const QUESTION_MS = 86_400_000
-/** What ends a question before its day: answered either way, or (FE-52) the platform's lapse. */
+/**
+ * What ends a question before its day: answered either way, or (FE-52, the platform's faculty-ready
+ * Task 13) ended by a person's act on its token: revoked, its maker taken off, the app switched off
+ * (`pending_action.expired`, its `cause` and `by`). None of them says a word of its own here: the
+ * revoke, the removal and the switch-off are each said where they are done.
+ */
 const ANSWERED = new Set([
   'pending_action.confirmed',
   'pending_action.rejected',
@@ -219,8 +224,21 @@ export interface WaitingQuestion {
   tokenId: string
   action: string
   at: string
-  /** When it was heard, plus a day: the event carries no expiry (S1: M4). */
+  /**
+   * When it was heard, plus a day (the event carries no expiry, S1: M4), or when its token stops
+   * working, if that is sooner and we know it: the platform caps a question at its token's expiry
+   * (its faculty-ready Task 13). We know it for an agent our page let in (`minted.expiresAt`).
+   */
   expiresAt: string
+}
+
+/** When each token we know stops working, by its id: an agent our page let in (`minted`). */
+export function tokenEndsOf(
+  kept: { tokenId: string; expiresAt: string | null }[],
+): ReadonlyMap<string, string> {
+  return new Map(
+    kept.flatMap((row) => (row.expiresAt === null ? [] : [[row.tokenId, row.expiresAt]])),
+  )
 }
 
 /**
@@ -229,7 +247,11 @@ export interface WaitingQuestion {
  * history, which the keeper already writes: no table of its own. A question is a need, never a
  * line of what happened (`happeningOf` reads none).
  */
-export function questionsOf(entries: HistoryEntry[], now: number): WaitingQuestion[] {
+export function questionsOf(
+  entries: HistoryEntry[],
+  now: number,
+  tokenEnds: ReadonlyMap<string, string> = new Map(),
+): WaitingQuestion[] {
   const answered = new Set<string>()
   for (const entry of entries) {
     if (!ANSWERED.has(entry.type)) continue
@@ -244,7 +266,9 @@ export function questionsOf(entries: HistoryEntry[], now: number): WaitingQuesti
     const action = text(detail.action)
     if (!pendingActionId || !tokenId || !action || answered.has(pendingActionId))
       return []
-    const expires = Date.parse(entry.at) + QUESTION_MS
+    const ends = Date.parse(tokenEnds.get(tokenId) ?? '')
+    const day = Date.parse(entry.at) + QUESTION_MS
+    const expires = Number.isNaN(ends) ? day : Math.min(day, ends)
     if (Number.isNaN(expires) || expires <= now) return []
     return [
       {
