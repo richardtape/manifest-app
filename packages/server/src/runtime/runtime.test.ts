@@ -3,6 +3,7 @@ import { z } from 'zod/v4'
 import { ModelError, type Model } from '../model/client.js'
 import { scripted } from '../model/scripted.js'
 import { openStore } from '../store/db.js'
+import { CREDENTIAL } from '../store/runs.js'
 import { askAgent, defineAgent } from './agent.js'
 import { run, type RunState, type Stop } from './run.js'
 import { defineTool, movesOf } from './tool.js'
@@ -47,7 +48,13 @@ const tools = [
     kind: 'commit',
     describe: 'commit files',
     input: z.object({ message: z.string() }),
-    guard: ({ message }) => (message.includes('Dockerfile') ? DOCKERFILE : null),
+    guard: ({ message }) =>
+      message.includes('Dockerfile')
+        ? DOCKERFILE
+        : message.startsWith('public/')
+          ? // As the real guards do, the reason names the path (m27).
+            `${message} is not a file we write`
+          : null,
     run: async ({ message }, ctx: Ctx) => {
       ctx.did.push(`commit ${message}`)
       if (message === 'and stop') ctx.stop = true
@@ -203,6 +210,27 @@ describe('a guard sends a move back (Review Focus 1)', () => {
         reason: DOCKERFILE,
       }),
     )
+  })
+})
+
+describe('a reason shaped like a key (m27)', () => {
+  it("a guard's reason echoing a key-shaped path is traced with that run redacted; the lead still reads it whole, and the run goes on", async () => {
+    const model = scripted({ lead: [commit('public/sk-1.js'), done('Built.')] })
+    const { trace, result } = harness(model)
+    expect(await result).toEqual({ kind: 'done', line: 'Built.' })
+    expect(JSON.stringify(model.calls[1]?.messages)).toContain(
+      'public/sk-1.js is not a file we write',
+    )
+    const rows = trace.list('run-1')
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        kind: 'move',
+        move: 'commit',
+        verdict: 'guarded',
+        reason: 'public/sk-[redacted].js is not a file we write',
+      }),
+    )
+    expect(JSON.stringify(rows)).not.toMatch(CREDENTIAL)
   })
 })
 

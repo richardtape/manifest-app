@@ -50,6 +50,14 @@ export interface RunOptions<Ctx, In> {
   stopWhen?: (state: RunState) => Stop | null
 }
 
+/**
+ * A REASON AS THE TRACE KEEPS IT (m27): a run shaped like a key (`mft_…`, `sk-…`, which a path
+ * such as `public/sk-1.js` is) redacted, so the trace's refusal of anything shaped like a
+ * credential never ends the leg. The lead still reads its reason whole.
+ */
+const traced = (reason: string) =>
+  reason.replace(/\b(mft_|sk-)[A-Za-z0-9_-]*/g, '$1[redacted]')
+
 function sameRefusal(
   before: RunState['sameRefusal'],
   refused: string | undefined,
@@ -97,11 +105,16 @@ export async function run<Ctx, In>(options: RunOptions<Ctx, In>): Promise<Stop> 
         kind: 'move',
         move: kind,
         verdict: 'ran',
-        ...(result.refused === undefined ? {} : { reason: result.refused }),
+        ...(result.refused === undefined ? {} : { reason: traced(result.refused) }),
       })
     } else {
       result = { report: reason, refused: reason }
-      trace.record(state.runId, { kind: 'move', move: kind, verdict: 'guarded', reason })
+      trace.record(state.runId, {
+        kind: 'move',
+        move: kind,
+        verdict: 'guarded',
+        reason: traced(reason),
+      })
     }
 
     state = {
