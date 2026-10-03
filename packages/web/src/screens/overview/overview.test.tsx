@@ -416,6 +416,7 @@ describe('the rail: Overview · Preview · Conversations · Going live · People
     [`/apps/${SLUG}/conversations`, rail_.conversations],
     [`/apps/${SLUG}/change`, rail_.conversations],
     [`/apps/${SLUG}/going-live`, rail_.goingLive],
+    [`/apps/${SLUG}/people`, rail_.people],
   ])('%s: %s is current', async (path, current) => {
     await open(path)
     await waitFor(() =>

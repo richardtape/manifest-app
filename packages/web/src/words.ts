@@ -1250,6 +1250,52 @@ export const words = {
     copy: 'Copy',
     copied: 'Copied',
   },
+  /**
+   * F6b (walk-through moment 18, design §2): WHO CAN CHANGE IT. The design's words, and F6b's
+   * *Words proposed* (the plan); each marked **ours** is this sitting's, for Rich.
+   */
+  people: {
+    title: (app: string) => `Who can change ${app}`,
+    students: "Students aren't on this list. They get in once it's live.",
+    you: '(you)',
+    owner: 'Owner',
+    helper: 'Helper',
+    /** Ours: a member's CWL login, beside their email, when CWL released it. */
+    login: (login: string) => `CWL login ${login}`,
+    roles:
+      "Helper: can change the app and try it. Only an owner can let students have a new version, change who's on this list, or switch it off.",
+    helperOnly: "Only an owner can change who's on this list.",
+    add: {
+      /** Ours: the form's heading. */
+      title: 'Add someone',
+      field: 'Their CWL login or email',
+      /** Ours: the role's group, for a screen reader. */
+      role: 'What they can do',
+      button: 'Add them',
+      adding: 'Adding…',
+    },
+    makeOwner: 'Make owner',
+    makeHelper: 'Make helper',
+    /** Ours: a role being changed. */
+    changing: 'Changing…',
+    takeOff: 'Take off',
+    /** Ours: the confirming step's two buttons. */
+    takeOffConfirm: 'Take them off',
+    keep: 'Keep them',
+    takingOff: 'Taking them off…',
+    confirmTakeOff: (who: string, app: string) =>
+      `Take ${who} off ${app}? Their work on it stops.`,
+    takenOff: (who: string, app: string) => `${who}'s work on ${app} has stopped.`,
+    couldnt: "We couldn't change who's on it just now. Nothing has changed.",
+    refused: {
+      MEMBER_USER_NOT_FOUND:
+        "We don't know anyone by that name yet. They need to sign in to Manifest once: send them app.manifest.internal, then try again.",
+      MEMBER_USER_AMBIGUOUS: 'Two people share that email. Use their CWL login instead.',
+      MEMBER_MAY_NOT_BUILD:
+        "Only UBC faculty can work on apps for now, so we can't add them yet.",
+      PROJECT_LAST_OWNER: 'Someone has to own it. Make someone else an owner first.',
+    },
+  },
   /** §24's two answers, in words. */
   audience: {
     scale: {

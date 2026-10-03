@@ -970,10 +970,11 @@ of this moment stands for when TAs may be added.
 - **`MEMBER_USER_AMBIGUOUS`**: *"Two people share that email. Use their CWL login instead."*
 - **`PROJECT_LAST_OWNER`** when removing: *"Someone has to own it. Make someone else an owner first."*
 - **Removing a TA whose agent is still working**:
-  - The platform keeps their token alive (**FE-11**). But the tokens our server holds are ours to stop using, so
-    removing someone **ends their conversations here** and discards their tokens.
-  - The page says what is true: *"<TA>'s work on this app has stopped here. Anything they run elsewhere keeps
-    its access until it expires."*
+  - **FE-11 landed** (the platform's launch path, sitting 5): removing someone revokes their tokens on the app, ends
+    their agent sessions and closes their streams. Our server **ends their conversations here** too, and forgets
+    their tokens (F6b Decision 5).
+  - The page says what is true: *"<TA>'s work on <App> has stopped."* (F6b: the sentence about anything they run
+    elsewhere went with FE-11.)
 
 **They wait:** seconds, plus the sign-in.
 

@@ -1378,3 +1378,62 @@
 .overview__back .start-again {
   align-items: flex-start;
 }
+
+/* F6b Task 6: PEOPLE (moment 18): one person a row, their role beside their name, the owner's
+   presses beneath; wraps at 375. */
+.people {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.app-main .people > p {
+  margin: 0;
+}
+.people__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.people__member {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+}
+.app-main .people__who,
+.app-main .people__how {
+  margin: 0;
+}
+.people__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+}
+.people__role {
+  color: var(--ink-muted);
+}
+.people__how {
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+.people__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.app-main .people__confirm .body {
+  margin: 0;
+}
+.people__add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.people__add .heading {
+  margin: 0;
+}
