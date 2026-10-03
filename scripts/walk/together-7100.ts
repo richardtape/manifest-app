@@ -534,14 +534,21 @@ async function change() {
   const projectId = need('projectId')
   const slug = need('slug')
   const page = await tabFor('instructor')
-  const id = await askChange(
-    page,
-    slug,
-    "Let it look up each reading's book on openlibrary.org, and show the book's cover and publisher beside the reading's title.",
-  )
-  save({ change: id })
-  await held(page, 'change-planned')
-  await page.press('Yes, change it')
+  // A change asked already (a run before this one stopped short): taken up where it is.
+  const asked = state().change
+  if (asked !== undefined) {
+    await page.go(`/apps/${slug}/conversations/${asked}`)
+    log(`the change asked already: ${asked}`)
+  } else {
+    const id = await askChange(
+      page,
+      slug,
+      "Let it look up each reading's book on openlibrary.org, and show the book's cover and publisher beside the reading's title.",
+    )
+    save({ change: id })
+    await held(page, 'change-planned')
+    await page.press('Yes, change it')
+  }
   const end = await page.until(
     'the round ends: ready, or it needs them',
     () => {
@@ -567,6 +574,16 @@ async function change() {
   )
   if (end !== 'ready') return
   await page.press('Put this version on trying-out')
+  // The question is asked once the page has read the version (put.tsx's `ask`).
+  await page.until(
+    'the question: put it there?',
+    () =>
+      [...document.querySelectorAll('button')].some(
+        (b) => b.textContent?.trim() === 'Put it there',
+      ),
+    [],
+    30_000,
+  )
   await page.press('Put it there')
   await page.untilWords("It's on the trying-out address.", 'main', 3 * MINUTE)
   await held(page, 'change-on-trying-out')
@@ -632,16 +649,26 @@ async function agent() {
   const slug = need('slug')
   const name = need('name')
   const page = await tabFor('instructor')
+  // An agent a run before this one made and never revoked (its key shown once, and lost): revoked.
+  const maker = await as('instructor')
+  for (const old of (await tokensOf(maker, projectId)).filter(
+    (t) => t.name === 'Reading helper' && !t.revokedAt && !t.expired,
+  )) {
+    const revoked = await maker.change('DELETE', `/v1/tokens/${old.id}`)
+    log(`an agent a run before left, ${old.id.slice(0, 8)}: revoked ${revoked.status}`)
+  }
   await page.go(`/apps/${slug}/agents`)
   await page.untilWords('Our agents', 'main', 20_000)
   await page.type({ label: 'What do you call it?' }, 'Reading helper')
   await page.press('read the app', { role: 'checkbox' })
   await page.press('Make it')
   await page.untilWords('Made. Give your agent this key:', 'main', 30_000)
+  // The key from its own element in mono: the page's text runs it into the next words ("…Copy").
   const key = await page.run(
     () =>
-      /mft_[A-Za-z0-9_-]+/.exec(document.querySelector('main')?.textContent ?? '')?.[0] ??
-      '',
+      [...document.querySelectorAll('main .mono')]
+        .map((element) => element.textContent?.trim() ?? '')
+        .find((text) => /^mft_\S+$/.test(text)) ?? '',
   )
   report.check(
     'the key shown once, in mono',
@@ -744,31 +771,51 @@ async function off() {
   const slug = need('slug')
   const name = need('name')
   const colleagueTab = await tabFor('colleague')
-  const id = await askChange(colleagueTab, slug, 'Add a reading list for week one.')
+  // A change of theirs planned already (a run before this one stopped short): theirs still.
+  const colleague = await as('colleague')
+  const theirsNow = (
+    list(
+      (await colleague.call('GET', `/api/apps/${projectId}/conversations`)).body,
+      'conversations',
+    ) as { id: string; state: string; by: { id: string } }[]
+  ).filter(
+    (c) =>
+      ['plan-ready', 'waiting', 'planning'].includes(c.state) &&
+      c.by.id === field(colleague.me, 'id'),
+  )
+  const id =
+    theirsNow.find((c) => c.state === 'plan-ready')?.id ??
+    (await askChange(colleagueTab, slug, 'Add a reading list for week one.'))
+  log(
+    `colleague's work on it: ${theirsNow.map((c) => `${c.id.slice(0, 8)} ${c.state}`).join(', ') || id}`,
+  )
   save({ last: id })
   const page = await tabFor('instructor')
   const colleagueName = await nameOf('colleague')
   await page.go(`/apps/${slug}/people`)
   await page.untilWords(colleagueName, 'main', 20_000)
-  const takeOffs = (await page.names('button')).filter((b) =>
-    b.name.startsWith('Take off'),
-  )
-  log(`Take off buttons: ${takeOffs.map((b) => b.name).join(', ')}`)
-  await page.press(
-    takeOffs.length === 1 ? takeOffs[0]!.name : /^Take off/,
-    takeOffs.length === 1 ? {} : { nth: 0 },
-  )
-  await page.untilWords('Their work on it stops.', 'main', 10_000)
-  await page.press('Take them off')
-  await signInAgainIfAsked(page, 'instructor', 'people', ['has stopped.'])
-  if (!(await page.words('main')).includes('has stopped.')) {
-    await page.press(/^Take off/)
+  // Take off in colleague's row: their own row has one too (to leave), and it comes first.
+  const takeOff = async () => {
+    await page.run((who: string) => {
+      const row = [...document.querySelectorAll('li')].find((li) =>
+        (li.textContent ?? '').includes(who),
+      )
+      const button = [...(row?.querySelectorAll('button') ?? [])].find(
+        (b) => b.textContent?.trim() === 'Take off',
+      )
+      if (!button) throw new Error(`no Take off in ${who}'s row`)
+      button.click()
+    }, colleagueName)
+    await page.untilWords('Their work on it stops.', 'main', 10_000)
     await page.press('Take them off')
   }
+  await takeOff()
+  // Back from the second sign-in, the press is theirs to make again.
+  if (await signInAgainIfAsked(page, 'instructor', 'people', ['has stopped.']))
+    await takeOff()
   await page.untilWords(`${colleagueName}'s work on ${name} has stopped.`, 'main', 30_000)
   await held(page, 'people-taken-off')
   const owner = await as('instructor')
-  const colleague = await as('colleague')
   let stateNow = ''
   for (let i = 0; i < 30 && stateNow !== 'set-aside'; i++) {
     await sleep(1_000)
