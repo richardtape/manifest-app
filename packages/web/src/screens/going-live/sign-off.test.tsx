@@ -502,6 +502,35 @@ describe('the sign-off on Going live (moment 13)', () => {
     await waitFor(() => expect(document.activeElement).toBe(back))
   })
 
+  it('Talk it through’s mint refused: says so with a reference, reported once as mintToken, and nothing started (minors m51)', async () => {
+    const s = await open(
+      stage({}, { mintToken: () => refused(503, 'PLATFORM_UNAVAILABLE') }),
+    )
+    fireEvent.click(
+      within(await signOff()).getByRole('button', { name: 'Talk it through' }),
+    )
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain(a.couldntTalk)
+    expect(alert.textContent).toMatch(/[0-9A-F]{4}-[0-9A-F]{4}/)
+    expect(reports).toHaveLength(1)
+    expect(reports[0]).toMatchObject({
+      code: 'PLATFORM_UNAVAILABLE',
+      operation: 'mintToken',
+    })
+    expect(s.called('startChange')).toEqual([])
+    expect(window.location.pathname).toBe(`/apps/${SLUG}/going-live`)
+  })
+
+  it('Talk it through with the session ended: the shell’s to say, nothing reported, nothing started (minors m51)', async () => {
+    const s = await open(stage({}, { mintToken: () => refused(401, 'UNAUTHENTICATED') }))
+    fireEvent.click(
+      within(await signOff()).getByRole('button', { name: 'Talk it through' }),
+    )
+    expect(await screen.findByText(words.expired.body)).toBeTruthy()
+    expect(reports).toEqual([])
+    expect(s.called('startChange')).toEqual([])
+  })
+
   it('undecided and nobody has asked: needs you, and the one thing to press is Ask (F5b)', async () => {
     await open(stage({ approval: null }))
     const row = await signOff()
