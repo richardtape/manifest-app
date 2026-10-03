@@ -18,6 +18,14 @@ const { page, report } = await walk({
   base: process.env.WALK_BASE ?? OURS,
   out: process.argv[2],
 })
+// Our watch answered as kept, a long way off: an app page whose watch our server lacks would
+// mint one (the shell's `useWatch`, *Your apps*' `ensureEach`), and a read-only walk mints
+// nothing, nor leaves a watch for check-keeping.sh to meet (minors m72).
+await page.rewrite({
+  method: 'GET',
+  path: /^\/api\/apps\/[^/]+\/keeping$/,
+  body: { watching: true, until: '2099-01-01T00:00:00.000Z', tokenId: null, mine: false },
+})
 
 /** What every screen is held to, whatever it shows. */
 async function screen(name: string, heading: string) {
