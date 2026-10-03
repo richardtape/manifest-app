@@ -1528,6 +1528,9 @@ export function createRounds(deps: RoundDeps): Rounds {
     // Stop wins over anything but a round already built (Review Focus 4).
     const final = live.stopped && ending.kind !== 'done' ? STOPPED : ending
     if (final.kind === 'done' || final.kind === 'stopped') await endSession(live)
+    // m18: built, the cost is read once more: the last answers can fall inside the 5 s between
+    // reads, and nothing reads it after the round.
+    if (final.kind === 'done') await refreshCost(live, true)
     let state: ConversationState = 'building'
     switch (final.kind) {
       case 'done':

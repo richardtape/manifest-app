@@ -2065,6 +2065,30 @@ describe('the cost (Decision 14)', () => {
     })
   })
 
+  it('m18: built, the figure is read again at the end: the last answers came inside the 5 s between reads', async () => {
+    const spent = [0.1]
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          read('server.js'),
+          async () => {
+            // Spend lands while the round answers, faster than the reads come.
+            spent[0] = 0.3
+            return commit()
+          },
+          done(),
+        ],
+      },
+      spent,
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    await until(
+      () => viewOf(h, id)?.cost.conversationUsd === 0.3,
+      () => viewOf(h, id)?.cost,
+    )
+  })
+
   it('a spend the gateway did not say leaves the figure unknown', async () => {
     const { h, id } = await startedRound({ script: STRAIGHT, spent: [null] })
     await until(
