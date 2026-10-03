@@ -393,6 +393,17 @@ describe('the list (design §4)', () => {
     expect(within(other).getByText('quota:peek').className).toContain('mono')
   })
 
+  it('a day in another year names its year (m112): a key made today for a year stops next year, never "today"', async () => {
+    open(stage({ tokens: [{ ...MINE, expiresAt: '2027-10-03T19:00:00Z' }, ELSE] }))
+    expect((await rowOf('Claude Code')).textContent).toContain(
+      a.theirs.stops('3 October 2027'),
+    )
+    // This year's says no year (above, and here).
+    expect((await rowOf('from the console')).textContent).toContain(
+      a.theirs.stops('1 November'),
+    )
+  })
+
   it('a reading that fails: what went wrong, and Try again', async () => {
     const s = stage({ listTokens: { status: 503, code: 'UNAVAILABLE' } })
     open(s)
@@ -845,6 +856,18 @@ describe('their agent’s questions, at the top (F6b Task 12; Decision 16; (S1: 
     await waitFor(() =>
       expect(cards()?.querySelectorAll('.agents__question')).toHaveLength(1),
     )
+  })
+
+  it('back from the second sign-in, then a press that is not an answer (a revoke): the line has done its work (m107)', async () => {
+    open(stage(), 'owner', 'agents')
+    const mine = within(await rowOf('Claude Code'))
+    expect(screen.getAllByText(words.goingLive.letIn.again)).toHaveLength(1)
+    await press(mine.getByRole('button', { name: a.theirs.revoke }))
+    await press(mine.getByRole('button', { name: a.theirs.revokeConfirm }))
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name)),
+    )
+    expect(screen.queryByText(words.goingLive.letIn.again)).toBeNull()
   })
 
   it('answered elsewhere meanwhile (PENDING_ACTION_RESOLVED): it has stopped waiting, read again', async () => {

@@ -82,6 +82,22 @@ function mayOf(capabilities: string[]): ReactNode {
 }
 
 /**
+ * The day an agent stops working, in their own zone (F6b's `dayWords`), with its year when it is not
+ * this year's (m112): a key made today for a year never reads as stopping today.
+ */
+function stopsOn(at: string, now: Date, timeZone?: string): string | null {
+  const day = dayWords(at, timeZone)
+  if (day === null) return null
+  const yearOf = (date: Date) =>
+    new Intl.DateTimeFormat('en-US', {
+      ...(timeZone === undefined ? {} : { timeZone }),
+      year: 'numeric',
+    }).format(date)
+  const year = yearOf(new Date(at))
+  return year === yearOf(now) ? day : `${day} ${year}`
+}
+
+/**
  * *AGENTS* (F6b Task 11; design §4, D4, D5; *Throughout*'s *An agent of their own*): every agent
  * with access to the app (`listTokens`, in the person's own session), the active alone. **Ours**
  * are told by the ids our server keeps (`ours.minted`), named for what they do, and never revocable
@@ -479,7 +495,7 @@ export function Agents({
                     : t.lastUsed(
                         whenOf(token.lastUsedAt, clock.current(), timeZone) ?? '',
                       )
-                const stops = dayWords(token.expiresAt, timeZone)
+                const stops = stopsOn(token.expiresAt, clock.current(), timeZone)
                 return (
                   <li key={token.id} className="agents__agent">
                     <p className="agents__who">
