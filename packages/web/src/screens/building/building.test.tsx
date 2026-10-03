@@ -1898,3 +1898,127 @@ describe('the kind of change, on a launched app (F6b Task 8, Decision 8)', () =>
     expect(within(work).queryByText(/administrator's look/)).toBeNull()
   })
 })
+
+describe('a new detail about the people who sign in (F6b Task 9, Decision 9)', () => {
+  const NEEDS_SN =
+    "This change needs their last name from UBC's identity team, and they must agree to share it first. That may take several days."
+  const CANT_ASK = "Manifest can't ask for it for you yet."
+  const LEAVE_OUT = 'Leave it out'
+  const SEEDED =
+    "Leave their last name out of ‘First build’: UBC's identity team hasn't agreed to share it."
+  const stuck = (details: string[]) =>
+    round(
+      { status: 'needs-you', needs: { kind: 'detail', details } },
+      { pages: { state: 'done' }, holds: { state: 'done' }, build: { state: 'halted' } },
+    )
+  const started = (s: ReturnType<typeof stage>, refused?: unknown) => {
+    s.ours.startChange = (projectId, body) => {
+      s.calls.push(['startChange', projectId, body])
+      return refused === undefined
+        ? Promise.resolve({ ...CONVERSATION, id: 'c-2', state: 'planning' })
+        : Promise.reject(refused)
+    }
+  }
+
+  it("says which detail, that UBC's identity team must agree first, and that we can't ask for it yet: [Leave it out] alone", async () => {
+    const s = stage()
+    await open(s)
+    s.state(stuck(['sn']), { state: 'paused' })
+    const work = screen.getByRole('region', { name: words.building.workLabel })
+    expect(await within(work).findByText(NEEDS_SN)).toBeTruthy()
+    expect(within(work).getByText(CANT_ASK)).toBeTruthy()
+    expect(
+      within(work)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual([LEAVE_OUT])
+    expect(within(work).queryByText(/Ask for it/)).toBeNull()
+    expect(machineryIn(wordsShown())).toEqual([])
+  })
+
+  it('two details joined; one we do not know, or none read, in general words', async () => {
+    const s = stage()
+    await open(s)
+    s.state(stuck(['givenName', 'sn']), { state: 'paused' })
+    expect(
+      await screen.findByText(
+        "This change needs their first name and their last name from UBC's identity team, and they must agree to share it first. That may take several days.",
+      ),
+    ).toBeTruthy()
+    s.state(stuck([]), { state: 'paused' })
+    expect(
+      await screen.findByText(
+        "This change needs a new detail about the people who sign in from UBC's identity team, and they must agree to share it first. That may take several days.",
+      ),
+    ).toBeTruthy()
+  })
+
+  it('[Leave it out]: a token named for the change, the change started with our words and its id, then the stuck one stopped, then the new conversation', async () => {
+    const s = stage()
+    started(s)
+    await open(s)
+    s.state(stuck(['sn']), { state: 'paused' })
+    await press(await screen.findByRole('button', { name: LEAVE_OUT }))
+    await waitFor(() =>
+      expect(window.location.pathname).toBe(`/apps/${PROJECT.slug}/conversations/c-2`),
+    )
+    const [[projectId, minted]] = s.called('mintToken') as [
+      [string, Schemas['MintTokenRequest']],
+    ]
+    expect(projectId).toBe(PROJECT.id)
+    expect(minted.name).toBe(`Changing — ${SEEDED}`.slice(0, 64))
+    expect(s.called('startChange')).toEqual([
+      [PROJECT.id, { words: SEEDED, token: 'mft_test_1', tokenId: 't-1' }],
+    ])
+    expect(s.called('stop')).toEqual([['c-1']])
+    const order = s.calls.map((c) => c[0])
+    expect(order.indexOf('mintToken')).toBeLessThan(order.indexOf('startChange'))
+    expect(order.indexOf('startChange')).toBeLessThan(order.indexOf('stop'))
+  })
+
+  it('a change that would not start is said with its reference, and the stuck one is left as it was', async () => {
+    const s = stage()
+    started(s, new OurRefusal('CONVERSATION_INVALID', 400))
+    await open(s)
+    s.state(stuck(['sn']), { state: 'paused' })
+    await press(await screen.findByRole('button', { name: LEAVE_OUT }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain(
+      "We couldn't start that change just now. Nothing has changed.",
+    )
+    expect(referenceIn(alert)).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(s.called('stop')).toEqual([])
+    expect(window.location.pathname).toBe('/new/c-1')
+  })
+
+  it("another member's: it waits on its person, and nothing is theirs to press", async () => {
+    const SAM = 'c0000000-0000-4000-8000-000000000001'
+    const s = stage(
+      {},
+      {
+        members: [
+          {
+            userId: ME.id,
+            puid: 'puid-me',
+            cwlLogin: null,
+            displayName: ME.displayName,
+            email: 'me@ubc.ca',
+            role: 'collaborator',
+          },
+          {
+            userId: SAM,
+            puid: 'puid-sam',
+            cwlLogin: null,
+            displayName: 'Sam Helper',
+            email: 'sam@ubc.ca',
+            role: 'owner',
+          },
+        ],
+      },
+    )
+    await open(s)
+    s.state(stuck(['sn']), { state: 'paused', personId: SAM, byName: 'Sam Helper' })
+    expect(await screen.findByText(words.together.waitsFor('Sam Helper'))).toBeTruthy()
+    noButton(LEAVE_OUT)
+  })
+})

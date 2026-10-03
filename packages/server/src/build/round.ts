@@ -19,6 +19,7 @@ import {
 } from '../model/client.js'
 import type { AgentSessions } from '../platform/agent-sessions.js'
 import type { Builds } from '../platform/builds.js'
+import type { Details } from '../platform/details.js'
 import type { Instances } from '../platform/instances.js'
 import type { Members } from '../platform/members.js'
 import type { ConversationTokens, Projects } from '../platform/project.js'
@@ -91,6 +92,8 @@ export interface RoundDeps {
   instances: Instances
   secrets: Secrets
   members: Members
+  /** F6b Task 9: what the manifest asks of the people who sign in, and production's registered. */
+  details: Details
   stream: ProjectStream
   /** The model on a session's key, which calls `onAnswer` with each answer paid for. */
   modelFor: (
@@ -110,6 +113,8 @@ export interface RoundDeps {
 const MAX_MOVES = 40
 /** Decision 7: the third failure of a kind asks. */
 const TRIES = 3
+/** F6b Decision 9: `build.failed`'s `machineDetail.code` for a detail UBC has not registered (S1: M1). */
+const NOT_REGISTERED = 'SPEC_ATTRIBUTE_NOT_REGISTERED'
 /** Rich's $2 a piece of work, on a clock of 240 minutes (Decision 9; M1 took both). */
 const SESSION = { capUsd: 2, durationMinutes: 240 }
 /** Decision 8: a failed build's telling lines are about 50 from the end (M4). */
@@ -164,7 +169,8 @@ interface Live {
   watch: Watch | null
   refused: boolean
   /** Each build's and instance's outcome, as the stream or a re-read said it. */
-  builds: Map<string, { ok: boolean; reason: string | null }>
+  /** Each build's end, as the stream or a read said it; `code` the stream's alone (`machineDetail.code`). */
+  builds: Map<string, { ok: boolean; reason: string | null; code: string | null }>
   instances: Map<string, boolean>
   wakers: Set<() => void>
   base: string
@@ -345,6 +351,7 @@ export function createRounds(deps: RoundDeps): Rounds {
           live.builds.set(said['buildId'], {
             ok: event.type === 'build.succeeded',
             reason: typeof said['reason'] === 'string' ? said['reason'] : null,
+            code: typeof said['code'] === 'string' ? said['code'] : null,
           })
         if (
           (event.type === 'instance.healthy' || event.type === 'instance.failed') &&
@@ -397,7 +404,13 @@ export function createRounds(deps: RoundDeps): Rounds {
         builds.get(live.token, buildId),
       )
       if (build.status === 'succeeded' || build.status === 'failed')
-        live.builds.set(buildId, { ok: build.status === 'succeeded', reason: null })
+        live.builds.set(buildId, {
+          ok: build.status === 'succeeded',
+          reason: null,
+          // A build read carries no code: a refusal missed on the stream is a try, and the next
+          // build's frame names it (F6b Task 9).
+          code: null,
+        })
     }
     const instanceId = d.instanceId
     if (live.run.step === 'draft' && instanceId !== null && live.sandbox !== null) {
@@ -1201,6 +1214,27 @@ export function createRounds(deps: RoundDeps): Rounds {
     return backToPages(live, { kind: what, report }, true)
   }
 
+  /**
+   * F6b DECISION 9: WHAT THE BUILT MANIFEST ASKS THAT PRODUCTION HAS NOT REGISTERED, from the
+   * platform's parse of it (`getSpec`) and the registration (`getLaunchRecords`), never from the
+   * failure's free-text reason. `[]` when the manifest read is not the one built, or a read fails:
+   * the page says a new detail generically.
+   */
+  async function missingDetails(live: Live): Promise<string[]> {
+    try {
+      const [asked, registered] = await Promise.all([
+        call(live, 'getSpec', null, () => deps.details.asked(live.token, live.projectId)),
+        call(live, 'getLaunchRecords', 'production', () =>
+          deps.details.registered(live.token, live.projectId),
+        ),
+      ])
+      if (asked.commitSha !== live.base || registered === null) return []
+      return asked.attributes.filter((attribute) => !registered.includes(attribute))
+    } catch {
+      return []
+    }
+  }
+
   /** BUILDING IT: build.succeeded for the build startBuild answered, by its id (Decision 5). */
   async function build(live: Live): Promise<Outcome> {
     const d = detail(live)
@@ -1232,6 +1266,9 @@ export function createRounds(deps: RoundDeps): Rounds {
       d.instanceId = null
       return next(live, 'draft')
     }
+    // F6b Decision 9: a detail UBC has not registered fails every build: stop, and never retry.
+    if (outcome.code === NOT_REGISTERED)
+      return needs({ kind: 'detail', details: await missingDetails(live) })
     const log = await call(live, 'getBuildLog', buildId, () =>
       builds.log(live.token, buildId, LOG_TAIL),
     )

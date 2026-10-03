@@ -316,6 +316,32 @@ export const words = {
           ? (said[0] ?? '')
           : `${said.slice(0, -1).join(', ')} and ${said.at(-1)!}`,
     },
+    /**
+     * F6b TASK 9: A NEW DETAIL ABOUT THE PEOPLE WHO SIGN IN (design §1; Words proposed, ours until
+     * Rich's word). S1: M1: only these four can reach a build; the platform refuses any other at the
+     * commit. An unknown one is said generically, never by its name.
+     */
+    detail: {
+      details: {
+        givenName: 'their first name',
+        sn: 'their last name',
+        mail: 'their email',
+        eduPersonAffiliation: "whether they're a student or staff",
+      } as Record<string, string>,
+      unknown: 'a new detail about the people who sign in',
+      /** [Leave it out]'s change names it so when we could not read which. */
+      theUnknown: 'the new detail about the people who sign in',
+      needs: (what: string) =>
+        `This change needs ${what} from UBC's identity team, and they must agree to share it first. That may take several days.`,
+      /** Until FE-47: nothing pretends to ask. */
+      cannotAskYet: "Manifest can't ask for it for you yet.",
+      leaveOut: 'Leave it out',
+      leavingOut: 'Starting that change…',
+      couldntLeaveOut: "We couldn't start that change just now. Nothing has changed.",
+      /** [Leave it out]'s change, its first words (Decision 10). */
+      leaveOutChange: (what: string, title: string) =>
+        `Leave ${what} out of ‘${title}’: UBC's identity team hasn't agreed to share it.`,
+    },
     /** The five steps (Decision 5), each ticking on its own signal. */
     steps: {
       pages: 'Writing the pages',

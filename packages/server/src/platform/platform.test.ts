@@ -2,6 +2,7 @@ import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { platformAgentSessions } from './agent-sessions.js'
 import { platformBuilds } from './builds.js'
+import { platformDetails } from './details.js'
 import { platformInstances } from './instances.js'
 import { platformMembers } from './members.js'
 import {
@@ -949,6 +950,88 @@ describe('agent sessions, with their cap and their clock (Decision 9)', () => {
         models: SESSION.session.models,
       },
     ])
+  })
+})
+
+describe('details: what the manifest asks of the people who sign in, and what production registered (F6b Task 9, S1: M1)', () => {
+  const SPEC = (attributes: string[] | undefined) =>
+    ok({
+      appSpecId: '7c4e2d66-242e-4ab0-9218-6d22e44c8c0f',
+      commitSha: NEXT,
+      spec: {
+        manifest: 1,
+        name: 'reading-responses',
+        auth:
+          attributes === undefined
+            ? { provider: 'none' }
+            : { provider: 'cwl', attributes, callback: '/auth/ubcshib/callback' },
+      },
+    })
+  const RECORDS = (registration: Record<string, unknown> | null) =>
+    ok({
+      projectId: PROJECT,
+      iamRegistration: registration,
+      stagingRegistration: null,
+      privacyAssessment: null,
+    })
+
+  it("asked reads getSpec with the token: the newest valid manifest's auth.attributes, and the commit it was validated at", async () => {
+    const fake = await fakePlatform(() => SPEC(['ubcEduCwlPuid', 'mail', 'sn']))
+    expect(await platformDetails(fake.origin).asked(TOKEN, PROJECT)).toEqual({
+      commitSha: NEXT,
+      attributes: ['ubcEduCwlPuid', 'mail', 'sn'],
+    })
+    const [seen] = fake.seen as [Seen]
+    expect([seen.method, path(seen)]).toEqual(['GET', `/v1/projects/${PROJECT}/spec`])
+  })
+
+  it('asked: a manifest that signs nobody in asks nothing', async () => {
+    const fake = await fakePlatform(() => SPEC(undefined))
+    expect(await platformDetails(fake.origin).asked(TOKEN, PROJECT)).toEqual({
+      commitSha: NEXT,
+      attributes: [],
+    })
+  })
+
+  it("registered reads getLaunchRecords with the token: production's registeredAttributes, once registered", async () => {
+    const fake = await fakePlatform(() =>
+      RECORDS({
+        environment: 'production',
+        state: 'active',
+        registeredAt: '2026-10-03T04:34:20.214Z',
+        registeredAttributes: [
+          'ubcEduCwlPuid',
+          'mail',
+          'eduPersonAffiliation',
+          'givenName',
+        ],
+      }),
+    )
+    expect(await platformDetails(fake.origin).registered(TOKEN, PROJECT)).toEqual([
+      'ubcEduCwlPuid',
+      'mail',
+      'eduPersonAffiliation',
+      'givenName',
+    ])
+    const [seen] = fake.seen as [Seen]
+    expect([seen.method, path(seen)]).toEqual([
+      'GET',
+      `/v1/projects/${PROJECT}/launch-records`,
+    ])
+  })
+
+  it('registered: none recorded, or recorded and never registered, is null', async () => {
+    const none = await fakePlatform(() => RECORDS(null))
+    expect(await platformDetails(none.origin).registered(TOKEN, PROJECT)).toBeNull()
+    const submitted = await fakePlatform(() =>
+      RECORDS({
+        environment: 'production',
+        state: 'submitted',
+        registeredAt: null,
+        registeredAttributes: ['ubcEduCwlPuid', 'mail'],
+      }),
+    )
+    expect(await platformDetails(submitted.origin).registered(TOKEN, PROJECT)).toBeNull()
   })
 })
 

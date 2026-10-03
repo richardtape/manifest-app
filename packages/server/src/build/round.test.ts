@@ -196,6 +196,10 @@ interface Options {
   commit?: (n: number, body: { baseCommit: string; changes: Change[] }) => void
   /** The sensitive fields each landed commit (its nth) changes, as the platform names them (F6b Task 8). */
   sensitive?: (n: number) => string[]
+  /** F6b Task 9: what the newest valid manifest asks of the people who sign in (getSpec); may throw. */
+  asked?: () => { commitSha: string; attributes: string[] }
+  /** F6b Task 9: production's registered attributes (getLaunchRecords), null when none. */
+  registered?: () => string[] | null
   tree?: (n: number) => Promise<{ commitSha: string }> | { commitSha: string }
   /** Each read of a file, before it answers (its nth read of that path): may throw (m19). */
   fileRead?: (path: string, n: number) => void
@@ -489,6 +493,16 @@ function harness(options: Options, file?: string, store0?: Store) {
     members,
     stream,
     projects,
+    details: {
+      asked: async (token) => {
+        did.push(`getSpec ${token.slice(0, 10)}`)
+        return options.asked?.() ?? { commitSha: BASE, attributes: [] }
+      },
+      registered: async (token) => {
+        did.push(`getLaunchRecords ${token.slice(0, 10)}`)
+        return options.registered?.() ?? null
+      },
+    },
     signIn: {
       starts: async (url) => {
         signInChecks++
@@ -2749,5 +2763,107 @@ describe("the kind of change: the sensitive fields the round's commits change (F
       detail: before as RunDetail,
     })
     expect(viewOf(h, conversation.id)?.sensitive).toEqual([])
+  })
+})
+
+describe('a new detail about the people who sign in (F6b Task 9, Decision 9)', () => {
+  const C1 = 'c1'.padEnd(40, '0')
+  const ASKED = {
+    commitSha: C1,
+    attributes: ['ubcEduCwlPuid', 'mail', 'eduPersonAffiliation', 'givenName', 'sn'],
+  }
+  const REGISTERED = ['ubcEduCwlPuid', 'mail', 'eduPersonAffiliation', 'givenName']
+  /** As measured on 7100 (S1: M1): the code in machineDetail, the attributes only in free text. */
+  const REASON = (named: string) =>
+    `SPEC_ATTRIBUTE_NOT_REGISTERED: manifest.yaml asks for 1 CWL attribute(s) UBC IAM did not register for 'reading-responses': ${named}. Registered: eduPersonAffiliation, givenName, mail, ubcEduCwlPuid.`
+  const lead: Script = {
+    lead: [commit(), done(), commit(), done()],
+    explaining: [EXPLAINED, EXPLAINED],
+  }
+  async function refuse(h: H, n: number, detail: Record<string, unknown>) {
+    await until(
+      () => h.started.length === n,
+      () => h.did,
+    )
+    h.buildStatus.set(`build-${n}`, 'failed')
+    h.emit('build.failed', { buildId: `build-${n}`, ...detail })
+  }
+
+  it('stops at once after one build, needing them: what the manifest asks that production has not registered', async () => {
+    const { h, id } = await startedRound({
+      script: lead,
+      asked: () => ASKED,
+      registered: () => REGISTERED,
+    })
+    await refuse(h, 1, { code: 'SPEC_ATTRIBUTE_NOT_REGISTERED', reason: REASON('sn') })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'detail', details: ['sn'] })
+    // Never three tries: no retry can pass, so the lead is not asked to fix it, nor anything built again.
+    expect(h.started).toHaveLength(1)
+    expect(h.commits).toHaveLength(1)
+    expect(stepOf(h, id, 'build')?.tries).toBe(0)
+    expect(h.did).toContain(`getSpec ${TOKEN.slice(0, 10)}`)
+    expect(h.did).toContain(`getLaunchRecords ${TOKEN.slice(0, 10)}`)
+  })
+
+  it('never from the free-text reason: a reason naming another detail changes nothing', async () => {
+    const { h, id } = await startedRound({
+      script: lead,
+      asked: () => ASKED,
+      registered: () => REGISTERED,
+    })
+    await refuse(h, 1, {
+      code: 'SPEC_ATTRIBUTE_NOT_REGISTERED',
+      reason: REASON('eduPersonAffiliation, givenName'),
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'detail', details: ['sn'] })
+  })
+
+  it('a manifest read at another commit, or reads refused: it still stops at once, naming no detail', async () => {
+    const elsewhere = await startedRound({
+      script: lead,
+      asked: () => ({ ...ASKED, commitSha: 'f'.repeat(40) }),
+      registered: () => REGISTERED,
+    })
+    await refuse(elsewhere.h, 1, {
+      code: 'SPEC_ATTRIBUTE_NOT_REGISTERED',
+      reason: REASON('sn'),
+    })
+    await untilStatus(elsewhere.h, elsewhere.id, 'needs-you')
+    expect(viewOf(elsewhere.h, elsewhere.id)?.needs).toEqual({
+      kind: 'detail',
+      details: [],
+    })
+
+    const refused = await startedRound({
+      script: lead,
+      asked: () => {
+        throw new PlatformRefusal('FORBIDDEN', 403)
+      },
+      registered: () => REGISTERED,
+    })
+    await refuse(refused.h, 1, {
+      code: 'SPEC_ATTRIBUTE_NOT_REGISTERED',
+      reason: REASON('sn'),
+    })
+    await untilStatus(refused.h, refused.id, 'needs-you')
+    expect(viewOf(refused.h, refused.id)?.needs).toEqual({ kind: 'detail', details: [] })
+    expect(refused.h.started).toHaveLength(1)
+  })
+
+  it('any other failed build is still a try, the lead asked to fix it (Decision 7)', async () => {
+    const { h, id } = await startedRound({
+      script: lead,
+      asked: () => ASKED,
+      registered: () => REGISTERED,
+    })
+    await refuse(h, 1, { code: 'BUILD_FAILED', reason: 'npm ci failed' })
+    await until(
+      () => h.started.length === 2,
+      () => viewOf(h, id),
+    )
+    expect(stepOf(h, id, 'build')?.tries).toBe(1)
+    expect(h.did).not.toContain(`getSpec ${TOKEN.slice(0, 10)}`)
   })
 })

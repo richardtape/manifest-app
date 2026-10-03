@@ -1,12 +1,13 @@
 import type { Conversation, Intake, RoundView, Said } from '@manifest-app/server/progress'
 import { Button, Card } from '@manifest-app/ui'
-import { linkTo } from '../../router.js'
+import { linkTo, navigate } from '../../router.js'
 import { useEffect, useRef, useState } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { words } from '../../words.js'
-import { handOverToken } from '../making/token.js'
+import { handOverToken, mintRequest } from '../making/token.js'
+import { leaveOutWords } from './detail.js'
 import { kindWords } from './kind.js'
 import { SupportReference } from '../reference.js'
 import { StartedBy, type Theirs } from '../change/together.js'
@@ -92,7 +93,12 @@ export function BuildingScreen({
         )
 
   /** Said, with a reference where something failed; a 401 is the session ending, as everywhere. */
-  const failed = (error: unknown, operation: string, retry: () => void) => {
+  const failed = (
+    error: unknown,
+    operation: string,
+    retry: () => void,
+    couldnt: string = words.building.couldntPress,
+  ) => {
     let code: string
     let status: number | null
     if (error instanceof OurRefusal) {
@@ -116,7 +122,7 @@ export function BuildingScreen({
         retry: null,
       })
     setNotice({
-      words: words.building.couldntPress,
+      words: couldnt,
       reference: reportProblem(
         status === null ? { code, operation } : { code, operation, status },
       ),
@@ -149,6 +155,42 @@ export function BuildingScreen({
   }
 
   const stop = () => void send('stop', () => ours.stop(id))
+
+  // F6b DECISION 10: [LEAVE IT OUT]. A new change on the app, seeded with our words and a token of
+  // its own (F5's Talk it through), planned and agreed first; then the stuck one stopped, so the
+  // new one has the app; then the new conversation. A press refused leaves the stuck one as it was.
+  const [leaving, setLeaving] = useState(false)
+  const leaveOut = async () => {
+    const slug = intake.project?.slug
+    const details = round?.needs?.kind === 'detail' ? round.needs.details : []
+    if (projectId === null || slug === undefined) return
+    const said = leaveOutWords(details, conversation.title)
+    setNotice(undefined)
+    setLeaving(true)
+    let step = 'mintToken'
+    try {
+      const minted = await platform.mintToken(
+        projectId,
+        mintRequest(said, 'changing'),
+        crypto.randomUUID(),
+      )
+      step = 'startChange'
+      const made = await ours.startChange(projectId, {
+        words: said,
+        token: minted.secret,
+        tokenId: minted.token.id,
+      })
+      // The new change exists: a Stop that fails leaves it waiting in line, which says so.
+      await ours.stop(id).catch(() => undefined)
+      navigate(
+        `/apps/${encodeURIComponent(slug)}/conversations/${encodeURIComponent(made.id)}`,
+      )
+    } catch (error) {
+      setLeaving(false)
+      failed(error, step, () => void leaveOut(), words.building.detail.couldntLeaveOut)
+    }
+  }
+
   const presses: Presses =
     theirs === null
       ? {
@@ -157,6 +199,8 @@ export function BuildingScreen({
               way === undefined ? ours.build(id) : ours.build(id, way),
             ),
           stop,
+          leaveOut: () => void leaveOut(),
+          leaving,
         }
       : theirs.mayStop
         ? { stop }

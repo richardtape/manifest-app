@@ -212,6 +212,10 @@ function setUp(script: unknown[] = [], options: { keeper?: Keeper } = {}) {
         },
         secrets: { setInSandbox: async () => undefined },
         members: { instructor: async () => ({ puid: 'ins000001', email: 'a@ubc.ca' }) },
+        details: {
+          asked: async () => ({ commitSha: BASE, attributes: [] }),
+          registered: async () => null,
+        },
         stream,
         trace: storeTrace(store),
         now: () => new Date(),

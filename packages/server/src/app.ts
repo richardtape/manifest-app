@@ -31,6 +31,7 @@ import { walkthroughModel } from './model/walkthrough.js'
 import { platformAgentSessions, type AgentSessions } from './platform/agent-sessions.js'
 import { platformAuthoring, type Authoring } from './platform/authoring.js'
 import { platformBuilds } from './platform/builds.js'
+import { platformDetails } from './platform/details.js'
 import { platformInstances } from './platform/instances.js'
 import { platformMembers } from './platform/members.js'
 import { createIntakeKeys, type IntakeKeys } from './platform/intake.js'
@@ -175,6 +176,7 @@ export function buildServer(
         instances: platformInstances(config.platformOrigin),
         secrets: platformSecrets(config.platformOrigin),
         members: platformMembers(config.platformOrigin),
+        details: platformDetails(config.platformOrigin),
         stream: platformStream(config.platformOrigin),
         trace: storeTrace(store),
         now: () => new Date(),

@@ -198,6 +198,12 @@ export type Needs =
   | { kind: 'token' }
   /** A refusal the round cannot answer itself: F2's words for its code. */
   | { kind: 'refused'; code: string }
+  /**
+   * F6b Decision 9: a build refused `SPEC_ATTRIBUTE_NOT_REGISTERED`: the details the built manifest
+   * asks that production has not registered (`[]` when we could not read which). No retry can pass:
+   * UBC's identity team must agree first. Until FE-47, the page offers [Leave it out] alone.
+   */
+  | { kind: 'detail'; details: string[] }
 
 /** Where a round is (F3 Task 8): the whole of it, in every state frame. */
 export interface RoundView {

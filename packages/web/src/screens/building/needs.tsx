@@ -1,9 +1,10 @@
 import type { Needs, RoundView } from '@manifest-app/server/progress'
-import { Button, Card } from '@manifest-app/ui'
+import { Button, Card, StateChip } from '@manifest-app/ui'
 import { Children, type ReactNode } from 'react'
 import { words } from '../../words.js'
 import { monthResetsAt, whenWords } from '../describe/model.js'
 import { SupportReference, useReported } from '../reference.js'
+import { detailWords } from './detail.js'
 import { ADMIN, money, SIGN_IN_REFUSED } from './model.js'
 
 /**
@@ -16,6 +17,9 @@ export interface Presses {
   build?: (way?: 'different') => void
   /** Absent unless it is theirs, or they own the app (F6b D3). */
   stop?: () => void
+  /** F6b Decision 10: [Leave it out], their own alone; `leaving` while its change starts. */
+  leaveOut?: () => void
+  leaving?: boolean
 }
 
 /** `plain` is still: a Stop they chose (Rich), which is neither a problem nor a wait. */
@@ -215,6 +219,26 @@ function needCard(
       return (
         <NeedsCard tone="waiting" said={said.cannot(needs.what)} reference={reference} />
       )
+    case 'detail': {
+      // F6b Decision 9: UBC's identity team must agree first; until FE-47, nothing pretends to ask.
+      const d = words.building.detail
+      return (
+        <NeedsCard
+          tone="attention"
+          first={d.needs(detailWords(needs.details))}
+          said={d.cannotAskYet}
+          reference={null}
+        >
+          {presses.leaving === true ? (
+            <StateChip state="working" label={d.leavingOut} />
+          ) : presses.leaveOut === undefined ? null : (
+            <Button kind="primary" onClick={presses.leaveOut}>
+              {d.leaveOut}
+            </Button>
+          )}
+        </NeedsCard>
+      )
+    }
     case 'refused':
       if (needs.code === SIGN_IN_REFUSED)
         return (
