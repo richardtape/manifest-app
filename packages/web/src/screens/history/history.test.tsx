@@ -56,6 +56,26 @@ describe('the history page', () => {
     expect(machineryIn(page)).toEqual([])
   })
 
+  it('a gap whose end is itself a line (minors m65): the gap below that line, not above it', async () => {
+    const answer = {
+      from: '2026-09-18T16:00:00.000Z',
+      gaps: [{ from: '2026-10-02T16:00:00.000Z', to: '2026-10-05T16:00:00.000Z' }],
+      lines: [
+        line('c', '2026-10-05T16:00:00.000Z'),
+        line('b', '2026-10-01T18:00:00.000Z'),
+      ],
+    }
+    render(
+      <History ours={oursWith(async () => answer)} project={project} timeZone={TZ} />,
+    )
+    await screen.findByRole('heading', { level: 1, name: h.title })
+    const page = document.body.textContent ?? ''
+    const gap = h.gap('2 October', '5 October')
+    // The line at the gap's end is the first one heard again: newer than the gap, so above it.
+    expect(page.indexOf('5 October')).toBeLessThan(page.indexOf(gap))
+    expect(page.indexOf(gap)).toBeLessThan(page.indexOf('1 October'))
+  })
+
   it('nothing held yet: it says so, with no From', async () => {
     render(
       <History

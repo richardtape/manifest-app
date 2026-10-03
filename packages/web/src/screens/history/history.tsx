@@ -18,14 +18,15 @@ type Piece =
   { kind: 'day'; day: string; lines: Line[] } | { kind: 'gap'; from: string; to: string }
 
 /**
- * Each gap goes where it happened: before the first line older than its end. Lines and gaps both
- * arrive from our server, newest lines first.
+ * Each gap goes where it happened: before the first line older than its end. A line AT its end is
+ * the first one heard again, so it stays above the gap (minors m65). Lines and gaps both arrive
+ * from our server, newest lines first.
  */
 function piecesOf(history: Read, timeZone: string | undefined): Piece[] {
   const gaps = [...history.gaps].sort((a, b) => Date.parse(b.to) - Date.parse(a.to))
   const pieces: Piece[] = []
   const gapsUntil = (at: number) => {
-    while (gaps.length > 0 && Date.parse(gaps[0]!.to) >= at) {
+    while (gaps.length > 0 && Date.parse(gaps[0]!.to) > at) {
       const gap = gaps.shift()!
       pieces.push({ kind: 'gap', from: gap.from, to: gap.to })
     }
