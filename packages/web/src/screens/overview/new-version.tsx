@@ -69,6 +69,8 @@ export function NewVersion({
   onChanged: () => void
 }) {
   const [reading, setReading] = useState<Reading | null>(null)
+  /** The gate refused the press, and the checklist is being read again (minors m102). */
+  const [gated, setGated] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const [held, setHeld] = useState(false)
   const heading = useId()
@@ -105,7 +107,11 @@ export function NewVersion({
       return { readiness, trying, students, decided }
     }
     read().then(
-      (value) => live && setReading(value),
+      (value) => {
+        if (!live) return
+        setReading(value)
+        setGated(false)
+      },
       (error: unknown) => {
         // A reading lost loses the panel, never the page: the Overview stands.
         if (live && refusalOf(error).kind === 'signed-out') expire()
@@ -119,12 +125,10 @@ export function NewVersion({
 
   const readAgain = useCallback(() => setAttempt((n) => n + 1), [])
   const onHold = useCallback((hold: boolean) => setHeld(hold), [])
-  // The gate said it is not ready: no press while the checklist is read again, as Going live
-  // (minors m102).
+  // The gate said it is not ready: nothing to press, and nothing said of what stands, until the
+  // checklist is read again (minors m102): the old reading is the one the gate just refused.
   const onGate = useCallback(() => {
-    setReading((r) =>
-      r === null ? r : { ...r, readiness: { ...r.readiness, ready: false } },
-    )
+    setGated(true)
     setAttempt((n) => n + 1)
   }, [])
 
@@ -164,51 +168,50 @@ export function NewVersion({
   const unmet = readiness.items.filter(
     (i) => CLOCK_IDS.includes(i.id) && i.blocking && i.state !== 'met',
   )
-  const what =
-    held || (readiness.ready && owner) ? (
-      press
-    ) : readiness.ready ? (
-      theirs
-    ) : approval !== undefined && approvalUnmet(readiness) ? (
-      <>
-        {readiness.reescalated ? (
-          <p className="body-lead">
-            {/* The platform's "no baseline" names none: still a look, never "straight" (M9). */}
-            {readiness.sensitiveFields.length === 0
-              ? k.look(k.unknown)
-              : kindWords(readiness.sensitiveFields)}
-          </p>
-        ) : null}
-        {owner ? (
-          <SignOff
-            row={signOffRow(approval, true, reading.decided, timeZone, now())}
-            decided={reading.decided}
-            candidate={candidate}
-            platform={platform}
-            ours={ours}
-            project={project}
-            expire={expire}
-            onAsked={readAgain}
-          />
-        ) : (
-          theirs
-        )}
-      </>
-    ) : (
-      <>
-        <p className="body-lead">{nv.unmet}</p>
-        {unmet.map((i) => (
-          <p key={i.id} className="body-lead">
-            {nv.clocks[i.id]}
-          </p>
+  const what = gated ? null : held || (readiness.ready && owner) ? (
+    press
+  ) : readiness.ready ? (
+    theirs
+  ) : approval !== undefined && approvalUnmet(readiness) ? (
+    <>
+      {readiness.reescalated ? (
+        <p className="body-lead">
+          {/* The platform's "no baseline" names none: still a look, never "straight" (M9). */}
+          {readiness.sensitiveFields.length === 0
+            ? k.look(k.unknown)
+            : kindWords(readiness.sensitiveFields)}
+        </p>
+      ) : null}
+      {owner ? (
+        <SignOff
+          row={signOffRow(approval, true, reading.decided, timeZone, now())}
+          decided={reading.decided}
+          candidate={candidate}
+          platform={platform}
+          ours={ours}
+          project={project}
+          expire={expire}
+          onAsked={readAgain}
+        />
+      ) : (
+        theirs
+      )}
+    </>
+  ) : (
+    <>
+      <p className="body-lead">{nv.unmet}</p>
+      {unmet.map((i) => (
+        <p key={i.id} className="body-lead">
+          {nv.clocks[i.id]}
+        </p>
+      ))}
+      {rowsOf(readiness, { hostname: production.hostname, timeZone, now: now() })
+        .filter((row) => row.state !== 'steady' && !row.apart)
+        .map((row) => (
+          <RowView key={row.id} row={{ ...row, action: null }} />
         ))}
-        {rowsOf(readiness, { hostname: production.hostname, timeZone, now: now() })
-          .filter((row) => row.state !== 'steady' && !row.apart)
-          .map((row) => (
-            <RowView key={row.id} row={{ ...row, action: null }} />
-          ))}
-      </>
-    )
+    </>
+  )
   return (
     <section className="overview__new-version" aria-labelledby={heading}>
       <h2 className="heading" id={heading}>
