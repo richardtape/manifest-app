@@ -30,5 +30,9 @@ asks through the edge; every script's session check exact; proved on 7100 headle
 the same note's *Part two*; Rich's click on `app.` in edge mode is owed at F5b sitting 1); **part three, the platform's sitting
 4, adopted** (manifest `0d5a743`, Task 13, and `5effd5e`, F8: *Agents* names every maker by `Token.mintedBy` and our server
 answers none; [Revoke] without its reject step; `pending_action.expired` held, a question's wait capped at its token's end where
-we know it; m62 no longer applies; overnight, mock mode, the same note's *Part three*). **The adoption is complete**; m129 and
-m130 are Rich's.
+we know it; m62 no longer applies; overnight, mock mode, the same note's *Part three*); **part four, the platform's Task 10,
+adopted** (2026-10-03, `manifest-app-5a`, `e8072e2`, at Rich's yes to question 10 and his words: an administrator who is not a
+member named in *what happened* and the people emails, with their reason; store version 8; the same note's *Part four*).
+**The adoption is complete.** m129 built in Rich's words (`937f99f`, and the band's m132); m130 filed as **FE-53**, with FE-5
+after the faculty-ready plan; m131 closes with it. **A fourth minors round** the same day (`minors.md`'s dated entry). **F5b
+sitting 1** is pre-authorised by Rich, after the platform's faculty-ready sitting 7, at `manifest-94`'s word that 7100 is free.
