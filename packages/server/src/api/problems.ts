@@ -38,20 +38,28 @@ export function problem(
 }
 
 /** What a browser may report, and nothing else: an unknown key (a `message`) is refused. */
-const KEYS = new Set(['reference', 'code', 'operation', 'status', 'at'])
+const KEYS = new Set(['reference', 'code', 'operation', 'status', 'at', 'requestId'])
 const REFERENCE = /^[0-9A-F]{4}-[0-9A-F]{4}$/
 const CODE = /^[A-Z][A-Z0-9_]{0,63}$/
 /** The platform's operationIds: `startIntakeSession`. */
 const OPERATION = /^[a-z][A-Za-z0-9]{0,63}$/
 const AT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?Z$/
+/**
+ * FE-30 (contract 1.6.0): the platform's own id for the request the browser was refused, a UUID.
+ * Kept beside our reference, so the reference a person quotes finds the platform's line too.
+ */
+const REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-type Report = Pick<Problem, 'reference' | 'code' | 'at' | 'operation' | 'status'>
+type Report = Pick<
+  Problem,
+  'reference' | 'code' | 'at' | 'operation' | 'status' | 'platformRequestId'
+>
 
 function reportOf(body: unknown): Report | undefined {
   if (typeof body !== 'object' || body === null || Array.isArray(body)) return undefined
   const b = body as Record<string, unknown>
   if (!Object.keys(b).every((key) => KEYS.has(key))) return undefined
-  const { reference, code, at, operation = null, status = null } = b
+  const { reference, code, at, operation = null, status = null, requestId = null } = b
   if (typeof reference !== 'string' || !REFERENCE.test(reference)) return undefined
   if (typeof code !== 'string' || !CODE.test(code)) return undefined
   if (typeof at !== 'string' || !AT.test(at) || Number.isNaN(Date.parse(at)))
@@ -66,7 +74,12 @@ function reportOf(body: unknown): Report | undefined {
       status > 599)
   )
     return undefined
-  return { reference, code, at, operation, status }
+  if (
+    requestId !== null &&
+    (typeof requestId !== 'string' || !REQUEST_ID.test(requestId))
+  )
+    return undefined
+  return { reference, code, at, operation, status, platformRequestId: requestId }
 }
 
 const INVALID = { error: { code: 'PROBLEM_INVALID' } }
@@ -98,7 +111,6 @@ export function registerProblems(
         where: 'browser',
         personId: who.person?.id ?? null,
         conversationId: null,
-        platformRequestId: null,
       })
       return reply.code(204).send()
     },

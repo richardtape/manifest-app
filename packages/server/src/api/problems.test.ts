@@ -58,6 +58,9 @@ const GOOD = {
   at: '2026-09-27T20:31:00.000Z',
 }
 
+/** The platform's own id for the request (FE-30, contract 1.6.0): the mock's, as it answered. */
+const REQUEST_ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+
 async function report(
   config: Config,
   store: Store,
@@ -140,6 +143,19 @@ describe('POST /api/problems: what the browser met', () => {
     ])
   })
 
+  it("FE-30: the platform's request id is kept beside our reference, exactly as reported", async () => {
+    const { store, file, config } = setUp()
+    const response = await report(config, store, { ...GOOD, requestId: REQUEST_ID })
+    expect(response.statusCode).toBe(204)
+    expect(rows(file)).toEqual([
+      expect.objectContaining({
+        reference: '7F3A-9C21',
+        place: 'browser',
+        platform_request_id: REQUEST_ID,
+      }),
+    ])
+  })
+
   it('a report from nobody is kept too: a person who cannot sign in has problems', async () => {
     const { store, file, config } = setUp()
     const response = await report(
@@ -167,6 +183,9 @@ describe('POST /api/problems: what the browser met', () => {
     ['a status that is not a number', { ...GOOD, status: '409' }],
     ['a time that is not a time', { ...GOOD, at: 'yesterday' }],
     ['an operation that is prose', { ...GOOD, operation: 'we tried to start it' }],
+    ['a request id that is not a UUID', { ...GOOD, requestId: 'b5ae64cb' }],
+    ['a request id that is prose', { ...GOOD, requestId: `${REQUEST_ID} was refused` }],
+    ['a request id that is not a string', { ...GOOD, requestId: 42 }],
     // A good report padded with whitespace: valid JSON, and only its size is wrong.
     ['a body over 1 KB', JSON.stringify(GOOD) + ' '.repeat(1100)],
     ['not JSON', '{"reference":'],
