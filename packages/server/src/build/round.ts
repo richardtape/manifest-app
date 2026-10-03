@@ -1061,7 +1061,8 @@ export function createRounds(deps: RoundDeps): Rounds {
    * message of theirs it read this round, and not yet noted, is added to docs/plan.md's Changes in
    * their own words, in one commit of ours (its dry run first) with no model, before the build: so
    * the file stays the agreement, and the build holds it. A file that no longer reads back as ours
-   * is left as it is.
+   * is left as it is, and their words are not marked noted: a later round adds them once it reads
+   * back again (minors m28).
    */
   async function noteTheirWords(live: Live) {
     const d = detail(live)
@@ -1075,7 +1076,7 @@ export function createRounds(deps: RoundDeps): Rounds {
     for (let attempt = 1; ; attempt++) {
       const file = await source.file(live.token, live.projectId, PLAN_FILE, live.base)
       const plan = 'content' in file ? readPlanMarkdown(file.content) : null
-      if (plan === null) break
+      if (plan === null) return
       const at = dayOf(deps.now())
       const markdown = planMarkdown(
         project?.name ?? plan.title,

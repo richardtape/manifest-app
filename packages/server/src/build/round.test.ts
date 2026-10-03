@@ -2673,6 +2673,24 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     ])
   })
 
+  it('a docs/plan.md that no longer reads back as ours (minors m28): left as it is, and their words not marked noted, so a later round can still add them', async () => {
+    const heldCommit = held<unknown>()
+    const { h, id, conversation } = started({
+      script: { lead: [read('server.js'), () => heldCommit.promise, done()] },
+      files: { 'docs/plan.md': '# Ours no more\n\nSomeone wrote this by hand.\n' },
+      autoBuild: true,
+    })
+    await until(
+      () => leadPrompts(h).length === 2,
+      () => h.did,
+    )
+    h.rounds.message(conversation, 'Show the count beside each name, please.')
+    heldCommit.resolve(commit())
+    await untilStatus(h, id, 'done')
+    expect(h.commits).toHaveLength(1)
+    expect(h.store.latestRun(id)?.detail?.noted ?? 0).toBe(0)
+  })
+
   it('no message read, no commit of ours', async () => {
     const { h, id } = started({
       script: STRAIGHT,
