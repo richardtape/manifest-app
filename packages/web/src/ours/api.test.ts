@@ -55,6 +55,28 @@ describe('reportProblem (Decision 11)', () => {
     expect(new Date(String(body['at'])).toISOString()).toBe(body['at'])
   })
 
+  it("FE-30: the platform's request id, when the problem has one, is sent as requestId", () => {
+    const fetch = vi.fn(async () => new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetch)
+    reportProblem({
+      code: 'INTAKE_DAILY_LIMIT_REACHED',
+      operation: 'startIntakeSession',
+      status: 409,
+      requestId: '1f758a00-2575-409b-bf48-dfbc4218b118',
+    })
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>
+    expect(Object.keys(body).sort()).toEqual([
+      'at',
+      'code',
+      'operation',
+      'reference',
+      'requestId',
+      'status',
+    ])
+    expect(body['requestId']).toBe('1f758a00-2575-409b-bf48-dfbc4218b118')
+  })
+
   it('without an operation or a status, sends nulls', () => {
     const fetch = vi.fn(async () => new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetch)

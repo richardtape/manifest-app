@@ -1,6 +1,6 @@
 import { Button, Card } from '@manifest-app/ui'
 import { useEffect } from 'react'
-import type { Refusal } from '../platform/refusal.js'
+import { reported, type Refusal } from '../platform/refusal.js'
 import { words } from '../words.js'
 import { SupportReference, useReported } from './reference.js'
 
@@ -11,7 +11,8 @@ export type Trouble = Exclude<Refusal, { kind: 'signed-out' }>
  * A READ THAT FAILED, IN OUR WORDS. "Can't reach" only when nothing answered (Review Focus 2);
  * any other refusal is "something went wrong on our side", and its code goes to the console
  * for whoever is looking, never to the page (Review Focus 5). Both offer Try again. Each
- * carries a support reference, reported once (F2 Decision 11).
+ * carries a support reference, reported once (F2 Decision 11), and the report and the console
+ * line keep the platform's own request id beside it (FE-30): never on the page (C3).
  */
 export function TroubleNotice({
   trouble,
@@ -22,14 +23,14 @@ export function TroubleNotice({
 }) {
   useEffect(() => {
     if (trouble.kind === 'refused')
-      console.warn(`Manifest refused a read: ${trouble.code} (${trouble.status})`)
+      console.warn(
+        `Manifest refused a read: ${trouble.code} (${trouble.status})${
+          trouble.requestId === undefined ? '' : `, request ${trouble.requestId}`
+        }`,
+      )
   }, [trouble])
   const w = trouble.kind === 'unreachable' ? words.unreachable : words.refused
-  const reference = useReported(
-    trouble.kind === 'refused'
-      ? { code: trouble.code, status: trouble.status }
-      : { code: 'UNREACHABLE' },
-  )
+  const reference = useReported(reported(trouble))
   return (
     <div role="alert">
       <Card>

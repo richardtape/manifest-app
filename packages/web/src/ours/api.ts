@@ -42,8 +42,9 @@ export function newReference(): string {
  * A PROBLEM THE PERSON IS SHOWN, REPORTED (Decision 11, Rich). The reference is made here
  * and answered at once, for the notice to show; the report goes without being waited on,
  * and `keepalive` lets it outlive the page. Nothing here can throw into a screen, and a
- * report that fails is lost: the notice is the same either way. Only a code, an operation
- * and a status are sent, never a platform message, which can carry machinery.
+ * report that fails is lost: the notice is the same either way. Only a code, an operation, a
+ * status and the platform's request id (FE-30) are sent, never a platform message, which can
+ * carry machinery.
  */
 export function reportProblem(problem: {
   code: string
@@ -51,6 +52,8 @@ export function reportProblem(problem: {
   status?: number
   /** Made beforehand, so a notice can show it on its first render. The server ignores a repeat. */
   reference?: string
+  /** FE-30: the platform's id for the request it refused, kept beside our reference. */
+  requestId?: string
 }): string {
   const reference = problem.reference ?? newReference()
   const body = JSON.stringify({
@@ -58,6 +61,7 @@ export function reportProblem(problem: {
     code: problem.code,
     operation: problem.operation ?? null,
     status: problem.status ?? null,
+    ...(problem.requestId === undefined ? {} : { requestId: problem.requestId }),
     at: new Date().toISOString(),
   })
   try {

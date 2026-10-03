@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Step } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, reported } from '../../platform/refusal.js'
 import { countProp, LIMITS, tooLong } from '../limits.js'
 import { words } from '../../words.js'
 import { monthResetsAt, whenWords } from '../describe/model.js'
@@ -184,16 +184,11 @@ export function PlanScreen({
   /** Said, with its reference, and reported (Decision 11). */
   const show = (
     said: Said,
-    problem: { code: string; operation: string; status: number | null },
+    problem: { code: string; operation: string; status?: number; requestId?: string },
     retry: () => void,
   ) => {
     setPressed(false)
-    const { status, ...rest } = problem
-    setNotice({
-      ...said,
-      retry,
-      reference: reportProblem(status === null ? rest : { ...rest, status }),
-    })
+    setNotice({ ...said, retry, reference: reportProblem(problem) })
   }
 
   /** What our server or the platform refused, outside the stream; `retry` does it again. */
@@ -203,18 +198,20 @@ export function PlanScreen({
     during: 'write' | 'agree' | 'leave',
     retry: () => void,
   ) => {
-    let code: string
-    let status: number | null
+    let report: ReturnType<typeof reported>
     if (error instanceof OurRefusal) {
       if (error.status === 401) return expire()
-      code = error.code
-      status = error.status
+      report =
+        error.status === null
+          ? { code: error.code }
+          : { code: error.code, status: error.status }
     } else {
       const refusal = refusalOf(error)
       if (refusal.kind === 'signed-out') return expire()
-      code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
-      status = refusal.kind === 'refused' ? refusal.status : null
+      // The platform's request id rides the report (FE-30).
+      report = reported(refusal)
     }
+    const { code } = report
     // F6 Task 11: the app switched off (a new token refused): said in words, never a problem.
     if (code === 'PROJECT_ARCHIVED') {
       setPressed(false)
@@ -226,7 +223,7 @@ export function PlanScreen({
         : during === 'leave'
           ? COULDNT_LEAVE
           : planRefused(code, undefined, now(), timeZone)
-    show(said, { code, operation, status }, retry)
+    show(said, { ...report, operation }, retry)
   }
 
   /** A new token for our server, then the same again: once. */

@@ -9,7 +9,17 @@ import { ManifestApiError } from '@manifest/contract'
 export type Refusal =
   | { kind: 'signed-out' }
   | { kind: 'unreachable' }
-  | { kind: 'refused'; code: string; status: number }
+  | {
+      kind: 'refused'
+      code: string
+      status: number
+      /**
+       * FE-30 (contract 1.6.0): the platform's own id for the request, when it gave one: kept in
+       * our report beside the reference the person is shown, so that reference finds the
+       * platform's line too. Never shown itself (C3).
+       */
+      requestId?: string
+    }
 
 /** The edge answers these with no envelope when the control plane is down (F1 M7). */
 const GATEWAY = [502, 503, 504]
@@ -20,7 +30,12 @@ export function refusalOf(error: unknown): Refusal {
     if (error.status === 401) return { kind: 'signed-out' }
     if (error.code === 'UNPARSEABLE' && GATEWAY.includes(error.status))
       return { kind: 'unreachable' }
-    return { kind: 'refused', code: error.code, status: error.status }
+    return {
+      kind: 'refused',
+      code: error.code,
+      status: error.status,
+      ...(error.requestId === null ? {} : { requestId: error.requestId }),
+    }
   }
   // `fetch` rejects with a TypeError when nothing answers: a closed port, no network.
   if (error instanceof TypeError) return { kind: 'unreachable' }
@@ -31,4 +46,23 @@ export function refusalOf(error: unknown): Refusal {
   )
     return { kind: 'unreachable' }
   return { kind: 'refused', code: 'UNEXPECTED', status: 0 }
+}
+
+/**
+ * A REFUSAL, AS ITS REPORT CARRIES IT (Decision 11): its code and status, and the platform's own
+ * request id when it gave one (FE-30), never its message. Nothing answering is `UNREACHABLE`; a
+ * status that is no HTTP status (`UNEXPECTED`'s 0) is left out, or our server refuses the report.
+ */
+export function reported(refusal: Exclude<Refusal, { kind: 'signed-out' }>): {
+  code: string
+  status?: number
+  requestId?: string
+} {
+  if (refusal.kind === 'unreachable') return { code: 'UNREACHABLE' }
+  const { code, status, requestId } = refusal
+  return {
+    code,
+    ...(status >= 100 && status <= 599 ? { status } : {}),
+    ...(requestId === undefined ? {} : { requestId }),
+  }
 }

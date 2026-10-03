@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { OurRefusal, reportProblem } from '../../ours/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, reported } from '../../platform/refusal.js'
 
 /**
  * WHAT A PRESS MET, FOR THE PERSON (Decision 11): the session ending is the shell's to say
@@ -17,25 +17,24 @@ export type Failed =
 export type Notice = Exclude<Failed, { expired: true }>
 
 export function pressFailed(error: unknown, operation: string): Failed {
-  let code: string
-  let status: number | null
+  let report: ReturnType<typeof reported>
   if (error instanceof OurRefusal) {
     if (error.status === 401) return { expired: true }
-    code = error.code
-    status = error.status
+    report =
+      error.status === null
+        ? { code: error.code }
+        : { code: error.code, status: error.status }
   } else {
     const refusal = refusalOf(error)
     if (refusal.kind === 'signed-out') return { expired: true }
-    code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
-    status = refusal.kind === 'refused' ? refusal.status : null
+    // The platform's request id rides the report (FE-30).
+    report = reported(refusal)
   }
-  if (code === 'PROJECT_ARCHIVED') return { expired: false, archived: true }
+  if (report.code === 'PROJECT_ARCHIVED') return { expired: false, archived: true }
   return {
     expired: false,
     archived: false,
-    reference: reportProblem(
-      status === null ? { code, operation } : { code, operation, status },
-    ),
+    reference: reportProblem({ ...report, operation }),
   }
 }
 

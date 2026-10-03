@@ -9,7 +9,7 @@ import {
   READ_TIMEOUT_MS,
   REHEARSAL_TIMEOUT_MS,
 } from './api.js'
-import { refusalOf } from './refusal.js'
+import { refusalOf, reported } from './refusal.js'
 
 /**
  * THE ONE PLACE THAT CALLS THE PLATFORM, against an in-process manifest-mock (the
@@ -17,8 +17,11 @@ import { refusalOf } from './refusal.js'
  * Origin as headers; in a browser it sends neither, because the browser does. That is why
  * this file runs in `node` and never under jsdom (sitting 2's note).
  */
-async function withMock<T>(fn: (origin: string) => Promise<T>): Promise<T> {
-  const server = createMockServer({ scanSilenceMs: 50 })
+async function withMock<T>(
+  fn: (origin: string) => Promise<T>,
+  options: { intake?: 'daily-limit' | 'budget-spent' } = {},
+): Promise<T> {
+  const server = createMockServer({ scanSilenceMs: 50, ...options })
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const { port } = server.address() as { port: number }
   try {
@@ -39,6 +42,10 @@ async function thrown(call: () => Promise<unknown>): Promise<unknown> {
   }
   throw new Error('the call did not throw')
 }
+
+/** The platform's own id for a request (FE-30, contract 1.6.0). */
+const REQUEST_ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 /** A refusal whose message carries machinery we must never show (Review Focus 5). */
 const envelopeWith = (code: string) =>
@@ -631,6 +638,76 @@ describe('refusalOf: by kind and code, never by message', () => {
     const r = refusalOf(new ManifestApiError(409, envelopeWith('SOMETHING_NEW'), 'x'))
     expect(Object.keys(r)).toEqual(['kind', 'code', 'status'])
     expect(JSON.stringify(r)).not.toMatch(/sha256|§|D23/)
+  })
+
+  it("FE-30: a refusal at the mock carries the platform's request id, a UUID", async () => {
+    await withMock(
+      async (origin) => {
+        const error = await thrown(() =>
+          platform(origin).startIntakeSession('describe-0002'),
+        )
+        const r = refusalOf(error)
+        expect(r).toMatchObject({
+          kind: 'refused',
+          code: 'INTAKE_DAILY_LIMIT_REACHED',
+          status: 409,
+        })
+        const id = r.kind === 'refused' ? r.requestId : undefined
+        expect(id).toMatch(UUID)
+        expect(id).toBe((error as ManifestApiError).requestId)
+      },
+      { intake: 'daily-limit' },
+    )
+  })
+
+  it("FE-30: a refusal carries the envelope's request id, a UUID, and still no message", () => {
+    const envelope = {
+      error: { ...envelopeWith('SOMETHING_NEW').error, requestId: REQUEST_ID },
+    } as ErrorEnvelope
+    const r = refusalOf(new ManifestApiError(409, envelope, 'x'))
+    expect(r).toEqual({
+      kind: 'refused',
+      code: 'SOMETHING_NEW',
+      status: 409,
+      requestId: REQUEST_ID,
+    })
+    expect(JSON.stringify(r)).not.toMatch(/sha256|§|D23/)
+  })
+
+  it('FE-30: an answer with no envelope carries the header’s id; with neither, none', () => {
+    expect(refusalOf(new ManifestApiError(500, undefined, 'x', REQUEST_ID))).toEqual({
+      kind: 'refused',
+      code: 'UNPARSEABLE',
+      status: 500,
+      requestId: REQUEST_ID,
+    })
+    expect(Object.keys(refusalOf(new ManifestApiError(500, undefined, 'x')))).toEqual([
+      'kind',
+      'code',
+      'status',
+    ])
+  })
+
+  it.each([
+    [
+      'a refusal with the platform’s id',
+      { kind: 'refused', code: 'INTERNAL', status: 500, requestId: REQUEST_ID } as const,
+      { code: 'INTERNAL', status: 500, requestId: REQUEST_ID },
+    ],
+    [
+      'a refusal without one',
+      { kind: 'refused', code: 'FORBIDDEN', status: 403 } as const,
+      { code: 'FORBIDDEN', status: 403 },
+    ],
+    // Status 0 is no HTTP status: our server refuses a report that sends it (api/problems.ts).
+    [
+      'something unexpected (status 0)',
+      { kind: 'refused', code: 'UNEXPECTED', status: 0 } as const,
+      { code: 'UNEXPECTED' },
+    ],
+    ['nothing answering', { kind: 'unreachable' } as const, { code: 'UNREACHABLE' }],
+  ])('reported(%s): what its report carries, exactly', (_, refusal, report) => {
+    expect(reported(refusal)).toEqual(report)
   })
 
   it('anything else is refused as unexpected, never thrown on', () => {

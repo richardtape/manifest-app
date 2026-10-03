@@ -4,7 +4,7 @@ import { linkTo, navigate } from '../../router.js'
 import { useEffect, useRef, useState } from 'react'
 import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, reported } from '../../platform/refusal.js'
 import { words } from '../../words.js'
 import { handOverToken, mintRequest } from '../making/token.js'
 import { leaveOutWords } from './detail.js'
@@ -100,20 +100,22 @@ export function BuildingScreen({
     retry: () => void,
     couldnt: string = words.building.couldntPress,
   ) => {
-    let code: string
-    let status: number | null
+    let report: ReturnType<typeof reported>
     if (error instanceof OurRefusal) {
       if (error.status === 401) return expire()
       if (error.code === 'CONVERSATION_BUSY')
         return setNotice({ words: words.building.busy, reference: null, retry })
-      code = error.code
-      status = error.status
+      report =
+        error.status === null
+          ? { code: error.code }
+          : { code: error.code, status: error.status }
     } else {
       const refusal = refusalOf(error)
       if (refusal.kind === 'signed-out') return expire()
-      code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
-      status = refusal.kind === 'refused' ? refusal.status : null
+      // The platform's request id rides the report (FE-30).
+      report = reported(refusal)
     }
+    const { code } = report
     // F6 Task 11: the app switched off (a new token refused): said in words, never a problem,
     // and nothing to try again until it is switched back on.
     if (code === 'PROJECT_ARCHIVED')
@@ -124,9 +126,7 @@ export function BuildingScreen({
       })
     setNotice({
       words: couldnt,
-      reference: reportProblem(
-        status === null ? { code, operation } : { code, operation, status },
-      ),
+      reference: reportProblem({ ...report, operation }),
       retry,
     })
   }

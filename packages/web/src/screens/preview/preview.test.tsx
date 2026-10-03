@@ -309,6 +309,39 @@ describe("an app's own pages", () => {
     expect(await screen.findByText(words.expired.body)).toBeTruthy()
   })
 
+  it("FE-30: a refused read's report and console line carry the platform's request id; the page never shows it", async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const id = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    await open(
+      `/apps/${SLUG}/preview`,
+      stage(A_FAILED_ATTEMPT, {
+        listEnvironments: () =>
+          new ManifestApiError(
+            500,
+            { error: { code: 'INTERNAL', message: 'x', requestId: id } } as never,
+            'test',
+          ),
+      }),
+    )
+    expect(await screen.findByText(words.refused.body)).toBeTruthy()
+    const reference = /quote ([0-9A-F]{4}-[0-9A-F]{4})\./.exec(
+      document.body.textContent ?? '',
+    )?.[1]
+    await waitFor(() =>
+      expect(reports).toEqual([
+        expect.objectContaining({
+          reference,
+          code: 'INTERNAL',
+          status: 500,
+          requestId: id,
+        }),
+      ]),
+    )
+    expect(warn.mock.calls.map((call) => String(call[0])).join('\n')).toContain(id)
+    expect(document.body.textContent).not.toContain(id)
+    vi.restoreAllMocks()
+  })
+
   it('a refused read shows our words with a reference, reported once, and Try again reads again', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     let refusing = true

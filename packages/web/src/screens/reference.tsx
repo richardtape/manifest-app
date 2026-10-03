@@ -13,15 +13,18 @@ export function useReported(problem: {
   code: string
   operation?: string
   status?: number
+  /** FE-30: the platform's id for the request it refused, kept beside the reference. */
+  requestId?: string
 }): string {
   const [reference] = useState(newReference)
-  const { code, operation, status } = problem
+  const { code, operation, status, requestId } = problem
   useEffect(() => {
     reportProblem({
       code,
       reference,
       ...(operation === undefined ? {} : { operation }),
       ...(status === undefined ? {} : { status }),
+      ...(requestId === undefined ? {} : { requestId }),
     })
     // Once per reference: a notice's problem is the one it was made for.
   }, [reference])

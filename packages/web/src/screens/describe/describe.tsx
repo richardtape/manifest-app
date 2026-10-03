@@ -6,7 +6,7 @@ import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import { useConversation } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { NOT_OPEN_CODE } from '../../not-open.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, reported } from '../../platform/refusal.js'
 import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { BuildingScreen } from '../building/building.js'
@@ -164,7 +164,7 @@ export function Describing({
   /** Shown, with its reference, and reported. */
   const show = (
     said: { words: string; then: Notice['then'] },
-    problem: { code: string; operation: string; status?: number },
+    problem: { code: string; operation: string; status?: number; requestId?: string },
   ) => {
     unpress()
     setNotice({ ...said, reference: reportProblem(problem) })
@@ -195,13 +195,10 @@ export function Describing({
     if (refusal.kind === 'signed-out') return void expire()
     if (refusal.kind === 'refused' && refusal.code === NOT_OPEN_CODE)
       return void unpress()
-    const code = refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE'
-    const said = intakeRefused(code, now(), timeZone)
-    show(said, {
-      code,
-      operation,
-      ...(refusal.kind === 'refused' ? { status: refusal.status } : {}),
-    })
+    // The platform's request id rides the report (FE-30).
+    const report = reported(refusal)
+    const said = intakeRefused(report.code, now(), timeZone)
+    show(said, { ...report, operation })
     return said.then
   }
 

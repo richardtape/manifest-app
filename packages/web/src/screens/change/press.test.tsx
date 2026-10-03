@@ -44,6 +44,24 @@ describe('pressFailed (F6 Task 11)', () => {
     expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1)
   })
 
+  it("FE-30: the report keeps the platform's request id beside the reference it answers", () => {
+    const id = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const error = new ManifestApiError(
+      409,
+      { error: { code: 'RELEASE_NOT_STAGED', message: 'x', requestId: id } } as never,
+      'test',
+    )
+    const said = pressFailed(error, 'deploy')
+    const [, init] = vi.mocked(fetch).mock.calls[0] as unknown as [string, RequestInit]
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      reference: said.expired || said.archived ? undefined : said.reference,
+      code: 'RELEASE_NOT_STAGED',
+      operation: 'deploy',
+      status: 409,
+      requestId: id,
+    })
+  })
+
   it('the session ending is the shell’s', () => {
     expect(pressFailed(refused(401, 'UNAUTHENTICATED'), 'deploy')).toEqual({
       expired: true,

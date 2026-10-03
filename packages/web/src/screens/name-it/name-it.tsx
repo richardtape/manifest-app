@@ -13,7 +13,7 @@ import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
 import type { Step } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { NOT_OPEN_CODE } from '../../not-open.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, reported } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
 import {
@@ -290,11 +290,7 @@ export function NameIt({
           if (refusal.kind === 'signed-out') return expire()
           setCheckFailed({
             slug,
-            reference: reportProblem({
-              code: refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE',
-              operation: 'checkSlug',
-              ...(refusal.kind === 'refused' ? { status: refusal.status } : {}),
-            }),
+            reference: reportProblem({ ...reported(refusal), operation: 'checkSlug' }),
           })
         },
       )
@@ -350,7 +346,12 @@ export function NameIt({
   const said = (
     text: string,
     then: 'make' | 'start',
-    problem: { code: string; operation: string; status?: number | null },
+    problem: {
+      code: string
+      operation: string
+      status?: number | null
+      requestId?: string
+    },
   ) => {
     const { status, ...rest } = problem
     setMakeNotice({
@@ -503,11 +504,8 @@ export function NameIt({
           setChanging(true)
           return
         }
-        return said(words.making.couldntMake, 'make', {
-          code: refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE',
-          operation,
-          status: refusal.kind === 'refused' ? refusal.status : null,
-        })
+        // The platform's request id rides the report (FE-30).
+        return said(words.making.couldntMake, 'make', { ...reported(refusal), operation })
       }
       const project = { id: created.id, name: created.name }
       rememberMadeProject(id, project)
