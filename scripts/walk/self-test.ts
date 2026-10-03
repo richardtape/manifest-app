@@ -296,7 +296,9 @@ report.check(
   rejected.status === 1 && !alive(rejected.pid),
   `exit ${rejected.status}, Chrome ${alive(rejected.pid) ? 'ALIVE' : 'gone'}`,
 )
-// The trap, shown open: a Chrome with no exit handler outlives the walk that threw.
+// The trap, shown open: a Chrome with no exit handler outlives the walk that threw. Its pid is
+// written plain: under FORCE_COLOR, console.log colours a number, Number() reads NaN, and the bare
+// Chrome is left running (minors m74).
 const bare = spawnSync(
   process.execPath,
   [
@@ -304,7 +306,7 @@ const bare = spawnSync(
     '-e',
     `import { spawn } from 'node:child_process'
      const c = spawn(${JSON.stringify(CHROME)}, ['--headless=new', '--user-data-dir=' + ${JSON.stringify(join(out, 'bare-profile'))}, 'about:blank'], { stdio: 'ignore' })
-     console.log(c.pid); await new Promise((r) => setTimeout(r, 1500)); throw new Error('threw')`,
+     process.stdout.write(c.pid + '\\n'); await new Promise((r) => setTimeout(r, 1500)); throw new Error('threw')`,
   ],
   { encoding: 'utf8', timeout: 30_000 },
 )
