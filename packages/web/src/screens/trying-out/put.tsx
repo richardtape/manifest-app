@@ -388,11 +388,15 @@ export function PutOnTryingOut({
       ])
       const staging = byKind(environments, 'staging')
       if (staging !== undefined) {
+        // m15: with no route serving one, the platform names its newest instance, this very
+        // attempt, as the address's: nothing serves there (Going live's rule, `live.tsx`).
+        const there =
+          staging.instance?.id === attemptId ? { ...staging, instance: null } : staging
         const release =
-          staging.instance === null
+          there.instance === null
             ? undefined
-            : await platform.getRelease(staging.instance.releaseId).catch(() => undefined)
-        serving = servingFact(staging, release, timeZone)
+            : await platform.getRelease(there.instance.releaseId).catch(() => undefined)
+        serving = servingFact(there, release, timeZone)
       }
       incident = found
     } catch (error) {

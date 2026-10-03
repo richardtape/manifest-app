@@ -573,6 +573,23 @@ describe('It never answered: the two facts, and [What went wrong]', () => {
     expect(machineryIn(wordsOn())).toEqual([])
   })
 
+  it("m15: a first deploy that never answered: the attempt, which the platform names when no route serves one, is nothing there (Going live's rule)", async () => {
+    const s = stage({ staging: [] })
+    await open(s)
+    await putOn(s)
+    s.world.incidents = [INCIDENT]
+    // Nothing served: the platform names the newest instance, this very attempt.
+    s.world.staging = [fresh('failed', true)]
+    await s.answer(bare(fresh('failed')))
+    const region = screen.getByRole('region', { name: t.put })
+    expect(
+      await within(region).findByText(
+        "Didn't start, a moment ago. Nobody lost anything.",
+      ),
+    ).toBeTruthy()
+    expect(within(region).getByText(words.preview.facts.nothing)).toBeTruthy()
+  })
+
   it('[What went wrong] mints a token named for the fix, starts a fix conversation carrying the incident, and opens it', async () => {
     const s = stage()
     await neverAnswered(s)
