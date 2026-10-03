@@ -751,6 +751,14 @@ describe('their agent’s questions, at the top (F6b Task 12; Decision 16; (S1: 
     expect(s.called('listPendingActions').length).toBe(2)
   })
 
+  it('back from the second sign-in: the address loses then=agents without a navigation, so a reload is not back again (minors m113)', async () => {
+    window.history.replaceState({}, '', `/apps/${SLUG}/agents?then=agents`)
+    open(stage(), 'owner', 'agents')
+    await firstCard()
+    expect(window.location.pathname + window.location.search).toBe(`/apps/${SLUG}/agents`)
+    expect(screen.getAllByText(words.goingLive.letIn.again)).toHaveLength(1)
+  })
+
   it('back from the second sign-in: said once, the same cards, nothing pressed by itself', async () => {
     const s = stage()
     open(s, 'owner', 'agents')

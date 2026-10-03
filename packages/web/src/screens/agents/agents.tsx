@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { OurRefusal, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf, type Refusal } from '../../platform/refusal.js'
-import { linkTo, type Then } from '../../router.js'
+import { linkTo, remember, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { PressNotice } from '../change/notice.js'
 import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
@@ -134,6 +134,12 @@ export function Agents({
   const [answered, setAnswered] = useState(false)
   /** The question a [Yes, once] left for the second sign-in (the whole-branch review's I2). */
   const [asked] = useState(() => (then === 'agents' ? askedOf(project.slug) : null))
+  // Back from signing in again: said once, and `then` taken out of the address without a
+  // navigation (the focus stays put), so a reload is not "back" again (minors m113).
+  const [back] = useState(then === 'agents')
+  useEffect(() => {
+    if (back) remember(`/apps/${encodeURIComponent(project.slug)}/agents`)
+  }, [back, project.slug])
   const askedRead = useRef(false)
   /** The key, the one time it exists: in this component alone, never stored (Review Focus 4). */
   const [made, setMade] = useState<string | null>(null)
@@ -402,7 +408,7 @@ export function Agents({
         <TroubleNotice trouble={loaded.stale} onRetry={retry} />
       ) : null}
       {/* The second sign-in's line, card or none (the whole-branch review's I2). */}
-      {loaded.state === 'ready' && then === 'agents' && !answered ? (
+      {loaded.state === 'ready' && back && !answered ? (
         <p className="body">{words.goingLive.letIn.again}</p>
       ) : null}
       {loaded.state === 'ready' ? (
