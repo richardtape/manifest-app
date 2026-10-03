@@ -398,6 +398,26 @@ describe('openAiCompatible: when the gateway refuses (LiteLLM 1.98.0, as the pla
     expect([error.code, error.status]).toEqual(['MODEL_KEY_REFUSED', 401])
   })
 
+  it('m32: a 2xx with no body at all is a body that ended before its end (MODEL_UNREACHABLE), at once, never a stall', async () => {
+    let asked = 0
+    const started = Date.now()
+    const error = await codeOf(
+      openAiCompatible({
+        baseUrl: 'http://127.0.0.1:9/v1',
+        key: KEY,
+        model: 'm',
+        fetch: (async () => {
+          asked += 1
+          return new Response(null, { status: 200 })
+        }) as unknown as typeof fetch,
+        deadlines: { firstWordMs: 2000, quietMs: 2000, ceilingMs: 5000 },
+      }).complete('a', Guess, MESSAGES),
+    )
+    expect(error.code).toBe('MODEL_UNREACHABLE')
+    expect(Date.now() - started).toBeLessThan(1000)
+    expect(asked).toBe(1)
+  })
+
   it("an error chunk mid-answer is MODEL_UNREACHABLE, not retried, and never the gateway's words", async () => {
     const broken = [
       `data: ${JSON.stringify({ choices: [{ delta: { content: '{"restatement":' } }] })}\n\n`,

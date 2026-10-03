@@ -186,6 +186,14 @@ export const ASKING_DEADLINES: Deadlines = {
  * bills for what it streamed (S1: M2), and is never asked again here: that is the person's
  * Carry on, since a retry re-asks and re-pays.
  */
+/** An answer with no body: a stream already ended (m32). Each call makes its own. */
+const ended = () =>
+  new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.close()
+    },
+  })
+
 export function openAiCompatible(options: {
   baseUrl: string
   key: string
@@ -276,11 +284,14 @@ export function openAiCompatible(options: {
             let named: string | null = null
             let usage: Answered['usage'] = null
             try {
-              const words = (
-                response.body ?? new ReadableStream<Uint8Array>()
-              ).pipeThrough(new TransformStream<Uint8Array, Uint8Array>(), {
-                signal: cut.signal,
-              })
+              // No body at all is a body that ended before its end, at once (m32): never a
+              // stream that waits out the first-word deadline.
+              const words = (response.body ?? ended()).pipeThrough(
+                new TransformStream<Uint8Array, Uint8Array>(),
+                {
+                  signal: cut.signal,
+                },
+              )
               let arriving = false
               for await (const chunk of chunksOf(words)) {
                 if (chunk.content !== '') {
