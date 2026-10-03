@@ -312,7 +312,7 @@ describe('needWords: each need, its sentence and its button', () => {
     })
   })
 
-  const asks = (owner: boolean): Need => ({
+  const asks = (owner: boolean): Extract<Need, { kind: 'agent-asks' }> => ({
     kind: 'agent-asks',
     app,
     pendingActionId: 'q',
@@ -343,7 +343,7 @@ describe('needWords: each need, its sentence and its button', () => {
   it.each(['yours', { name: 'Sam Helper' }, { name: null }] as const)(
     'their agent’s question, to a helper: an owner answers it, and no button (m109, Rich’s words): %o',
     (whose) => {
-      const said = needWords({ ...asks(false), whose } as Need, TZ)
+      const said = needWords({ ...asks(false), whose }, TZ)
       expect(said).toEqual({
         says: "Reading responses: an agent is waiting for an owner's answer.",
         button: null,
