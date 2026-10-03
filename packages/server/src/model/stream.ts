@@ -35,7 +35,9 @@ function chunkOf(data: string): Chunk {
     usage?: { prompt_tokens?: unknown; completion_tokens?: unknown } | null
   } | null
   // FE-34: LiteLLM answers a provider's `422` as `200` with `null`: the request refused, never
-  // a gateway out of reach (the platform's sitting 4). Its F8 (b) would send the 422 itself.
+  // a gateway out of reach (the platform's sitting 4). Since its F8 (manifest `5effd5e`) the
+  // gateway sends the `422` itself, before any stream (read by its status in `client.ts`); an
+  // older gateway's `null` is still read as the refusal it is.
   if (body === null) throw new ModelError('MODEL_ANSWER_INVALID', REFUSED_AS_NULL)
   // The gateway's own error mid-answer. Never its words: they can carry anything. An `"error":
   // null` is no error (minors m33): LiteLLM omits nulls today, but nothing promises it.

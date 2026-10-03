@@ -285,7 +285,22 @@ describe('openAiCompatible: when the gateway refuses (LiteLLM 1.98.0, as the pla
       'a streamed event whose data is null',
       { status: 200, stream: 'data: null\n\n' } as const,
     ],
-    ['a 422 itself (should LiteLLM pass it on: F8’s (b))', refused(422, 'unprocessable')],
+    [
+      // The platform's F8 (manifest 5effd5e): a streamed request too, before any stream begins.
+      'a 422 itself, before any stream (the platform’s F8, 5effd5e: its exact body)',
+      {
+        status: 422,
+        body: {
+          error: {
+            message:
+              'the provider could not process this request (422), so it was not answered; correct the request',
+            type: 'invalid_request_error',
+            param: null,
+            code: '422',
+          },
+        },
+      } as const,
+    ],
   ])(
     'a request the provider refused, as %s: MODEL_ANSWER_INVALID (422), not retried, never MODEL_UNREACHABLE',
     async (_, answer) => {
@@ -299,6 +314,8 @@ describe('openAiCompatible: when the gateway refuses (LiteLLM 1.98.0, as the pla
       )
       expect([error.code, error.status]).toEqual(['MODEL_ANSWER_INVALID', 422])
       expect(seen).toHaveLength(1)
+      // Every call streams (F5 sitting 2): the 422 is a streamed request's, read by its status.
+      expect(seen[0]!.body).toMatchObject({ stream: true })
     },
   )
 
