@@ -252,14 +252,18 @@ export function openAiCompatible(options: {
           const ceiling = setTimeout(() => stop('ceiling'), deadlines.ceilingMs)
           // Refused or cut: never the error itself, whose cause could carry the request, and
           // the request carries the key.
-          const failed = (error: unknown): ModelError =>
+          const failed = (error: unknown, streaming = false): ModelError =>
             why === 'quiet'
               ? new ModelError('MODEL_STALLED', null, received())
               : why === 'ceiling'
                 ? new ModelError('MODEL_TOO_LONG', null, received())
-                : error instanceof ModelError
-                  ? error
-                  : new ModelError('MODEL_UNREACHABLE')
+                : // Broken mid-answer: billed for what streamed, so say how much came (m35).
+                  streaming &&
+                    (!(error instanceof ModelError) || error.code === 'MODEL_UNREACHABLE')
+                  ? new ModelError('MODEL_UNREACHABLE', null, received())
+                  : error instanceof ModelError
+                    ? error
+                    : new ModelError('MODEL_UNREACHABLE')
           try {
             let response: Response
             try {
@@ -315,7 +319,7 @@ export function openAiCompatible(options: {
                 if (chunk.usage !== null) usage = chunk.usage
               }
             } catch (error) {
-              throw failed(error)
+              throw failed(error, true)
             }
             onAnswer?.({
               model: named,

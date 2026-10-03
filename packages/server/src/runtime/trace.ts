@@ -20,8 +20,11 @@ export type TraceEntry =
       usage: { in: number; out: number } | null
       /** How much of the answer came, and when (F5 Decision 14): counted, never its text. */
       received: Received
-      /** Why it ended before a whole answer came: its words stopped, or went on too long. */
-      stalled?: 'quiet' | 'ceiling'
+      /**
+       * Why it ended before a whole answer came: its words stopped, went on too long, or the
+       * stream broke mid-answer (minors m35).
+       */
+      stalled?: 'quiet' | 'ceiling' | 'broken'
     }
   | { kind: 'move'; move: string; verdict: 'ran' | 'guarded'; reason?: string }
   | {

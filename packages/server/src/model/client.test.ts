@@ -432,6 +432,34 @@ describe('openAiCompatible: when the gateway refuses (LiteLLM 1.98.0, as the pla
     expect(`${error.message} ${JSON.stringify(error)}`).not.toContain(KEY)
   })
 
+  it('a stream broken mid-answer carries how much came (minors m35: the gateway bills what it streamed); one refused before any word, nothing', async () => {
+    const broken = [
+      `data: ${JSON.stringify({ choices: [{ delta: { content: '{"restatement":' } }] })}\n\n`,
+      `data: ${JSON.stringify({ error: { message: 'upstream refused', code: '500' } })}\n\n`,
+    ].join('')
+    const { baseUrl } = await gateway([{ status: 200, stream: broken }])
+    const error = await codeOf(
+      openAiCompatible({ baseUrl, key: KEY, model: 'm' }).complete('a', Guess, MESSAGES),
+    )
+    expect(error.code).toBe('MODEL_UNREACHABLE')
+    expect(error.received).toEqual({
+      chars: '{"restatement":'.length,
+      firstWordMs: expect.any(Number),
+      ms: expect.any(Number),
+    })
+    const refusedFirst = await codeOf(
+      openAiCompatible({ baseUrl: 'http://127.0.0.1:9', key: KEY, model: 'm' }).complete(
+        'a',
+        Guess,
+        MESSAGES,
+      ),
+    )
+    expect([refusedFirst.code, refusedFirst.received]).toEqual([
+      'MODEL_UNREACHABLE',
+      null,
+    ])
+  })
+
   it('the key never appears in a thrown error, whatever the gateway says back', async () => {
     const echo = refused(401, 'expired_key', `Authentication Error, key ${KEY} expired`)
     const cases = [

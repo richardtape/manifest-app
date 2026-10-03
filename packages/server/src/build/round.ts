@@ -485,7 +485,8 @@ export function createRounds(deps: RoundDeps): Rounds {
 
   /**
    * AN ANSWER CUT SHORT (F5 Decision 14): the trace says how much came and why it ended, never
-   * what; the gateway bills what it streamed (S1: M2), so the cost is read again.
+   * what; the gateway bills what it streamed (S1: M2), so the cost is read again. A stream broken
+   * mid-answer is one too (minors m35).
    */
   function stalled(live: Live, error: ModelError) {
     if (error.received === null) return
@@ -497,7 +498,12 @@ export function createRounds(deps: RoundDeps): Rounds {
       fallback: null,
       usage: null,
       received: error.received,
-      stalled: error.code === 'MODEL_TOO_LONG' ? 'ceiling' : 'quiet',
+      stalled:
+        error.code === 'MODEL_TOO_LONG'
+          ? 'ceiling'
+          : error.code === 'MODEL_STALLED'
+            ? 'quiet'
+            : 'broken',
     })
     void refreshCost(live, true)
   }
@@ -604,7 +610,9 @@ export function createRounds(deps: RoundDeps): Rounds {
               .catch((error: unknown) => {
                 if (
                   error instanceof ModelError &&
-                  (error.code === 'MODEL_STALLED' || error.code === 'MODEL_TOO_LONG')
+                  (error.code === 'MODEL_STALLED' ||
+                    error.code === 'MODEL_TOO_LONG' ||
+                    error.code === 'MODEL_UNREACHABLE')
                 )
                   stalled(live, error)
                 throw error

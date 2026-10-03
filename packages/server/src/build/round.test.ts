@@ -1978,6 +1978,41 @@ describe('a stall (F5 Decision 14, Review Focus 2)', () => {
     )
   })
 
+  it('a stream broken mid-answer (minors m35): traced with how much came, and billed, so the cost line is read again', async () => {
+    const spent = [0.1]
+    let release = () => undefined as void
+    const held = new Promise<void>((resolve) => (release = resolve))
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          async () => (await held, new ModelError('MODEL_UNREACHABLE', null, RECEIVED)),
+        ],
+      },
+      spent,
+    })
+    await until(
+      () => viewOf(h, id)?.cost.conversationUsd === 0.1,
+      () => viewOf(h, id),
+    )
+    spent[0] = 0.25
+    release()
+    await untilStatus(h, id, 'needs-you')
+    expect(models(h, id).at(-1)).toEqual({
+      kind: 'model',
+      agent: 'lead',
+      asked: 'default-chat-large',
+      answered: null,
+      fallback: null,
+      usage: null,
+      received: RECEIVED,
+      stalled: 'broken',
+    })
+    await until(
+      () => viewOf(h, id)?.cost.conversationUsd === 0.25,
+      () => viewOf(h, id)?.cost,
+    )
+  })
+
   it('every answer is traced with how much came, never what (Global Constraints): the real client over a gateway that streams a sentinel', async () => {
     const SENTINEL = 'SENTINEL-7c1e-never-kept'
     const whole = `{"move":"${SENTINEL}"}`
