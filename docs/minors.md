@@ -2,8 +2,8 @@
 
 *Collected 2026-10-01 by manifest-app-3a from the dated entries of F2, F3, F4, F4a and F5, each checked against main at
 `238e6a0`. Nothing here is fixed: Rich chooses.* *Seven were fixed at his word (m1–m4, m14, m19, m63; 2026-10-02),
-and thirty at his overnight *"Its pick, no decisions"* (2026-10-03; m77 found already fixed): see* Already fixed *and its
-dated entries.*
+and thirty at his overnight *"Its pick, no decisions"* (2026-10-03; m77 found already fixed), and eighteen more at a second
+sitting under the same words the same morning (m122 closed with it): see* Already fixed *and its dated entries.*
 
 **How to read it.** Each minor has an ID (`m1`, `m2`…) for this page only. **From** names the plan and the dated entry
 it was recorded in: F2 is [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md), F3
@@ -28,37 +28,24 @@ checked by reading the code it names, and the check is in the cell.
 | m7 | F5 sitting 3, review (ledger 118), *"for Rich's click"* | A held clock (someone has it) is filled lighter than the not-started hatch, so it can look emptier than one not started. | `packages/ui/src/components.css:201-203` (`--waiting-tint`). | S | faculty-visible |
 | m8 | F5 sitting 4, review (ledger 183), *"for Rich's click"* | The administrator's reason is quoted inline in ‘ ’; moment 13 puts it behind the Card's one left rule. | `packages/web/src/words.ts:713` and `:735`; drawn as the row's sentence (`sign-off.tsx:74`). | S | faculty-visible |
 | m9 | F5 sitting 6 (first half), whole-branch review M5' (ledger 283) | A clock record in a state we do not know, with a day we cannot read, passes an empty label, so *"Nothing counting yet"* shows beside *"We can't tell right now"*. | `going-live/clocks.ts:121-127`; the empty label falls to `ProgressBar`'s default at `packages/ui/src/ProgressBar.tsx:24`. | S | faculty-visible |
-| m10 | F5 sitting 5, review M2 (ledger 240) | *"You're signed in again."* is said again after a gate refusal, when the card is drawn again. | `going-live/live.tsx:153` (`pressedOnce` is the card's own state) and `:488`; the card unmounts and remounts at `going-live.tsx:268`. | S | faculty-visible |
 | m11 | F5 sitting 4, review (ledger 182) | A failed approval read says *"We can't tell right now whether it's been signed off."* with no support reference, only a `console.warn`. | `sign-off.tsx:72`; the read's failure is only warned at `going-live.tsx:44-50`, `:78-80`. | S | faculty-visible |
 | m12 | F4 sitting 7, M11 (ledger 719) | The *Interrupted* card files a `ROUND_INTERRUPTED` problem, with a reference, for a fix that reached the front after a restart and never started. | `screens/building/needs.tsx:57-58` reports on every *Interrupted* card; `withoutToken` (`build/round.ts`, near its end) saves such a fix as `interrupted`. | S | faculty-visible |
 | m13 | F4a sitting 1, deferred (ledger 91) | `useKeeps` draws the page as loading again when `getMe` is read again with the same answer, since it is keyed on the object. Only after a `BUILDING_NOT_OPEN` signal. | `packages/web/src/screens/keeps.ts:59` (the effect's `me`) and `:61` (`kept.me === me`). | S | faculty-visible |
-| m15 | F5 sitting 6 (first half), whole-branch review (ledger 302 only) | On *Trying out*, after a first deploy that never answered, *"Serving right now"* can name the failed attempt, which the platform names as the address's instance when no route serves one. *Going live* already sets it aside. | `screens/trying-out/put.tsx:389-395` takes `staging.instance` as it comes; compare `going-live/live.tsx:430`. | S | faculty-visible |
 | m16 | F5 sitting 4, review (ledger 181) | Two millisecond races in the sign-off row: a decision landing between the checklist's read and the approval's draws the wrong sentence until the next read. | `going-live.tsx:66-79`: the checklist first, the approval after. | S | faculty-visible |
-| m17 | F5 sitting 3, review (ledger 116) | A failed quiet re-read (the page shown again) replaces a good page with the trouble notice, and files a new report at every tab switch while Manifest is out of reach. | `going-live.tsx:198-203` (any failed read sets `trouble`) and `:216-223` (each `visibilitychange` reads again). | S | faculty-visible |
-| m18 | F3 sitting 7, review (ledger 213) | The cost line at *built* can be stale: the round's end never reads the cost again. | `build/round.ts:1379` (`end`) calls no `refreshCost` (`:384`); answers read it at most every 5 s. | S | faculty-visible |
 | m20 | F4 sitting 7, M3 (ledger 711) | Several secrets set at once: one refused after another was set empties both fields, and both are typed again. | `screens/trying-out/parts.tsx:168-171` empties every field on send; the loops at `put.tsx:553-559` and `going-live/live.tsx:347-354`. | M | faculty-visible |
 | m21 | F5 sitting 5, review M10 (ledger 244) | A dropped connection on the live deploy (a `TypeError`) is said as *didn't go*, without one read of the live address. | `going-live/live.tsx:279-283`: only our deadline reads on; anything else ends at `:305` (`didNotGo(error, 'deploy')`). | M | faculty-visible |
 | m22 | F5 sitting 6 (first half), own review M1 (ledger 314) | Before a launch, the Preview can call an older failed dry run *"the last attempt"*, even after a newer one passed and was taken down. | `screens/preview/facts.ts:64-69`: with nothing served, `after()` counts every failed instance; `:98-99`. | M | faculty-visible |
 | m23 | F5 sitting 6 (first half), own review M3 (ledger 316) | The dry run's endings never give way: *didn't start* with no incident has no button until a reload; *passed* and *failed* outlive a reading that names a new version. | `going-live/dry-run.tsx:191-195` gives way only when the row is met; `:412-425` (no action without an incident). | M | faculty-visible |
 | m24 | F4 sitting 7, M5 (ledger 713) | The line is the app's, but its words and link are the person's: *"…which is waiting for you"*, and a link to another member's conversation that answers `404`. | `packages/server/src/api/line-state.ts:86-96` carries no owner; `screens/change/waiting.tsx:96-107`. | L | faculty-visible |
 | m25 | F2, *After F2: the deferred Minors*, item 1 (ledger 194) | The FE-20 honesty check reads only *Who gets in*: a class-only promise in another part, or in *Things we assumed*, passes. **Rich deferred it** until the class-limited sign-in lands (FE-20). | `packages/server/src/agents/plan.ts:127` and `agents/change.ts:134` rewrite `whoGetsIn` alone. | L | faculty-visible |
-| m27 | F3 sitting 7, review (ledger 218); F4 sitting 7, M9 (ledger 717) | A guard's reason that echoes a path shaped like a key (`public/sk-1.js`) trips the trace's credential check, and the leg ends `INTERNAL`. | Reasons echo the path at `guards.ts:145`, `:152`, `:156`, `:186`; traced at `runtime/run.ts:104`; refused at `store/runs.ts:160`, `:288`. | S | robustness |
 | m28 | F4 sitting 7, M7 (ledger 715) | Their words while it worked are marked noted even when `docs/plan.md` no longer reads back, so a hand-edited plan never gains them, silently. | `build/round.ts:975` (`break`) then `:1004` (`d.noted = read.length`). | S | robustness |
-| m29 | F4a sitting 1, deferred (ledger 93) | The expired card is drawn twice in `app.tsx` (the shell's, and while we look): one component would do. | `packages/web/src/app.tsx:157-164` and `:363-369`. | S | robustness |
-| m31 | F5 sitting 2, review (ledger 37) | A non-2xx whose body stalls is said as a stall (`MODEL_STALLED`), not its status's refusal. | `packages/server/src/model/client.ts:249-256`. | S | robustness |
-| m32 | F5 sitting 2, review (ledger 40) | A 2xx with no body waits out the first-word deadline and reads as a stall. | `client.ts:264` (an empty `ReadableStream` that never closes). | S | robustness |
 | m35 | F5 sitting 2, review (ledger 38) | A mid-stream `MODEL_UNREACHABLE` is billed for what streamed, but leaves no trace entry and forces no cost read; only stalls do. | `build/round.ts:548-553` traces stalls alone; `client.ts:233` carries no `received`. | S | robustness |
 | m36 | F5 sitting 2, review (ledger 39) | The stall's forced cost read comes before the gateway's spend settles (within 60 s), so the line shows the old figure until *Carry on*. | `round.ts:446`. | S | robustness |
-| m37 | F5 sitting 2, review (ledger 42) | `fetch` is taken when the model is made, not when it asks (the cause of two stray test requests to the real LiteLLM). | `client.ts:188` (`fetch: send = fetch`). | S | robustness |
-| m38 | F5 sitting 2, review (ledger 44) | `TraceEntry.received` is required, but trace rows written before F5 lack it. Nothing reads it yet. | `packages/server/src/runtime/trace.ts:22`. | S | robustness |
-| m39 | F5 sitting 2, review (ledger 45) | `received.chars` counts UTF-16 code units, and says *characters*. | `client.ts:273`. | S | robustness |
 | m40 | F5 sitting 6 (first half), own review M5 (ledger 318) | The lead's view of a failed dry run names details asked for and never carried, but not details carried and never asked for. | `packages/server/src/agents/lead.ts:190-201`. | S | robustness |
 | m41 | F5 sitting 5, review M5 (ledger 241) | Our five more minutes after a cut deploy are 300 timer ticks, which a hidden tab stretches; overlapping reads are not skipped. | `going-live/live.tsx:381-383`; `trying-out/put.tsx:318-320`. | S | robustness |
-| m42 | F5 sitting 5, review M7 (ledger 242) | A failed `listInstances` at the press is reported under the operation `getLaunchReadiness`. | `live.tsx:245-259` (one `catch` for the whole press read). | S | robustness |
 | m43 | F5 sitting 5, review M9 (ledger 243) | The 2-s incident re-read is not cancelled when the card goes (one read, its answer ignored). | `trying-out/parts.tsx:67-74` (`incidentLater`). | S | robustness |
 | m45 | F5 sitting 4, review (ledger 188) | The Overview reads the checklist only while the draft serves something, so a stale lookup of a launched app with nothing on its draft never hears the launch until a reload. | `overview/overview.tsx:59`; `your-apps/model.ts:126-131` (`beforeLaunch`). | S | robustness |
 | m46 | F3 sitting 7, review (ledger 215) | A round left needing a token across a restart: opening the page mints a token and presses *Carry on* by itself, starting a session nobody pressed for. | `screens/building/building.tsx:157-166`: any page that finds `needs: token` renews once, however old. | S | robustness |
-| m49 | F5 sitting 4, review (ledger 184) | `students.test`'s `expect(fetched).toEqual([])` proves nothing: the page's fakes never call `fetch`. | `overview/students.test.tsx:259`. | S | tests-only |
 | m54 | F3 sitting 7, review (ledger 209) | Their words read after *Checking it answers*, then a `done` with no new commit, builds the same commit again: a second sandbox instance, about 30 s. F4's *Changes* commit narrowed it to an answer, or a plan that no longer reads back. | `build/round.ts:1259-1260` goes back to the pages; `backToPages` (`:1019-1035`) clears the build; `build()` starts one on the same base (`:1127-1135`). | M | robustness |
 | m55 | F3 sitting 7, review (ledger 210) | A deploy cut by its 120-s deadline, or a restart at the draft, deploys the release again; one `listInstances` would adopt the instance. | `round.ts:1184-1186`: `instanceId` is still null, so *Carry on* deploys. | M | robustness |
 | m56 | F4 sitting 7, M8 (ledger 716) | A conversation `agreed` with no run holds its app with no way out: `/stop` and `/build` refuse `agreed`. Pre-F3 rows, or a crash in the same tick. | `api/line-state.ts:26` (`agreed` holds); `api/build.ts:124` (`/build`: `building` only) and `:207-218` (`/stop`'s states). | M | robustness |
@@ -80,13 +67,6 @@ wording only. m7 is one colour token; m8 needs the row to draw a quotation as a 
 never-started case in the run's detail and draws it without a problem report. Test first: a fix saved by
 `withoutToken` draws the card and reports nothing.
 
-**m15.** The same rule *Going live* uses (`live.tsx:428-430`): the attempt itself, named for want of a route, is
-nothing there. Test first in `put.test.tsx` with a first staging deploy that fails.
-
-**m17.** The sitting 6 review declined the related *"a notice above a press under way"*. A fix keeps the good page on a
-failed quiet re-read, and says the trouble only on a read the person asked for. Test first: a ready page, then a failing
-`visibilitychange` read: the rows stay, and no report is filed.
-
 **m20.** The fields were emptied on send by ruling (no secret kept on the page longer than needed). A safe fix re-reads
 `listAppSecrets` after a failure and asks again only for what is still not set. Test first: two secrets, the second
 refused; only its field comes back.
@@ -104,10 +84,6 @@ member may open.
 
 **m25.** Rich, 2026-09-28: *"We actually WILL have a way to do this"*. The check changes when the class-limited sign-in
 lands. Recorded at FE-20 in `api-findings.md`.
-
-**m27.** Two fixes, either enough: keep the path out of the traced reason (the lead still gets it in its report), or let
-the trace redact a key-shaped run instead of throwing. Test first: commit to `public/sk-1.js` and assert the leg does
-not end `INTERNAL`.
 
 **m46.** The renewal is right when the refusal happened while the page watched. A fix renews by itself only when it saw
 the round go to `needs: token`, and otherwise shows *Carry on*. Test first: open a page on a round already at
@@ -194,9 +170,7 @@ I1 and I3 fixed test-first the same sitting, its I2 and ten minors here). Lines 
 | m76 | The review's **I2** (graded Important; carried with m69 at the executor's ruling, **a departure from the plan's Review Focus 1**) | Someone taken off an app while a round of theirs is in flight is usually emailed *"we need you"* first: the platform revokes their tokens and ends their sessions before it publishes `member.removed`, so the round ends needs-you (`token`) and `workEnded` emails them, before our removal stops it. When they minted our watch (FE-48) the event never comes, and the stop waits for the next hand-over. | `packages/server/src/keeping/keeper.ts:489` (`workEnded`), `build/round.ts`'s `fromError`. | S | faculty-visible |
 | m81 | The review's M5 (F6's race, a new consequence) | Two members reads can land out of order: one begun before a `member.removed` can put the removed member back until the next read. | `keeping/keeper.ts`'s `refresh`. | S | robustness |
 | m82 | The review's M6 (closes Task 4's first residual where it applies) | Kept members are trusted for a person's own conversations even while we do not watch the app (F6's whole-branch I2 trusted them only while watching): someone added since our last read meets 404 on their own new change. Their own could stay theirs while the keeper is not watching; and a change asked (whose token `projects.read` has just proved a member's) could prompt a read of the members. | `packages/server/src/api/sharing.ts`'s `standingOf`. | S | faculty-visible |
-| m83 | The review's M7 | A hand-over's `tokenId` is not checked against its secret (`mft_<id>_<secret>`, the id without dashes): a page bug could mark someone else's token ours; and an old page's id could be read from its secret. | `packages/server/src/api/project.ts:104`, `api/apps.ts:273`. | S | robustness |
 | m84 | The review's M8 | Someone taken off an app while its first piece is `making` (the creator, with another owner already added) leaves it holding the app: neither `endWork` nor Stop reaches `making`. Rare. | `packages/server/src/api/work-end.ts`; `api/line-state.ts:23`. | S | robustness |
-| m86 | The review's M10 | Small: `store/conversations.ts:45`'s comment says every change still asks `getConversation` (they ask `reachable(…, mayAct)` now); `STOPPED_FROM` repeats `work-end.ts`'s two sets; `endWork`'s boolean is never read; `api/minted.ts:21`'s `MOMENT` wants seconds the contract's date-time leaves optional. | as named | S | robustness |
 
 **m76.** With m69, one mechanism (Rich's to choose): hold a *we need you* for a round that paused on its token for about a
 minute, and at send time say nothing when its run is stopped, or the app's history has `keeping.stopped` (FE-48's `4401`)
@@ -212,7 +186,6 @@ six Important and one Minor re-graded Important fixed test-first in `3912ff3`, t
 | m90 | The review's M4 | Another's round needing a token reads *"Working, a few minutes"* with motion, though only its person's page can hand one over: it waits on them. | `packages/web/src/screens/building/model.ts` (`chipOf`'s token case). | S | faculty-visible |
 | m91 | The review's M5 | The owner who pressed Stop reads *"Stopped by <their own name>."*; *"You stopped it."* (words for Rich). | `packages/web/src/screens/building/building.tsx` (`stoppedBy`), `change/waiting.tsx`. | S | faculty-visible |
 | m92 | The review's M6 | People's rows share their buttons' names (*Make owner*, *Take off*): a screen reader's list of buttons cannot tell whose. Add the member's name, visually hidden. | `packages/web/src/screens/people/people.tsx`. | S | accessibility |
-| m93 | The review's M7 | People does not read the list again after a refusal that means it moved (`PROJECT_LAST_OWNER`, *"the other owner left meanwhile"*; `FORBIDDEN` after being made a helper). | `people.tsx` (`didNotGo`'s `'said'`). | S | faculty-visible |
 | m94 | The review's M9 | Another's conversation while its app is made draws *Making it* without who started it. | `packages/web/src/screens/plan/plan.tsx` (`making`). | S | faculty-visible |
 
 **From F6b sitting 1's measurements on 7100** (`manifest-app-30`, 2026-10-02, M3; the plan's entry *Sitting 1*).
@@ -259,16 +232,11 @@ reviewer over `7a85693..f14a877`; its two Important and two minors re-graded Imp
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
 | m120 | The review's M1 | After launch, a helper on a re-escalated version reads *"An owner lets your students have it."*: no sign-off ask, no *"asked … waiting N days"*, no refusal's reason. Sitting 4's ruling (*a helper is offered no ask*) rests on a premise the platform answers the other way: its `COLLABORATOR` keeps `approval:request` (`projects/authz.ts`), and before launch *Going live*'s `SignOff` has no role gate. Draw `SignOff` for any member, or at least its row. For Rich. | `packages/web/src/screens/overview/new-version.tsx`. | S | faculty-visible |
-| m122 | The review's M3 | A member's word claims a token id: **its *agents* half closed** (the faculty-ready adoption, part three, `5e656e4`: *Agents* names a maker from the platform's `Token.mintedBy`, never from our kept ids, so a claimant is no one's maker; `POST …/agents` still takes any id, which now costs only the keeper's email naming that agent by the claimant's word). **Its *watch* half stays:** a watch hand-over's `current` branch notes `handed.tokenId` unchecked, so a member could have an outside token listed under *Our agents* (no [Revoke]). Check the id against the secret on a hand-over. | `packages/server/src/keeping/keeper.ts` (`hand`). | S | code |
 | m123 | The walk on 7100 | The change planner, on the laptop's plan model (`default-chat`), wrote machinery into a plan's *Things we assumed*: *"permitted by the environment variables provided by the platform"*, *"our existing deployment limits"*, *"web scraping capability"* (C3). The model's prose, shown as it wrote it; nothing of ours checks a plan's words. Re-ask once when `machineryIn` finds any (as a refused answer is re-asked), or say less of the assumptions. F4's planner, not F6b's. | `packages/server/src/agents/change.ts` (the prompt), `api/plan.ts` (no check). | S | faculty-visible |
 
 **From the 1.6.0 adoption** (2026-10-03, overnight, mock mode; `research/2026-10-01-faculty-ready-adoption.md`, *Part one*): read
-while carrying the platform's request id (FE-30) and a limit's facts (FE-29). m124 and m125 were fixed the same sitting (*Already
-fixed*, below); m126 is open.
-
-| ID | From | The minor | Where it is today | Size | Affects |
-|---|---|---|---|---|---|
-| m126 | The adoption's reading | After a start refused `AGENT_BUDGET_EXHAUSTED` (the budget read just before said there was money: seconds stale), moment 5's allowance says the amount and reset from that read, and the round reads the budget again; the refusal's own `error.limit` (`amountUsd`, `resetsAt`) is the platform's fresher word. The same gateway fact, seconds apart. | `packages/server/src/api/plan.ts` (`write`), `build/round.ts` (`fromError`). | S | faculty-visible (rarely) |
+while carrying the platform's request id (FE-30) and a limit's facts (FE-29). m124 and m125 were fixed the same sitting, and
+m126 by the second minors sitting of 2026-10-03 (`8743428`): *Already fixed*, below. None is open.
 
 **From the `__Host-` adoption** (2026-10-03, overnight, mock mode; the same note, *Part two*): both open, neither needing a
 decision.
@@ -343,6 +311,24 @@ decision.
 | **m118**: F6b sitting 5's review, Minor 13 | `q.didntSay[action]` read without `Object.hasOwn` | `1f91fe3` |
 | The review's M2 (F6b sitting 5), **m121** | A question's band line outlives its agent (a helper's revoke, a removal) | the platform's `0d5a743` (FE-52: `pending_action.expired` on a revoke, a removal, a switch-off), read by `questionsOf` since sitting 5; held by `d6037d8` |
 | The platform's Task 13, met mid-sitting, **m127** | Our Token fixtures named the mock's person as every token's maker | `5e656e4` |
+| **m126**: the 1.6.0 adoption | A start refused for the month said the allowance from a cached budget read, and the round made a spent month the session's checkpoint | `8743428` (the platform's `error.limit`) |
+| **m122**: F6b sitting 6's review, M3 | A member's word claimed a token id: its *watch* half (an outside token noted under *Our agents*) | `44793b5`, `1b12316` (the secret must name the id; its *agents* half: `5e656e4`) |
+| **m83**: F6b sitting 2's review, M7 | A conversation's token id handed over unchecked against its secret | `0168092` (an absent id is still not read from the secret: its entry) |
+| **m18**: F3 sitting 7, review (ledger 213) | The cost line at *built* stale: nothing read it after the round | `2763335` (m36's lag stays) |
+| **m37**: F5 sitting 2, review (ledger 42) | The model's `fetch` taken when the model was made | `b9ddb64` |
+| **m15**: F5 sitting 6 (first half), whole-branch review (ledger 302) | *Trying out*'s never-answered facts named the failed attempt as serving | `74f6097` |
+| **m42**: F5 sitting 5, review M7 (ledger 242) | A failed `listInstances` at the press reported as `getLaunchReadiness` | `2a70baf` |
+| **m93**: F6b sitting 3's review, M7 | People never read its list again after a refusal that meant it moved | `68413d6` |
+| **m49**: F5 sitting 4, review (ledger 184) | `students.test`'s *nothing sent* heard only `fetch` | `e0a029d` |
+| **m86**: F6b sitting 2's review, M10 | A stale comment, `STOPPED_FROM` twice, `endWork`'s unread boolean, `MOMENT` stricter than the contract | `03d5098` |
+| **m17**: F5 sitting 3, review (ledger 116) | A failed quiet re-read replaced *Going live*'s good page and filed a report at every tab switch | `0a874e9` |
+| **m31**: F5 sitting 2, review (ledger 37) | A refusal whose body stalled was said as a stall | `52591d8` |
+| **m32**: F5 sitting 2, review (ledger 40) | A 2xx with no body waited out the first-word deadline | `460ccc8` |
+| **m10**: F5 sitting 5, review M2 (ledger 240) | *"You're signed in again."* said again after a gate refusal | `8daf66c` (the Overview's panel too) |
+| **m38**: F5 sitting 2, review (ledger 44) | `TraceEntry.received` read back as required, which older rows lack | `bf7b6d5` |
+| **m39**: F5 sitting 2, review (ledger 45) | `received.chars` said *characters* and counts UTF-16 code units | `8f82e42` (said so) |
+| **m29**: F4a sitting 1, deferred (ledger 93) | The expired card drawn twice in `app.tsx` | `fa79b46` |
+| **m27**: F3 sitting 7, review (ledger 218); F4 sitting 7, M9 (ledger 717) | A guard's reason echoing a key-shaped path ended the leg `INTERNAL` | `e5c3631` (the traced reason redacted) |
 
 ### 2026-10-02 — m1–m4, m14, m19 and m63 fixed at Rich's word (`manifest-app-minors`, overnight, mock mode only)
 
@@ -546,6 +532,117 @@ Each test-first, its controls watched red (the sitting's record has them). The g
   Rich's word), m131 (a member's word for an agent's expiry: m122's kind; its review's).
 
 The record: `research/2026-10-01-faculty-ready-adoption.md`, *Part three*.
+
+### 2026-10-03 — eighteen more at a second overnight sitting, m122 closed (`app-minors-3`, mock mode only)
+
+**Rich's word**, the same as the sitting before (manifest's `docs/superpowers/2026-09-30-decisions.md`, its last entry): *"Its
+pick, no decisions"*; spawned by `manifest-3d`. One commit per minor on `main` in the main checkout, each test-first: the new
+test watched red against the committed code (one written in a `HOLD`: red with the fix set aside once `FREE` came), then green.
+The platform's faculty-ready sitting 6 (`plat-s6`, Task 10) held the machine twice (06:55–06:57 for its contract and mock edits;
+07:14–08:53 for its close): no Vitest of ours ran in either; the review ran in the second, reading only.
+
+**Fixed** (each commit names its minor; *Already fixed*, above, has the rows):
+
+- **Server:** m126 (a start refused for the month: the platform's `error.limit` is moment 5's allowance and the round's
+  month, never a cached budget read's checkpoint), **m122's watch half and m83** (a token id handed over beside a secret must be
+  the one the secret names, `mft_<id>_…`: the watch's `400 KEEPING_INVALID`, the project's `PROJECT_INVALID`, a change's
+  `CHANGE_INVALID`; `api/token-names.ts`; **m122 is closed**), m18 (built, the cost read once more), m37 (the model's `fetch`
+  taken when it asks), m31 (a refusal whose body stalls is its status's), m32 (a 2xx with no body is unreachable at once),
+  m27 (a guard's reason echoing `public/sk-1.js` traced redacted, never `INTERNAL`), m86 (an agent's expiry as the contract's
+  date-time allows; `STOPPABLE` said once; `endWork` answers nothing; a comment), m38 (`Trace.list` answers `received` as
+  optional), m39 (`received.chars` says it counts UTF-16 code units).
+- **Web:** m15 (*Trying out*'s never-answered facts: the attempt the platform names for want of a route is nothing there),
+  m42 (the press's refused instances read reported as `listInstances`), m93 (People reads its list again after
+  `PROJECT_LAST_OWNER` or `FORBIDDEN`), m17 (*Going live*'s quiet re-read that fails keeps a good page and files nothing),
+  m10 (*"You're signed in again."* said once: *Going live* and the Overview's *Waiting to reach your students* alike), m29
+  (one `Expired` card), m49 (tests: the hand-over's *nothing sent* hears the page's own fakes).
+- **Scripts:** `check-together.sh` and `.ts` hand over secrets that name their own ids (`1b12316`, `0168092`): the mock answers
+  one token id to every mint, and accepts any Bearer.
+
+**Decided, routine** (the option chosen; the options rejected; what changing course costs):
+
+- **m126**: the refusal's limit first: its `amountUsd` and `resetsAt`, the read's only where it names none (after the review:
+  a spent allowance says when it resets, Rich's rule); the round needs the month at once, a budget read only for a reset the
+  limit does not name. Rejected: a `null` reset kept `null` (the first cut), which dropped a date the read had just given.
+  One line each to change.
+- **m122, m83**: the id is read from the secret alone, dashes or none (the platform's id has none; the mock's fixture has
+  them), and refused under each route's existing code; no new code, no platform call. **Rejected for m83: reading an absent id
+  from the secret** (its second half): every page since F6b D5 sends one, and the scripts that send none
+  (`check-building.sh`, `check-describing.sh`) would keep the mock's one id for every conversation. A line to add.
+- **m17**: a quiet read is the page shown again (`visibilitychange`) alone; with a good page drawn, its failure keeps the page
+  as it stands (its refused line warned, no report), and the next showing reads again; the first read and *Try again* say it as
+  before. **The final review's I2 test** (`live.test.tsx`, a reading that fails mid-deploy) waited for that notice: it now
+  waits for the failed read and asserts the card stays with no notice. Rejected: a notice above the page (the sitting 6 review
+  declined it, and it would need words).
+- **m10**: the page forgets *back* at the gate (`back`; the panel's `arrived`, the same twin on the Overview, F6b Task 10).
+- **m15**: by the attempt's own id, as `live.tsx` does: *"Nothing there yet."* (existing words). The Preview's trying-out tab
+  is not changed (m22's ground).
+- **m18**: a round ending `done` alone (a stall already reads its cost; a refusal has nothing new to show). m36's lag stays.
+- **m27**: redacted in the traced reason (`runtime/run.ts`), never in the store, whose refusal stays the net; the lead reads
+  its reason whole. **m39**: said, not recounted: the trace's rows keep their meaning.
+
+**Controls.** Every behaviour fix's new test was red against the committed code (named in its commit). Tests-only and
+type-only: m49's new assertion red with a change sent through the page's own fake while the `fetch` one stayed green; m38's
+type made a reader of `e.received.chars` fail typecheck (TS18048); m29 with `Expired`'s button removed, two tests red. **The
+committed `check-together.sh` against m122**: half one 3 passed, 7 failed (its watch hand-over refused); its leftovers forgotten
+by its own `forget`, and half one 10/10 after, then both halves 10 + 13.
+
+**The platform's Task 10, landed mid-sitting** (`EventFrame.actor`, `Manifest-Admin-Reason`, `400 ADMIN_REASON_REQUIRED`;
+contract still 1.6.0): our typecheck clean against its working tree at 06:57, with no fixture of ours needing `actor`; our mock
+restarted at 06:58 on its fixtures; committed as manifest `beb4827`..`efcaaeb` (143 codes; `EventActor.token` added before its
+FREE), against which the closing gates ran, our mock restarted on it again at 08:54.
+
+**The review** (a fresh read-only reviewer over `f309eb5..e5c3631`, asked whether any commit took a decision of Rich's, and for
+any regression or test that cannot fail; it ran no tests, the platform holding the machine): **no Critical; no decision of
+Rich's taken** (m10 the nearest: it restores the card's own once-only rule after a remount, no word changed; m107, when *signed
+in again* stops being said at all, stays his); **no caller broken** (every page hand-over pairs `minted.secret` with
+`minted.token.id`; the scripts that send no id are unchecked). Fixed after it, in `abaf069`:
+- **Its Important 1, ruled otherwise:** the two I2 tests of the final review (`live.test.tsx`) no longer reach I2's own fallback
+  (`going-live.tsx`'s `lastSeen`). Its suggested path does not either: the `changed` question is not a held phase, so the card is
+  released before that read. **Every reading during a press is a quiet one**, and since m17 a quiet reading's failure keeps the
+  page whole; I2's fallback is reached by no reading today, kept as it is, and the two tests are retitled to say m17 holds them.
+- **Minor 2 (m93):** after `FORBIDDEN` the re-read took away the button the focus went back to: a refusal that means the list
+  moved now puts the focus on what was said (the words unchanged); asserted in m93's tests.
+- **Minor 3 (m126):** a limit naming no reset now keeps the read's (the round's: a budget read), so a spent allowance still says
+  when it resets (Rich's rule); the plan step's header comment says where each fact comes from.
+- **Minor 4 (m18):** the cost is read after *done* is said, never before it.
+- **Minors 5–7:** two doc comments back above their own declarations; m38 kept by a `@ts-expect-error` reader in
+  `runtime.test.ts` (red, TS2578, with `received` required again); `MOMENT` takes any fraction, as the contract's `\.\d+`.
+- **Minor 8:** `0168092`'s message names the change route `POST /api/apps/:projectId/changes`; it is
+  `POST /api/apps/:projectId/conversations` (not amended: history stands).
+
+**The acceptance**, in mock mode, on the dev database as it was (every run since the 1.6.0 adoption's on it: stopping our server
+for a fresh one was refused twice tonight), against our mock restarted at 08:54 on the platform's committed Task 10
+(`efcaaeb`): `check-seeing.sh` 8/8, `check-going-live.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh` 18/18,
+`check-building.sh` 12/12, `check-together.sh` 10 + 13, `check-keeping.sh` 8 + 12.
+
+**The gates** (at `abaf069`, contract 1.6.0 with Task 10 at manifest `efcaaeb`): `pnpm test` **2785 tests, 106 files, twice**
+(2752 at the adoption's part three: 33 new), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, all clean. Our server on 7105
+stays in mock mode (pid 9809's watcher throughout); no Vitest of ours left running.
+
+**For Rich:** nothing to decide. Told: m17 (a quiet read's failure says nothing on the page) and m83 (an absent id not read
+from the secret), each a line to change.
+
+**Skipped, and why:**
+
+- **m131** (named needing no decision): **no decision-free fix exists.** The keeper cannot read another token's question
+  (manifest's `api/routes/pending-actions.ts`, `getPendingAction`: a token reads *"ITS OWN, and nothing else"*) nor its expiry
+  (`listTokens` is a session's); keeping an expiry only from a mint our page saw needs the agent's key sent to our server
+  (F6b's Review Focus 4: never a secret on `POST …/agents`); and m130's finding (the expiry on the event) is Rich's word.
+  Task 10's `EventFrame.actor` names a person by display name only, too weak to match a kept row. Open; accept it, or decide
+  m130.
+- **m45**: reading the checklist of an app whose draft serves nothing goes past F5 Decision 3's rule (*"the only ones whose
+  checklist is read"*): a decision's edge.
+- **m101**: its second half (the landed moment kept under its heading, hiding a later version) needs the press's landed
+  version out of `LetStudentsIn` and an Overview-level landing test (m105's): larger than a minor. Its first half is m17's
+  mechanism, for the Overview.
+- **m12**: needs a mark in our progress contract (server and page) for a fix that never started: a small task of its own.
+- **m43**: begun as the `HOLD` came (nothing written).
+- **The sitting before's lists stand** for Rich's (m7, m8, m25, m59, m69 and m76, m75, m88–m91, m104, m107, m109, m112, m117,
+  m119, m120, m123, m73; and m129, m130), 7100's (m92, m111), the platform's (m64) and the larger (m20–m24, m54–m61, m68,
+  m97, m106).
+- **Not reached** (S, no decision found): m5, m6, m9, m11, m13, m16, m28, m35, m36, m40, m41, m46, m67, m70, m81, m82, m84,
+  m94, m98, m108, m128 (at Rich's review of `close-out.sh`); m99, m103 and m114 may need words.
 
 ## No longer applies
 

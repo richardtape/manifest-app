@@ -4,15 +4,15 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-03, ~06:50 PDT: **the faculty-ready adoption, part three, closed** (overnight, mock mode, spawned
-by `manifest-3d`): **the platform's sitting 4 is adopted** (manifest `0d5a743`, Task 13; `5effd5e`, F8): ***Agents* names every
-maker by `Token.mintedBy`** (*(yours)* and [Revoke] on the reader's own, the console's too; *"Made by <name>"* from `listMembers`
-on anyone else's) and our server answers no maker; **[Revoke] answers no question** (the platform ends them, FE-52);
-`pending_action.expired` held at the API and in `check-together.ts`; a question's wait capped at its token's end where we know it;
-F8 held, **m62 no longer applies**. Its record: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md)'s
-*Part three*. **All three parts of the faculty-ready adoption are in**; part two's clicked half (Rich on `app.` in edge mode) is owed
-at F5b sitting 1. **F1–F6 and F4a, F6b executed**; our server in **mock mode**. **Holds and frees come through `manifest-3d`**, the
-night's coordinator, Rich asleep)*:
+**Where things stand** *(2026-10-03, ~09:00 PDT: **a second overnight minors sitting closed** (`app-minors-3`, mock mode, spawned
+by `manifest-3d`, at Rich's *"Its pick, no decisions"*): **eighteen minors fixed and m122 closed** (`8743428`..`e5c3631`;
+[`minors.md`](./minors.md)'s dated entry), among them a start refused for the month now saying the platform's own limit (m126), a
+token id handed over refused unless its secret names it (m122, m83), *Going live*'s quiet re-read that fails keeping its page
+(m17). **The platform's Task 10 landed meanwhile** (manifest `beb4827`..`efcaaeb`: `EventFrame.actor` with its `token`,
+`Manifest-Admin-Reason`, `400 ADMIN_REASON_REQUIRED`, contract still 1.6.0): our typecheck and tests clean against it with no change, **not adopted**
+(nothing of ours reads `actor` or sends the header). **All three parts of the faculty-ready adoption are in**; part two's clicked
+half (Rich on `app.` in edge mode) is owed at F5b sitting 1. **F1–F6 and F4a, F6b executed**; our server in **mock mode**.
+**Holds and frees come through `manifest-3d`**, the night's coordinator, Rich asleep)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
@@ -23,7 +23,7 @@ night's coordinator, Rich asleep)*:
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **Minors, again** ([`minors.md`](./minors.md)): its dated entries 2026-10-03 list the S ones *not reached* and needing no decision; **m126** (the 1.6.0 adoption's), **m122**'s watch half and **m131** need none; **m129** and **m130** are Rich's (words; a finding) | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
+  | 1 | **Minors, a fourth time** ([`minors.md`](./minors.md)): its last dated entry (2026-10-03, `app-minors-3`) lists the S ones *not reached* with no decision found (m5, m6, m9, m11, m13, m16, m28, m35, m36, m40, m41, m43, m46, m67, m70, m81, m82, m84, m94, m98, m108); **m131 has no decision-free fix** (its entry: it waits with m130 for Rich); m12 and m101 are small tasks of their own | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
   | 2 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`) | Blocked | Rich's word and a 7100 window (*"After platform sitting 2"*, which is closed; the `__Host-` adoption, which is done); people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
   | 3 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
   | 4 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open (F6b is executed) |
@@ -31,7 +31,7 @@ night's coordinator, Rich asleep)*:
   - **First, always:** `ListAgents` (`manifest-3d` coordinates tonight: holds and frees come through it; tell it and the
     platform's live session your name and ports, and **run no Vitest while a HOLD stands**: read the flag file
     `manifest-3d` names before **every** run, and gate the run on it, never `cat` beside it), `pgrep -fl vitest`, Step 0
-    (contract **1.6.0**, 72 operations, 142 codes, adopted: its `__Host-` cookie names, and the platform's sitting 4's
+    (contract **1.6.0**, 72 operations, **143 codes** since Task 10, adopted: its `__Host-` cookie names, and the platform's sitting 4's
     `Token.mintedBy` and `pending_action.expired`, added without a bump, at manifest `0d5a743`).
 - **DOING A SITTING ON 7100** (F5b's sitting 1 next; the steps F6's walk and F6b's sittings 1 and 6 proved, gathered from
   §2, §7 and the plans):
@@ -73,6 +73,16 @@ night's coordinator, Rich asleep)*:
   7. **Before a click on an app our fresh database never saw** (F6b sitting 6): moving `app.sqlite` aside forgets every id
      our page minted before, so *Agents* would list old tokens under *Your agents*: **`together-7100.ts tidy` revokes every
      active token our server does not know, as its minter**.
+- **Minors, a third sitting, DONE** (2026-10-03, overnight, `app-minors-3`, mock mode, spawned by `manifest-3d`; the record:
+  [`minors.md`](./minors.md)'s dated entry): server m126, m122 (watch half: **closed**), m83, m18, m37, m31, m32, m27, m86, m38,
+  m39; web m15, m42, m93, m17, m10, m29, m49; `check-together.sh`/`.ts` hand over secrets naming their own ids (`1b12316`).
+  **New refusals of our own API** (no new code): a token id beside a secret that does not name it is `400 KEEPING_INVALID`,
+  `PROJECT_INVALID` or `CHANGE_INVALID` (`api/token-names.ts`'s `secretNames`). **Ours, for Rich:** no new words; m17's quiet
+  failure and m83's absent id not read from the secret, each a line to change. **The review** (fresh, read-only):
+  no Critical, nothing of Rich's taken, no caller broken; its fixes in `abaf069` (m93's focus, m126's reset kept, m18 after
+  *done*, m38 guarded); **the final review's two I2 tests are now held by m17** (every reading during a press is quiet, and I2's
+  `lastSeen` is reached by none today). 2785 tests twice; the seven acceptance scripts in mock mode on the dev database as it
+  was; our mock restarted on Task 10 (`efcaaeb`).
 - **The faculty-ready adoption, part three, DONE** (2026-10-03, overnight, mock mode, spawned by `manifest-3d`; the record:
   `research/2026-10-01-faculty-ready-adoption.md`, *Part three*): `5e656e4` (***Agents* by `Token.mintedBy`**: `rowsOf(tokens, kept,
   members, now)`, `Row.minter` always the platform's; `listMembers` read with the page; `KeptTokens.agents` ids alone, its `by`
@@ -189,7 +199,7 @@ night's coordinator, Rich asleep)*:
     the email edit `a7f5542`).
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
     session starts with `pgrep -fl vitest`. **Restart `pnpm mock`** after a landing that moves the mock's fixtures.
-- **Minors, two sittings** ([`minors.md`](./minors.md)'s dated entries): **m1–m4, m14, m19, m63** at Rich's word
+- **Minors, three sittings** ([`minors.md`](./minors.md)'s dated entries; the third, `app-minors-3`, above): **m1–m4, m14, m19, m63** at Rich's word
   (`manifest-app-minors`, 2026-10-02); **thirty more overnight** at his *"Its pick, no decisions"* (`manifest-app-minors-2`,
   2026-10-03, mock mode, `a947482`..`c1412af`: web, server and scripts; m77 found already fixed): test-first, the
   read-only walk 38/38 (m72) and the walk self-test 53/53 under `FORCE_COLOR` (m74), a fresh read-only review
@@ -222,7 +232,8 @@ night's coordinator, Rich asleep)*:
   - **The faculty-ready adoption, part three's** (the note's *Part three*): its four decisions, ours (the maker's name from
     `listMembers` read with the page; `pending_action.expired` says nothing of its own; the question card's *"Your agent"*
     unchanged; a token made elsewhere keeps the band's day); **m129** (words for another's agent on the card and in the
-    email) and **m130** (whether to ask the platform for a question's expiry on `pending_action.created`).
+    email) and **m130** (whether to ask the platform for a question's expiry on `pending_action.created`); **m131** waits with
+    m130 (the minors sitting of 2026-10-03 found no fix that needs no decision: its entry).
   - **F6b sitting 4's** (its entry): its words marked *ours* (the detail words, *"Manifest can't ask for it for you yet."*,
     **[Leave it out]** and its change's words, *Waiting to reach your students*'s facts and lines, the press's after-launch
     three, *"something reviewed at launch"*); its rulings (a helper is offered no ask; the versions' days with a time);
@@ -303,7 +314,12 @@ sitting 3 (Task 5, the `__Host-` cookies) was **`plat-s3`** (`7b85326`, `d4291dd
     (FE-29), the fixture unlisted (FE-31), `TOKEN_ACTION_PENDING`'s words (FE-50, FE-51). **Adopted** (part one, above).
     **Its sitting 3's `7b85326`** (still 1.6.0): `__Host-` cookie names on https and `sessionCookieFor(baseUrl)`, which the
     contract's client uses, **for an origin Manifest serves, never 7100's own port** (`d4291dd`): **adopted** (part two).
-    **Its sitting 4's Task 13** (still 1.6.0, in its working tree when last read): `Token.mintedBy` required, `pending_action.expired`.
+    **Its sitting 4's Task 13** (still 1.6.0, `0d5a743`): `Token.mintedBy` required, `pending_action.expired`: adopted (part
+    three). **Its sitting 6's Task 10** (still 1.6.0, `beb4827`..`efcaaeb`; **143 codes**): `EventFrame.actor` (`{ name,
+    asAdministrator, reason, token } | null`, required on every event; `token` is `{ id, name } | null`), the request header `Manifest-Admin-Reason` on 24 operations,
+    `400 ADMIN_REASON_REQUIRED` (a non-member administrator without a reason), and the build, deploy and validate sentences
+    naming who acted: **our typecheck and tests clean against it with no change; not adopted** (nothing of ours reads `actor`,
+    and our server acts for members alone).
     **At run time our server takes `@manifest/contract` from manifest's git-ignored `dist/`** (its `exports`' default), which
     the platform's sessions rebuild; only our tests alias it to `src/` (Decision 5). `dist/` held `sessionCookieFor` from
     04:07.
@@ -318,14 +334,15 @@ sitting 3 (Task 5, the `__Host-` cookies) was **`plat-s3`** (`7b85326`, `d4291dd
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-03, ~06:00 PDT)*:
+- **The machine** *(2026-10-03, ~09:00 PDT)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, started 05:07, its log
-    in the 1.6.0 adoption's scratchpad, `…/scratchpad/adopt-160/dev-mock.log`; `tsx watch` has restarted it on the
-    `__Host-` adoption's code), on **the dev database** (**version 7**) that the 1.6.0 adoption's third acceptance run began
-    fresh, **with the `__Host-` adoption's two acceptance runs on top** (stopping our server for a fresh one was refused by the
-    classifier), against **our mock on 7102** (`pnpm mock`, its default stage, **restarted at 05:28 on the platform's Task 13
-    fixture** by the `__Host-` adoption, its log in that sitting's scratchpad, `…/scratchpad/adopt-host/mock.log`; restart it
-    again whenever the platform's mock changes). The databases before are kept
+    in the 1.6.0 adoption's scratchpad, `…/scratchpad/adopt-160/dev-mock.log`; `tsx watch` has restarted it on every server
+    commit since, the third minors sitting's last), on **the dev database** (**version 7**) that the 1.6.0 adoption's third
+    acceptance run began fresh, **with every acceptance run since on top** (the `__Host-` adoption's two, part three's, and the
+    third minors sitting's: stopping our server for a fresh one was refused by the classifier twice), against **our mock on
+    7102** (`pnpm mock`, its default stage, **restarted at 08:54 on the platform's committed Task 10** (`efcaaeb`: `EventFrame.actor`
+    with its `token`) by the third minors sitting, its log in `manifest-3d`'s scratchpad, `…/scratchpad/minors-3/mock.log`; restart it again
+    whenever the platform's mock changes). The databases before are kept
     in `.data/`: `app-adopt160-acceptance-1.sqlite` and `-2` (the adoption's first two acceptance runs),
     **`app-adopt160-before-acceptance.sqlite`** (the minors sitting's second acceptance run),
     `app-minors2-acceptance-1.sqlite` (the minors sitting's first acceptance
@@ -458,7 +475,7 @@ sitting 3 (Task 5, the `__Host-` cookies) was **`plat-s3`** (`7b85326`, `d4291dd
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (**2742 tests, 106 files**, at `5d17771`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (**2785 tests, 106 files**, at `abaf069`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action; **and (F6) holds `keeping/` to the
       watch token's reads, and refuses `archive`, `restore` and a project's `DELETE` anywhere**;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
@@ -832,9 +849,10 @@ bash scripts/check-seeing.sh                                    # F4's acceptanc
 - **Shapes that cost a run** (F5 sitting 1): a build's field is `status`, an instance's `state`; `getProject` carries no
   environments and no spec (`createProject`'s answer does: use `listEnvironments` and the tree's `commitSha`); an
   audience's `burst` is `steady` or `synchronised`.
-- **`openAiCompatible`'s `fetch` is the global at the moment the model is made** (F5 sitting 2). A test that stubs
-  `fetch` after making the model sends real requests: sitting 2's first deadline test reached the real LiteLLM on 7106
-  (with made-up keys, refused). Stub first, then make the model.
+- **`openAiCompatible`'s `fetch` was the global at the moment the model was made** (F5 sitting 2): a test that stubbed
+  `fetch` after making the model sent real requests (sitting 2's first deadline test reached the real LiteLLM on 7106, with
+  made-up keys, refused). **Since m37 (`b9ddb64`) it is the global at the moment it asks**; a test still names a closed port
+  (`127.0.0.1:9`) or passes its own `fetch`, never a `.test` host (Valet answers those).
 - **A negative control must break what the test guards, not something beside it** (F5 sitting 2): a 5-minute first-word
   timer was not *"the old total deadline"* (the first word replaces it), and stayed green. Read why a control stayed green
   before trusting the test or the control.
