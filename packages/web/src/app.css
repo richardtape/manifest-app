@@ -66,6 +66,10 @@
 .app-main .mf-card .body-lead {
   margin: 0 0 var(--space-4);
 }
+/* The card's padding is the space beneath its last line (minors m5: a one-line notice). */
+.app-main .mf-card .body-lead:last-child {
+  margin-bottom: 0;
+}
 
 /* Nothing to show beside a rail: the platform could not be reached before we knew who. */
 .app-alone {

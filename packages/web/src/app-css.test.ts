@@ -19,6 +19,12 @@ function declarationsFor(selector: string): string {
 }
 
 describe('app.css', () => {
+  it('a card’s last line has no space beneath it: a one-line notice sits in its card (minors m5)', () => {
+    expect(declarationsFor('.app-main .mf-card .body-lead:last-child')).toMatch(
+      /margin-bottom:\s*0/,
+    )
+  })
+
   it('a support reference is kept whole, never broken at its hyphen (minors m6)', () => {
     expect(declarationsFor('.support-ref__code')).toMatch(/white-space:\s*nowrap/)
   })
