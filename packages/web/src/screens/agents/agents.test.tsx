@@ -14,6 +14,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
+import type { Then } from '../../router.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
 import { Agents } from './agents.js'
@@ -132,6 +133,7 @@ function stage(
     questions?: Schemas['PendingAction'][]
     revoke?: Answer[]
     reject?: Answer[]
+    confirm?: Answer[]
     mint?: Answer[]
     keepAgent?: Answer[]
     listTokens?: Answer
@@ -139,8 +141,9 @@ function stage(
 ) {
   const calls: [string, ...unknown[]][] = []
   let tokens = options.tokens ?? TOKENS
+  let questions = options.questions ?? QUESTIONS
   const turns: Record<string, number> = {}
-  const next = (name: 'revoke' | 'reject' | 'mint' | 'keepAgent'): Answer => {
+  const next = (name: 'revoke' | 'reject' | 'confirm' | 'mint' | 'keepAgent'): Answer => {
     const list = options[name] ?? ['ok']
     const turn = turns[name] ?? 0
     turns[name] = turn + 1
@@ -159,11 +162,25 @@ function stage(
     },
     listPendingActions: (projectId: string) => {
       calls.push(['listPendingActions', projectId])
-      return Promise.resolve(options.questions ?? QUESTIONS)
+      return Promise.resolve(questions)
     },
     rejectPendingAction: (id: string, reason: string, key: string) => {
       calls.push(['rejectPendingAction', id, reason, key])
-      return answered(next('reject'), () => ({ ...question(id, ''), state: 'rejected' }))
+      return answered(next('reject'), () => {
+        questions = questions.map((one) =>
+          one.id === id ? { ...one, state: 'rejected' as const } : one,
+        )
+        return { ...question(id, ''), state: 'rejected' }
+      })
+    },
+    confirmPendingAction: (id: string, key: string) => {
+      calls.push(['confirmPendingAction', id, key])
+      return answered(next('confirm'), () => {
+        questions = questions.map((one) =>
+          one.id === id ? { ...one, state: 'confirmed' as const } : one,
+        )
+        return { ...question(id, ''), state: 'confirmed' }
+      })
     },
     revokeToken: (tokenId: string, key: string) => {
       calls.push(['revokeToken', tokenId, key])
@@ -214,6 +231,7 @@ function stage(
 function open(
   s: ReturnType<typeof stage>,
   role: 'owner' | 'helper' | 'unknown' = 'owner',
+  then: Then = null,
 ) {
   return render(
     <Agents
@@ -222,7 +240,7 @@ function open(
       project={PROJECT}
       me={ME}
       role={role}
-      then={null}
+      then={then}
       expire={s.expire}
       now={() => NOW}
       timeZone={TZ}
@@ -239,7 +257,12 @@ const press = async (element: HTMLElement) => {
 const button = (name: string | RegExp) => screen.getByRole('button', { name })
 /** A row by the token's own name (in mono). */
 const rowOf = async (name: string) =>
-  (await screen.findByText(name)).closest('li') as HTMLElement
+  (await screen.findAllByText(name))
+    .map((found) => found.closest('li.agents__agent'))
+    .find((row) => row !== null) as HTMLElement
+/** The row of a token's name, if the list has one (its question's card names it too). */
+const listed = (name: string) =>
+  screen.queryAllByText(name).some((found) => found.closest('li.agents__agent') !== null)
 /** The page's words, without what is in mono (a token's own name, its key, an address). */
 const prose = () => {
   const copy = document.body.cloneNode(true) as HTMLElement
@@ -315,7 +338,7 @@ describe('the list (design §4)', () => {
     const s = stage({ listTokens: { status: 503, code: 'UNAVAILABLE' } })
     open(s)
     expect(await screen.findByRole('button', { name: words.refused.button })).toBeTruthy()
-    expect(screen.queryByText('Claude Code')).toBeNull()
+    expect(listed('Claude Code')).toBe(false)
   })
 
   it('a session that ended: the shell’s to say', async () => {
@@ -388,10 +411,13 @@ describe('[Revoke] (Decision 4; FE-49; (S1: M5))', () => {
     expect(order.indexOf('rejectPendingAction')).toBeLessThan(
       order.indexOf('revokeToken'),
     )
-    expect(order.lastIndexOf('listPendingActions')).toBeLessThan(
-      order.indexOf('rejectPendingAction'),
-    )
-    await waitFor(() => expect(screen.queryByText('Claude Code')).toBeNull())
+    // The page's own read, then the revoke's, before its answer.
+    expect(
+      order
+        .slice(0, order.indexOf('rejectPendingAction'))
+        .filter((c) => c === 'listPendingActions'),
+    ).toHaveLength(2)
+    await waitFor(() => expect(listed('Claude Code')).toBe(false))
     expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name))
     expect(s.called('listTokens').length).toBe(2)
   })
@@ -403,7 +429,7 @@ describe('[Revoke] (Decision 4; FE-49; (S1: M5))', () => {
     await press(mine.getByRole('button', { name: a.theirs.revoke }))
     await press(mine.getByRole('button', { name: a.theirs.revokeConfirm }))
     expect(s.called('revokeToken').map(([id]) => id)).toEqual([MINE.id])
-    await waitFor(() => expect(screen.queryByText('Claude Code')).toBeNull())
+    await waitFor(() => expect(listed('Claude Code')).toBe(false))
   })
 
   it('refused 404 at the press: only the person who made it can revoke it, and it is still listed', async () => {
@@ -413,7 +439,7 @@ describe('[Revoke] (Decision 4; FE-49; (S1: M5))', () => {
     await press(other.getByRole('button', { name: a.theirs.revoke }))
     await press(other.getByRole('button', { name: a.theirs.revokeConfirm }))
     expect((await screen.findByRole('alert')).textContent).toContain(a.theirs.onlyMinter)
-    expect(screen.getByText('from the console')).toBeTruthy()
+    expect(listed('from the console')).toBe(true)
   })
 
   it('anything else: we couldn’t, it still works, and a support reference', async () => {
@@ -575,5 +601,95 @@ describe('Let an agent of your own in (Review Focus 4)', () => {
     await press(button(m.button))
     await screen.findByText(SECRET)
     expect(machineryIn(prose())).toEqual([])
+  })
+})
+
+describe('their agent’s questions, at the top (F6b Task 12; Decision 16; (S1: M4))', () => {
+  const q = a.question
+  const cards = () =>
+    screen.queryByRole('heading', { name: q.title })?.closest('section') ?? null
+  const firstCard = () =>
+    waitFor(() => {
+      const found = cards()?.querySelector('.agents__question')
+      expect(found).toBeTruthy()
+      return found as HTMLElement
+    })
+
+  it('each question still waiting from an agent that can still act, its name joined from the list', async () => {
+    const s = stage({
+      questions: [
+        ...QUESTIONS,
+        // Its agent revoked (FE-52: still pending on the platform): not asked (Decision 16).
+        question('40000000-0000-4000-8000-000000000004', REVOKED.id),
+        // Past its day, the platform not yet saying so.
+        {
+          ...question('40000000-0000-4000-8000-000000000005', MINE.id),
+          expiresAt: '2026-10-03T18:59:00Z',
+        },
+      ],
+    })
+    open(s)
+    await firstCard()
+    const said = [...cards()!.querySelectorAll('.agents__question .body-lead')].map(
+      (p) => p.textContent,
+    )
+    expect(said).toEqual([
+      "Your agent 'Claude Code' asked to change who's on Reading responses.",
+      "Your agent 'from the console' asked to change who's on Reading responses.",
+    ])
+    expect(s.called('listPendingActions')).toEqual([[PROJECT.id]])
+  })
+
+  it('nothing waiting: no cards, and no heading', async () => {
+    open(stage({ questions: [QUESTIONS[1]!] }))
+    await rowOf('Claude Code')
+    expect(cards()).toBeNull()
+  })
+
+  it('Yes, once: said in the page, and the list read again; that card gone', async () => {
+    const s = stage()
+    open(s)
+    await press(within(await firstCard()).getByRole('button', { name: q.yes }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe(q.saidYes))
+    expect(s.called('confirmPendingAction').map(([id]) => id)).toEqual([QUESTIONS[0]!.id])
+    await waitFor(() =>
+      expect(cards()?.querySelectorAll('.agents__question')).toHaveLength(1),
+    )
+    expect(s.called('listPendingActions').length).toBe(2)
+  })
+
+  it('No: said in the page, and that card gone', async () => {
+    const s = stage()
+    open(s)
+    await press(within(await firstCard()).getByRole('button', { name: q.no }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe(q.saidNo))
+    await waitFor(() =>
+      expect(cards()?.querySelectorAll('.agents__question')).toHaveLength(1),
+    )
+  })
+
+  it('answered elsewhere meanwhile (PENDING_ACTION_RESOLVED): it has stopped waiting, read again', async () => {
+    const s = stage({ confirm: [{ status: 409, code: 'PENDING_ACTION_RESOLVED' }] })
+    open(s)
+    await press(within(await firstCard()).getByRole('button', { name: q.yes }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe(q.stopped))
+    expect(s.called('listPendingActions').length).toBe(2)
+  })
+
+  it('back from the second sign-in: said once, the same cards, nothing pressed by itself', async () => {
+    const s = stage()
+    open(s, 'owner', 'agents')
+    await firstCard()
+    expect(screen.getAllByText(words.goingLive.letIn.again)).toHaveLength(1)
+    expect(s.called('confirmPendingAction')).toEqual([])
+    expect(s.called('rejectPendingAction')).toEqual([])
+  })
+
+  it('a helper: an owner answers each, and nothing to press on them', async () => {
+    open(stage(), 'helper')
+    await firstCard()
+    const section = cards() as HTMLElement
+    expect(within(section).getAllByText(a.question.ownerAnswers)).toHaveLength(2)
+    expect(within(section).queryByRole('button')).toBeNull()
   })
 })

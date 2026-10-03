@@ -250,6 +250,27 @@ describe('needWords: each need, its sentence and its button', () => {
       button: { label: b.goingLiveButton, href: '/apps/reading-responses/going-live' },
     })
   })
+
+  it.each([true, false])(
+    'their agent’s question (F6b Task 12), to an owner (%s) or a helper: Agents, where it is answered or said who can',
+    (owner) => {
+      const need: Need = {
+        kind: 'agent-asks',
+        app,
+        pendingActionId: 'q',
+        tokenId: 't',
+        action: 'members:manage',
+        at: AT,
+        expiresAt: '2026-10-02T17:03:00.000Z',
+        owner,
+      }
+      expect(needWords(need, TZ)).toEqual({
+        says: 'Reading responses: your agent is asking something.',
+        button: { label: 'Agents', href: '/apps/reading-responses/agents' },
+      })
+      expect(machineryIn(needWords(need, TZ).says)).toEqual([])
+    },
+  )
 })
 
 describe('needsStillTrue: a switched-off app’s needs are its questions alone (the whole-branch review’s I1)', () => {
@@ -262,6 +283,17 @@ describe('needsStillTrue: a switched-off app’s needs are its questions alone (
     { kind: 'going-live', app: off },
     { kind: 'question', app: off, conversationId: 'c', title: 'Word count', since: AT },
     { kind: 'down', app: on, from: AT, owner: true },
+    // F6b Task 12: a switch-off revokes every token, so nothing could be said yes to.
+    {
+      kind: 'agent-asks',
+      app: off,
+      pendingActionId: 'q',
+      tokenId: 't',
+      action: 'members:manage',
+      at: AT,
+      expiresAt: '2026-10-02T17:03:00.000Z',
+      owner: true,
+    },
   ]
 
   it('switched off (the platform’s state, which our server cannot see: S1, M4): its questions alone; another app’s, all', () => {

@@ -661,6 +661,9 @@ export const words = {
       goingLive: (app: string) =>
         `${app}: something on its way to your students needs you.`, // ✓
       goingLiveButton: 'Going live', // ✓
+      /** F6b Task 12 (design §4): their agent's question, answered on *Agents*. */
+      agent: (app: string) => `${app}: your agent is asking something.`,
+      agents: 'Agents',
     },
     since: {
       title: 'Since you were last here', // ✓ (the design)
@@ -1488,6 +1491,54 @@ export const words = {
       sends: 'It sends the key with every request to Manifest, at',
       guide: "Its first read is Manifest's guide for agents, at",
       done: 'Done',
+    },
+    /**
+     * F6b TASK 12: THEIR AGENT'S QUESTION (design §4, D4; Decision 13). The design's words; the honest
+     * line stays until FE-5 (a) names who or which; the rest marked ours.
+     */
+    question: {
+      /** Ours: the cards' heading. */
+      title: 'What your agents are asking',
+      yourAgent: (name: string) => `Your agent '${name}'`,
+      anAgent: 'An agent',
+      asked: (who: string, action: string) => `${who} asked to ${action}.`,
+      /** Ours: an action we do not know, followed by the platform's own summary in mono. */
+      askedThis: (who: string) => `${who} asked:`,
+      /** The four a token is refused (D24), in the plan's words. */
+      actions: {
+        'members:manage': (app: string) => `change who's on ${app}`,
+        'release:promote': () => 'let your students have a new version',
+        'secret:read': () => 'read one of its secrets',
+        'quota:set': () => 'change how much it may use',
+      } as Record<string, (app: string) => string>,
+      /** FE-5's honest line, until it lands: *who* is the design's; the other three ours. */
+      didntSay: {
+        'members:manage': "It didn't say who.",
+        'release:promote': "It didn't say which version.",
+        'secret:read': "It didn't say which.",
+        'quota:set': "It didn't say how much.",
+      } as Record<string, string>,
+      unsure: "If you're not sure, say no.",
+      once: 'Yes lets it try that one request once.',
+      stops: (time: string, day: string | null) =>
+        day === null
+          ? `It stops waiting at ${time}.`
+          : `It stops waiting at ${time} on ${day}.`,
+      yes: 'Yes, once',
+      no: 'No',
+      why: 'Tell it why',
+      /** Ours. */
+      whyHint: 'If you like. It reads your words exactly as you write them.',
+      /** Decision 13: what an empty *Tell it why* sends (the platform asks for a reason). */
+      noReason: 'No reason given.',
+      /** Ours: a press under way. */
+      answering: 'Answering…',
+      ownerAnswers: 'An owner answers this.',
+      /** Ours: what the answer did, said in the page's status. */
+      saidYes: 'You said yes. It can try that one request once.',
+      saidNo: 'You said no, and it has been told.',
+      stopped: 'It has stopped waiting.',
+      couldnt: "We couldn't answer it just now. It's still waiting.",
     },
   },
   /** §24's two answers, in words. */

@@ -1,6 +1,6 @@
 import type { Conversation, Happening } from '../api/progress.js'
 import type { EmailKind, KeptApp, KeptMember, Outgoing } from '../store/keeping.js'
-import { actorOf } from './happenings.js'
+import { actorOf, type WaitingQuestion } from './happenings.js'
 import { mailWords as w } from './words.js'
 
 /**
@@ -159,6 +159,40 @@ export function emailsFor(happening: Happening, context: Context): Outgoing[] {
         recipient: member.email,
       },
       subject: one.subject,
+      text,
+    }))
+}
+
+/**
+ * F6b TASK 12 (Decision 14): THEIR AGENT'S QUESTION, once to each owner (who may answer it: FE-50),
+ * as work waiting (D3's four kinds stand), keyed by the question. Never to a helper, and not to its
+ * maker as such: the platform names none (FE-49). Its name is ours when our page made it.
+ */
+export function questionEmails(
+  question: WaitingQuestion,
+  context: {
+    app: KeptApp
+    members: KeptMember[]
+    origin: string
+    tokenName: string | null
+  },
+): Outgoing[] {
+  const { app, members, origin, tokenName } = context
+  const subject = w.agentAsks.subject(app.name)
+  const text = textOf(
+    w.agentAsks.body(app.name, tokenName, question.action, question.expiresAt),
+    appPage(origin, app, '/agents'),
+    w.lastLine.owner(app.name),
+  )
+  return members
+    .filter((member) => member.role === 'owner' && member.email !== '')
+    .map((member) => ({
+      key: {
+        kind: 'waiting',
+        happening: `${app.projectId}:agent-asks:${question.pendingActionId}`,
+        recipient: member.email,
+      },
+      subject,
       text,
     }))
 }

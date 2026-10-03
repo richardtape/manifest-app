@@ -203,3 +203,57 @@ export function gapsOf(entries: HistoryEntry[]): { from: string; to: string }[] 
 export function fromOf(entries: HistoryEntry[]): string | null {
   return entries.find((entry) => !entry.type.startsWith('keeping.'))?.at ?? null
 }
+
+/** F6b Decision 14: an agent's question waits a day (the platform's TTL; S1: M4). */
+const QUESTION_MS = 86_400_000
+/** What ends a question before its day: answered either way, or (FE-52) the platform's lapse. */
+const ANSWERED = new Set([
+  'pending_action.confirmed',
+  'pending_action.rejected',
+  'pending_action.expired',
+])
+
+/** An agent's question still waiting, as `pending_action.created` said it. */
+export interface WaitingQuestion {
+  pendingActionId: string
+  tokenId: string
+  action: string
+  at: string
+  /** When it was heard, plus a day: the event carries no expiry (S1: M4). */
+  expiresAt: string
+}
+
+/**
+ * F6b TASK 12: THEIR AGENT'S QUESTIONS STILL WAITING (Decision 14), oldest first: each
+ * `pending_action.created` with no answer (or lapse) for its id, and not past its day. Read from
+ * history, which the keeper already writes: no table of its own. A question is a need, never a
+ * line of what happened (`happeningOf` reads none).
+ */
+export function questionsOf(entries: HistoryEntry[], now: number): WaitingQuestion[] {
+  const answered = new Set<string>()
+  for (const entry of entries) {
+    if (!ANSWERED.has(entry.type)) continue
+    const id = text(detailOf(entry).pendingActionId)
+    if (id !== undefined) answered.add(id)
+  }
+  return entries.flatMap((entry) => {
+    if (entry.type !== 'pending_action.created') return []
+    const detail = detailOf(entry)
+    const pendingActionId = text(detail.pendingActionId)
+    const tokenId = text(detail.tokenId)
+    const action = text(detail.action)
+    if (!pendingActionId || !tokenId || !action || answered.has(pendingActionId))
+      return []
+    const expires = Date.parse(entry.at) + QUESTION_MS
+    if (Number.isNaN(expires) || expires <= now) return []
+    return [
+      {
+        pendingActionId,
+        tokenId,
+        action,
+        at: entry.at,
+        expiresAt: new Date(expires).toISOString(),
+      },
+    ]
+  })
+}

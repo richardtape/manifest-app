@@ -406,6 +406,20 @@ export type Need =
   | { kind: 'down'; app: AppRef; from: string; owner: boolean }
   | { kind: 'answering-again'; app: AppRef; from: string; to: string }
   | { kind: 'change-failed'; app: AppRef; incidentId: string; at: string; owner: boolean }
+  /**
+   * F6b Task 12 (Decision 14): an agent's question, still waiting. Every member's need; `owner`, who
+   * may answer it (FE-50: the code's rule, S1: M4). Its `expiresAt` is when it was heard plus a day.
+   */
+  | {
+      kind: 'agent-asks'
+      app: AppRef
+      pendingActionId: string
+      tokenId: string
+      action: string
+      at: string
+      expiresAt: string
+      owner: boolean
+    }
 
 /** *Since you were last here*: a line, and the app it is about. */
 export type SinceLine = Line & { app: AppRef }

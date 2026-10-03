@@ -182,5 +182,11 @@ export function needWords(
         says: b.goingLive(name),
         button: { label: b.goingLiveButton, href: appPath(need.app, '/going-live') },
       }
+    // F6b Task 12: to everyone on it; *Agents* says who may answer (FE-50).
+    case 'agent-asks':
+      return {
+        says: b.agent(name),
+        button: { label: b.agents, href: appPath(need.app, '/agents') },
+      }
   }
 }

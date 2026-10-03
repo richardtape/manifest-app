@@ -13,7 +13,16 @@ import { whenOf } from '../going-live/live.js'
 import { countOf } from '../limits.js'
 import { CopyButton } from '../preview/try-it-as.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
-import { CAPABILITY_WORDS, MINTABLE, rowsOf, type Row } from './model.js'
+import {
+  around,
+  askingOf,
+  CAPABILITY_WORDS,
+  MINTABLE,
+  rowsOf,
+  type Asking,
+  type Row,
+} from './model.js'
+import { Question } from './question.js'
 
 const a = words.agents
 const t = a.theirs
@@ -25,7 +34,7 @@ const DAYS = [7, 30, 90] as const
 type Loaded =
   | { state: 'loading' }
   | { state: 'trouble'; trouble: Trouble }
-  | { state: 'ready'; rows: Row[] }
+  | { state: 'ready'; rows: Row[]; questions: Asking[] }
 /** One press at a time. */
 type Pressing = { kind: 'revoke'; tokenId: string } | { kind: 'make' }
 /** What a press that did not go through says, and where. */
@@ -40,12 +49,6 @@ function refusalFrom(error: unknown): Refusal {
   return error.status === null
     ? { kind: 'unreachable' }
     : { kind: 'refused', code: error.code, status: error.status }
-}
-
-/** A sentence's words around one place (`words.ts` keeps the sentence whole). */
-function around(sentence: (said: string) => string): [string, string] {
-  const [before = '', after = ''] = sentence('\u0000').split('\u0000')
-  return [before, after]
 }
 
 /** What a token may do: our words, an unknown one by its name in mono; "a, b and c". */
@@ -88,6 +91,8 @@ export function Agents({
   ours,
   project,
   me,
+  role,
+  then,
   expire,
   now = () => new Date(),
   timeZone,
@@ -96,9 +101,9 @@ export function Agents({
   ours: Ours
   project: Schemas['Project']
   me: Pick<Schemas['Me'], 'id'>
-  /** Owner or helper (`useRole`): who may answer an agent's question (Task 12). */
+  /** Owner or helper (`useRole`): who may answer an agent's question (FE-50). */
   role: 'owner' | 'helper' | 'unknown'
-  /** Back from signing in again (`agents`): an answer's second sign-in (Task 12). */
+  /** Back from signing in again (`agents`): [Yes, once]'s second sign-in. */
   then: Then
   expire: () => void
   now?: () => Date
@@ -119,6 +124,8 @@ export function Agents({
   const [name, setName] = useState('')
   const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set())
   const [days, setDays] = useState<number>(30)
+  /** An answer given here: the second sign-in's line has done its work. */
+  const [answered, setAnswered] = useState(false)
   /** The key, the one time it exists: in this component alone, never stored (Review Focus 4). */
   const [made, setMade] = useState<string | null>(null)
   const revokes = useRef(new Map<string, HTMLDivElement>())
@@ -136,10 +143,18 @@ export function Agents({
 
   useEffect(() => {
     let current = true
-    Promise.all([platform.listTokens(project.id), ours.minted(project.id)]).then(
-      ([tokens, kept]) =>
+    Promise.all([
+      platform.listTokens(project.id),
+      ours.minted(project.id),
+      platform.listPendingActions(project.id),
+    ]).then(
+      ([tokens, kept, actions]) =>
         current &&
-        setLoaded({ state: 'ready', rows: rowsOf(tokens, kept, clock.current()) }),
+        setLoaded({
+          state: 'ready',
+          rows: rowsOf(tokens, kept, clock.current()),
+          questions: askingOf(actions, tokens, clock.current()),
+        }),
       (error: unknown) => {
         if (!current) return
         const refusal = refusalFrom(error)
@@ -217,6 +232,21 @@ export function Agents({
     setPressing(null)
     setConfirming(null)
     setStatus(t.revoked(project.name))
+    setFocusOn('status')
+    readAgain()
+  }
+
+  /** Their agent's question answered, or found no longer waiting: said, and read again. */
+  const onAnswered = (answer: 'yes' | 'no' | 'gone') => {
+    setAnswered(true)
+    setSaid(undefined)
+    setStatus(
+      answer === 'yes'
+        ? a.question.saidYes
+        : answer === 'no'
+          ? a.question.saidNo
+          : a.question.stopped,
+    )
     setFocusOn('status')
     readAgain()
   }
@@ -300,6 +330,30 @@ export function Agents({
       ) : null}
       {loaded.state === 'ready' ? (
         <>
+          {loaded.questions.length === 0 ? null : (
+            <section className="agents__section" aria-labelledby="agents-questions">
+              <h2 className="heading" id="agents-questions">
+                {a.question.title}
+              </h2>
+              {then === 'agents' && !answered ? (
+                <p className="body">{words.goingLive.letIn.again}</p>
+              ) : null}
+              {loaded.questions.map(({ action, tokenName }) => (
+                <Question
+                  key={action.id}
+                  platform={platform}
+                  project={project}
+                  action={action}
+                  tokenName={tokenName}
+                  role={role}
+                  now={() => clock.current()}
+                  timeZone={timeZone}
+                  expire={expire}
+                  onAnswered={onAnswered}
+                />
+              ))}
+            </section>
+          )}
           {ourRows.length === 0 ? null : (
             <section className="agents__section" aria-labelledby="agents-ours">
               <h2 className="heading" id="agents-ours">

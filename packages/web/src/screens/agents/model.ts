@@ -75,3 +75,39 @@ export function rowsOf(tokens: Schemas['Token'][], kept: KeptTokens, now: Date):
       }
     })
 }
+
+/** A sentence's words around one place, so a name can sit in it in mono (`words.ts` keeps it whole). */
+export function around(sentence: (said: string) => string): [string, string] {
+  const [before = '', after = ''] = sentence('\u0000').split('\u0000')
+  return [before, after]
+}
+
+/** A question to put to the person, and its agent's name (the list's). */
+export interface Asking {
+  action: Schemas['PendingAction']
+  tokenName: string
+}
+
+/**
+ * F6b TASK 12: THE QUESTIONS ASKED, in the platform's order (newest first): still `pending`, not
+ * past its day, and **its agent still able to act** (Decision 16, FE-52: a revoked or expired
+ * token's question stays `pending` on the platform, and a yes to it does nothing). `listPendingActions`
+ * takes no `?state=` ((S1: M4)): filtered here.
+ */
+export function askingOf(
+  actions: Schemas['PendingAction'][],
+  tokens: Schemas['Token'][],
+  now: Date,
+): Asking[] {
+  const active = new Map(
+    tokens.filter((token) => activeOf(token, now)).map((token) => [token.id, token.name]),
+  )
+  return actions.flatMap((action) => {
+    const tokenName = active.get(action.tokenId)
+    return action.state === 'pending' &&
+      Date.parse(action.expiresAt) > now.getTime() &&
+      tokenName !== undefined
+      ? [{ action, tokenName }]
+      : []
+  })
+}

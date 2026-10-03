@@ -1522,3 +1522,19 @@
   align-items: center;
   gap: var(--space-2);
 }
+/* F6b Task 12: their agent's question, a card at the top of *Agents*. */
+.agents__question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.app-main .agents__question p {
+  margin: 0;
+}
+.agents__question .body-lead {
+  overflow-wrap: anywhere;
+}
+.agents__why {
+  width: 100%;
+  resize: vertical;
+}

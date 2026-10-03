@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Happening } from '../api/progress.js'
 import type { HistoryEntry, KeptMember } from '../store/keeping.js'
-import { fromOf, gapsOf, happeningOf, linesOf } from './happenings.js'
+import { fromOf, gapsOf, happeningOf, linesOf, questionsOf } from './happenings.js'
 
 /**
  * F6 TASK 4: WHAT HAPPENED, AS A PERSON READS IT. `history` keeps each event as the platform sent
@@ -491,5 +491,66 @@ describe('gapsOf and fromOf: what the history page says of itself', () => {
     expect(fromOf(entries)).toBe('2026-09-18T16:00:00.000Z')
     expect(fromOf([entry('keeping.gap', { from: 'a', to: 'b' })])).toBeNull()
     expect(fromOf([])).toBeNull()
+  })
+})
+
+describe('questionsOf: their agent’s questions still waiting (F6b Task 12, Decision 14)', () => {
+  const Q1 = 'q1000000-0000-4000-8000-000000000001'
+  const Q2 = 'q2000000-0000-4000-8000-000000000002'
+  const T1 = 't1000000-0000-4000-8000-000000000001'
+  const AT = '2026-10-03T17:00:00.000Z'
+  const asked = (id: string, at = AT, action = 'members:manage') =>
+    entry('pending_action.created', { pendingActionId: id, tokenId: T1, action }, at)
+  const answered = (type: string, id: string) =>
+    entry(type, { pendingActionId: id, tokenId: T1, action: 'members:manage' }, AT)
+  const soon = Date.parse('2026-10-03T18:00:00.000Z')
+
+  it('a question asked is waiting for a day: its expiry the moment it was heard plus 24 hours (S1: M4)', () => {
+    expect(questionsOf([asked(Q1)], soon)).toEqual([
+      {
+        pendingActionId: Q1,
+        tokenId: T1,
+        action: 'members:manage',
+        at: AT,
+        expiresAt: '2026-10-04T17:00:00.000Z',
+      },
+    ])
+  })
+
+  it.each([
+    'pending_action.confirmed',
+    'pending_action.rejected',
+    'pending_action.expired',
+  ])('%s for it: no longer waiting; another’s answer changes nothing', (type) => {
+    expect(questionsOf([asked(Q1), asked(Q2), answered(type, Q1)], soon)).toEqual([
+      expect.objectContaining({ pendingActionId: Q2 }),
+    ])
+  })
+
+  it('past its day, with no event: no longer waiting (Review Focus 5)', () => {
+    expect(questionsOf([asked(Q1)], Date.parse('2026-10-04T17:00:00.000Z'))).toEqual([])
+    expect(questionsOf([asked(Q1)], Date.parse('2026-10-04T16:59:59.000Z'))).toHaveLength(
+      1,
+    )
+  })
+
+  it('an action the platform adds later is still a question, by its name', () => {
+    expect(questionsOf([asked(Q1, AT, 'payments:spend')], soon)[0]?.action).toBe(
+      'payments:spend',
+    )
+  })
+
+  it('a detail missing an id, or the action, is no question (never a crash)', () => {
+    const broken = [
+      entry('pending_action.created', { tokenId: T1, action: 'members:manage' }),
+      entry('pending_action.created', { pendingActionId: Q1, action: 'members:manage' }),
+      entry('pending_action.created', { pendingActionId: Q2, tokenId: T1 }),
+      entry('pending_action.created', null),
+    ]
+    expect(questionsOf(broken, soon)).toEqual([])
+  })
+
+  it('is never a line of the history (what happened is the platform’s; a question is a need)', () => {
+    expect(happeningOf(asked(Q1))).toBeNull()
   })
 })

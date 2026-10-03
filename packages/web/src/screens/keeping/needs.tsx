@@ -16,6 +16,8 @@ function keyOf(need: PageNeed): string {
       return `change-failed-${need.incidentId}`
     case 'answering-again':
       return `answering-again-${need.app.projectId}-${need.from}`
+    case 'agent-asks':
+      return `agent-asks-${need.pendingActionId}`
     case 'down':
     case 'going-live':
       return `${need.kind}-${need.app.projectId}`

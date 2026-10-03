@@ -760,6 +760,96 @@ describe('the emails (Task 5: D3, once each)', () => {
     expect(t.store.members(P1)).toEqual([member(ALICE), carol])
   })
 
+  describe('their agent’s question (F6b Task 12, Decision 14)', () => {
+    const Q = 'q1000000-0000-4000-8000-000000000001'
+    const T = 't1000000-0000-4000-8000-000000000001'
+    const created = (n: number, id = Q) =>
+      event(n, 'pending_action.created', {
+        pendingActionId: id,
+        tokenId: T,
+        action: 'members:manage',
+      })
+
+    it('pending_action.created: each owner emailed once, its agent named as our page kept it; never a helper', async () => {
+      const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+      t.store.rememberPerson({
+        id: ALICE,
+        displayName: 'Alice Instructor',
+        email: 'alice@example.test',
+      })
+      t.store.keepMinted({
+        tokenId: T,
+        projectId: P1,
+        personId: ALICE,
+        purpose: 'agent',
+        conversationId: null,
+        name: 'Claude Code',
+        expiresAt: inDays(30),
+        mintedAt: NOW.toISOString(),
+      })
+      t.handlers.event(created(6))
+      await settle()
+      expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+        {
+          to: 'alice@example.test',
+          subject: 'Reading responses: your agent is asking something',
+        },
+        {
+          to: 'carol@example.test',
+          subject: 'Reading responses: your agent is asking something',
+        },
+      ])
+      expect(t.sent[0]!.text).toContain(
+        "Your agent 'Claude Code' asked to change who's on",
+      )
+      expect(t.sent[0]!.text).toContain(`${ORIGIN}/apps/reading-responses/agents`)
+      // Written to history as every event is (the band reads it there).
+      expect(t.store.historyOf(P1).map((entry) => entry.type)).toContain(
+        'pending_action.created',
+      )
+    })
+
+    it('an agent our page did not make is "An agent"', async () => {
+      const t = await live()
+      t.handlers.event(created(6))
+      await settle()
+      expect(t.sent[0]!.text).toMatch(/^An agent asked to /)
+    })
+
+    it('heard again (a replay, a reconnect) sends nothing more; another question is its own email', async () => {
+      const t = await live()
+      t.handlers.event(created(6))
+      t.handlers.event(created(6))
+      t.handlers.event(created(7, 'q2000000-0000-4000-8000-000000000002'))
+      await settle()
+      expect(t.sent).toHaveLength(2)
+    })
+
+    it('in the first replay of an app we never watched: its past, written and emailed to nobody', async () => {
+      const t = setUp()
+      await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+      const handlers = t.open()[0]!.handlers
+      handlers.event(created(6))
+      handlers.replayed!({ ids: [created(6).id], overlapped: false })
+      await settle()
+      expect(t.store.historyOf(P1)).toHaveLength(1)
+      expect(t.sent).toEqual([])
+    })
+
+    it('its answer, and anything else of its kind, emails nobody', async () => {
+      const t = await live()
+      for (const [n, type] of [
+        [8, 'pending_action.confirmed'],
+        [9, 'pending_action.rejected'],
+      ] as const)
+        t.handlers.event(
+          event(n, type, { pendingActionId: Q, tokenId: T, action: 'members:manage' }),
+        )
+      await settle()
+      expect(t.sent).toEqual([])
+    })
+  })
+
   it('at boot, an email claimed and never finished is sent (Review Focus 1)', async () => {
     const t = setUp()
     t.store.claimEmail({

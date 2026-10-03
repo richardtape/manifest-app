@@ -6,8 +6,8 @@ import type { Hub } from '../api/events.js'
 import type { Chip, Conversation, Happening } from '../api/progress.js'
 import type { Store } from '../store/db.js'
 import type { HistoryEntry, KeptApp, KeptMember } from '../store/keeping.js'
-import { emailsFor, waitingEmail } from './emails.js'
-import { happeningOf } from './happenings.js'
+import { emailsFor, questionEmails, waitingEmail } from './emails.js'
+import { happeningOf, questionsOf } from './happenings.js'
 import { deliver, deliverUnfinished, type Mailer } from './mail.js'
 import {
   answerOf,
@@ -192,6 +192,7 @@ export function createKeeper({
     }
     if (event.type === 'project.deleted') return forget(projectId)
     if (READS_APP.has(event.type)) void refresh(projectId, one, 'app')
+    if (event.type === 'pending_action.created' && !one.first) asked(entry)
     const happening = one.first ? null : happeningOf(entry)
     // Someone added is named once the members are read again; someone removed, before.
     if (happening?.kind === 'member-added')
@@ -225,6 +226,24 @@ export function createKeeper({
     const members = store.members(entry.projectId)
     const context = { app, members, origin, at: entry.at, id: entry.id }
     for (const outgoing of emailsFor(happening, context))
+      void deliver(store, mailer, outgoing, wait)
+  }
+
+  /**
+   * F6b TASK 12 (Decision 14): their agent's question, once to each owner, its agent named as our
+   * page kept it (`minted`), else none. A question already answered or a day old is not one.
+   */
+  function asked(entry: HistoryEntry): void {
+    const app = store.app(entry.projectId)
+    const [question] = questionsOf([entry], now().getTime())
+    if (app === undefined || question === undefined) return
+    const tokenName =
+      store
+        .mintedOn(entry.projectId)
+        .find((row) => row.tokenId === question.tokenId && row.purpose === 'agent')
+        ?.name ?? null
+    const members = store.members(entry.projectId)
+    for (const outgoing of questionEmails(question, { app, members, origin, tokenName }))
       void deliver(store, mailer, outgoing, wait)
   }
 

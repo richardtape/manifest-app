@@ -568,6 +568,84 @@ describe('GET /api/needs (design §2: the band)', () => {
     })
   })
 
+  describe('their agent’s question (F6b Task 12, Decision 14)', () => {
+    const Q = 'q1000000-0000-4000-8000-000000000001'
+    const TOKEN = 't1000000-0000-4000-8000-000000000001'
+    const asked = (t: T, at = ago(HOUR), id = Q) =>
+      happened(
+        t,
+        PROJECT,
+        'pending_action.created',
+        { pendingActionId: id, tokenId: TOKEN, action: 'members:manage' },
+        at,
+      )
+
+    it('a need for every member, with whether they may answer it (an owner); waiting a day from when it was heard', async () => {
+      const t = setUp()
+      keep(t, PROJECT, [memberOf(ALICE), memberOf(BOB, 'collaborator')])
+      const at = ago(HOUR)
+      asked(t, at)
+      const need = {
+        kind: 'agent-asks',
+        app: refOf(),
+        pendingActionId: Q,
+        tokenId: TOKEN,
+        action: 'members:manage',
+        at,
+        expiresAt: new Date(Date.parse(at) + 24 * HOUR).toISOString(),
+      }
+      expect((await t.ask('GET', '/api/needs')).json()).toEqual({
+        needs: [{ ...need, owner: true }],
+      })
+      expect((await t.ask('GET', '/api/needs', AS_BOB)).json()).toEqual({
+        needs: [{ ...need, owner: false }],
+      })
+    })
+
+    it.each(['pending_action.confirmed', 'pending_action.rejected'])(
+      'answered (%s): gone',
+      async (type) => {
+        const t = setUp()
+        keep(t, PROJECT, [memberOf(ALICE)])
+        asked(t)
+        happened(
+          t,
+          PROJECT,
+          type,
+          {
+            pendingActionId: Q,
+            tokenId: TOKEN,
+            action: 'members:manage',
+            resolvedBy: ALICE.id,
+          },
+          ago(HOUR / 2),
+        )
+        expect((await t.ask('GET', '/api/needs')).json()).toEqual({ needs: [] })
+      },
+    )
+
+    it('a day old, with nothing heard since: gone, without an event (Review Focus 5)', async () => {
+      const t = setUp()
+      keep(t, PROJECT, [memberOf(ALICE)])
+      asked(t, ago(24 * HOUR + 60_000))
+      expect((await t.ask('GET', '/api/needs')).json()).toEqual({ needs: [] })
+    })
+
+    it('a switched-off app: gone (a switch-off revokes every token; nothing could be said yes to)', async () => {
+      const t = setUp()
+      keep(t, PROJECT, [memberOf(ALICE)], { state: 'archived' })
+      asked(t)
+      expect((await t.ask('GET', '/api/needs')).json()).toEqual({ needs: [] })
+    })
+
+    it('another person’s app’s question is not theirs (Review Focus 5)', async () => {
+      const t = setUp()
+      keep(t, PROJECT, [memberOf(ALICE)])
+      asked(t)
+      expect((await t.ask('GET', '/api/needs', AS_BOB)).json()).toEqual({ needs: [] })
+    })
+  })
+
   it('another person’s app is not in it (Review Focus 5); ?projectId= keeps to one app, and a stranger’s is 404', async () => {
     const t = setUp()
     keep(t, PROJECT, [memberOf(ALICE)])

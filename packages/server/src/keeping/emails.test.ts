@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { machineryIn } from '../../../web/src/screens/machinery.js'
 import type { Conversation, Happening } from '../api/progress.js'
 import type { EmailKind, KeptApp, KeptMember, Outgoing } from '../store/keeping.js'
-import { emailsFor, waitingEmail } from './emails.js'
+import { emailsFor, questionEmails, waitingEmail } from './emails.js'
 
 /**
  * F6 TASK 5: THE EMAILS (D3), pure. Who is emailed what for one happening, and the words: plain
@@ -401,5 +401,82 @@ describe('the words: plain text in our words (C3)', () => {
       happening: `${P}:k`,
       recipient: 'alice@ubc.ca',
     })
+  })
+})
+
+describe('questionEmails: their agent’s question, to the owners (F6b Task 12, Decision 14)', () => {
+  const Q = 'q1000000-0000-4000-8000-000000000001'
+  const T = 't1000000-0000-4000-8000-000000000001'
+  /** Heard at 10:12am on 3 October in Vancouver: it stops waiting at the same time the next day. */
+  const question = (action = 'members:manage') => ({
+    pendingActionId: Q,
+    tokenId: T,
+    action,
+    at: '2026-10-03T17:12:00.000Z',
+    expiresAt: '2026-10-04T17:12:00.000Z',
+  })
+  const asked = (action?: string, tokenName: string | null = 'Claude Code') =>
+    questionEmails(question(action), {
+      app: APP,
+      members: MEMBERS,
+      origin: ORIGIN,
+      tokenName,
+    })
+
+  it('once to each owner, keyed by the question, as work waiting; never to a helper', () => {
+    const sent = asked()
+    expect(sentTo(sent)).toEqual(OWNERS)
+    expect(sent.map((one) => one.key.kind)).toEqual(['waiting', 'waiting', 'waiting'])
+    expect(new Set(sent.map((one) => one.key.happening))).toEqual(
+      new Set([`${P}:agent-asks:${Q}`]),
+    )
+  })
+
+  it('an owner with no address is skipped', () => {
+    const members = MEMBERS.map((m) => (m.userId === CAROL ? { ...m, email: '' } : m))
+    expect(
+      sentTo(
+        questionEmails(question(), {
+          app: APP,
+          members,
+          origin: ORIGIN,
+          tokenName: null,
+        }),
+      ),
+    ).toEqual(['alice@ubc.ca', 'dan@ubc.ca'])
+  })
+
+  it('its subject, its body naming the agent and the action, when it stops waiting (Vancouver’s), and a link to Agents', () => {
+    const [one] = asked()
+    expect(one!.subject).toBe('Reading responses: your agent is asking something')
+    expect(one!.text).toBe(
+      [
+        "Your agent 'Claude Code' asked to change who's on Reading responses. It stops waiting at 10:12am on 4 October. Answer it on its page:",
+        `${ORIGIN}/apps/reading-responses/agents`,
+        "You're getting this because you own Reading responses on Manifest.",
+      ].join('\n\n'),
+    )
+  })
+
+  it('an agent we did not make is "An agent"', () => {
+    expect(asked('members:manage', null)[0]!.text.split('\n')[0]).toBe(
+      "An agent asked to change who's on Reading responses. It stops waiting at 10:12am on 4 October. Answer it on its page:",
+    )
+  })
+
+  it.each([
+    ['members:manage', "change who's on Reading responses"],
+    ['release:promote', 'let your students have a new version of Reading responses'],
+    ['secret:read', 'read one of the secrets Reading responses keeps'],
+    ['quota:set', 'change how much Reading responses may use'],
+    ['payments:spend', 'do something on Reading responses that an owner must allow'],
+  ])('%s, in words, with no machinery and never its name', (action, said) => {
+    const [one] = asked(action)
+    expect(one!.text).toContain(`asked to ${said}.`)
+    const link = `${ORIGIN}/apps/reading-responses/agents`
+    expect(machineryIn(`${one!.subject}\n${one!.text.replace(link, '')}`)).toEqual([])
+    expect(one!.text).not.toContain(action)
+    expect(one!.text).not.toContain("Reading responses's")
+    for (const id of [Q, T, P]) expect(one!.text).not.toContain(id)
   })
 })

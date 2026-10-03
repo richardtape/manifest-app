@@ -2,7 +2,14 @@ import type { Schemas } from '@manifest/contract'
 import { describe, expect, it } from 'vitest'
 import type { KeptTokens } from '@manifest-app/server/progress'
 import { machineryIn } from '../machinery.js'
-import { activeOf, CAPABILITY_WORDS, capabilityWords, MINTABLE, rowsOf } from './model.js'
+import {
+  activeOf,
+  askingOf,
+  CAPABILITY_WORDS,
+  capabilityWords,
+  MINTABLE,
+  rowsOf,
+} from './model.js'
 
 /**
  * F6b TASK 11: *AGENTS*' WORDS AND ROWS, pure. What a token may do in words (the eleven a person
@@ -125,5 +132,54 @@ describe('which tokens are listed', () => {
       ['mine', null, { id: 'u-1', name: 'Alex Owner' }],
       ['theirs', null, null],
     ])
+  })
+})
+
+describe('which questions are asked (F6b Task 12; Decision 16; (S1: M4))', () => {
+  const asked = (
+    id: string,
+    tokenId: string,
+    over: Partial<Schemas['PendingAction']> = {},
+  ): Schemas['PendingAction'] => ({
+    id,
+    projectId: 'p',
+    tokenId,
+    action: 'members:manage',
+    state: 'pending',
+    method: 'POST',
+    path: '/v1/projects/p/members',
+    bodySha256: 'x',
+    summary: 'Add a member',
+    expiresAt: '2026-10-04T00:00:00Z',
+    createdAt: '2026-10-03T00:00:00Z',
+    resolvedAt: null,
+    waitingSeconds: 0,
+    reason: null,
+    consumedAt: null,
+    ...over,
+  })
+  const tokens = [
+    token('live', { name: 'Claude Code' }),
+    token('gone', { revokedAt: '2026-10-03T00:00:00Z' }),
+    token('lapsed', { expired: true }),
+  ]
+
+  it('still waiting, not past its day, and its agent still able to act: with its name', () => {
+    const actions = [
+      asked('a', 'live'),
+      asked('b', 'live', { state: 'confirmed' }),
+      asked('c', 'live', { state: 'rejected' }),
+      asked('d', 'live', { state: 'expired' }),
+      asked('e', 'live', { expiresAt: '2026-10-03T11:59:59Z' }),
+      asked('f', 'gone'),
+      asked('g', 'lapsed'),
+      asked('h', 'unknown-token'),
+    ]
+    expect(
+      askingOf(actions, tokens, NOW).map(({ action, tokenName }) => [
+        action.id,
+        tokenName,
+      ]),
+    ).toEqual([['a', 'Claude Code']])
   })
 })

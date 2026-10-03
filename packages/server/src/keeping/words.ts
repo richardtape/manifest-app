@@ -46,6 +46,21 @@ export function howLong(from: string, to: string): string {
 
 const roleWords = { owner: 'an owner', collaborator: 'a helper' } as const
 
+/** The four a token is refused and asks a person about (D24), with the app in each; ours. */
+const ACTIONS: Record<string, (app: string) => string> = {
+  'members:manage': (app) => `change who's on ${app}`,
+  'release:promote': (app) => `let your students have a new version of ${app}`,
+  'secret:read': (app) => `read one of the secrets ${app} keeps`,
+  'quota:set': (app) => `change how much ${app} may use`,
+}
+
+/** An action in words; one the platform adds later, generically (never its name: C3). */
+export function actionWords(action: string, app: string): string {
+  return Object.hasOwn(ACTIONS, action)
+    ? ACTIONS[action]!(app)
+    : `do something on ${app} that an owner must allow`
+}
+
 export const mailWords = {
   lastLine: {
     owner: (app: string) => `You're getting this because you own ${app} on Manifest.`,
@@ -160,6 +175,15 @@ export const mailWords = {
     subject: (app: string) => `${app}: we need you`,
     body: (app: string, title: string) =>
       `We stopped working on "${title}" for ${app}, because we need you. What we're asking is in the conversation:`,
+  },
+  /**
+   * F6b TASK 12 (Decision 14; the plan's *Words proposed*): their agent's question, to each owner.
+   * The action is said with the app in it (never "<app>'s"), so the body does not name it twice.
+   */
+  agentAsks: {
+    subject: (app: string) => `${app}: your agent is asking something`,
+    body: (app: string, tokenName: string | null, action: string, expiresAt: string) =>
+      `${tokenName === null ? 'An agent' : `Your agent '${tokenName}'`} asked to ${actionWords(action, app)}. It stops waiting at ${clockOf(expiresAt)} on ${dayOf(expiresAt)}. Answer it on its page:`,
   },
   aDay: {
     subject: (app: string) => `${app}: still waiting for you`,
