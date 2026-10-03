@@ -361,6 +361,10 @@
   margin: 0 0 var(--space-4);
   color: var(--ink-secondary);
 }
+/* The reference itself, kept whole wherever it is said: never broken at its hyphen (minors m6). */
+.support-ref__code {
+  white-space: nowrap;
+}
 
 /* Moment 3: their words, and what happens next beside them. */
 .describe {

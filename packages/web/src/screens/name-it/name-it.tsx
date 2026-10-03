@@ -25,7 +25,7 @@ import {
 } from '../describe/memory.js'
 import { MakingSteps } from '../making/making.js'
 import { mintRequest } from '../making/token.js'
-import { SupportReference } from '../reference.js'
+import { ReferenceLine, SupportReference } from '../reference.js'
 import {
   addressOf,
   needAnotherRound,
@@ -313,7 +313,7 @@ export function NameIt({
         ? {
             tone: 'attention',
             title: words.nameIt.couldntCheck,
-            body: words.reference.line(uncheckable.reference),
+            body: <ReferenceLine reference={uncheckable.reference} />,
           }
         : undefined
   const checkAgain =

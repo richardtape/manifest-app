@@ -22,6 +22,11 @@ import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
 
+/** The reference's line, the reference kept whole in an element of its own (minors m6). */
+const referenceLine = (reference: string) => (_: string, element: Element | null) =>
+  element?.textContent === words.reference.line(reference) &&
+  element.querySelector('.support-ref__code')?.textContent === reference
+
 /**
  * MOMENT 5 (F2 Task 9), through the whole App: the plan written, corrected and agreed, with
  * our API and the stream stood in for, so every press can be seen reaching our server and
@@ -475,7 +480,7 @@ describe('the plan (moment 5)', () => {
     s.say({ kind: 'refusal', code: 'SOURCE_CONFLICT', reference: '0000-00A1' })
     const notice = await screen.findByRole('alert')
     expect(within(notice).getByText(words.plan.couldntSave)).toBeTruthy()
-    expect(within(notice).getByText(words.reference.line('0000-00A1'))).toBeTruthy()
+    expect(within(notice).getByText(referenceLine('0000-00A1'))).toBeTruthy()
     await press(within(notice).getByRole('button', { name: words.describe.tryAgain }))
     expect(s.called('agree')).toEqual([
       ['c-1', { version: 1, answers: { ta: 'Yes' } }],
@@ -664,7 +669,7 @@ describe('refusals while the plan is written (Rich’s words)', () => {
         "You've used your $10.00 AI allowance for this month. It resets at 5pm on 30 September. Nothing is lost; this plan will be here.",
       ),
     ).toBeTruthy()
-    expect(within(notice).getByText(words.reference.line('0000-0001'))).toBeTruthy()
+    expect(within(notice).getByText(referenceLine('0000-0001'))).toBeTruthy()
     // The plan's refusal is the plan's: moment 3's key renewal never hears it.
     expect(s.called('startIntakeSession')).toEqual([])
   })

@@ -19,6 +19,11 @@ import { machineryIn } from '../machinery.js'
 import { WATCH_NAME } from '../keeping/watch.js'
 import { rememberMadeProject } from './memory.js'
 
+/** The reference's line, the reference kept whole in an element of its own (minors m6). */
+const referenceLine = (reference: string) => (_: string, element: Element | null) =>
+  element?.textContent === words.reference.line(reference) &&
+  element.querySelector('.support-ref__code')?.textContent === reference
+
 /**
  * MOMENTS 3 AND 4 (F2 Task 7), through the whole App: the platform, our API and the stream
  * stood in for, so every press can be seen reaching the right place, and every frame seen
@@ -638,7 +643,7 @@ describe('a refusal on the stream', () => {
     s.say({ kind: 'refusal', code: 'MODEL_ANSWER_INVALID', reference: '7F3A-9C21' })
     const notice = await screen.findByRole('alert')
     expect(within(notice).getByText(words.describe.couldntRead)).toBeTruthy()
-    expect(within(notice).getByText(words.reference.line('7F3A-9C21'))).toBeTruthy()
+    expect(within(notice).getByText(referenceLine('7F3A-9C21'))).toBeTruthy()
     await act(async () => {
       fireEvent.click(
         within(notice).getByRole('button', { name: words.describe.tryAgain }),
@@ -663,7 +668,7 @@ describe('a refusal on the stream', () => {
       s.say({ kind: 'refusal', code, reference: '7F3A-9C22' })
       const notice = await screen.findByRole('alert')
       expect(within(notice).getByText(said)).toBeTruthy()
-      expect(within(notice).getByText(words.reference.line('7F3A-9C22'))).toBeTruthy()
+      expect(within(notice).getByText(referenceLine('7F3A-9C22'))).toBeTruthy()
       expect(
         within(notice).getByRole('button', { name: words.describe.nameItYourself }),
       ).toBeTruthy()
@@ -944,6 +949,8 @@ describe('Name it (moment 4, before Make it)', () => {
       field.textContent ?? '',
     )?.[1]
     expect(reference).toBeDefined()
+    // Kept whole at 375 (minors m6): never broken at its hyphen.
+    expect(field.querySelector('.support-ref__code')?.textContent).toBe(reference)
     expect(reports).toContainEqual(
       expect.objectContaining({ reference, code: 'UNREACHABLE', operation: 'checkSlug' }),
     )

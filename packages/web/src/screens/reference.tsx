@@ -31,6 +31,21 @@ export function useReported(problem: {
   return reference
 }
 
+/**
+ * "If you contact support, quote 7F3A-9C21.", the reference kept whole (minors m6: at 375 it broke at
+ * its hyphen), wherever it is said.
+ */
+export function ReferenceLine({ reference }: { reference: string }) {
+  const [before = '', after = ''] = words.reference.line('\u0000').split('\u0000')
+  return (
+    <>
+      {before}
+      <span className="support-ref__code">{reference}</span>
+      {after}
+    </>
+  )
+}
+
 /** "If you contact support, quote 7F3A-9C21." with [Copy]. Opaque: never a machine word (C3). */
 export function SupportReference({ reference }: { reference: string }) {
   const [copied, setCopied] = useState(false)
@@ -42,7 +57,9 @@ export function SupportReference({ reference }: { reference: string }) {
   }
   return (
     <p className="support-ref">
-      <span>{words.reference.line(reference)}</span>{' '}
+      <span>
+        <ReferenceLine reference={reference} />
+      </span>{' '}
       <Button kind="tertiary" size="sm" onClick={copy}>
         {words.reference.copy}
       </Button>{' '}

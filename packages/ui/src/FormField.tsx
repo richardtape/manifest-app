@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, ReactNode } from 'react'
 import { cx } from './cx.js'
 import { Icon, TICK } from './icons.js'
 
@@ -8,8 +8,8 @@ export interface FieldMessage {
   tone: Tone
   /** The platform's own `message`. Never rewrite it (FormField/README.md). */
   title: string
-  /** The platform's own `hint`. */
-  body?: string
+  /** The platform's own `hint`; or ours, with a part kept whole (a support reference: minors m6). */
+  body?: ReactNode
 }
 
 /**
