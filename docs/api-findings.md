@@ -63,6 +63,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Decided by Rich, 2026-10-01** (designing F6b with `manifest-app-d9`; carried by it to `manifest-6d` at his word, as FE-46) | **FE-47**, **FE-5** | After launch an owner cannot ask for a new sign-in detail, and every build that needs one fails until UBC registers it; an agent's question does not say what it asks | **FE-47 (a):** the owner's request for a change to the live registration, from `active`, through LTIC as FE-46's sends are (a package drafted from the newest valid manifest; `since` and `listQueue` as FE-46; LTIC emailed); the build's check stays. **FE-5 (a):** the question carries its specific object (who and what role; which release and environment; which record), never a secret. F6b's moment 17 and *Agents* screen are designed against them. **CONFIRMED by Rich in `manifest-6d`'s session** (19:56 PDT, manifest `ddc76d7`); a spec action before they are built |
 | **The launch path's sitting 12 closed, 2026-10-02, at `d5c76d5`: the launch path plan is EXECUTED** (`manifest-5a`; its holds sent to F6b's sittings 2 and 3, `manifest-app-b8`) | — | — | **Contract 1.5.0, 72 operations; one change, text only**: `f619376` (announced before and at its commit) rewrites `IamRegistration.registeredAt`'s description — null until the first time, **and again once the registration lapses (`expired`)** until it is recorded `active` again; behind it, a lapsed production registration sent again no longer reads registered (a launched app's iam-registration item reads unmet after a lapse). `packages/mock` unchanged. **Adopted with no change of ours**: typecheck clean, 2386 tests (F6b sitting 2) and 2457 (sitting 3), our Vitest held through its tier and closing tests. 7100 left on `37b223d`, real GitHub, **its database empty** (`operator` not an administrator until granted again). Its §7e hands over to the faculty-ready plan, after Rich places FE-46, FE-47 and FE-5 (a); FE-49 and FE-50 are in its §8 *Open* for him |
 | **The faculty-ready plan's sitting 1 closed, 2026-10-02, at `2e63cb4`** (`manifest-96`, Task 1, measurements only; told to F6b's sitting 5, `manifest-app-ba`) | FE-49, FE-50 placed | Rich's placements at its open: **FE-49** (`Token.mintedBy: Uuid`, its Task 13, sitting 4) and **FE-50** (its words, Task 12) **in** it, with F7 (Task 14); **FE-46, FE-47 and FE-5 after it** | **Docs only**: no contract or mock change, no Vitest, 7100 untouched. Its M1: Chrome and curl keep and send a `__Host-` cookie on loopback http (its Decision 7 still keeps plain names on http: our mock mode untouched); **its M3: a streamed call the provider refuses `422` answers `500` with LiteLLM's internal text today** (a non-streamed one `200 null`), and both answer `422` with a JSON body before any stream after its Task 6 (m62's fix decides on that). Its sitting 2 (1.6.0: a required `error.requestId`, `x-request-id`, the `limit` and `session` facts, `listed`; the mock too; Vitest and the Docker tier) waits on Rich's Spec actions 2 and 3, and will ask our holds |
+| **Landed, the faculty-ready plan's sitting 2, closed 2026-10-03 at `1b404f2`** (`manifest-71`, Tasks 2, 3, 4, 12 and 14; its notices through `manifest-3d`, the night's coordinator, Rich asleep) | **FE-29**, **FE-30**, **FE-31**, **FE-50**, **FE-51** | — | **Contract 1.6.0, 72 operations, 142 codes** (`71df40d`; additive since in `95843e2`, text in `e355d10` and `70c3964`; no operation or code added or removed). **FE-30** (`71df40d`): `x-request-id` on every answer, `error.requestId` required on every refusal, one operator line per refusal, `ManifestApiError.requestId` (an optional fourth constructor argument). **FE-29** (`95843e2`): `error.limit` on the three limits, `error.session` on the two `*_ALREADY_STARTED`. **FE-31** (`3d73adf`): the fixture unlisted, still resolving. **FE-50, FE-51** (`e355d10`): `TOKEN_ACTION_PENDING`'s words follow the code (a person who could do it answers; the same request, whatever its key). F7 (`f1e7255`, `SOURCE_REPOSITORY_EXISTS`) is driver 1's alone. The mock sends an id per request and plays the five facts (**restart `pnpm mock`**). Our four gates were green on it unadopted (2689 tests at `c1412af`); **the adoption: the 1.6.0 adoption sitting, 2026-10-03, its record in this row's next update** |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -772,6 +773,13 @@ Rich's word: a limit is to be said plainly, whose it is and when it resets. **Ca
       limits.
   - (b) At least `resetsAt` on the three limits.
 - **When:** whenever the error envelope is next touched. It adds fields, so it is additive (D23.8).
+- **Landed** (the platform's faculty-ready sitting 2, `95843e2`, additive to 1.6.0; closed at `1b404f2`, 2026-10-03):
+  option (a). `error.limit` (`Limit`: `scope`, `period`, `resetsAt` (a time, or `null` when the AI gateway reports no
+  reset, never a guess, never omitted), `amountUsd?`, `count?`) on `AGENT_BUDGET_EXHAUSTED` (person, month),
+  `INTAKE_BUDGET_EXHAUSTED` (platform, month) and `INTAKE_DAILY_LIMIT_REACHED` (person, day; `resetsAt` the next Vancouver
+  midnight, computed by the database in the same statement as the count); `error.session` (`StartedSession`: `id`, `name`,
+  `null` for an intake) on the two `*_SESSION_ALREADY_STARTED`. The mock plays all five. **Adopted** by the 1.6.0 adoption
+  sitting (2026-10-03): see the table's row above.
 
 ### FE-30 — Nothing lets a support report meet the platform's log
 
@@ -801,6 +809,13 @@ Rich's word: a limit is to be said plainly, whose it is and when it resets. **Ca
     operation and the code. We record the id beside our reference.
   - (b) At least the header, and a log line for every `5xx`.
 - **When:** before faculty use it for real. It adds a header and a field, so it is additive.
+- **Landed** (the platform's faculty-ready sitting 2, `71df40d`, **contract 1.6.0**; closed at `1b404f2`, 2026-10-03):
+  option (a). `x-request-id` (a UUID) on **every** answer, successes too; `error.requestId`, the same id, **required** on
+  every refusal; one operator line per refusal (`{ level: 'warn', msg: 'refused', requestId, at, method, operation,
+  status, code }`); `ManifestApiError.requestId` (the envelope's, else the header's, else `null`: an edge's own `502` has
+  none), its constructor's fourth argument optional, so our three-argument constructions compile. The mock sends one
+  per request. The guide (`docs/api/conventions.md`): *"Show a refusal's id to the person and keep it in your own log."*
+  **Adopted** by the 1.6.0 adoption sitting (2026-10-03): see the table's row above.
 
 ### FE-31 — `listBlueprints` offers a test fixture, with no CWL sign-in, to every client
 
@@ -833,6 +848,11 @@ Measured. **Carried to the platform session 2026-09-28**, at Rich's word (to `ma
     platform's tests alone, by a setting.
   - (b) `Blueprint.purpose: 'people' | 'testing'`, and clients filter.
 - **When:** before faculty use it for real. Either is small.
+- **Landed** (the platform's faculty-ready sitting 2, `3d73adf`, its review's `70c3964`; closed at `1b404f2`, 2026-10-03):
+  option (a), by a field of the platform's own descriptor: `fixture-node` declares `listed: false`; `listBlueprints` omits
+  it, and it still resolves; no hint or message offers it; the published examples are `node-ts-mongo@1`. `Blueprint`'s
+  shape is unchanged (the platform filters; no `listed` reaches a client). **Nothing of ours moves**: our CWL rule and
+  fallback stay as written above.
 
 ### FE-32 — An agent cannot add a dependency: nothing regenerates `package-lock.json`
 
@@ -1534,6 +1554,11 @@ rule which is right.*
 - **Placed by Rich** (2026-10-02, relayed by `manifest-96` at faculty-ready's sitting 1, closed at manifest `2e63cb4`):
   **its words**, with the faculty-ready plan's **Task 12**. *Agents* already builds on the code's rule (an owner answers;
   a helper reads *"An owner answers this."*: F6b sitting 5).
+- **Landed** (the same sitting, `e355d10`; a served guide's last *"the minter confirms"* fixed in its review, `70c3964`):
+  option (a). The remedy names *a person who could do it* (an owner, or for `quota:set` an administrator), never the person
+  who minted the token. **Nothing of ours moves**: *Agents* has built on that rule since F6b sitting 5 (*"An owner answers
+  this."*; the owners emailed). Our *"Only the person who made it can revoke it."* is about revoking, which stays the
+  minter's (FE-49).
 
 ### FE-51 — An agent's retry after a yes: the hint says the same Idempotency-Key, the platform matches the body
 
@@ -1558,6 +1583,10 @@ not carried: for Rich, and the platform's to rule which is right.*
 - **Placed by Rich** (2026-10-02, ~22:10 PDT, relayed by `manifest-96`; manifest `71ce7f0`, docs only): the platform's
   faculty-ready plan, **Task 12** (its sitting 2, its Decision 16): option (a), the hint, the remedy and the guides say
   *"the same method, path and body from the same token, whatever its Idempotency-Key"*. Text only.
+- **Landed** (the platform's faculty-ready sitting 2, `e355d10`; closed at `1b404f2`, 2026-10-03; contract 1.6.0, text only,
+  the mock unchanged): option (a). `TOKEN_ACTION_PENDING`'s hint, its remedy and the guides say the identical request (the
+  same method, path and body, from the same token) goes through once, whatever its `Idempotency-Key`. **Nothing of ours
+  moves**: our card says *"Yes lets it try that one request once."*, and our page never retries for an agent.
 
 ### FE-52 — A revoked agent's question stays open, and a yes to it does nothing
 
