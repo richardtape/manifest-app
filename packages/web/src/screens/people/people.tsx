@@ -63,6 +63,9 @@ function withAddress(text: string): ReactNode {
   )
 }
 
+/** m93: refusals that mean the members moved since the page read them. */
+const MOVED = new Set(['PROJECT_LAST_OWNER', 'FORBIDDEN'])
+
 /**
  * *PEOPLE* (walk-through moment 18; F6b Task 6, design §2): who can change the app, in the person's
  * own session (`listMembers`). **An owner** adds someone (`addMember`, by the shape of what they
@@ -184,6 +187,9 @@ export function People({
     if (!live.current) return 'said'
     setPressing(null)
     const code = codeOf(error)
+    // m93: the list moved under them (the other owner left meanwhile, or they are no longer an
+    // owner themselves): it is read again, so the page shows what is true now.
+    if (code !== null && MOVED.has(code)) readAgain()
     if (code === 'STEP_UP_REQUIRED') {
       setStepUp(true)
       return 'step-up'

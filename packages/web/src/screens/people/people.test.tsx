@@ -411,6 +411,26 @@ describe('refusals, by code (design §2): each says what is still true', () => {
     )
   })
 
+  it.each([
+    ['PROJECT_LAST_OWNER', 409],
+    ['FORBIDDEN', 403],
+  ])(
+    'm93: %s means the list moved: it is read again, and shows what is true now',
+    async (code, status) => {
+      const s = stage({ add: [{ status, code }] })
+      open(s)
+      const dana = await rowOf('Dana Owner')
+      // Meanwhile Dana made Alex (the reader) a helper: Dana is now the last owner.
+      s.setMembers([{ ...ALEX, role: 'collaborator' }, SAM, DANA])
+      await press(within(dana).getByRole('button', { name: p.makeHelper }))
+      await screen.findByRole('alert')
+      await waitFor(() => expect(s.called('listMembers')).toHaveLength(2))
+      await waitFor(async () =>
+        expect(within(await rowOf('Alex Owner')).getByText(p.helper)).toBeTruthy(),
+      )
+    },
+  )
+
   it('PROJECT_LAST_OWNER, taking the last owner off', async () => {
     const s = stage({ remove: [{ status: 409, code: 'PROJECT_LAST_OWNER' }] })
     open(s)
