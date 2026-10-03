@@ -88,10 +88,11 @@ listening() { lsof -nP -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null; }
 doctor() { curl -s -m 2 "$APP/api/__doctor" 2>/dev/null; }
 command_of() { ps -o command= -p "$1" 2>/dev/null | cut -c1-150; }
 
-# Our server's watchers: tsx's `watch` of src/main.ts, from this checkout (never another's).
+# Our server's watchers: tsx's `watch` of src/main.ts, from this checkout (never another's: the
+# root with its slash, so a sibling worktree's, manifest-app-s7, is not matched: minors m71).
 watchers() {
   ps -axo pid=,command= |
-    awk -v root="$ROOT" 'index($0, "tsx/dist/cli.mjs watch") && index($0, "src/main.ts") && index($0, root) { print $1 }'
+    awk -v root="$ROOT" 'index($0, "tsx/dist/cli.mjs watch") && index($0, "src/main.ts") && index($0, root "/") { print $1 }'
 }
 children() { ps -axo pid=,ppid= | awk -v parent="$1" '$2 == parent { print $1 }'; }
 descendants() {
