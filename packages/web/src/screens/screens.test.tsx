@@ -231,6 +231,30 @@ describe('the platform refuses who we are, for a reason we do not name (Review F
   })
 })
 
+describe("FE-30: the shell's refusal keeps the platform's request id, and never shows it", () => {
+  it('the report and the console line carry it; the page does not', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const sent: string[] = []
+    vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
+      if (url === '/api/problems') sent.push(String(init?.body))
+      return new Response(null, { status: 204 })
+    })
+    const id = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const error = new ManifestApiError(
+      500,
+      { error: { code: 'INTERNAL', message: 'x', requestId: id } } as never,
+      'getMe',
+    )
+    render(<App platform={platform({ getMe: () => Promise.reject(error) })} />)
+    expect(await screen.findByText(words.refused.body)).toBeTruthy()
+    await waitFor(() => expect(sent.join('\n')).toContain(`"requestId":"${id}"`))
+    expect(warn.mock.calls.flat().join(' ')).toContain(id)
+    expect(document.body.textContent).not.toContain(id)
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+})
+
 describe('the platform cannot be reached (Review Focus 2)', () => {
   it('says so, and Try again asks again', async () => {
     let calls = 0

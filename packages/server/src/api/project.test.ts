@@ -24,6 +24,9 @@ const GOOD = 'mft_test_x_the_conversations_token'
 const STRANGER = 'mft_test_x_another_projects_token'
 const LIAR = 'mft_test_x_answers_another_project'
 const DOWN = 'mft_test_x_the_platform_is_down'
+/** The platform's own failure, with its request id (FE-30). */
+const FAILED = 'mft_test_x_the_platform_failed'
+const REQUEST_ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
 /** The token of ANOTHER: a second window's project, made at the same time. */
 const SECOND = 'mft_test_x_the_second_windows_token'
 
@@ -43,6 +46,11 @@ beforeAll(async () => {
       if (bearer === GOOD) return { status: 200, body: project(PROJECT) }
       if (bearer === LIAR) return { status: 200, body: project(ANOTHER) }
       if (bearer === DOWN) return { status: 502, body: undefined }
+      if (bearer === FAILED)
+        return {
+          status: 500,
+          body: { error: { code: 'INTERNAL', message: 'm', requestId: REQUEST_ID } },
+        }
       return {
         status: 404,
         body: { error: { code: 'NOT_FOUND', message: 'no such project' } },
@@ -172,6 +180,16 @@ describe('POST /api/conversations/:id/project: the handover (moment 4’s end)',
     expect(answer.json()).toEqual({ error: { code: 'PLATFORM_UNAVAILABLE' } })
     expect(s.tokens.get(s.conversation.id)).toBeUndefined()
     expect(s.now().state).toBe('naming')
+  })
+
+  it("m124: a platform that failed is 502 PLATFORM_UNAVAILABLE, carrying the platform's request id", async () => {
+    const s = await setUp()
+    const answer = await s.hand({ projectId: PROJECT, token: FAILED })
+    expect([answer.statusCode, answer.json()]).toEqual([
+      502,
+      { error: { code: 'PLATFORM_UNAVAILABLE', platformRequestId: REQUEST_ID } },
+    ])
+    expect(s.tokens.get(s.conversation.id)).toBeUndefined()
   })
 
   it('from a student app is 403 ORIGIN_REFUSED, and the platform is never asked', async () => {

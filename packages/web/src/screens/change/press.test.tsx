@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { words } from '../../words.js'
 import { PressNotice } from './notice.js'
+import { OurRefusal } from '../../ours/api.js'
 import { pressFailed, useFocusBack } from './press.js'
 
 /**
@@ -58,6 +59,18 @@ describe('pressFailed (F6 Task 11)', () => {
       code: 'RELEASE_NOT_STAGED',
       operation: 'deploy',
       status: 409,
+      requestId: id,
+    })
+  })
+
+  it("m124: our server's refusal relaying the platform's keeps its request id in the report", () => {
+    const id = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    pressFailed(new OurRefusal('PLATFORM_UNAVAILABLE', 502, id), 'startChange')
+    const [, init] = vi.mocked(fetch).mock.calls[0] as unknown as [string, RequestInit]
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      code: 'PLATFORM_UNAVAILABLE',
+      operation: 'startChange',
+      status: 502,
       requestId: id,
     })
   })

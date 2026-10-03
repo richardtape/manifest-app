@@ -9,7 +9,7 @@ import type {
 } from '@manifest-app/server/progress'
 import { Button, Card, FormField, LiveSteps, StateChip } from '@manifest-app/ui'
 import { useEffect, useRef, useState } from 'react'
-import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
+import { OurRefusal, ourReported, reportProblem, type Ours } from '../../ours/api.js'
 import type { Step } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf, reported } from '../../platform/refusal.js'
@@ -201,10 +201,8 @@ export function PlanScreen({
     let report: ReturnType<typeof reported>
     if (error instanceof OurRefusal) {
       if (error.status === 401) return expire()
-      report =
-        error.status === null
-          ? { code: error.code }
-          : { code: error.code, status: error.status }
+      // Ours, relaying the platform's request id when it carried one (m124).
+      report = ourReported(error)
     } else {
       const refusal = refusalOf(error)
       if (refusal.kind === 'signed-out') return expire()

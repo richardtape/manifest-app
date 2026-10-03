@@ -19,8 +19,19 @@ import { mayAct, reachable } from './sharing.js'
  * - **The intake is over**: its key is dropped.
  * - **Its id is kept** when the page names it (F6b D5): never the secret.
  */
-const refuse = (reply: FastifyReply, status: number, code: string) =>
-  reply.code(status).send({ error: { code } })
+/**
+ * Our refusal. One that relays the platform's carries the platform's request id beside our code
+ * (FE-30, m124), so the page's report of it finds the platform's line.
+ */
+const refuse = (
+  reply: FastifyReply,
+  status: number,
+  code: string,
+  platformRequestId: string | null = null,
+) =>
+  reply.code(status).send({
+    error: { code, ...(platformRequestId === null ? {} : { platformRequestId }) },
+  })
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const TOKEN = /^\S{1,512}$/
@@ -88,8 +99,8 @@ export function registerProject(
         const refusal =
           error instanceof PlatformRefusal ? error : new PlatformRefusal('INTERNAL', null)
         if (refusal.status !== null && NOT_THE_TOKENS.has(refusal.status))
-          return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT')
-        return refuse(reply, 502, 'PLATFORM_UNAVAILABLE')
+          return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT', refusal.requestId)
+        return refuse(reply, 502, 'PLATFORM_UNAVAILABLE', refusal.requestId)
       }
       if (made.id !== handed.projectId) return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT')
 

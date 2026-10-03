@@ -4,6 +4,7 @@ import {
   createOurs,
   newReference,
   OurRefusal,
+  ourReported,
   reportProblem,
 } from './api.js'
 
@@ -283,6 +284,43 @@ describe('createOurs: the conversation and its intake (F2 Task 7)', () => {
       'UNREACHABLE',
       null,
     ])
+  })
+})
+
+describe("m124: our refusal relaying the platform's keeps its request id (FE-30)", () => {
+  const answer = (status: number, body: unknown) =>
+    vi.fn(async () => new Response(JSON.stringify(body), { status }))
+  it('OurRefusal reads platformRequestId; without one it is null', async () => {
+    const id = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    vi.stubGlobal(
+      'fetch',
+      answer(502, { error: { code: 'PLATFORM_UNAVAILABLE', platformRequestId: id } }),
+    )
+    const relayed = await createOurs()
+      .intake('c-1', {})
+      .catch((e: unknown) => e)
+    expect(relayed).toMatchObject({
+      code: 'PLATFORM_UNAVAILABLE',
+      status: 502,
+      requestId: id,
+    })
+    expect(ourReported(relayed as OurRefusal)).toEqual({
+      code: 'PLATFORM_UNAVAILABLE',
+      status: 502,
+      requestId: id,
+    })
+    vi.stubGlobal('fetch', answer(409, { error: { code: 'CONVERSATION_BUSY' } }))
+    const busy = await createOurs()
+      .intake('c-1', {})
+      .catch((e: unknown) => e)
+    expect((busy as OurRefusal).requestId).toBeNull()
+    expect(ourReported(busy as OurRefusal)).toEqual({
+      code: 'CONVERSATION_BUSY',
+      status: 409,
+    })
+    expect(ourReported(new OurRefusal('UNREACHABLE', null))).toEqual({
+      code: 'UNREACHABLE',
+    })
   })
 })
 

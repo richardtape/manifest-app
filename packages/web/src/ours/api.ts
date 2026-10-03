@@ -78,14 +78,34 @@ export function reportProblem(problem: {
   return reference
 }
 
-/** What our API refused: its code and status. Nothing answering at all is `UNREACHABLE`. */
+/**
+ * What our API refused: its code and status. Nothing answering at all is `UNREACHABLE`. A
+ * refusal of ours that relays the platform's carries the platform's request id (FE-30, m124).
+ */
 export class OurRefusal extends Error {
   constructor(
     readonly code: string,
     readonly status: number | null,
+    readonly requestId: string | null = null,
   ) {
     super(status === null ? code : `${code} (${status})`)
     this.name = 'OurRefusal'
+  }
+}
+
+/**
+ * OUR REFUSAL, AS ITS REPORT CARRIES IT (Decision 11): its code, its status, and the platform's
+ * request id when ours relayed the platform's (m124). Nothing answering is `UNREACHABLE`.
+ */
+export function ourReported(error: OurRefusal): {
+  code: string
+  status?: number
+  requestId?: string
+} {
+  return {
+    code: error.code,
+    ...(error.status === null ? {} : { status: error.status }),
+    ...(error.requestId === null ? {} : { requestId: error.requestId }),
   }
 }
 
@@ -126,7 +146,13 @@ async function call(
     if (code === undefined && [502, 503, 504].includes(response.status))
       throw new OurRefusal('UNREACHABLE', response.status)
     noticeRefusal(code)
-    throw new OurRefusal(typeof code === 'string' ? code : 'UNEXPECTED', response.status)
+    const relayed = (json as { error?: { platformRequestId?: unknown } } | undefined)
+      ?.error?.platformRequestId
+    throw new OurRefusal(
+      typeof code === 'string' ? code : 'UNEXPECTED',
+      response.status,
+      typeof relayed === 'string' ? relayed : null,
+    )
   }
   return json
 }

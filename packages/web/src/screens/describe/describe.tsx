@@ -2,7 +2,7 @@ import type { Schemas } from '@manifest/contract'
 import type { Intake, Question, StepKey } from '@manifest-app/server/progress'
 import { Button, Card, Choice, FieldCount, FormField, StateChip } from '@manifest-app/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
+import { OurRefusal, ourReported, reportProblem, type Ours } from '../../ours/api.js'
 import { useConversation } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { NOT_OPEN_CODE } from '../../not-open.js'
@@ -183,11 +183,8 @@ export function Describing({
           words: unreachable ? words.describe.couldntRead : words.refused.body,
           then: 'choose',
         },
-        {
-          code: error.code,
-          operation,
-          ...(error.status === null ? {} : { status: error.status }),
-        },
+        // Ours, relaying the platform's request id when it carried one (m124).
+        { ...ourReported(error), operation },
       )
       return 'choose'
     }

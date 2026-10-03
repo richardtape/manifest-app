@@ -2,7 +2,7 @@ import type { Conversation, Intake, RoundView, Said } from '@manifest-app/server
 import { Button, Card } from '@manifest-app/ui'
 import { linkTo, navigate } from '../../router.js'
 import { useEffect, useRef, useState } from 'react'
-import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
+import { OurRefusal, ourReported, reportProblem, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf, reported } from '../../platform/refusal.js'
 import { words } from '../../words.js'
@@ -105,10 +105,8 @@ export function BuildingScreen({
       if (error.status === 401) return expire()
       if (error.code === 'CONVERSATION_BUSY')
         return setNotice({ words: words.building.busy, reference: null, retry })
-      report =
-        error.status === null
-          ? { code: error.code }
-          : { code: error.code, status: error.status }
+      // Ours, relaying the platform's request id when it carried one (m124).
+      report = ourReported(error)
     } else {
       const refusal = refusalOf(error)
       if (refusal.kind === 'signed-out') return expire()

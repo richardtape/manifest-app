@@ -167,7 +167,14 @@ export function App({
         <TroubleNotice
           trouble={
             session.state === 'refused'
-              ? { kind: 'refused', code: session.code, status: session.status }
+              ? {
+                  kind: 'refused',
+                  code: session.code,
+                  status: session.status,
+                  ...(session.requestId === undefined
+                    ? {}
+                    : { requestId: session.requestId }),
+                }
               : { kind: 'unreachable' }
           }
           onRetry={retry}

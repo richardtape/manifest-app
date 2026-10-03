@@ -9,7 +9,7 @@ import {
   type FieldMessage,
 } from '@manifest-app/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { OurRefusal, reportProblem, type Ours } from '../../ours/api.js'
+import { OurRefusal, ourReported, reportProblem, type Ours } from '../../ours/api.js'
 import type { Step } from '../../ours/conversation.js'
 import type { Platform } from '../../platform/api.js'
 import { NOT_OPEN_CODE } from '../../not-open.js'
@@ -372,7 +372,8 @@ export function NameIt({
   async function startWork(project: MadeProject) {
     setMakeNotice(undefined)
     setMaking(true)
-    let failure: { code: string; operation: string; status: number | null } | undefined
+    let failure:
+      { code: string; operation: string; status?: number; requestId?: string } | undefined
     for (let attempt = 0; attempt < 2; attempt++) {
       let minted: Schemas['MintedToken']
       try {
@@ -384,11 +385,8 @@ export function NameIt({
       } catch (error) {
         const refusal = refusalOf(error)
         if (refusal.kind === 'signed-out') return expire()
-        failure = {
-          code: refusal.kind === 'refused' ? refusal.code : 'UNREACHABLE',
-          operation: 'mintToken',
-          status: refusal.kind === 'refused' ? refusal.status : null,
-        }
+        // The platform's request id rides the report (FE-30).
+        failure = { ...reported(refusal), operation: 'mintToken' }
         continue
       }
       try {
@@ -414,11 +412,8 @@ export function NameIt({
           setMakeNotice({ words: words.making.madeElsewhere, then: 'none' })
           return
         }
-        failure = {
-          code: ourRefusal.code,
-          operation: 'handProject',
-          status: ourRefusal.status,
-        }
+        // Ours, relaying the platform's request id when it carried one (m124).
+        failure = { ...ourReported(ourRefusal), operation: 'handProject' }
         break
       }
     }

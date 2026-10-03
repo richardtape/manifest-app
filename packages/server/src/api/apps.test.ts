@@ -46,6 +46,9 @@ const SECOND = 'mft_test_x_the_second_changes_token'
 const STRANGER = 'mft_test_x_another_projects_token'
 const LIAR = 'mft_test_x_answers_another_project'
 const DOWN = 'mft_test_x_the_platform_is_down'
+/** The platform's own failure, with its request id (FE-30). */
+const FAILED = 'mft_test_x_the_platform_failed'
+const REQUEST_ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
 const WORDS = 'Also show a word count on each response.'
 
 const project = (id: string) => ({
@@ -65,6 +68,11 @@ beforeAll(async () => {
         return { status: 200, body: project(PROJECT) }
       if (bearer === LIAR) return { status: 200, body: project(ANOTHER) }
       if (bearer === DOWN) return { status: 502, body: undefined }
+      if (bearer === FAILED)
+        return {
+          status: 500,
+          body: { error: { code: 'INTERNAL', message: 'm', requestId: REQUEST_ID } },
+        }
       return { status: 404, body: { error: { code: 'NOT_FOUND', message: 'no' } } }
     }
     return undefined
@@ -607,6 +615,16 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
     const answer = await s.ask({ words: WORDS, token: DOWN })
     expect(answer.statusCode).toBe(502)
     expect(answer.json()).toEqual({ error: { code: 'PLATFORM_UNAVAILABLE' } })
+    expect(s.store.conversationsOn(PROJECT)).toEqual([])
+  })
+
+  it("m124: a platform that failed is 502 PLATFORM_UNAVAILABLE, carrying the platform's request id", async () => {
+    const s = setUp()
+    const answer = await s.ask({ words: WORDS, token: FAILED })
+    expect([answer.statusCode, answer.json()]).toEqual([
+      502,
+      { error: { code: 'PLATFORM_UNAVAILABLE', platformRequestId: REQUEST_ID } },
+    ])
     expect(s.store.conversationsOn(PROJECT)).toEqual([])
   })
 

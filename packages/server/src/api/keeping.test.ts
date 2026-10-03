@@ -340,6 +340,17 @@ describe('POST /api/apps/:projectId/keeping: the token handed over', () => {
     ])
   })
 
+  it("m124: the platform's own failure is 502 PLATFORM_UNAVAILABLE, carrying its request id", async () => {
+    const t = setUp()
+    const id = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    t.answers(() => Promise.reject(new PlatformRefusal('INTERNAL', 500, id)))
+    const response = await t.post(GOOD)
+    expect([response.statusCode, response.json()]).toEqual([
+      502,
+      { error: { code: 'PLATFORM_UNAVAILABLE', platformRequestId: id } },
+    ])
+  })
+
   it('the token never reaches the store, nor any answer', async () => {
     const t = setUp()
     t.answers(async () => {

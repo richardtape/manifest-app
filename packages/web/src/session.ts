@@ -19,7 +19,13 @@ export type Session =
   /** No answer: nothing reached, or our deadline passed (Review Focus 2). */
   | { state: 'unreachable' }
   /** An answer we do not name (Review Focus 5): its code, for the console. */
-  | { state: 'refused'; code: string; status: number }
+  | {
+      state: 'refused'
+      code: string
+      status: number
+      /** FE-30: the platform's id for the refused `getMe`, for the report and the console. */
+      requestId?: string
+    }
 
 export function useSession(platform: Platform): {
   session: Session
@@ -38,7 +44,14 @@ export function useSession(platform: Platform): {
         const refusal = refusalOf(error)
         setSession(
           refusal.kind === 'refused'
-            ? { state: 'refused', code: refusal.code, status: refusal.status }
+            ? {
+                state: 'refused',
+                code: refusal.code,
+                status: refusal.status,
+                ...(refusal.requestId === undefined
+                  ? {}
+                  : { requestId: refusal.requestId }),
+              }
             : { state: refusal.kind },
         )
       },

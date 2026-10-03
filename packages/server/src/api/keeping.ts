@@ -20,8 +20,19 @@ import type { AppRef, Line, Need, SinceLine } from './progress.js'
  * platform answers a stranger (Review Focus 5). An app we keep nothing for answers *not watching*,
  * so its page mints; the token it hands proves it can read the project, or nothing is kept.
  */
-const refuse = (reply: FastifyReply, status: number, code: string) =>
-  reply.code(status).send({ error: { code } })
+/**
+ * Our refusal. One that relays the platform's carries the platform's request id beside our code
+ * (FE-30, m124), so the page's report of it finds the platform's line.
+ */
+const refuse = (
+  reply: FastifyReply,
+  status: number,
+  code: string,
+  platformRequestId: string | null = null,
+) =>
+  reply.code(status).send({
+    error: { code, ...(platformRequestId === null ? {} : { platformRequestId }) },
+  })
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const TOKEN = /^\S{1,512}$/
@@ -309,8 +320,8 @@ export function registerKeeping(
           refusal.code === 'TOKEN_NOT_FOR_PROJECT' ||
           (refusal.status !== null && NOT_THE_TOKENS.has(refusal.status))
         )
-          return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT')
-        return refuse(reply, 502, 'PLATFORM_UNAVAILABLE')
+          return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT', refusal.requestId)
+        return refuse(reply, 502, 'PLATFORM_UNAVAILABLE', refusal.requestId)
       }
       if (kept === 'stranger') return refuse(reply, 404, 'NOT_FOUND')
       const { until } = keeper.status(projectId)
