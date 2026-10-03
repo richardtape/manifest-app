@@ -140,7 +140,8 @@ const current = (projectId: string) => {
 /** A (re)connection's replay: each event, then the report. */
 function replay(projectId: string, events: ProjectEvent[]) {
   const one = current(projectId)
-  for (const event of events) one.handlers.event(event)
+  // As the stream does: each carried by the replay (minors m108), then the report.
+  for (const event of events) one.handlers.event(event, true)
   one.handlers.replayed?.({ ids: events.map((e) => e.id), overlapped: false })
 }
 const sent: Record<string, ProjectEvent[]> = {}

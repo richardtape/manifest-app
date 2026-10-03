@@ -932,6 +932,33 @@ describe('the emails (Task 5: D3, once each)', () => {
       expect(t.sent).toEqual([])
     })
 
+    it('a reconnect’s replay holding a question and its answer (minors m108): nobody is emailed a question already answered', async () => {
+      const t = await live()
+      const confirmed = event(8, 'pending_action.confirmed', {
+        pendingActionId: Q,
+        tokenId: T,
+        action: 'members:manage',
+      })
+      t.handlers.event(created(6), true)
+      t.handlers.event(confirmed, true)
+      t.handlers.replayed!({ ids: [created(6).id, confirmed.id], overlapped: false })
+      await settle()
+      expect(t.sent).toEqual([])
+    })
+
+    it('a replay’s question still waiting is emailed once the replay is over, not before (minors m108)', async () => {
+      const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+      t.handlers.event(created(6), true)
+      await settle()
+      expect(t.sent).toEqual([])
+      t.handlers.replayed!({ ids: [created(6).id], overlapped: false })
+      await settle()
+      expect(t.sent.map(({ to }) => to)).toEqual([
+        'alice@example.test',
+        'carol@example.test',
+      ])
+    })
+
     it('its answer, and anything else of its kind, emails nobody', async () => {
       const t = await live()
       for (const [n, type] of [

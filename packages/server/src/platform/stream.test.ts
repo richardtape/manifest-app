@@ -153,6 +153,29 @@ describe('each event once (Decision 15)', () => {
     expect(w.counts().reconnected).toBe(1)
   })
 
+  it('says which events a replay carried, and which arrived after it (minors m108: the keeper holds a replay’s questions to its report)', async () => {
+    vi.useFakeTimers()
+    const replaying: boolean[] = []
+    const { open, connections } = scriptedSubscribe()
+    const watch = platformStream('http://127.0.0.1:7100', open, async () => 426).watch(
+      TOKEN,
+      PROJECT,
+      {
+        event: (_e, replayed) => replaying.push(replayed === true),
+        reconnected: () => undefined,
+        refused: () => undefined,
+      },
+    )
+    connections[0]!.replay([event(1), event(2), READY, event(3)])
+    await watch.ready
+    expect(replaying).toEqual([true, true, false])
+    connections[0]!.drop(1001)
+    await vi.advanceTimersByTimeAsync(200)
+    connections[1]!.replay([event(3), event(4), READY, event(5)])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(replaying).toEqual([true, true, false, true, false])
+  })
+
   it('hands over who acted as the platform sent it (EventFrame.actor; the adoption note’s question 10), and nothing when a frame names nobody', async () => {
     vi.useFakeTimers()
     const w = watching()

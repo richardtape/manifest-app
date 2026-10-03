@@ -130,6 +130,11 @@ interface Open {
    * written to history and emailed to nobody. Over at the replay's report.
    */
   first: boolean
+  /**
+   * Questions a replay carried, emailed at its report if still waiting (minors m108): the same
+   * replay can hold the answer too.
+   */
+  asking: HistoryEntry[]
 }
 
 const NOT_WATCHING = { watching: false, until: null, tokenId: null, mintedBy: null }
@@ -174,10 +179,18 @@ export function createKeeper({
     const first = !store
       .historyOf(projectId)
       .some((entry) => !entry.type.startsWith('keeping.'))
-    const one: Open = { tokenId, token, watch: undefined, held: new Set(), first }
+    const one: Open = {
+      tokenId,
+      token,
+      watch: undefined,
+      held: new Set(),
+      first,
+      asking: [],
+    }
     open.set(projectId, one)
     one.watch = stream.watch(token, projectId, {
-      event: (event) => isCurrent(projectId, one) && onEvent(projectId, one, event),
+      event: (event, replayed) =>
+        isCurrent(projectId, one) && onEvent(projectId, one, event, replayed),
       replayed: (replay) =>
         isCurrent(projectId, one) && onReplayed(projectId, one, replay),
       reconnected: () =>
@@ -186,7 +199,12 @@ export function createKeeper({
     })
   }
 
-  function onEvent(projectId: string, one: Open, event: ProjectEvent): void {
+  function onEvent(
+    projectId: string,
+    one: Open,
+    event: ProjectEvent,
+    replayed = false,
+  ): void {
     const entry: HistoryEntry = {
       id: event.id,
       projectId,
@@ -202,7 +220,10 @@ export function createKeeper({
     }
     if (event.type === 'project.deleted') return forget(projectId)
     if (READS_APP.has(event.type)) void refresh(projectId, one, 'app')
-    if (event.type === 'pending_action.created' && !one.first) asked(entry)
+    if (event.type === 'pending_action.created' && !one.first) {
+      if (replayed) one.asking.push(entry)
+      else asked(entry)
+    }
     const happening = one.first ? null : happeningOf(entry)
     // Someone added is named once the members are read again; someone removed, before.
     if (happening?.kind === 'member-added')
@@ -405,6 +426,21 @@ export function createKeeper({
    */
   function onReplayed(projectId: string, one: Open, replay: Replay): void {
     one.first = false
+    // A replay's questions, once it is over: only those its own answers left waiting (m108).
+    const carried = one.asking.splice(0)
+    if (carried.length > 0) {
+      const ends = tokenEndsOf(store.mintedOn(projectId))
+      const waiting = new Set(
+        questionsOf(store.historyOf(projectId), now().getTime(), ends).map(
+          (question) => question.pendingActionId,
+        ),
+      )
+      for (const entry of carried) {
+        const { pendingActionId } = (entry.detail ?? {}) as { pendingActionId?: unknown }
+        if (typeof pendingActionId === 'string' && waiting.has(pendingActionId))
+          asked(entry)
+      }
+    }
     const heldBefore = replay.overlapped || replay.ids.some((id) => one.held.has(id))
     one.held.clear()
     if (replay.ids.length === 0 || heldBefore) return

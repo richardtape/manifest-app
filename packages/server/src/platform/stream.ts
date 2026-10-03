@@ -48,8 +48,11 @@ export interface ProjectStream {
     token: string,
     projectId: string,
     handlers: {
-      /** Each event once. */
-      event: (event: ProjectEvent) => void
+      /**
+       * Each event once; `replayed` when a connection's replay carried it, before its ready frame
+       * (minors m108: the keeper holds a replay's questions until the replay is over). Absent: live.
+       */
+      event: (event: ProjectEvent, replayed?: boolean) => void
       /** Connected again, and its replay handed over: re-read what the replay may have missed. */
       reconnected: () => void
       /** The token was refused: the round pauses for a new one. Called once, and nothing follows. */
@@ -139,14 +142,17 @@ export function platformStream(
             if (seen.has(frame.id)) return
             seen.add(frame.id)
             if (seen.size > REMEMBERED) seen.delete(seen.values().next().value as string)
-            handlers.event({
-              id: frame.id,
-              type: frame.type,
-              subject: frame.subject,
-              detail: frame.machineDetail,
-              at: frame.createdAt,
-              actor: frame.actor,
-            })
+            handlers.event(
+              {
+                id: frame.id,
+                type: frame.type,
+                subject: frame.subject,
+                detail: frame.machineDetail,
+                at: frame.createdAt,
+                actor: frame.actor,
+              },
+              replaying,
+            )
           },
         })
         current = subscription
