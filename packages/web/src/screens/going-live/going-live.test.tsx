@@ -138,11 +138,12 @@ beforeEach(() => {
     }),
   )
 })
+/** A test that set the page's visibility gives jsdom's own back (minors m48). */
+const restoreVisibility = () => Reflect.deleteProperty(document, 'visibilityState')
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
-  // A test that set the page's visibility gives jsdom's own back (minors m48).
-  Reflect.deleteProperty(document, 'visibilityState')
+  restoreVisibility()
 })
 
 async function open(s = stage()) {
@@ -465,9 +466,8 @@ describe('the page: letting your students in (moment 11)', () => {
     await act(async () => undefined)
     expect(s.called('getLaunchReadiness')).toHaveLength(1)
     expect(s.called('getLaunchRecords')).toHaveLength(1)
-  })
-
-  it('a test that set the visibility leaves jsdom’s own behind (minors m48)', () => {
+    // What afterEach does gives jsdom's own back (asserted here, never by the order of tests).
+    restoreVisibility()
     expect(Object.getOwnPropertyDescriptor(document, 'visibilityState')).toBeUndefined()
     expect(document.visibilityState).toBe('visible')
   })
