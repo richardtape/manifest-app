@@ -301,6 +301,16 @@ reviewer over `7a85693..f14a877`; its two Important and two minors re-graded Imp
 | m118 | The review's Minor 13 | `q.didntSay[action.action]` is read without `Object.hasOwn`, unlike `ACTION_WORDS`. | `question.tsx`. | S | code |
 | m119 | The review's Minor 14 | *"You said no, and it has been told."* overstates: the agent learns it at its next try. Rich's words. | `words.ts` (`agents.question.saidNo`). | S | faculty-visible |
 
+**From F6b sitting 6** (`manifest-app-a1`, 2026-10-03): the whole-branch review's minors and the walk's m123 (a fresh reviewer over
+`af8983c..3d5142d`, F6b's 25 commits; its two Important fixed test-first in `726bb53`; its M4 was the walk's, `6b6cb59`).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m120 | The review's M1 | After launch, a helper on a re-escalated version reads *"An owner lets your students have it."*: no sign-off ask, no *"asked … waiting N days"*, no refusal's reason. Sitting 4's ruling (*a helper is offered no ask*) rests on a premise the platform answers the other way: its `COLLABORATOR` keeps `approval:request` (`projects/authz.ts`), and before launch *Going live*'s `SignOff` has no role gate. Draw `SignOff` for any member, or at least its row. For Rich. | `packages/web/src/screens/overview/new-version.tsx`. | S | faculty-visible |
+| m121 | The review's M2 | A question's band line outlives its agent on F6b's own paths: a helper revoking their agent (their reject is `403`, FE-50, swallowed); an owner taking someone off (the platform revokes their tokens; FE-52 keeps the questions pending). Every member's band says *"your agent is asking something"* for up to a day, [Agents] showing no card. Decision 16's residual, now common: People could answer *no* to a removed person's questions after the removal (an owner may). | `packages/server/src/api/keeping.ts` (`needsOn`), `screens/people/people.tsx`. | S | faculty-visible |
+| m122 | The review's M3 | A member's word claims a token id (m83's kind, two more doors): `POST …/agents` takes any id seen in `listTokens`, and a watch hand-over's `current` branch notes `handed.tokenId` unchecked. The real maker of an outside token then reads *"Made by <claimant>"* and no [Revoke]. Check the id against the secret on a hand-over; the agents route until FE-49's `Token.mintedBy`. | `packages/server/src/api/minted.ts`, `keeping/keeper.ts` (`hand`). | S | code |
+| m123 | The walk on 7100 | The change planner, on the laptop's plan model (`default-chat`), wrote machinery into a plan's *Things we assumed*: *"permitted by the environment variables provided by the platform"*, *"our existing deployment limits"*, *"web scraping capability"* (C3). The model's prose, shown as it wrote it; nothing of ours checks a plan's words. Re-ask once when `machineryIn` finds any (as a refused answer is re-asked), or say less of the assumptions. F4's planner, not F6b's. | `packages/server/src/agents/change.ts` (the prompt), `api/plan.ts` (no check). | S | faculty-visible |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed

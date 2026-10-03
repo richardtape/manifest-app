@@ -5,7 +5,7 @@
 > syntax for tracking. **Read [`../ORIENTATION.md`](../ORIENTATION.md) first. F6 is executed (2026-10-02); this plan starts
 > from it, and from F5b's part one (sitting 2, merged).**
 
-**Status: WRITTEN 2026-10-02** by `manifest-app-c0`, after F6's execution (D1), from the design Rich approved as written,
+**Status: EXECUTED 2026-10-03** (sitting 6, `manifest-app-a1`: the acceptance passed and Rich clicked it on 7100; sitting 7 stays its own, waiting for FE-47 and FE-5 (a)). **WRITTEN 2026-10-02** by `manifest-app-c0`, after F6's execution (D1), from the design Rich approved as written,
 [`2026-10-01-f6b-working-together-design.md`](./2026-10-01-f6b-working-together-design.md): **read it first**. This plan says how to build it, and the decisions only an implementation needs. **The contract was read for it
 the same day** (manifest `6c77c15`, 1.5.0, 72 operations): most of the design's five measurements are now answered by
 reading, and two findings are written (**FE-49**, **FE-50**, below). **APPROVED BY RICH, 2026-10-02** (*"plan approved,
@@ -59,7 +59,7 @@ moments **17 and 18**, and *Throughout*'s **An agent of their own**.
 | 3 | 5, 6, 7 | **The page:** the platform's six new calls, *People* and *Agents* in the rail; *People* (moment 18); working on it together (§3) | **done 2026-10-02** (`manifest-app-b8`, mock mode): m77 `9502d7c`; `005a552`, `1559bc6`, `842a403`; the review's fixes `3912ff3`. 2476 tests twice; walks of *People* and of two people on one app at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 4 | 8, 9, 10 | **A change after launch** (moment 17): the kind of change; the new detail's stop and **[Leave it out]**; *Waiting to reach your students* | **done 2026-10-02** (`manifest-app-30`, mock mode): `093ff61`, `7a3d476`, `6efc46e`; the review's fixes `3c31dd0`. Walks at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 5 | 11, 12 | ***Agents***: ours and theirs, **[Revoke]**, an agent of their own let in; their agent's questions (the band, the email, the card) | **done 2026-10-02** (`manifest-app-ba`, mock mode): `495af2b`, `f14a877`; the walk's 375 fix `a96a907`; the review's fixes `4c44f2a` (store **version 7**, `watched`). 2638 tests; the walk 35/35 at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
-| 6 | 13 | **The acceptance:** `scripts/check-together.sh` in mock mode; the whole-branch review; the walk on 7100 with two people; **Rich's click**. **Alone, and last** | not started |
+| 6 | 13 | **The acceptance:** `scripts/check-together.sh` in mock mode; the whole-branch review; the walk on 7100 with two people; **Rich's click**. **Alone, and last** | **done 2026-10-03** (`manifest-app-a1`, mock mode, then **edge mode** in `manifest-71`'s 7100 window): `check-together` (`fee43d9`); the review's two Important fixed (`726bb53`); `scripts/walk/together-7100.ts` (`853d159`, `6b6cb59`, `2054949`, `c4c9649`), its first run on 7100 its proof; **Rich's click** (*"Looks good I think?"*). 2651 tests twice; the seven acceptance scripts from a fresh dev database, twice. *What executing this plan found*, its entry. **F6b EXECUTED** |
 | 7 | 14, 15 | **When the platform lands them:** FE-47's **[Ask for it]**; FE-5 (a)'s question naming who or which version | **waits for FE-47 and FE-5 (a)** (confirmed by Rich, `ddc76d7`; their spec actions drafted at manifest `6c77c15`, not applied) |
 
 **F6b is executed when sitting 6 is done.** Sitting 7 is its own, later, and does not hold F6b open (as F5b's part two).
@@ -866,8 +866,8 @@ export const ACTION_WORDS: Record<string, (app: string) => string>   // the four
 
 ## Task 13: The acceptance (sitting 6, alone)
 
-- [ ] **Step 0:** the platform's landings; re-read `openapi.json`.
-- [ ] **Step 1: Against the mock and Mailpit.** `scripts/check-together.sh` (our API as the browser drives it, curl, two
+- [x] **Step 0:** the platform's landings; re-read `openapi.json`.
+- [x] **Step 1: Against the mock and Mailpit.** `scripts/check-together.sh` (our API as the browser drives it, curl, two
   sessions of the mock's) and `scripts/check-together.ts` (the keeper in-process, F6's way):
   1. **Sharing:** two people on the mock's app (our `members` seeded through the keeper's hand-over); each reads the other's
      conversation; each change route on the other's is `404`; an owner's *Stop* frees the app, recorded; a stranger `404`.
@@ -879,19 +879,19 @@ export const ACTION_WORDS: Record<string, (app: string) => string>   // the four
 
   **Negative controls, each red on its own check:** a helper's write to another's allowed; a secret kept in `minted`; the
   re-read path removed; an email to the helper.
-- [ ] **Step 2: The whole-branch review** (a fresh reviewer, the most capable model, read-only, dispatched at the sitting's
+- [x] **Step 2: The whole-branch review** (a fresh reviewer, the most capable model, read-only, dispatched at the sitting's
   start so its fixes land before the real platform), its findings fixed test-first.
-- [ ] **Step 3: On the real platform** (at Rich's word, in the platform's window; our server in edge mode, said; `instructor`
+- [x] **Step 3: On the real platform** (at Rich's word, in the platform's window; our server in edge mode, said; `instructor`
   and `colleague`; `operator` for the administrator's look). A walk with `scripts/walk/` (a new `together-7100.ts`, built as
   `keeping-7100.ts` is, step by step, its first run its proof): `colleague` added as a helper (step-up typed by the walk at
   Rich's word); `colleague`'s conversation read by `instructor` and stopped; a sensitive change (an `egress.allow` host)
   asked about, approved by `operator`, then let through by `instructor` with the step-up; an agent of `instructor`'s own
   minted on *Agents*, its `addMember` asked, the band and the email, answered **[No]**; `colleague` taken off, their work
   ended; every email in Mailpit word for word.
-- [ ] **Step 4: Rich's click**, with two people: a colleague added as a helper; the owner reading the helper's conversation
+- [x] **Step 4: Rich's click**, with two people: a colleague added as a helper; the owner reading the helper's conversation
   and stopping it to free the app; a change that needs an administrator's look asked about and then let through to
   students; their own agent's question answered (the design's *Success*).
-- [ ] **Close:** the gates twice; the dated entry; this table; ORIENTATION; the roadmap. **F6b is executed only when Step 4
+- [x] **Close:** the gates twice; the dated entry; this table; ORIENTATION; the roadmap. **F6b is executed only when Step 4
   is done.**
 
 ## Task 14: **[Ask for it]** (FE-47) (sitting 7; waits for FE-47)
@@ -1272,3 +1272,73 @@ ours touched 7100.
   walk app's active tokens on 7100 and revoke any leftover *Keeping watch* as its minter** (Decision 4's residual: a
   dev database moved aside knows no older id); our [Revoke] revokes first now (I1); FE-49's `Token.mintedBy` (faculty-ready
   Task 13) will let *Agents* name every maker.
+
+### 2026-10-03 — Sitting 6: the acceptance, the walk on 7100, Rich's click (Task 13) (session `manifest-app-a1`, natively)
+
+**At Rich's word** (*"yeah co-ordinate and start when possible"*, ~00:15 PDT). **The window was `manifest-71`'s** (the
+platform's faculty-ready sitting 2): no Vitest, no Docker tier, no `make verify`, no restart, nothing in its contract or
+mock, from our start until our *"7100 released"*, sent after our close gates (its ask: one signal). Its plan after us, Rich's
+answers relayed: its sitting 2 (1.6.0), then our adoption, then F5b sitting 1 on a fresh 7100; `f6b-measure-1` simply
+truncated. **Step 0:** manifest `9914bab` (docs only since `2e63cb4`), contract 1.5.0 / 72, unchanged; 2638 tests.
+
+- **Step 1, `scripts/check-together.sh` and `.ts`** (`fee43d9`). **One line of the plan could not be:** *"two sessions of
+  the mock's"*: since the platform's sitting 10 the mock trusts only the one session it issues (FE-26; §6 of ORIENTATION
+  said otherwise, stale). So **half one** (curl, `pnpm dev:mock`) is the mock's one person, the app's owner: the members
+  kept through our watch's hand-over; a colleague's change (written by our store's own API, `check-together.ts seed`)
+  read, every other change on it `404` and nothing changed, the owner's Stop recorded as theirs; a stranger's `404`; a
+  conversation's token and an agent kept by their ids and listed, a secret beside or as a name `400`; no `mft_`/`sk-` in
+  any table; left as found (the owner's DELETE). **Half two** (tsx, in-process): our real `buildServer` and keeper, four
+  people through `inject` and a pretend `/v1/me`, real email to Mailpit: each reads the other's, every change `404`, a
+  helper's Stop `404`, a stranger `404`, an owner's Stop recorded; their agent's question a need for both, emailed to each
+  owner and never a helper, gone at `.confirmed`; someone taken off by `member.removed` (work ended, `removed`, their
+  agent's id forgotten, their own `404` to them) and someone by a re-read alone (once, a second ending nothing); no email
+  to anyone taken off; no credential. **10/10 and 13/13.** Its four controls, each red on its own check and restored:
+  `mayAct` widened (half two's 3, half one's 3), the re-read's `keepMembers` replaced (half two's 10 alone), questions
+  emailed to every member (half two's 7), `CONTROL=secret` (half one's 8). Its order: after `check-building.sh`, before
+  `check-keeping.sh`.
+- **Step 2, the whole-branch review** (a fresh reviewer, opus, read-only, over `af8983c..3d5142d`, F6b's 25 commits; the
+  seams between sittings and Review Focus 1–5): **no Critical; two Important, fixed test-first in `726bb53`:**
+  - **I1:** an owner who takes themselves off (the designed hand-over) and minted our watch stayed a kept member here until
+    another member visited (the platform closes our watch `4401`; `member.removed` never arrives), so their round's
+    *needs-you* emailed them, the hourly scan emailed *"still waiting"*, their band showed the app. Now People tells our
+    server before *Your apps* (`POST /api/apps/:projectId/leave`: the asker's own standing alone, `keeper.left`; the next
+    members read keeps anyone still on it), which ends their work as a removal's; and a **[Yes, once]** to an agent's
+    `members:manage` question looks at our watch again, now and in 5 s, as People does after a removal. **Review Focus
+    1's self-removal half is closed; m76 (someone taken off by another, mid-round) stays Rich's, with m69.**
+  - **I2:** on the real platform a confirm asks the second sign-in **before** it says a question is no longer waiting, so
+    back from it the card was gone and nothing was said. The question's id is kept for the way back
+    (`manifest-app.agents.<slug>`, its id alone), and the page says *"It has stopped waiting."*; the signed-in line is
+    drawn with or without a card.
+  - **Minors m120–m122** in [`minors.md`](../minors.md) (m120, a helper offered no sign-off after launch, is Rich's); its
+    **M4** was the walk's: `tidy` revokes every active token our fresh database does not know (`6b6cb59`).
+- **Step 3, the walk on 7100** (`scripts/walk/together-7100.ts`, built as `keeping-7100.ts` is; our server in **edge mode**
+  on a fresh database from ~00:40, said; Rich's yes for the IdP's test passwords; **`f6b-measure-1` reused**, no new
+  repository; colleague, left on it as a helper by sitting 1, taken off first through the platform so People's add was a
+  real one). Every step passed: `check` 5/5, `people` (operator still an administrator), `quiet` 21/21 (our watch minted by
+  the page), `helper` 8/8 (the second sign-in, the typed name kept across it; nobody emailed), `theirs` 19/19 (read-only
+  at 1440 and 375, an owner's Stop, *"Stopped by Test Instructor."*), **`change` 23/23** (the real lead built an
+  `openlibrary.org` change in ~4.5 min; *"This change needs a Manifest administrator's look … because it changes what it
+  can reach."*; on trying-out `reescalated`; the sign-off asked on the Overview; operator's approval; **Let your students
+  have this version** with the second sign-in; production serving it), **`agent` 18/18** (the key once, in mono; its
+  `addMember` `403 TOKEN_ACTION_PENDING`; the band; the email to the owner alone; **[No]** with words; revoked), **`off`**
+  12/12 (colleague taken off: their planned change and the one waiting set aside here, their own `404` to them, *"Test
+  Colleague was taken off Keeping walk re-1. Their work on it stopped."*), `tidy` (sitting 1's *Keeping watch* revoked as
+  its minter: every active token ours). **The walk's own bugs, each fixed** (`2054949`, `c4c9649`): the mock's names
+  written in (the laptop's are *"Test Instructor"*, *"Test Colleague"*); a change's yes is *"Yes, change it"*; *Put it
+  there* pressed before the question; the key read from run-together text (*"…Copy"*: `401`); the first *Take off* is the
+  owner's own row; a press not made again after the second sign-in; a re-run asking a second change that waited behind
+  the first. **One finding of the product's:** the change planner, on the laptop's plan model, wrote machinery into a
+  plan's *Things we assumed* (*"environment variables provided by the platform"*, *"deployment limits"*): **m123**,
+  F4's planner, for Rich.
+- **Step 4, Rich's click** (~01:05–01:21 PDT, his own browser, `instructor` and `colleague`): colleague added as a helper;
+  colleague's change read and stopped by the owner; his change needing an administrator's look built, put on trying-out,
+  the sign-off asked (operator's approval ours, at his *"sign it"*), let through to students (production serves it); his
+  own agent made on *Agents*, its ask (sent from his clipboard, never printed) a question, the band and the email, answered
+  **[Yes, once]** (confirmed, the band empty after). **Rich: *"Looks good I think?"*** The design's *Success*, met.
+- **Close:** our server back in mock mode (the edge database kept as `.data/app-edge-f6b-s6.sqlite`); the seven acceptance
+  scripts from a fresh dev database before and after the review's fixes (`app-f6b-s6-acceptance.sqlite` kept); 2651 tests
+  twice, lint, typecheck, format; no Vitest left; **"7100 released"** to `manifest-71` and `manifest-3d` (the night's
+  coordinator Rich set up).
+- **For Rich:** m120–m123 (`minors.md`); m76 with m69 (unchanged); the review's I1 adds no words; I2 uses *"It has stopped
+  waiting."*, already his to read; the repositories `f6b-measure-1`, `keep-walk-1002` and `f6-watch` on GitHub, his to
+  remove (`f6b-measure-1` goes from 7100 at the platform's next truncation).
