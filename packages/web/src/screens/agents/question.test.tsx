@@ -204,11 +204,12 @@ describe('what it says (design §4; FE-5 (a) honest)', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
-  it('a role not known yet: what it asked, and nothing to press', () => {
+  it('a role not known (the members unread, or not listed): what it asked, who answers it, and nothing to press (m114)', () => {
     open(stage(), { role: 'unknown' })
     expect(text()).toContain('asked to')
+    expect(text()).toContain(q.ownerAnswers)
     expect(screen.queryByRole('button')).toBeNull()
-    expect(text()).not.toContain(q.ownerAnswers)
+    expect(screen.queryByRole('textbox')).toBeNull()
   })
 })
 

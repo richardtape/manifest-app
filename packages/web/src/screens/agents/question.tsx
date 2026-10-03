@@ -183,7 +183,9 @@ export function Question({
           today ? null : dayWords(expires, timeZone),
         )}
       </p>
-      {role === 'helper' ? <p className="body">{q.ownerAnswers}</p> : null}
+      {/* A helper, or a role not known (the members unread, or not listing them): who answers
+          it, and nothing to press (m114); the platform still decides. */}
+      {role === 'owner' ? null : <p className="body">{q.ownerAnswers}</p>}
       {role === 'owner' ? (
         <>
           <div className="mf-field">
