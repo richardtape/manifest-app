@@ -58,6 +58,8 @@ const OUT = process.env['OUT'] ?? join(tmpdir(), 'together-7100')
 const STATE = join(OUT, 'state.json')
 const WIDTHS = [1440, 375]
 const MINUTE = 60_000
+/** A plan's yes: a change's (moment 8), or a first plan's (moment 5). */
+const YES = ['Yes, change it', 'Yes, build that']
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 mkdirSync(OUT, { recursive: true })
 
@@ -190,6 +192,8 @@ async function untilMail(address: string, subject: string, ms: number) {
     await sleep(10_000)
   }
 }
+/** The name the platform gives them (the laptop's: "Test Instructor"), as our pages show it. */
+const nameOf = async (user: string) => field((await as(user)).me, 'displayName')
 const emailOf = async (user: string) =>
   field((await as(user)).me, 'email') || `${user}@example.test`
 
@@ -307,11 +311,11 @@ async function askChange(page: Page, slug: string, words: string): Promise<strin
   )
   await page.until(
     'its plan, ready for a yes',
-    () =>
-      [...document.querySelectorAll('button')].some(
-        (b) => b.textContent?.trim() === 'Yes, build that',
+    (yes: string[]) =>
+      [...document.querySelectorAll('button')].some((b) =>
+        yes.includes(b.textContent?.trim() ?? ''),
       ),
-    [],
+    [YES],
     5 * MINUTE,
   )
   log(`asked "${words}": ${id}, planned`)
@@ -433,9 +437,10 @@ async function helper() {
   await page.type({ label: 'Their CWL login or email' }, 'colleague')
   await page.press('Helper', { role: 'radio' })
   await page.press('Add them')
-  await signInAgainIfAsked(page, 'instructor', 'people', ['Colleague One'])
+  const colleagueName = await nameOf('colleague')
+  await signInAgainIfAsked(page, 'instructor', 'people', [colleagueName])
   // Back from the second sign-in, the name and role kept: Add them once more, as they would.
-  if (!(await page.words('main')).includes('Colleague One')) {
+  if (!(await page.words('main')).includes(colleagueName)) {
     const kept = await page.run(
       () =>
         (document.querySelector('.people__add input') as HTMLInputElement | null)
@@ -445,7 +450,7 @@ async function helper() {
     if (kept === '') await page.type({ label: 'Their CWL login or email' }, 'colleague')
     await page.press('Add them')
   }
-  await page.untilWords('Colleague One', 'main', 30_000)
+  await page.untilWords(colleagueName, 'main', 30_000)
   await held(page, 'people-with-a-helper')
   const owner = await as('instructor')
   const members = await membersOf(owner, projectId)
@@ -473,24 +478,32 @@ async function helper() {
 async function theirs() {
   const slug = need('slug')
   const colleagueTab = await tabFor('colleague')
-  const id = await askChange(
-    colleagueTab,
-    slug,
-    'Show the week number at the top of each page.',
-  )
+  // A change of theirs planned already (a run before this one stopped short): theirs again.
+  const colleague = await as('colleague')
+  const planned = (
+    list(
+      (await colleague.call('GET', `/api/apps/${need('projectId')}/conversations`)).body,
+      'conversations',
+    ) as { id: string; state: string; by: { id: string } }[]
+  ).find((c) => c.state === 'plan-ready' && c.by.id === field(colleague.me, 'id'))
+  const id =
+    planned?.id ??
+    (await askChange(colleagueTab, slug, 'Show the week number at the top of each page.'))
+  if (planned) log(`colleague's change planned already: ${planned.id}`)
   save({ theirs: id })
+  const colleagueName = await nameOf('colleague')
   const owner = await tabFor('instructor')
   await owner.go(`/apps/${slug}/conversations`)
-  await owner.untilWords('Colleague One', 'main', 20_000)
+  await owner.untilWords(colleagueName, 'main', 20_000)
   await held(owner, 'conversations-with-theirs')
   for (const width of WIDTHS) {
     await owner.setWidth(width)
     await owner.go(`/apps/${slug}/conversations/${id}`)
-    await owner.untilWords('Colleague One', 'main', 20_000)
+    await owner.untilWords(colleagueName, 'main', 20_000)
     const buttons = (await owner.names('button')).map((b) => b.name)
     report.check(
       `${width}: theirs, read-only: no Yes, no box; an owner's Stop`,
-      !buttons.includes('Yes, build that') && buttons.includes('Stop'),
+      !buttons.some((b) => YES.includes(b)) && buttons.includes('Stop'),
       buttons.join(', '),
     )
     await held(owner, `theirs-read-only at ${width}`)
@@ -509,7 +522,11 @@ async function theirs() {
     stateNow,
   )
   await colleagueTab.go(`/apps/${slug}/conversations/${id}`)
-  await colleagueTab.untilWords('Stopped by Instructor One.', 'main', 20_000)
+  await colleagueTab.untilWords(
+    `Stopped by ${await nameOf('instructor')}.`,
+    'main',
+    20_000,
+  )
   await held(colleagueTab, 'theirs-stopped-by')
 }
 
@@ -524,7 +541,7 @@ async function change() {
   )
   save({ change: id })
   await held(page, 'change-planned')
-  await page.press('Yes, build that')
+  await page.press('Yes, change it')
   const end = await page.until(
     'the round ends: ready, or it needs them',
     () => {
@@ -730,8 +747,9 @@ async function off() {
   const id = await askChange(colleagueTab, slug, 'Add a reading list for week one.')
   save({ last: id })
   const page = await tabFor('instructor')
+  const colleagueName = await nameOf('colleague')
   await page.go(`/apps/${slug}/people`)
-  await page.untilWords('Colleague One', 'main', 20_000)
+  await page.untilWords(colleagueName, 'main', 20_000)
   const takeOffs = (await page.names('button')).filter((b) =>
     b.name.startsWith('Take off'),
   )
@@ -747,7 +765,7 @@ async function off() {
     await page.press(/^Take off/)
     await page.press('Take them off')
   }
-  await page.untilWords(`Colleague One's work on ${name} has stopped.`, 'main', 30_000)
+  await page.untilWords(`${colleagueName}'s work on ${name} has stopped.`, 'main', 30_000)
   await held(page, 'people-taken-off')
   const owner = await as('instructor')
   const colleague = await as('colleague')
@@ -767,7 +785,7 @@ async function off() {
   )
   await page.go(`/apps/${slug}/conversations/${id}`)
   await page.untilWords(
-    `Colleague One was taken off ${name}. Their work on it stopped.`,
+    `${colleagueName} was taken off ${name}. Their work on it stopped.`,
     'main',
     20_000,
   )
