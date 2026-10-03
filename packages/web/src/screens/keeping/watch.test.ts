@@ -134,10 +134,16 @@ describe('ensureWatch (design §1, Decision 5)', () => {
     expect(f.did).toEqual([])
   })
 
-  it('our server’s hand-over fails after the mint (minors m66): the token just minted is revoked, nothing thrown', async () => {
+  it('our server’s hand-over fails after the mint (minors m66): asked once more, not kept, the token just minted is revoked, nothing thrown', async () => {
     const f = fakes({ hand: () => Promise.reject(new Error('UNREACHABLE')) })
     await expect(ensureWatch(f.platform, f.ours, active, NOW)).resolves.toBeUndefined()
-    expect(f.did).toEqual([`keeping ${P}`, `mint ${P}`, `hand ${P}`, `revoke ${NEW}`])
+    expect(f.did).toEqual([
+      `keeping ${P}`,
+      `mint ${P}`,
+      `hand ${P}`,
+      `keeping ${P}`,
+      `revoke ${NEW}`,
+    ])
   })
 
   it('the hand-over fails on someone’s own old token: only the new one is revoked, theirs is still our server’s', async () => {
@@ -146,7 +152,53 @@ describe('ensureWatch (design §1, Decision 5)', () => {
       hand: () => Promise.reject(new Error('UNREACHABLE')),
     })
     await ensureWatch(f.platform, f.ours, active, NOW)
-    expect(f.did).toEqual([`keeping ${P}`, `mint ${P}`, `hand ${P}`, `revoke ${NEW}`])
+    expect(f.did).toEqual([
+      `keeping ${P}`,
+      `mint ${P}`,
+      `hand ${P}`,
+      `keeping ${P}`,
+      `revoke ${NEW}`,
+    ])
+  })
+
+  it('the hand-over fails, and asked again our server has it after all (the review of m66): kept as new, and their old one revoked', async () => {
+    let asked = 0
+    const f = fakes({
+      status: () =>
+        Promise.resolve(
+          ++asked === 1
+            ? { watching: true, until: inDays(20), tokenId: OLD, mine: true }
+            : { watching: true, until: inDays(365), tokenId: NEW, mine: true },
+        ),
+      hand: () => Promise.reject(new Error('TIMEOUT')),
+    })
+    await ensureWatch(f.platform, f.ours, active, NOW)
+    expect(f.did).toEqual([
+      `keeping ${P}`,
+      `mint ${P}`,
+      `hand ${P}`,
+      `keeping ${P}`,
+      `revoke ${OLD}`,
+    ])
+  })
+
+  it('the hand-over fails, and our server cannot be asked again: the new one is revoked (never left alive unknown)', async () => {
+    let asked = 0
+    const f = fakes({
+      status: () =>
+        ++asked === 1
+          ? Promise.resolve({ watching: false, until: null, tokenId: null, mine: false })
+          : Promise.reject(new Error('UNREACHABLE')),
+      hand: () => Promise.reject(new Error('UNREACHABLE')),
+    })
+    await ensureWatch(f.platform, f.ours, active, NOW)
+    expect(f.did).toEqual([
+      `keeping ${P}`,
+      `mint ${P}`,
+      `hand ${P}`,
+      `keeping ${P}`,
+      `revoke ${NEW}`,
+    ])
   })
 
   it.each([
