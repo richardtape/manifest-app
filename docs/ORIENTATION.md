@@ -4,11 +4,14 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-03, ~01:35 PDT: **F6b is EXECUTED**: its sitting 6 closed tonight (`manifest-app-a1`):
-`check-together`, the whole-branch review's two Important fixed, the walk on 7100 and **Rich's click** (*"Looks good I think?"*);
-**F1–F6 and F4a, F6b executed**; our server in **mock mode**; 7100 released to the platform's faculty-ready **sitting 2**
-(`manifest-71`: Vitest, the truncation, contract 1.6.0), which **holds our Vitest until `manifest-3d` relays FREE**;
-`manifest-3d` is the night's coordinator, Rich asleep)*:
+**Where things stand** *(2026-10-03, ~03:45 PDT: **the overnight minors sitting closed** (`manifest-app-minors-2`, mock
+mode): **thirty minors fixed** at Rich's *"Its pick, no decisions"*, each test-first, one commit each (`a947482`..`c1412af`);
+[`minors.md`](./minors.md)'s dated entry has them, what it skipped and why. **F1–F6 and F4a, F6b executed**; our server in
+**mock mode**. **Contract 1.6.0 has landed** in the platform's working tree and commits (`71df40d`, its Task 4's limit and
+session facts `95843e2`): **our four gates are green on it unadopted**; the adoption (row 1 below) is next. The platform's
+faculty-ready **sitting 2** (`manifest-71`) finished its test runs (FREE 03:25) and closes docs-only; its **sitting 3** (the
+`__Host-` cookies) starts next and holds our Vitest only at its own close; **holds and frees come through `manifest-3d`**,
+the night's coordinator, Rich asleep)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
@@ -20,8 +23,8 @@ says which plan is current. This file states where things stand and the rules. I
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **Minors** ([`minors.md`](./minors.md)): any open one that needs no decision of Rich's and no 7100 (his night-plan answer: *"Its pick, no decisions"*); the sitting lists what it skipped and why | Ready (mock mode) | `manifest-3d`'s word, and its FREE for any Vitest of ours | Rich's night plan; m120–m123 are new (m120 and m123 are his) |
-  | 2 | **The faculty-ready adoption, part one: contract 1.6.0** (the error envelope's required `requestId`, `x-request-id`, a limit's and the session's facts, `listed`; the mock's id) | Blocked | the platform's sitting 2 closing (running in `manifest-71` now); its 1.6.0 notice, relayed by `manifest-3d` | Prepared: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md); restart `pnpm mock` after it lands |
+  | 1 | **The faculty-ready adoption, part one: contract 1.6.0** (the error envelope's required `requestId`, `x-request-id`, a limit's and the session's facts, `listed`; the mock's id) | Ready at `manifest-3d`'s word | 1.6.0 is committed (`71df40d`; Task 4's facts `95843e2`); the platform's sitting 2's tests done (`manifest-71`, FREE 03:25); `manifest-3d` starts it | Prepared: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md). **Our gates already pass on 1.6.0 unadopted** (2689 tests, typecheck clean at `c1412af`): the adoption is using it, not mending reds. **Restart `pnpm mock` first**: the one on 7102 still runs the fixtures it read before 1.6.0 |
+  | 2 | **Minors, again** ([`minors.md`](./minors.md)): its dated entry 2026-10-03 lists the S ones *not reached* and needing no decision | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | Thirty fixed tonight; m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
   | 3 | The faculty-ready adoption, part two: `__Host-` cookies on https (whoIs and edge mode change in one window with its restart) | Blocked | the platform's sitting 3 (its Task 5 messages us first) | The same note; **FE-49's `Token.mintedBy`** (its Task 13, sitting 4) lets *Agents* name every maker, and closes m122 |
   | 4 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | Blocked | after the platform's sitting 2 (Rich: *"After platform sitting 2"*), on a fresh 7100 and contract 1.6.0: people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
   | 5 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
@@ -29,7 +32,7 @@ says which plan is current. This file states where things stand and the rules. I
 
   - **First, always:** `ListAgents` (`manifest-3d` coordinates tonight: holds and frees come through it; tell it and the
     platform's live session your name and ports, and **run no Vitest while a HOLD stands**), `pgrep -fl vitest`, Step 0
-    (contract 1.5.0, 72 operations until sitting 2's 1.6.0 lands; manifest at `29f4922`, docs only since `f619376`'s text).
+    (contract **1.6.0**, 72 operations, since manifest `71df40d` and `95843e2`; our gates green on it, unadopted).
 - **DOING A SITTING ON 7100** (F5b's sitting 1 next, after the platform's sitting 2; the steps F6's walk and F6b's sittings
   1 and 6 proved, gathered from §2, §7 and the plans):
   1. **Rich's word, every time.** If a platform session is live, ask it for a window: no restart of the control plane, no
@@ -147,9 +150,12 @@ says which plan is current. This file states where things stand and the rules. I
     the email edit `a7f5542`).
   - **Every landing:** re-read `openapi.json`, `pnpm typecheck`, `pnpm test`, and record it the same day (§8). Every
     session starts with `pgrep -fl vitest`. **Restart `pnpm mock`** after a landing that moves the mock's fixtures.
-- **Minors m1–m4, m14, m19, m63 fixed at Rich's word** (`manifest-app-minors`, 2026-10-02 ~00:30 PDT, mock mode): `2b9c3e1`,
-  `7345e0c`, `c5bae5a`, `09c45da` and `92002fa`, `ba7e529`, `d4ea05b`, `ecbbec5` (and `13e6e17`, the read-only walk's
-  wait); 2211 tests twice; the decisions, the walk, the review and m72 (found) in [`minors.md`](./minors.md)'s dated entry.
+- **Minors, two sittings** ([`minors.md`](./minors.md)'s dated entries): **m1–m4, m14, m19, m63** at Rich's word
+  (`manifest-app-minors`, 2026-10-02); **thirty more overnight** at his *"Its pick, no decisions"* (`manifest-app-minors-2`,
+  2026-10-03, mock mode, `a947482`..`c1412af`: web, server and scripts; m77 found already fixed): test-first, the
+  read-only walk 38/38 (m72) and the walk self-test 53/53 under `FORCE_COLOR` (m74), a fresh read-only review
+  (no Critical; its two Important and a Minor fixed test-first), 2689 tests twice, the seven acceptance
+  scripts twice, each from a fresh dev database.
 - **F4a, executed** ([`plans/2026-09-29-f4a-only-faculty-build.md`](./plans/2026-09-29-f4a-only-faculty-build.md), its
   sitting 1 entry is the record): the platform decides (`Me.mayBuild`, its 5a); our server refuses a new start
   (`403 BUILDING_NOT_OPEN`, a `getMe` with no decision building as today); someone who may not build and keeps no app sees
@@ -257,12 +263,13 @@ says which plan is current. This file states where things stand and the rules. I
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-03, ~01:35 PDT)*:
+- **The machine** *(2026-10-03, ~03:45 PDT)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, its log in
-    `manifest-app-a1`'s scratchpad), on **a fresh dev database** (**version 7**) started for F6b sitting 6's last
-    acceptance run, against **our mock on 7102** (`pnpm mock`, its default stage; the platform's packages unchanged since
-    `6d76459` but `f619376`'s one description; **restart it when sitting 2's 1.6.0 mock lands**). The databases before are
-    kept in `.data/`: **`app-edge-f6b-s6.sqlite`** (edge mode, F6b sitting 6's walk and Rich's click: our watch of
+    `manifest-app-minors-2`'s scratchpad), on **a fresh dev database** (**version 7**) started for the minors sitting's
+    acceptance runs, against **our mock on 7102** (`pnpm mock`, its default stage, **started before 1.6.0 landed: restart
+    it at the adoption**). The databases before are kept in `.data/`: `app-minors2-acceptance-1.sqlite` (the minors sitting's first acceptance
+    run), **`app-minors2-before-acceptance.sqlite`** (F6b sitting 6's last acceptance, then the minors sitting's walks,
+    which wrote nothing), **`app-edge-f6b-s6.sqlite`** (edge mode, F6b sitting 6's walk and Rich's click: our watch of
     `f6b-measure-1`), `app-f6b-s6-acceptance.sqlite` (sitting 6's first acceptance), `app-f6b-s6-before-acceptance.sqlite`
     (sitting 5's last acceptance, then sitting 6's `check-together` runs), **`app-f6b-s5-acceptance.sqlite`** (sitting 5's first acceptance), `app-f6b-s5-before-acceptance.sqlite` (sitting 4's
     last acceptance, then sitting 5's walks, which wrote nothing), **`app-f6b-s4-walks-2.sqlite`**
@@ -289,7 +296,7 @@ says which plan is current. This file states where things stand and the rules. I
     and `reference/bundle.js` holds the components' markup by the parity test. Our extensions have tests of their own:
     SideNav's two; FormField's `count`, `FieldCount` and `secret`; LiveSteps' `line` and `detail`; `Disclosure`;
     SegmentedControl's arrow keys, tab order, `controls` and `label`; **ClockItem's `state`** (and its card's top row
-    wraps, a styles test).
+    wraps, a styles test); **Choice's `labelledBy`** (m116: a group named by a visible label).
   - `packages/web` is the app. Only `src/platform` calls the platform, and `words.ts` holds every sentence.
     `mode.ts` says which platform our server answers from (Vite's `define`), and `App` draws the mock-mode banner from it.
     **Every reader of an address's instance takes its environment through `your-apps/model.ts`'s `asServed`** (sitting 6):
@@ -387,7 +394,7 @@ says which plan is current. This file states where things stand and the rules. I
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (2651 tests, 105 files, at `726bb53`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (2689 tests, 106 files, at `c1412af`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action; **and (F6) holds `keeping/` to the
       watch token's reads, and refuses `archive`, `restore` and a project's `DELETE` anywhere**;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
