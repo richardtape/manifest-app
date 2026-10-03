@@ -2,7 +2,7 @@ import type { Schemas } from '@manifest/contract'
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, refusedLine } from '../../platform/refusal.js'
 import { linkTo, remember, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
@@ -46,8 +46,7 @@ function settle<T>(result: PromiseSettledResult<T>): T | undefined {
   if (result.status === 'fulfilled') return result.value
   const refusal = refusalOf(result.reason)
   if (refusal.kind === 'signed-out') throw result.reason
-  if (refusal.kind === 'refused')
-    console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+  if (refusal.kind === 'refused') console.warn(refusedLine(refusal))
   return undefined
 }
 

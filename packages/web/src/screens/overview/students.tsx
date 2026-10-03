@@ -3,7 +3,7 @@ import { TwoFacts } from '@manifest-app/ui'
 import { useId, useState } from 'react'
 import { OurRefusal, type Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, refusedLine } from '../../platform/refusal.js'
 import { words } from '../../words.js'
 import {
   attemptFact,
@@ -34,9 +34,7 @@ function settled<T>(result: PromiseSettledResult<T>): T | null {
   const refusal = refusalOf(result.reason)
   if (refusal.kind === 'signed-out') throw result.reason
   console.warn(
-    refusal.kind === 'refused'
-      ? `A read was refused: ${refusal.code} (${refusal.status})`
-      : 'A read went unanswered',
+    refusal.kind === 'refused' ? refusedLine(refusal) : 'A read went unanswered',
   )
   return null
 }

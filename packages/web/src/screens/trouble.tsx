@@ -1,6 +1,6 @@
 import { Button, Card } from '@manifest-app/ui'
 import { useEffect } from 'react'
-import { reported, type Refusal } from '../platform/refusal.js'
+import { refusedLine, reported, type Refusal } from '../platform/refusal.js'
 import { words } from '../words.js'
 import { SupportReference, useReported } from './reference.js'
 
@@ -22,12 +22,7 @@ export function TroubleNotice({
   onRetry: () => void
 }) {
   useEffect(() => {
-    if (trouble.kind === 'refused')
-      console.warn(
-        `Manifest refused a read: ${trouble.code} (${trouble.status})${
-          trouble.requestId === undefined ? '' : `, request ${trouble.requestId}`
-        }`,
-      )
+    if (trouble.kind === 'refused') console.warn(refusedLine(trouble))
   }, [trouble])
   const w = trouble.kind === 'unreachable' ? words.unreachable : words.refused
   const reference = useReported(reported(trouble))

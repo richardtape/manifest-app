@@ -9,7 +9,7 @@ import {
   READ_TIMEOUT_MS,
   REHEARSAL_TIMEOUT_MS,
 } from './api.js'
-import { refusalOf, reported } from './refusal.js'
+import { refusalOf, refusedLine, reported } from './refusal.js'
 
 /**
  * THE ONE PLACE THAT CALLS THE PLATFORM, against an in-process manifest-mock (the
@@ -720,6 +720,20 @@ describe('refusalOf: by kind and code, never by message', () => {
     ['nothing answering', { kind: 'unreachable' } as const, { code: 'UNREACHABLE' }],
   ])('reported(%s): what its report carries, exactly', (_, refusal, report) => {
     expect(reported(refusal)).toEqual(report)
+  })
+
+  it("refusedLine: the console's line names the code, the status and the platform's request id (FE-30)", () => {
+    expect(
+      refusedLine({
+        kind: 'refused',
+        code: 'INTERNAL',
+        status: 500,
+        requestId: REQUEST_ID,
+      }),
+    ).toBe(`Manifest refused a read: INTERNAL (500), request ${REQUEST_ID}`)
+    expect(refusedLine({ kind: 'refused', code: 'FORBIDDEN', status: 403 })).toBe(
+      'Manifest refused a read: FORBIDDEN (403)',
+    )
   })
 
   it('anything else is refused as unexpected, never thrown on', () => {

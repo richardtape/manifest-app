@@ -10,7 +10,7 @@ import { NeedsBand } from '../keeping/needs.js'
 import { useRole } from '../keeping/role.js'
 import { Since } from '../keeping/since.js'
 import { ensureEach } from '../keeping/watch.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, refusedLine } from '../../platform/refusal.js'
 import { linkTo } from '../../router.js'
 import { SwitchBackOn } from '../overview/switching.js'
 import { TroubleNotice, type Trouble } from '../trouble.js'
@@ -90,8 +90,7 @@ async function read(
   if (projects.length > 0 && read.every((r) => r.status === 'rejected')) throw failures[0]
   for (const reason of failures) {
     const refusal = refusalOf(reason)
-    if (refusal.kind === 'refused')
-      console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+    if (refusal.kind === 'refused') console.warn(refusedLine(refusal))
   }
 
   const releaseById = new Map(

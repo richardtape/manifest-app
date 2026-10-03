@@ -4,7 +4,7 @@ import { Button, StateChip, type FactTone, type State } from '@manifest-app/ui'
 import { useCallback, useEffect, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, refusedLine } from '../../platform/refusal.js'
 import { linkTo, remember, TABS, type Tab, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { rowsOf, type Five } from '../going-live/checklist.js'
@@ -105,8 +105,7 @@ async function read(
     if (r.status === 'rejected') {
       const refusal = refusalOf(r.reason)
       if (refusal.kind === 'signed-out') throw r.reason
-      if (refusal.kind === 'refused')
-        console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+      if (refusal.kind === 'refused') console.warn(refusedLine(refusal))
     }
   const byId = new Map(
     releases.flatMap((r) =>

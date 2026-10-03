@@ -74,3 +74,14 @@ export function reported(refusal: Exclude<Refusal, { kind: 'signed-out' }>): {
     ...(requestId === undefined ? {} : { requestId }),
   }
 }
+
+/**
+ * A REFUSED READ, FOR WHOEVER IS LOOKING (the console, never the page): its code and status, and
+ * the platform's request id when it gave one (FE-30: *"keep it in your own log"*).
+ */
+export function refusedLine(refusal: Extract<Refusal, { kind: 'refused' }>): string {
+  const { code, status, requestId } = refusal
+  return `Manifest refused a read: ${code} (${status})${
+    requestId === undefined ? '' : `, request ${requestId}`
+  }`
+}

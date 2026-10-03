@@ -3,7 +3,7 @@ import { Button, Card, SegmentedControl, StateChip, TwoFacts } from '@manifest-a
 import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, refusedLine } from '../../platform/refusal.js'
 import { linkTo, remember, TABS, type Tab } from '../../router.js'
 import { words } from '../../words.js'
 import { phraseOf, stepOf } from '../going-live/steps.js'
@@ -73,8 +73,7 @@ async function read(
         if (r.status === 'rejected') {
           const refusal = refusalOf(r.reason)
           if (refusal.kind === 'signed-out') throw r.reason
-          if (refusal.kind === 'refused')
-            console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+          if (refusal.kind === 'refused') console.warn(refusedLine(refusal))
         }
       const releases = new Map(
         read.flatMap((r) =>
@@ -160,8 +159,7 @@ export function Preview({
     const refused = (error: unknown) => {
       const refusal = refusalOf(error)
       if (refusal.kind === 'signed-out') expire()
-      else if (refusal.kind === 'refused')
-        console.warn(`Manifest refused a read: ${refusal.code} (${refusal.status})`)
+      else if (refusal.kind === 'refused') console.warn(refusedLine(refusal))
       return refusal.kind !== 'signed-out'
     }
     platform.getLaunchRecords(project.id).then(
