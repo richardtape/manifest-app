@@ -120,6 +120,7 @@ function fakes(
       calls.push(['read', token, projectId])
       return Promise.resolve(PROJECT)
     },
+    launched: () => Promise.resolve(false),
     knowledgePack: (token, blueprint) => {
       calls.push(['knowledgePack', token, blueprint])
       return options.pack?.() ?? Promise.resolve('## AGENTS.md\n\nHow it is built.')

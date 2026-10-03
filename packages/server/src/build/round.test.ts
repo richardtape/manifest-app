@@ -200,6 +200,8 @@ interface Options {
   asked?: () => { commitSha: string; attributes: string[] }
   /** F6b Task 9: production's registered attributes (getLaunchRecords), null when none. */
   registered?: () => string[] | null
+  /** The project's `launchedAt` as the token reads it at each round's start; may throw (the review's I1). */
+  launchedAt?: () => string | null
   tree?: (n: number) => Promise<{ commitSha: string }> | { commitSha: string }
   /** Each read of a file, before it answers (its nth read of that path): may throw (m19). */
   fileRead?: (path: string, n: number) => void
@@ -450,6 +452,14 @@ function harness(options: Options, file?: string, store0?: Store) {
   }
   const projects: Projects = {
     read: async () => PROJECT,
+    launched: async () => {
+      did.push('getProject')
+      return (
+        (options.launchedAt === undefined
+          ? '2026-09-18T22:30:00.000Z'
+          : options.launchedAt()) !== null
+      )
+    },
     knowledgePack: async () => '## AGENTS.md\n\nThe stack is fixed.',
   }
 
@@ -2762,7 +2772,60 @@ describe("the kind of change: the sensitive fields the round's commits change (F
       sameRefusal: null,
       detail: before as RunDetail,
     })
-    expect(viewOf(h, conversation.id)?.sensitive).toEqual([])
+    expect(viewOf(h, conversation.id)?.sensitive).toBeNull()
+  })
+
+  it('a round begun before the app launched says nothing of the kind, whatever its commits change (the review’s I1)', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      sensitive: () => ['services', 'auth.attributes'],
+      launchedAt: () => null,
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.sensitive).toBeNull()
+  })
+
+  it('a project it could not read: nothing said', async () => {
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      sensitive: () => ['egress.allow'],
+      launchedAt: () => {
+        throw new PlatformRefusal('PLATFORM_UNAVAILABLE', 503)
+      },
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.sensitive).toBeNull()
+  })
+
+  it("a later round keeps what this conversation's rounds since launch changed: never under-says (the review's I1)", async () => {
+    let launched: string | null = null
+    const { h, id, conversation } = await startedRound({
+      script: { lead: [commit(), done(), commit(), done(), commit(), done()] },
+      sensitive: (n) => (n === 1 ? ['services'] : n === 2 ? ['egress.allow'] : []),
+      launchedAt: () => launched,
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    // Round 1 began before launch: its starter's fields are launch's, not this change's.
+    expect(viewOf(h, id)?.sensitive).toBeNull()
+
+    launched = '2026-09-18T22:30:00.000Z'
+    h.rounds.start(h.store.getConversation(id, ALICE.id) ?? conversation, TOKEN)
+    await until(
+      () => viewOf(h, id)?.round === 2 && viewOf(h, id)?.status === 'done',
+      () => viewOf(h, id),
+    )
+    expect(viewOf(h, id)?.sensitive).toEqual(['egress.allow'])
+
+    h.rounds.start(h.store.getConversation(id, ALICE.id) ?? conversation, TOKEN)
+    await until(
+      () => viewOf(h, id)?.round === 3 && viewOf(h, id)?.status === 'done',
+      () => viewOf(h, id),
+    )
+    // Round 3 changed nothing sensitive; the draft still carries round 2's.
+    expect(viewOf(h, id)?.sensitive).toEqual(['egress.allow'])
   })
 })
 
@@ -2850,6 +2913,83 @@ describe('a new detail about the people who sign in (F6b Task 9, Decision 9)', (
     await untilStatus(refused.h, refused.id, 'needs-you')
     expect(viewOf(refused.h, refused.id)?.needs).toEqual({ kind: 'detail', details: [] })
     expect(refused.h.started).toHaveLength(1)
+  })
+
+  it('carried on from it, or from a Stop after it, the round builds anew: never the failed build read again as a try (the review’s M2)', async () => {
+    // As the platform's tree: its head is the last commit made (a resume builds what it reads).
+    let head = BASE
+    const { h, id } = await startedRound({
+      script: lead,
+      asked: () => ASKED,
+      registered: () => REGISTERED,
+      commit: (n) => void (head = `c${n}`.padEnd(40, '0')),
+      tree: () => ({ commitSha: head }),
+    })
+    await refuse(h, 1, { code: 'SPEC_ATTRIBUTE_NOT_REGISTERED', reason: REASON('sn') })
+    await untilStatus(h, id, 'needs-you')
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN)
+    // Built again, as it was: UBC may have agreed meanwhile.
+    await until(
+      () => h.started.length === 2,
+      () => ({ view: viewOf(h, id), did: h.did }),
+    )
+    expect(h.commits).toHaveLength(1)
+    await refuse(h, 2, { code: 'SPEC_ATTRIBUTE_NOT_REGISTERED', reason: REASON('sn') })
+    await until(
+      () => viewOf(h, id)?.status === 'needs-you' && h.started.length === 2,
+      () => viewOf(h, id),
+    )
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'detail', details: ['sn'] })
+    expect(stepOf(h, id, 'build')?.tries).toBe(0)
+
+    // Stopped (as [Leave it out] does), then carried on: built anew again.
+    h.rounds.stop(h.store.getConversation(id, ALICE.id)!)
+    await untilStatus(h, id, 'stopped')
+    h.rounds.carryOn(h.store.getConversation(id, ALICE.id)!, TOKEN)
+    await until(
+      () => h.started.length === 3,
+      () => ({ view: viewOf(h, id), did: h.did }),
+    )
+    expect(h.commits).toHaveLength(1)
+    expect(stepOf(h, id, 'build')?.tries).toBe(0)
+  })
+
+  it('a refusal missed on the stream, found by reading the build: still the new detail at once, from the two reads (the review’s M1)', async () => {
+    const { h, id } = await startedRound({
+      script: lead,
+      asked: () => ASKED,
+      registered: () => REGISTERED,
+    })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.buildStatus.set('build-1', 'failed')
+    h.watches.at(-1)!.handlers.reconnected()
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({ kind: 'detail', details: ['sn'] })
+    expect(h.started).toHaveLength(1)
+    expect(h.commits).toHaveLength(1)
+    expect(stepOf(h, id, 'build')?.tries).toBe(0)
+  })
+
+  it('a failure read from the build while every detail asked is registered: a try, as before', async () => {
+    const { h, id } = await startedRound({
+      script: lead,
+      asked: () => ASKED,
+      registered: () => [...REGISTERED, 'sn'],
+    })
+    await until(
+      () => h.started.length === 1,
+      () => h.did,
+    )
+    h.buildStatus.set('build-1', 'failed')
+    h.watches.at(-1)!.handlers.reconnected()
+    await until(
+      () => h.started.length === 2,
+      () => viewOf(h, id),
+    )
+    expect(stepOf(h, id, 'build')?.tries).toBe(1)
   })
 
   it('any other failed build is still a try, the lead asked to fix it (Decision 7)', async () => {

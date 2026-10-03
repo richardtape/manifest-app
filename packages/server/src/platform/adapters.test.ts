@@ -277,6 +277,36 @@ describe('platformProjects.knowledgePack: how apps like this are built (moment 5
   })
 })
 
+describe('platformProjects.launched: whether the app has reached its students (F6b, the review’s I1)', () => {
+  const PROJECT_ID = '22222222-2222-4222-8222-222222222222'
+  const project = (launchedAt: string | null) => ({
+    status: 200,
+    body: {
+      id: PROJECT_ID,
+      name: 'Reading responses',
+      slug: 'reading-responses',
+      blueprint: 'node-ts-mongo@1',
+      launchedAt,
+    },
+  })
+
+  it('reads getProject with the conversation’s token: launched once launchedAt is set', async () => {
+    const live = await fakePlatform(() => project('2026-09-18T22:30:00.000Z'))
+    expect(await platformProjects(live.origin).launched(TOKEN, PROJECT_ID)).toBe(true)
+    expect(live.seen[0]!.url).toBe(`/v1/projects/${PROJECT_ID}`)
+    expect(live.seen[0]!.headers.authorization).toBe(`Bearer ${TOKEN}`)
+    const draft = await fakePlatform(() => project(null))
+    expect(await platformProjects(draft.origin).launched(TOKEN, PROJECT_ID)).toBe(false)
+  })
+
+  it('a refusal is its code', async () => {
+    const fake = await fakePlatform(() => refusal(403, 'FORBIDDEN', 'not yours'))
+    const error = await failure(platformProjects(fake.origin).launched(TOKEN, PROJECT_ID))
+    expect(error).toBeInstanceOf(PlatformRefusal)
+    expect((error as PlatformRefusal).code).toBe('FORBIDDEN')
+  })
+})
+
 describe('platformAuthoring: the plan’s first commit (Decision 9)', () => {
   const TREE = (sha: string) => ({
     status: 200,

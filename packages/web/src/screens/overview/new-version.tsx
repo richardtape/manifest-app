@@ -1,19 +1,22 @@
 import type { Schemas } from '@manifest/contract'
-import { Button } from '@manifest-app/ui'
 import { useCallback, useEffect, useId, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
 import { kindWords } from '../building/kind.js'
-import { rowsOf } from '../going-live/checklist.js'
+import { CLOCK_IDS, rowsOf } from '../going-live/checklist.js'
 import { LetStudentsIn, whenOf } from '../going-live/live.js'
 import { RowView } from '../going-live/row.js'
 import { SignOff, signOffRow, type Decided } from '../going-live/sign-off.js'
 import { asServed } from '../your-apps/model.js'
 
 const nv = words.overview.newVersion
+const k = words.building.kind
+
+/** The sign-off is what holds it: unmet, whether re-escalated, undecided or refused. */
+const approvalUnmet = (readiness: Schemas['LaunchReadiness']) =>
+  readiness.items.some((i) => i.id === 'admin-approval' && i.state === 'unmet')
 
 /** What the panel read, in the person's session: the checklist, both versions' days, a decision. */
 type Reading = {
@@ -31,9 +34,11 @@ type Reading = {
  * address serves (`asServed`). The two facts, then what lets the students have it:
  * - **self-serve** (`ready`): an owner's press, F5's `LetStudentsIn` after a launch (its second
  *   sign-in back at `?then=new-version`); a helper reads that an owner does it;
- * - **re-escalated** (`reescalated`, never `sensitiveFields` alone, S1: M2): what changed, in Task 8's
- *   words, and F5b's sign-off: the ask, the asked row, *[Talk it through]* after a refusal;
- * - **anything else unmet**: said, with F5's rows and *[Going live]*.
+ * - **the sign-off unmet** (re-escalated, undecided or refused): what changed when re-escalated
+ *   (`reescalated`, never `sensitiveFields` alone, S1: M2), in Task 8's words, and F5b's sign-off: the
+ *   ask, the asked row, a refusal's reason and *[Talk it through]*;
+ * - **anything else unmet**: said here, UBC's two in our words and the rest in F5's rows (after a
+ *   launch, Going live says only that it is live: the review's I2).
  * The panel reads its own checklist (the Overview reads one only before a launch), and keeps a press
  * it started to its end, whatever it reads meanwhile.
  */
@@ -94,7 +99,8 @@ export function NewVersion({
       const [trying, students, decided] = await Promise.all([
         candidate === null ? null : day(candidate),
         served === null ? null : day(served),
-        readiness.reescalated && candidate !== null ? decision(candidate) : null,
+        // Undecided or refused alike: what the sign-off says (the review's I2).
+        approvalUnmet(readiness) && candidate !== null ? decision(candidate) : null,
       ])
       return { readiness, trying, students, decided }
     }
@@ -144,15 +150,28 @@ export function NewVersion({
     />
   )
   const approval = readiness.items.find((i) => i.id === 'admin-approval')
+  // While we do not know whether they own it, neither the press nor "An owner lets…" (the review's
+  // M6): an owner reads the facts until the members answer.
+  const theirs = role === 'unknown' ? null : <p className="body-lead">{nv.helper}</p>
+  const unmet = readiness.items.filter(
+    (i) => CLOCK_IDS.includes(i.id) && i.blocking && i.state !== 'met',
+  )
   const what =
     held || (readiness.ready && owner) ? (
       press
     ) : readiness.ready ? (
-      <p className="body-lead">{nv.helper}</p>
-    ) : readiness.reescalated ? (
+      theirs
+    ) : approval !== undefined && approvalUnmet(readiness) ? (
       <>
-        <p className="body-lead">{kindWords(readiness.sensitiveFields)}</p>
-        {owner && approval !== undefined ? (
+        {readiness.reescalated ? (
+          <p className="body-lead">
+            {/* The platform's "no baseline" names none: still a look, never "straight" (M9). */}
+            {readiness.sensitiveFields.length === 0
+              ? k.look(k.unknown)
+              : kindWords(readiness.sensitiveFields)}
+          </p>
+        ) : null}
+        {owner ? (
           <SignOff
             row={signOffRow(approval, true, reading.decided, timeZone, now())}
             decided={reading.decided}
@@ -164,25 +183,22 @@ export function NewVersion({
             onAsked={readAgain}
           />
         ) : (
-          <p className="body-lead">{nv.helper}</p>
+          theirs
         )}
       </>
     ) : (
       <>
         <p className="body-lead">{nv.unmet}</p>
+        {unmet.map((i) => (
+          <p key={i.id} className="body-lead">
+            {nv.clocks[i.id]}
+          </p>
+        ))}
         {rowsOf(readiness, { hostname: production.hostname, timeZone, now: now() })
           .filter((row) => row.state !== 'steady' && !row.apart)
           .map((row) => (
             <RowView key={row.id} row={{ ...row, action: null }} />
           ))}
-        <div className="describe__actions">
-          <Button
-            kind="secondary"
-            {...linkTo(`/apps/${encodeURIComponent(project.slug)}/going-live`)}
-          >
-            {nv.goingLive}
-          </Button>
-        </div>
       </>
     )
   return (

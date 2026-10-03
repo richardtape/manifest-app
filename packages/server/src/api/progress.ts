@@ -253,10 +253,12 @@ export interface RoundView {
    */
   stopped: { by: { id: string; name: string }; why: 'stopped' | 'removed' } | null
   /**
-   * F6b Decision 8: the sensitive fields the round's commits change so far, the union, in the
-   * platform's order: the page says the kind of change on a launched app. `[]` when none (yet).
+   * F6b Decision 8: the sensitive fields this conversation's rounds since launch changed, the union,
+   * in the platform's order (over-said, never under-said: the draft carries them all). `[]` when
+   * none (yet); **null when this round began before the app launched, or we cannot tell**: the page
+   * then says nothing of the kind of change (the review's I1).
    */
-  sensitive: string[]
+  sensitive: string[] | null
 }
 
 /**

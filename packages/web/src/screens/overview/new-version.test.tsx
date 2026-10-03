@@ -268,16 +268,130 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
   })
 
-  it('another item unmet: said, with Going live, and no press', async () => {
+  it('another item unmet: said, its row in F5’s words, and no press; never a link to Going live, which says only that it is live (the review’s I2)', async () => {
     draw(stage(SCANS_UNMET))
     expect(
       await screen.findByText(
-        'Before your students can have it, something on Going live needs doing.',
+        'Before your students can have it, this needs doing first.',
       ),
     ).toBeTruthy()
-    const link = screen.getByRole('link', { name: 'Going live' })
-    expect(link.getAttribute('href')).toBe(`/apps/${SLUG}/going-live`)
+    expect(screen.getByText(words.goingLive.rows.scans.name)).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Going live' })).toBeNull()
     expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
+    expect(machineryIn(shown())).toEqual([])
+  })
+
+  it("UBC's registration, or the privacy assessment, unmet: named in our words (the review's I2)", async () => {
+    draw(
+      stage({
+        ...SELF_SERVE,
+        ready: false,
+        items: item(SELF_SERVE, 'iam-registration', { state: 'unmet' }),
+      }),
+    )
+    expect(
+      await screen.findByText(
+        "UBC's identity team registers what this version asks for.",
+      ),
+    ).toBeTruthy()
+    cleanup()
+    draw(
+      stage({
+        ...SELF_SERVE,
+        ready: false,
+        items: item(SELF_SERVE, 'privacy-assessment', { state: 'unmet' }),
+      }),
+    )
+    expect(
+      await screen.findByText("UBC's Privacy Office approves its privacy assessment."),
+    ).toBeTruthy()
+  })
+
+  it('a sign-off refused: its reason, and Talk it through; never an undecided ask (the review’s I2)', async () => {
+    const REFUSED = {
+      ...SELF_SERVE,
+      ready: false,
+      reescalated: false,
+      items: item(SELF_SERVE, 'admin-approval', { state: 'unmet', since: null }),
+    }
+    draw(
+      stage(REFUSED, {
+        getApproval: () =>
+          Promise.resolve({
+            id: 'a-1',
+            releaseId: NEW.id,
+            projectId: PROJECT.id,
+            decision: 'rejected',
+            decidedBy: 'u-admin',
+            decidedByName: 'Pat Admin',
+            decidedAt: '2026-10-03T17:00:00.000Z',
+            imageDigest: 'x',
+            reason: 'It reaches a host we have not reviewed.',
+            diff: null,
+            previewId: null,
+          } as never),
+      }),
+    )
+    expect(
+      await screen.findByText(
+        'Not signed off: ‘It reaches a host we have not reviewed.’ A new version is needed, and it’s looked at afresh.',
+      ),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Talk it through' })).toBeTruthy()
+    expect(
+      screen.queryByRole('button', { name: words.goingLive.rows.approval.ask }),
+    ).toBeNull()
+    expect(screen.queryByText(/something on Going live/)).toBeNull()
+  })
+
+  it('re-escalated with no field named: something reviewed at launch, never "straight to your students" (the review’s M9)', async () => {
+    draw(stage({ ...REESCALATED, sensitiveFields: [] }))
+    expect(
+      await screen.findByText(
+        "This change needs a Manifest administrator's look before it reaches your students, because it changes something reviewed at launch.",
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText(/straight to your students/)).toBeNull()
+  })
+
+  it('while we do not know whether they own it: the facts alone, never "An owner lets…" to an owner (the review’s M6)', async () => {
+    draw(stage(SELF_SERVE), { role: 'unknown' })
+    expect(await screen.findByText(FACTS)).toBeTruthy()
+    expect(screen.queryByText(HELPER)).toBeNull()
+    expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
+  })
+
+  it("after a launch, the press never speaks of going live: its stations, and a version changed under it (the review's M5)", async () => {
+    const NEWER = { ...NEW, id: '88888888-8888-4888-8888-888888888883' }
+    let reads = 0
+    const s = stage(
+      () => (++reads <= 2 ? SELF_SERVE : { ...SELF_SERVE, candidateReleaseId: NEWER.id }),
+      {
+        deploy: () => Promise.reject(refused(409, 'RELEASE_NOT_STAGED')),
+        getRelease: (id) =>
+          Promise.resolve(id === NEWER.id ? NEWER : id === NEW.id ? NEW : OLD),
+      },
+    )
+    draw(s)
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    expect(
+      await screen.findByText(
+        'The version on your trying-out address changed a moment ago. Let your students have the new one?',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText(/Go live/)).toBeNull()
+    cleanup()
+    draw(stage(SELF_SERVE, { deploy: () => never() }))
+    const again = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(again)
+    })
+    expect(
+      await screen.findByRole('region', { name: 'Letting your students have it' }),
+    ).toBeTruthy()
   })
 
   it('the gate refuses the press (RELEASE_REESCALATED): the panel reads again, and asks instead', async () => {

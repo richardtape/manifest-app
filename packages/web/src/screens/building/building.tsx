@@ -71,14 +71,15 @@ export function BuildingScreen({
   const projectId = conversation.projectId
   const name = intake.project?.name ?? conversation.title
   const [notice, setNotice] = useState<Notice>()
-  // F6b Decision 8: the kind of change, on a launched app only; said as soon as a commit names a
-  // field, and at the round's end whatever it changed.
-  const launched = useLaunched(platform, projectId)
+  // F6b Decision 8: the kind of change, our server's to judge (null: begun before launch, or we
+  // cannot tell; the review's I1); said as soon as a commit names a field, and at the round's end
+  // whatever it changed; never once stopped, since a stopped change reaches nobody.
+  const sensitive = round?.sensitive ?? null
   const kind =
-    !launched || round === null
+    round === null || sensitive === null || round.status === 'stopped'
       ? null
-      : round.status === 'done' || round.sensitive.length > 0
-        ? kindWords(round.sensitive)
+      : round.status === 'done' || sensitive.length > 0
+        ? kindWords(sensitive)
         : null
 
   const handOver = () =>
@@ -344,27 +345,4 @@ export function BuildingScreen({
       </div>
     </div>
   )
-}
-
-/**
- * F6b DECISION 8: WHETHER THE APP IS LAUNCHED, read once in the person's session (the conversation
- * page looks no app up: `/new/<id>`). False until it answers, and on any refusal: the kind of
- * change is said only when we know.
- */
-function useLaunched(platform: Platform, projectId: string | null): boolean {
-  const [read, setRead] = useState<{ for: string; launched: boolean } | null>(null)
-  useEffect(() => {
-    if (projectId === null) return
-    let live = true
-    platform.getProject(projectId).then(
-      (project) =>
-        live &&
-        setRead({ for: projectId, launched: (project.launchedAt ?? null) !== null }),
-      () => undefined,
-    )
-    return () => {
-      live = false
-    }
-  }, [platform, projectId])
-  return read !== null && read.for === projectId && read.launched
 }

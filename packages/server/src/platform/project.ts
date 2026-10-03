@@ -30,6 +30,11 @@ export interface Projects {
   /** `getProject`: a token sees exactly one project. */
   read(token: string, projectId: string): Promise<Made>
   /**
+   * `getProject` again (F6b, the review's I1): whether the app has reached its students
+   * (`launchedAt`), kept apart from `Made`, which a conversation's record keeps.
+   */
+  launched(token: string, projectId: string): Promise<boolean>
+  /**
    * `getKnowledgePack`: how apps on this blueprint are built (D25), as text, each file under
    * its path, `AGENTS.md` first as the platform sends it. Cut at a length a small model can
    * read, and said so.
@@ -64,6 +69,19 @@ export function platformProjects(origin: string): Projects {
         return text.length <= PACK_CHARS
           ? text
           : text.slice(0, PACK_CHARS - CUT.length) + CUT
+      } catch (error) {
+        throw refusalFrom(error)
+      }
+    },
+    async launched(token, projectId) {
+      try {
+        const project = unwrap(
+          await client(token).GET('/v1/projects/{projectId}', {
+            params: { path: { projectId } },
+          }),
+          'getProject',
+        )
+        return (project.launchedAt ?? null) !== null
       } catch (error) {
         throw refusalFrom(error)
       }

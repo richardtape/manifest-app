@@ -1,5 +1,6 @@
 import type { Run, RunDetail, Store } from '../store/db.js'
 import type { BuildStep, RoundView, Said } from './progress.js'
+import { unionOf } from './sensitive.js'
 
 /**
  * THE ROUND, FROM WHAT WAS SAVED (F3 Task 8), as `intake-state.ts` folds the intake: the
@@ -143,8 +144,24 @@ export function roundOf(store: Store, conversationId: string): RoundView | null 
     draft: detail.draft,
     cost: detail.cost,
     stopped: stoppedOf(store, run),
-    sensitive: detail.sensitive ?? [],
+    sensitive: sensitiveOf(store, conversationId, detail),
   }
+}
+
+/**
+ * F6b DECISION 8, AFTER THE REVIEW'S I1: the union over this conversation's runs that began after
+ * launch; null unless this one did (a first build's fields are launch's, and an old run's unknown).
+ */
+function sensitiveOf(
+  store: Store,
+  conversationId: string,
+  detail: RunDetail,
+): string[] | null {
+  if (detail.launched !== true) return null
+  return store
+    .listRuns(conversationId)
+    .filter((run) => run.detail?.launched === true)
+    .reduce<string[]>((kept, run) => unionOf(kept, run.detail?.sensitive ?? []), [])
 }
 
 /**

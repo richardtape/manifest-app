@@ -8,6 +8,7 @@ import { publishRefusal, publishState, type Hub } from '../api/events.js'
 import { intakeOf, planOf } from '../api/intake-state.js'
 import { pieceOf } from '../api/piece-state.js'
 import { problem } from '../api/problems.js'
+import { unionOf } from '../api/sensitive.js'
 import type { BuildStep, ConversationState, Needs } from '../api/progress.js'
 import { heardIn, NO_DETAIL, type RoundSaid } from '../api/round-state.js'
 import { Refused, type Work } from '../api/work.js'
@@ -208,29 +209,6 @@ interface Live {
 
 const detail = (live: Live): RunDetail => live.run.detail as RunDetail
 
-/** The platform's seven sensitive fields, in its order (`spec/diff.ts`'s SENSITIVE_FIELDS). */
-const SENSITIVE_ORDER = [
-  'services',
-  'auth.attributes',
-  'egress.allow',
-  'resources',
-  'data.classification',
-  'ai.models',
-  'blueprint',
-]
-
-/** F6b Decision 8: both, each once, the seven in the platform's order, any other after them. */
-function unionOf(kept: string[], more: string[]): string[] {
-  const rank = (field: string) => {
-    const at = SENSITIVE_ORDER.indexOf(field)
-    return at === -1 ? SENSITIVE_ORDER.length : at
-  }
-  return [...new Set([...kept, ...more])]
-    .map((field, seen) => ({ field, seen }))
-    .sort((a, b) => rank(a.field) - rank(b.field) || a.seen - b.seen)
-    .map(({ field }) => field)
-}
-
 const codeOf = (error: unknown): string =>
   error instanceof PlatformRefusal ||
   error instanceof ModelError ||
@@ -403,12 +381,14 @@ export function createRounds(deps: RoundDeps): Rounds {
       const build = await call(live, 'getBuild', buildId, () =>
         builds.get(live.token, buildId),
       )
-      if (build.status === 'succeeded' || build.status === 'failed')
+      // Never over the stream's own answer, which alone carries a code (the review's M1).
+      if (
+        (build.status === 'succeeded' || build.status === 'failed') &&
+        !live.builds.has(buildId)
+      )
         live.builds.set(buildId, {
           ok: build.status === 'succeeded',
           reason: null,
-          // A build read carries no code: a refusal missed on the stream is a try, and the next
-          // build's frame names it (F6b Task 9).
           code: null,
         })
     }
@@ -622,6 +602,17 @@ export function createRounds(deps: RoundDeps): Rounds {
         },
       }
       save(live)
+    }
+    // F6b (the review's I1): whether this run began after the app first reached its students, read
+    // once a run. Unread, nothing is said of the kind of change.
+    if (d.launched === undefined) {
+      const launched = await call(live, 'getProject', null, () =>
+        deps.projects.launched(live.token, live.projectId),
+      ).then(
+        (yes) => yes,
+        () => undefined,
+      )
+      if (launched !== undefined) d.launched = launched
     }
     await readTree(live)
     if (live.pack === null)
@@ -1217,18 +1208,20 @@ export function createRounds(deps: RoundDeps): Rounds {
   /**
    * F6b DECISION 9: WHAT THE BUILT MANIFEST ASKS THAT PRODUCTION HAS NOT REGISTERED, from the
    * platform's parse of it (`getSpec`) and the registration (`getLaunchRecords`), never from the
-   * failure's free-text reason. `[]` when the manifest read is not the one built, or a read fails:
-   * the page says a new detail generically.
+   * failure's free-text reason. `[]` when the manifest read is not the one built (the build's own
+   * commit, never the round's base, which a resume reads from the tree: the review's M3), or a read
+   * fails: the page says a new detail generically.
    */
-  async function missingDetails(live: Live): Promise<string[]> {
+  async function missingDetails(live: Live, buildId: string): Promise<string[]> {
     try {
-      const [asked, registered] = await Promise.all([
+      const [built, asked, registered] = await Promise.all([
+        call(live, 'getBuild', buildId, () => builds.get(live.token, buildId)),
         call(live, 'getSpec', null, () => deps.details.asked(live.token, live.projectId)),
         call(live, 'getLaunchRecords', 'production', () =>
           deps.details.registered(live.token, live.projectId),
         ),
       ])
-      if (asked.commitSha !== live.base || registered === null) return []
+      if (asked.commitSha !== built.commitSha || registered === null) return []
       return asked.attributes.filter((attribute) => !registered.includes(attribute))
     } catch {
       return []
@@ -1267,8 +1260,18 @@ export function createRounds(deps: RoundDeps): Rounds {
       return next(live, 'draft')
     }
     // F6b Decision 9: a detail UBC has not registered fails every build: stop, and never retry.
-    if (outcome.code === NOT_REGISTERED)
-      return needs({ kind: 'detail', details: await missingDetails(live) })
+    // The failed build is forgotten (the review's M2): carried on, or carried on after a Stop, the
+    // round builds anew (UBC may have agreed meanwhile), never reads this one again as a try.
+    // A failure only read, never heard (no code: the review's M1), is the new detail too when the
+    // built manifest asks one production has not registered: the platform fails every such build.
+    const details =
+      outcome.code === NOT_REGISTERED || outcome.code === null
+        ? await missingDetails(live, buildId)
+        : []
+    if (outcome.code === NOT_REGISTERED || details.length > 0) {
+      d.buildId = null
+      return needs({ kind: 'detail', details })
+    }
     const log = await call(live, 'getBuildLog', buildId, () =>
       builds.log(live.token, buildId, LOG_TAIL),
     )

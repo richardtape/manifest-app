@@ -231,10 +231,16 @@ function needCard(
         >
           {presses.leaving === true ? (
             <StateChip state="working" label={d.leavingOut} />
-          ) : presses.leaveOut === undefined ? null : (
-            <Button kind="primary" onClick={presses.leaveOut}>
-              {d.leaveOut}
-            </Button>
+          ) : (
+            <>
+              {presses.leaveOut === undefined ? null : (
+                <Button kind="primary" onClick={presses.leaveOut}>
+                  {d.leaveOut}
+                </Button>
+              )}
+              {/* F4 Decision 5: a round that holds its app can always be stopped here. */}
+              {stopHere(presses)}
+            </>
           )}
         </NeedsCard>
       )

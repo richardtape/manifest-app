@@ -486,6 +486,8 @@ export function LetStudentsIn({
   const offered = phase.at === 'offer' || phase.at === 'changed' || phase.at === 'reading'
   const nv = words.overview.newVersion
   const button = afterLaunch ? nv.button : l.button
+  // After a launch nothing goes live: the same press, its own words (the review's M5).
+  const stations = afterLaunch ? nv.stationsLabel : l.stationsLabel
   const noticeCard =
     notice === undefined ? null : (
       <div role="alert">
@@ -505,7 +507,7 @@ export function LetStudentsIn({
           {phase.at === 'changed' ? (
             // Said to a screen reader too: the button they pressed was replaced (M8).
             <p className="body-lead" role="status">
-              {l.changed}
+              {afterLaunch ? nv.changed : l.changed}
             </p>
           ) : null}
           {goes(phase.at === 'changed' ? phase.sent.when : (candidate?.when ?? null))}
@@ -530,7 +532,7 @@ export function LetStudentsIn({
         <>
           {goes(phase.sent.when)}
           <StateChip state="working" label={t.working} />
-          <Stations instance={phase.instance} name={l.stationsLabel} />
+          <Stations instance={phase.instance} name={stations} />
           <p className="body-lead">{t.real}</p>
           <p className="building__leave">{t.leave}</p>
         </>
@@ -539,24 +541,22 @@ export function LetStudentsIn({
         <>
           {goes(phase.sent.when)}
           {/* Stations only while we still read them: motion means a machine is moving. */}
-          {phase.gaveUp ? null : (
-            <Stations instance={phase.instance} name={l.stationsLabel} />
-          )}
+          {phase.gaveUp ? null : <Stations instance={phase.instance} name={stations} />}
           <p className="body-lead" role="status">
-            {phase.gaveUp ? l.unsureLong : t.unsure}
+            {phase.gaveUp ? (afterLaunch ? nv.unsureLong : l.unsureLong) : t.unsure}
           </p>
         </>
       ) : null}
       {phase.at === 'landed' && afterLaunch ? (
         <>
-          <Stations instance={{ state: 'healthy' }} name={l.stationsLabel} />
+          <Stations instance={{ state: 'healthy' }} name={stations} />
           <p className="going-live__landed" role="status">
             {nv.landed(phase.sent.when)}
           </p>
         </>
       ) : phase.at === 'landed' ? (
         <>
-          <Stations instance={{ state: 'healthy' }} name={l.stationsLabel} />
+          <Stations instance={{ state: 'healthy' }} name={stations} />
           <p className="going-live__landed" role="status">
             {l.landed(project.name)}
           </p>
@@ -573,7 +573,7 @@ export function LetStudentsIn({
       {phase.at === 'failed' ? (
         <>
           <StateChip state="attention" label={t.needsYou} />
-          <Stations instance={{ state: 'failed' }} name={l.stationsLabel} />
+          <Stations instance={{ state: 'failed' }} name={stations} />
           <h2 className="trying-out__title">{l.address}</h2>
           <TwoFacts
             serving={{

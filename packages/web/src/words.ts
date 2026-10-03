@@ -763,9 +763,21 @@ export const words = {
         when === null
           ? 'Your students still have the version they had.'
           : `Your students still have the version from ${when}.`,
-      /** Ours: another item unmet, said where Going live says which. */
-      unmet: 'Before your students can have it, something on Going live needs doing.',
-      goingLive: 'Going live',
+      /** Ours (the review's M5): the press after a launch, where F5's speak of going live. */
+      changed:
+        'The version on your trying-out address changed a moment ago. Let your students have the new one?',
+      unsureLong:
+        'We stopped waiting, and couldn’t see how it ended. Your students’ address shows which version they have.',
+      stationsLabel: 'Letting your students have it',
+      /**
+       * Ours: another item unmet, each said here (after a launch, Going live says only that it is
+       * live: the review's I2); UBC's two in our words, the rest in F5's row words.
+       */
+      unmet: 'Before your students can have it, this needs doing first.',
+      clocks: {
+        'iam-registration': "UBC's identity team registers what this version asks for.",
+        'privacy-assessment': "UBC's Privacy Office approves its privacy assessment.",
+      } as Record<string, string>,
     },
     /** Ours: the address rows' name, for a screen reader: no count, since fewer may be drawn (m1). */
     addresses: 'Its addresses',

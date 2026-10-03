@@ -92,6 +92,11 @@ export interface RunDetail {
    * platform's order (each commit's `sensitiveDiff.fields`). Absent on a run saved before F6b.
    */
   sensitive?: string[]
+  /**
+   * F6b (the review's I1): whether the app had reached its students when this run began; absent
+   * until read, and on a run saved before it. Only such a run's fields are a change after launch.
+   */
+  launched?: boolean
 }
 
 /** One question a round asked (F3 Decision 10). A secret's answer is never here. */

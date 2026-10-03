@@ -120,6 +120,7 @@ function setUp(script: unknown[] = [], options: { keeper?: Keeper } = {}) {
   }
   const projects: Projects = {
     read: async () => PROJECT,
+    launched: async () => false,
     knowledgePack: async () => '## AGENTS.md\n\nThe stack is fixed.',
   }
   const commits: string[] = []
