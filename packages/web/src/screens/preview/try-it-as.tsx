@@ -5,14 +5,19 @@ import { words } from '../../words.js'
 
 const w = words.preview
 
-/** "Copy", named for whose value it copies; "Copied" said in a status once it has. */
+/**
+ * "Copy", named for whose value it copies; said in a status once it has, or (m117) that it could
+ * not: the browser refused it, or has no clipboard here.
+ */
 export function CopyButton({ value, name }: { value: string; name: string }) {
-  const [copied, setCopied] = useState(false)
+  const [said, setSaid] = useState<'copied' | 'refused' | null>(null)
   const copy = () => {
-    void navigator.clipboard
-      ?.writeText(value)
-      .then(() => setCopied(true))
-      .catch(() => undefined)
+    const clipboard = navigator.clipboard as Clipboard | undefined
+    if (clipboard === undefined) return setSaid('refused')
+    clipboard.writeText(value).then(
+      () => setSaid('copied'),
+      () => setSaid('refused'),
+    )
   }
   return (
     <>
@@ -21,7 +26,7 @@ export function CopyButton({ value, name }: { value: string; name: string }) {
         <span className="visually-hidden"> {name}</span>
       </Button>
       <span className="try-it-as__copied" role="status">
-        {copied ? w.copied : ''}
+        {said === 'copied' ? w.copied : said === 'refused' ? w.copyRefused : ''}
       </span>
     </>
   )

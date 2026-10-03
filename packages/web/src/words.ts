@@ -551,6 +551,11 @@ export const words = {
     copyPassword: (who: string) => `${who.toLowerCase()}'s password`,
     copied: 'Copied',
     /**
+     * Ours (m117, under Rich's *"approve, change on sight"*): the browser refused the copy, or has
+     * no clipboard here; the value stays on screen to select (a key is shown once).
+     */
+    copyRefused: "We couldn't copy it. Select it and copy it yourself.",
+    /**
      * The laptop only (the pretend people are the laptop's IdP's, FE-3): corrected to what F4's
      * M4 measured, and approved by Rich at sitting 2's start ("Use it as written").
      */
