@@ -3,13 +3,15 @@ import { Button, Card, FieldCount, StateChip } from '@manifest-app/ui'
 import { useEffect, useId, useRef, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
-import { refusalOf } from '../../platform/refusal.js'
+import { refusalOf, reported } from '../../platform/refusal.js'
 import { navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { PressNotice } from '../change/notice.js'
 import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
 import { countOf, LIMITS, tooLong } from '../limits.js'
 import { mintRequest } from '../making/token.js'
+import { ReferenceLine, useReported } from '../reference.js'
+import type { Trouble } from '../trouble.js'
 import type { Five, Row } from './checklist.js'
 import { dayWords, vancouverDays } from './steps.js'
 import { RowView } from './row.js'
@@ -121,6 +123,7 @@ export function talkWords(reason: string | null): string {
 export function SignOff({
   row,
   decided,
+  unread = null,
   candidate,
   platform,
   ours,
@@ -130,6 +133,8 @@ export function SignOff({
 }: {
   row: Row
   decided: Decided
+  /** Why `decided` is `'unread'`: said with a reference, reported once (m11). */
+  unread?: Trouble | null
   /** The release on trying-out, as this reading has it: what an ask names (F5b). */
   candidate: string | null
   platform: Platform
@@ -194,6 +199,12 @@ export function SignOff({
         onAsked={onAsked}
       />
     )
+  if (decided === 'unread' && unread !== null)
+    return (
+      <RowView row={row}>
+        <UnreadReference trouble={unread} />
+      </RowView>
+    )
   if (row.action !== 'talk-it-through') return <RowView row={row} />
   return (
     <RowView row={row}>
@@ -219,6 +230,19 @@ export function SignOff({
         )}
       </div>
     </RowView>
+  )
+}
+
+/**
+ * MINORS m11: a sign-off we could not read, *"We can't tell right now…"*, with a support reference,
+ * reported once (F2 Decision 11) as the read it was; the console line is the read's own (`settle`).
+ */
+function UnreadReference({ trouble }: { trouble: Trouble }) {
+  const reference = useReported({ ...reported(trouble), operation: 'getApproval' })
+  return (
+    <p className="body-small">
+      <ReferenceLine reference={reference} />
+    </p>
   )
 }
 

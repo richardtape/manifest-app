@@ -594,10 +594,21 @@ describe('the sign-off on Going live (moment 13)', () => {
     expect(s.called('getApproval')).toEqual([])
   })
 
-  it('an approval that cannot be read: the row says we cannot tell, and the page stands', async () => {
+  it('an approval that cannot be read: the row says we cannot tell, with a reference reported once (m11), and the page stands', async () => {
     await open(stage({}, { getApproval: () => refused(500, 'INTERNAL') }))
     const row = await signOff()
     expect(wordsOf(row)).toContain(a.cantTell)
+    const reference = /quote ([0-9A-F]{4}-[0-9A-F]{4})\./.exec(wordsOf(row))?.[1]
+    expect(reference).toBeDefined()
+    await waitFor(() =>
+      expect(reports).toEqual([
+        expect.objectContaining({
+          reference,
+          code: 'INTERNAL',
+          operation: 'getApproval',
+        }),
+      ]),
+    )
     expect(within(row).queryAllByRole('button')).toEqual([])
     expect(screen.getByText(g.rows.rehearsal.name)).toBeTruthy()
   })

@@ -24,6 +24,8 @@ type Seen = {
   rows: Row[]
   /** The candidate's sign-off, for *[Talk it through]*'s words (Task 8). */
   decided: Decided
+  /** Why the sign-off could not be read, when it could not (m11: said with a reference). */
+  unread: Trouble | null
   /**
    * The checklist's own word that the app has launched: the App reads the project once per slug,
    * so a launch since (another tab; Task 10's press) is known here first (sitting 3's minor).
@@ -71,6 +73,7 @@ async function read(
   let version: string | null | undefined
   // Nothing on trying-out: nothing to sign off, and nobody has decided.
   let decided: Decided = null
+  let unread: Trouble | null = null
   if (readiness.candidateReleaseId !== null) {
     const [candidate, approval] = await Promise.allSettled([
       platform.getRelease(readiness.candidateReleaseId),
@@ -80,6 +83,8 @@ async function read(
     else {
       settle(approval!)
       decided = 'unread'
+      // A session that ended has thrown (settle): anything else is said with a reference (m11).
+      unread = refusalOf(approval!.reason) as Trouble
     }
     const release = settle(candidate!)
     // "the version from 18 September, 3:12pm" → "18 September, 3:12pm"; undated → null.
@@ -98,6 +103,7 @@ async function read(
       now,
     }),
     decided,
+    unread,
     launched: readiness.launched,
     ready: readiness.ready,
     candidate:
@@ -331,6 +337,7 @@ export function GoingLive({
                 key={row.id}
                 row={row}
                 decided={seen.decided}
+                unread={seen.unread}
                 candidate={seen.candidate?.releaseId ?? null}
                 platform={platform}
                 ours={ours}
