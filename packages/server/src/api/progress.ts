@@ -246,6 +246,11 @@ export interface RoundView {
    * Null unless it is stopped with a record (a round from before F6b has none).
    */
   stopped: { by: { id: string; name: string }; why: 'stopped' | 'removed' } | null
+  /**
+   * F6b Decision 8: the sensitive fields the round's commits change so far, the union, in the
+   * platform's order: the page says the kind of change on a launched app. `[]` when none (yet).
+   */
+  sensitive: string[]
 }
 
 /**

@@ -87,6 +87,11 @@ export interface RunDetail {
    * none. Absent on a run saved before F6b.
    */
   stopped?: { by: string; why: 'stopped' | 'removed' } | null
+  /**
+   * F6b Decision 8: the sensitive fields this round's landed commits change, the union, in the
+   * platform's order (each commit's `sensitiveDiff.fields`). Absent on a run saved before F6b.
+   */
+  sensitive?: string[]
 }
 
 /** One question a round asked (F3 Decision 10). A secret's answer is never here. */

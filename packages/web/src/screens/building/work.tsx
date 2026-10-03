@@ -78,6 +78,7 @@ export function Work({
   connecting,
   notice,
   end,
+  kind = null,
   presses,
   stoppedBy = null,
   whose = null,
@@ -89,6 +90,8 @@ export function Work({
   notice: ReactNode
   /** Once built, what comes next: try it, or put this version on trying-out (F4 Task 10). */
   end: ReactNode
+  /** F6b Decision 8: the kind of change, while the round goes on (its end says it with `end`). */
+  kind?: string | null
   presses: Presses
   /** F6b Decision 6: who stopped it, when it was not its own person. */
   stoppedBy?: { said: string; removed: boolean } | null
@@ -137,6 +140,7 @@ export function Work({
         />
       </div>
       <LiveSteps steps={stepsOf(round)} />
+      {kind === null ? null : <p className="building__kind">{kind}</p>}
       {round?.status === 'done' ? (
         <>
           <p className="body-lead">{words.building.startedAndAnswered}</p>

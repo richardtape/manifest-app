@@ -95,6 +95,7 @@ function round(
     draft: null,
     cost: { conversationUsd: null, monthLeftUsd: null, resetsAt: null },
     stopped: null,
+    sensitive: [],
     ...patch,
   }
 }
@@ -1808,5 +1809,92 @@ describe('another person’s conversation, read by a member (F6b Task 7)', () =>
     s.state(round({ status: 'stopped', stopped: { by: SAM, why: 'removed' } }), sams)
     expect(await screen.findByText(t.removed(SAM.name, PROJECT.name))).toBeTruthy()
     noButton(words.building.carryOn)
+  })
+})
+
+describe('the kind of change, on a launched app (F6b Task 8, Decision 8)', () => {
+  const LAUNCHED = { id: PROJECT.id, launchedAt: '2026-09-18T16:00:00.000Z' }
+  const NEVER_LAUNCHED = { id: PROJECT.id, launchedAt: null }
+  const LOOK_AT_REACH =
+    "This change needs a Manifest administrator's look before it reaches your students, because it changes what it can reach."
+  const STRAIGHT = "Once you've tried it, this can go straight to your students."
+  const project = (
+    s: ReturnType<typeof stage>,
+    answer: { id: string; launchedAt: string | null },
+  ) => {
+    s.platform.getProject = (projectId) => {
+      s.calls.push(['getProject', projectId])
+      return Promise.resolve(answer as Schemas['Project'])
+    }
+  }
+  const built = (sensitive: string[]) =>
+    round(
+      {
+        status: 'done',
+        sensitive,
+        draft: { address: DRAFT, serving: true, lastAttempt: 'healthy' },
+      },
+      ALL_DONE,
+    )
+
+  it('says it as soon as a commit names a field, while the work goes on, and nothing before one does', async () => {
+    const s = stage()
+    project(s, LAUNCHED)
+    await open(s)
+    s.state(round())
+    await waitFor(() => expect(s.called('getProject')).toEqual([[PROJECT.id]]))
+    const work = screen.getByRole('region', { name: words.building.workLabel })
+    expect(within(work).queryByText(STRAIGHT)).toBeNull()
+    expect(within(work).queryByText(/administrator's look/)).toBeNull()
+
+    s.state(round({ sensitive: ['egress.allow'] }))
+    expect(await within(work).findByText(LOOK_AT_REACH)).toBeTruthy()
+    expect(machineryIn(wordsShown())).toEqual([])
+  })
+
+  it('says it again at the round\'s end, beside "Ready on your draft address.", once', async () => {
+    const s = stage()
+    project(s, LAUNCHED)
+    await open(s)
+    s.state(built(['egress.allow']), { state: 'built' })
+    const work = screen.getByRole('region', { name: words.building.workLabel })
+    expect(
+      await within(work).findByText(`Ready on your draft address. ${LOOK_AT_REACH}`),
+    ).toBeTruthy()
+    expect(within(work).getAllByText(/administrator's look/)).toHaveLength(1)
+  })
+
+  it('a round that changed nothing sensitive says it can go straight to the students, at its end only', async () => {
+    const s = stage()
+    project(s, LAUNCHED)
+    await open(s)
+    s.state(built([]), { state: 'built' })
+    const work = screen.getByRole('region', { name: words.building.workLabel })
+    expect(
+      await within(work).findByText(`Ready on your draft address. ${STRAIGHT}`),
+    ).toBeTruthy()
+    expect(machineryIn(wordsShown())).toEqual([])
+  })
+
+  it('never says it before launch: the change reaches nobody but them', async () => {
+    const s = stage()
+    project(s, NEVER_LAUNCHED)
+    await open(s)
+    s.state(round({ sensitive: ['egress.allow'] }))
+    await waitFor(() => expect(s.called('getProject')).toHaveLength(1))
+    s.state(built(['egress.allow']), { state: 'built' })
+    const work = screen.getByRole('region', { name: words.building.workLabel })
+    expect(await within(work).findByText(words.tryingOut.ready)).toBeTruthy()
+    expect(within(work).queryByText(/administrator's look/)).toBeNull()
+    expect(within(work).queryByText(new RegExp(STRAIGHT.replace('.', '\\.')))).toBeNull()
+  })
+
+  it('says nothing while it cannot tell whether the app is launched', async () => {
+    const s = stage()
+    await open(s)
+    s.state(built(['egress.allow']), { state: 'built' })
+    const work = screen.getByRole('region', { name: words.building.workLabel })
+    expect(await within(work).findByText(words.tryingOut.ready)).toBeTruthy()
+    expect(within(work).queryByText(/administrator's look/)).toBeNull()
   })
 })

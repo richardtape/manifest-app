@@ -7,6 +7,7 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { words } from '../../words.js'
 import { handOverToken } from '../making/token.js'
+import { kindWords } from './kind.js'
 import { SupportReference } from '../reference.js'
 import { StartedBy, type Theirs } from '../change/together.js'
 import { PutOnTryingOut } from '../trying-out/put.js'
@@ -69,6 +70,15 @@ export function BuildingScreen({
   const projectId = conversation.projectId
   const name = intake.project?.name ?? conversation.title
   const [notice, setNotice] = useState<Notice>()
+  // F6b Decision 8: the kind of change, on a launched app only; said as soon as a commit names a
+  // field, and at the round's end whatever it changed.
+  const launched = useLaunched(platform, projectId)
+  const kind =
+    !launched || round === null
+      ? null
+      : round.status === 'done' || round.sensitive.length > 0
+        ? kindWords(round.sensitive)
+        : null
 
   const handOver = () =>
     projectId === null
@@ -235,7 +245,9 @@ export function BuildingScreen({
   const end =
     round?.status !== 'done' || projectId === null || slug === undefined ? null : (
       <div className="building__end">
-        <p className="body-lead">{words.tryingOut.ready}</p>
+        <p className="body-lead">
+          {kind === null ? words.tryingOut.ready : `${words.tryingOut.ready} ${kind}`}
+        </p>
         <div className="describe__actions">
           <Button kind="primary" {...linkTo(`/apps/${encodeURIComponent(slug)}/preview`)}>
             {words.tryingOut.tryIt}
@@ -265,6 +277,7 @@ export function BuildingScreen({
           connecting={connecting}
           notice={noticeCard}
           end={end}
+          kind={round?.status === 'done' ? null : kind}
           presses={presses}
           stoppedBy={stoppedBy}
           whose={theirs?.name ?? null}
@@ -287,4 +300,27 @@ export function BuildingScreen({
       </div>
     </div>
   )
+}
+
+/**
+ * F6b DECISION 8: WHETHER THE APP IS LAUNCHED, read once in the person's session (the conversation
+ * page looks no app up: `/new/<id>`). False until it answers, and on any refusal: the kind of
+ * change is said only when we know.
+ */
+function useLaunched(platform: Platform, projectId: string | null): boolean {
+  const [read, setRead] = useState<{ for: string; launched: boolean } | null>(null)
+  useEffect(() => {
+    if (projectId === null) return
+    let live = true
+    platform.getProject(projectId).then(
+      (project) =>
+        live &&
+        setRead({ for: projectId, launched: (project.launchedAt ?? null) !== null }),
+      () => undefined,
+    )
+    return () => {
+      live = false
+    }
+  }, [platform, projectId])
+  return read !== null && read.for === projectId && read.launched
 }

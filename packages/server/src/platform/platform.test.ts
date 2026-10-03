@@ -271,6 +271,7 @@ describe('source: the tree, a file, and a commit (M1)', () => {
           hint: 'Nothing to fix.',
         },
       ],
+      sensitive: [],
     })
     const [dry, real] = fake.seen as [Seen, Seen]
     expect(dry.body).toEqual({
@@ -283,6 +284,38 @@ describe('source: the tree, a file, and a commit (M1)', () => {
     expect([dry.method, path(dry)]).toEqual(['POST', `/v1/projects/${PROJECT}/commits`])
     expect(String(dry.headers['idempotency-key'])).toMatch(/^.{8,}$/)
     expect(dry.headers['idempotency-key']).not.toBe(real.headers['idempotency-key'])
+  })
+
+  it("commit says which sensitive fields the commit changes, from the commit's own answer, never the dry run's (F6b Task 8)", async () => {
+    const fake = await fakePlatform((seen) => {
+      const dryRun = (seen.body as { dryRun?: boolean }).dryRun === true
+      const answer = COMMITTED(dryRun)
+      const body = answer.body as { spec: { sensitiveDiff: unknown } }
+      body.spec.sensitiveDiff = dryRun
+        ? { sensitive: true, fields: ['services'] }
+        : { sensitive: true, fields: ['egress.allow', 'auth.attributes'] }
+      return answer
+    })
+    const answer = await platformSource(fake.origin).commit(TOKEN, PROJECT, {
+      baseCommit: SHA,
+      message: 'Read the calendar',
+      changes: CHANGES,
+    })
+    expect(answer.sensitive).toEqual(['egress.allow', 'auth.attributes'])
+  })
+
+  it('commit with no sensitiveDiff in its answer says no sensitive field', async () => {
+    const fake = await fakePlatform((seen) => {
+      const answer = COMMITTED((seen.body as { dryRun?: boolean }).dryRun === true)
+      delete (answer.body as { spec: { sensitiveDiff?: unknown } }).spec.sensitiveDiff
+      return answer
+    })
+    const answer = await platformSource(fake.origin).commit(TOKEN, PROJECT, {
+      baseCommit: SHA,
+      message: 'Two pages',
+      changes: CHANGES,
+    })
+    expect(answer.sensitive).toEqual([])
   })
 
   it('commit records what it sent, call by call, even when a call is refused', async () => {

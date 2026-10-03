@@ -73,6 +73,7 @@ function roundContext(over: Partial<RoundContext> = {}) {
           path: c.path,
           status: c.op === 'delete' ? ('deleted' as const) : ('added' as const),
         })),
+        sensitive: [],
         warnings: [
           {
             code: 'SPEC_FIELD_NOT_ENFORCED',

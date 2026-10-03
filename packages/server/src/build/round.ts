@@ -202,6 +202,29 @@ interface Live {
 
 const detail = (live: Live): RunDetail => live.run.detail as RunDetail
 
+/** The platform's seven sensitive fields, in its order (`spec/diff.ts`'s SENSITIVE_FIELDS). */
+const SENSITIVE_ORDER = [
+  'services',
+  'auth.attributes',
+  'egress.allow',
+  'resources',
+  'data.classification',
+  'ai.models',
+  'blueprint',
+]
+
+/** F6b Decision 8: both, each once, the seven in the platform's order, any other after them. */
+function unionOf(kept: string[], more: string[]): string[] {
+  const rank = (field: string) => {
+    const at = SENSITIVE_ORDER.indexOf(field)
+    return at === -1 ? SENSITIVE_ORDER.length : at
+  }
+  return [...new Set([...kept, ...more])]
+    .map((field, seen) => ({ field, seen }))
+    .sort((a, b) => rank(a.field) - rank(b.field) || a.seen - b.seen)
+    .map(({ field }) => field)
+}
+
 const codeOf = (error: unknown): string =>
   error instanceof PlatformRefusal ||
   error instanceof ModelError ||
@@ -738,7 +761,11 @@ export function createRounds(deps: RoundDeps): Rounds {
         const calls: Sent[] = []
         let code: string | null = null
         try {
-          return await source.commit(token, projectId, body, calls)
+          const made = await source.commit(token, projectId, body, calls)
+          // F6b Decision 8: the round's union, said with the move's own save.
+          const d = detail(live)
+          d.sensitive = unionOf(d.sensitive ?? [], made.sensitive)
+          return made
         } catch (error) {
           code = codeOf(error)
           throw error

@@ -154,6 +154,7 @@ describe('useConversation', () => {
       draft: null,
       cost: { conversationUsd: 0.4, monthLeftUsd: 9.6, resetsAt: null },
       stopped: null,
+      sensitive: [],
     }
     const thread: Said[] = [
       {

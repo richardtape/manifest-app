@@ -169,7 +169,12 @@ function setUp(script: unknown[] = [], options: { keeper?: Keeper } = {}) {
             truncated: false,
           }),
           file: async () => ({ content: '{"dependencies":{}}' }),
-          commit: async () => ({ commitSha: 'd'.repeat(40), changed: [], warnings: [] }),
+          commit: async () => ({
+            commitSha: 'd'.repeat(40),
+            changed: [],
+            warnings: [],
+            sensitive: [],
+          }),
         },
         builds: {
           start: async (_t, _p, commitSha) => ({

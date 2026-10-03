@@ -292,6 +292,30 @@ export const words = {
    * where neither has any, marked "ours".
    */
   building: {
+    /**
+     * F6b TASK 8: THE KIND OF CHANGE, ON A LAUNCHED APP (design §1, approved by Rich; the seven
+     * fields' words his). An unknown field is ours (Words proposed): never its name.
+     */
+    kind: {
+      straight: "Once you've tried it, this can go straight to your students.",
+      look: (what: string) =>
+        `This change needs a Manifest administrator's look before it reaches your students, because it changes ${what}.`,
+      fields: {
+        services: 'what it keeps',
+        'auth.attributes': 'who it learns about',
+        'egress.allow': 'what it can reach',
+        resources: 'how much room it gets',
+        'data.classification': 'how sensitive its data is',
+        'ai.models': 'which AI it asks',
+        blueprint: "what it's built on",
+      } as Record<string, string>,
+      unknown: 'something reviewed at launch',
+      /** "a", "a and b", "a, b and c". */
+      joined: (said: string[]) =>
+        said.length <= 1
+          ? (said[0] ?? '')
+          : `${said.slice(0, -1).join(', ')} and ${said.at(-1)!}`,
+    },
     /** The five steps (Decision 5), each ticking on its own signal. */
     steps: {
       pages: 'Writing the pages',

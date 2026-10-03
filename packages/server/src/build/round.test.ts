@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { planMarkdown } from '../agents/plan.js'
-import { roundOf } from '../api/round-state.js'
+import { NO_DETAIL, roundOf } from '../api/round-state.js'
 import { createHub, type Hub } from '../api/events.js'
 import type { Progress, RoundView } from '../api/progress.js'
 import { createWork } from '../api/work.js'
@@ -25,7 +25,7 @@ import type { Secrets } from '../platform/secrets.js'
 import type { Change, Source } from '../platform/source.js'
 import type { ProjectStream } from '../platform/stream.js'
 import { storeTrace } from '../runtime/trace.js'
-import { openStore, type Conversation, type Store } from '../store/db.js'
+import { openStore, type Conversation, type RunDetail, type Store } from '../store/db.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
 import { createLine, type Line } from './line.js'
 import { createRounds, type RoundDeps, type Rounds } from './round.js'
@@ -194,6 +194,8 @@ interface Options {
   spent?: (number | null)[]
   deploy?: (releaseId: string, n: number) => Promise<Instance> | Instance
   commit?: (n: number, body: { baseCommit: string; changes: Change[] }) => void
+  /** The sensitive fields each landed commit (its nth) changes, as the platform names them (F6b Task 8). */
+  sensitive?: (n: number) => string[]
   tree?: (n: number) => Promise<{ commitSha: string }> | { commitSha: string }
   /** Each read of a file, before it answers (its nth read of that path): may throw (m19). */
   fileRead?: (path: string, n: number) => void
@@ -333,6 +335,7 @@ function harness(options: Options, file?: string, store0?: Store) {
         commitSha: `c${commits.length}`.padEnd(40, '0'),
         changed: body.changes.map((c) => ({ path: c.path, status: 'added' as const })),
         warnings: [],
+        sensitive: options.sensitive?.(commits.length) ?? [],
       }
     },
   }
@@ -2654,5 +2657,97 @@ describe('the lead on an app that exists (F4 Task 8)', () => {
     })
     await untilStatus(h, id, 'needs-you')
     expect(viewOf(h, id)?.needs).toMatchObject({ kind: 'checkpoint' })
+  })
+})
+
+describe("the kind of change: the sensitive fields the round's commits change (F6b Task 8, Decision 8)", () => {
+  it("keeps the union over the round's commits, in the platform's order, said from the first commit that names one", async () => {
+    const second = held<unknown>()
+    const last = held<unknown>()
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          commit(),
+          () => second.promise,
+          commit([write('public/post.html', PAGE)]),
+          commit([write('public/about.html', PAGE)]),
+          () => last.promise,
+        ],
+      },
+      sensitive: (n) => (n === 1 ? ['egress.allow'] : n === 2 ? [] : ['services']),
+      autoBuild: true,
+    })
+    await until(
+      () => h.commits.length === 1,
+      () => h.did,
+    )
+    await until(
+      () => (viewOf(h, id)?.sensitive ?? []).length > 0,
+      () => viewOf(h, id),
+    )
+    expect(viewOf(h, id)?.sensitive).toEqual(['egress.allow'])
+    expect(viewOf(h, id)?.status).toBe('working')
+    const told = h.frames.filter((f) => f.kind === 'state').at(-1)
+    expect(told?.kind === 'state' && told.round?.sensitive).toEqual(['egress.allow'])
+
+    second.resolve(read('server.js'))
+    await until(
+      () => h.commits.length === 3,
+      () => h.did,
+    )
+    await until(
+      () => (viewOf(h, id)?.sensitive ?? []).length === 2,
+      () => viewOf(h, id),
+    )
+    // The platform's order (services before egress.allow), not the order they came in.
+    expect(viewOf(h, id)?.sensitive).toEqual(['services', 'egress.allow'])
+
+    last.resolve(done())
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.sensitive).toEqual(['services', 'egress.allow'])
+  })
+
+  it('keeps a field it does not know after the seven, once, and a round with none says none', async () => {
+    const { h, id } = await startedRound({
+      script: {
+        lead: [
+          commit(),
+          commit([write('public/post.html', PAGE)]),
+          commit([write('public/about.html', PAGE)]),
+          done(),
+        ],
+      },
+      sensitive: (n) =>
+        n === 1 ? ['quotas', 'blueprint'] : n === 2 ? ['quotas'] : ['ai.models'],
+      autoBuild: true,
+    })
+    await untilStatus(h, id, 'done')
+    expect(viewOf(h, id)?.sensitive).toEqual(['ai.models', 'blueprint', 'quotas'])
+
+    const plain = await startedRound({ script: STRAIGHT, autoBuild: true })
+    await untilStatus(plain.h, plain.id, 'done')
+    expect(viewOf(plain.h, plain.id)?.sensitive).toEqual([])
+  })
+
+  it('a round saved before F6b, with no sensitive fields kept, reads as none', () => {
+    const h = harness({ script: STRAIGHT })
+    const conversation = agreed(h)
+    const before: Partial<RunDetail> = { ...NO_DETAIL }
+    delete before.sensitive
+    h.store.saveRun({
+      id: 'run-saved-before-f6b',
+      conversationId: conversation.id,
+      round: 1,
+      step: 'answers',
+      moves: 0,
+      tries: {},
+      status: 'done',
+      sessionIds: [],
+      model: null,
+      last: null,
+      sameRefusal: null,
+      detail: before as RunDetail,
+    })
+    expect(viewOf(h, conversation.id)?.sensitive).toEqual([])
   })
 })

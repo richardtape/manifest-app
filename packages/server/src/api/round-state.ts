@@ -49,6 +49,7 @@ export const NO_DETAIL: RunDetail = {
   tried: [],
   cannot: null,
   account: null,
+  sensitive: [],
 }
 
 /**
@@ -142,6 +143,7 @@ export function roundOf(store: Store, conversationId: string): RoundView | null 
     draft: detail.draft,
     cost: detail.cost,
     stopped: stoppedOf(store, run),
+    sensitive: detail.sensitive ?? [],
   }
 }
 

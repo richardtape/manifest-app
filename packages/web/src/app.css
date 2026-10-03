@@ -604,6 +604,12 @@
 .building__changed {
   margin: 0 0 var(--space-2);
 }
+/* F6b Decision 8: the kind of change, a fact about the change, read as body text. */
+.building__kind {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
 .building__draft {
   display: flex;
   flex-direction: column;

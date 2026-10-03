@@ -20,6 +20,11 @@ export interface Committed {
   changed: { path: string; status: 'added' | 'modified' | 'deleted' }[]
   /** `spec.warnings`: what the validation says without refusing. Never a stop (M1). */
   warnings: { code: string; path: string; hint: string | null }[]
+  /**
+   * F6b Task 8: the sensitive fields this commit changes (`spec.sensitiveDiff.fields`, measured
+   * against the newest valid manifest: one commit's delta, S1: M2), in the platform's order.
+   */
+  sensitive: string[]
 }
 
 export interface Source {
@@ -146,6 +151,7 @@ export function platformSource(origin: string): Source {
           path: warning.path,
           hint: warning.hint ?? null,
         })),
+        sensitive: [...(made.spec?.sensitiveDiff?.fields ?? [])],
       }
     },
   }
