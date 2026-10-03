@@ -24,6 +24,14 @@ describe('a refusal because they may not build is heard by the shell (D7, FE-39)
     await vi.waitFor(() => expect(heard).toHaveBeenCalledTimes(1))
   })
 
+  it('from the platform, a read answering it raises nothing (minors m30): a getMe that did would loop', async () => {
+    vi.stubGlobal('fetch', async () => refusedWith(NOT_OPEN_CODE))
+    const platform = createPlatform({ origin: 'http://127.0.0.1:1', session: 's' })
+    await expect(platform.getMe()).rejects.toBeTruthy()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(heard).not.toHaveBeenCalled()
+  })
+
   it('from our server: call() raises it too', async () => {
     vi.stubGlobal('fetch', async () => refusedWith(NOT_OPEN_CODE))
     await expect(createOurs().startConversation('words')).rejects.toBeTruthy()

@@ -239,8 +239,14 @@ export function createPlatform(options: {
           signal: AbortSignal.timeout(deadline),
         })
         // D7 (FE-39): a refusal because they may not build is heard by the shell; the answer
-        // itself is left to `unwrap`, read from a copy.
-        if (response.status === 403)
+        // itself is left to `unwrap`, read from a copy. Only a change's: the three operations
+        // that refuse it all start something, and a read answering it (`getMe`, which the
+        // contract rules out) would have the shell read `getMe` again for ever (minors m30).
+        if (
+          response.status === 403 &&
+          request instanceof Request &&
+          request.method !== 'GET'
+        )
           void response
             .clone()
             .json()
