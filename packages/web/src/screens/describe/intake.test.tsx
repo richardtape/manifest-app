@@ -294,6 +294,7 @@ function stage(
     },
     minted: () => new Promise(() => undefined),
     keepAgent: () => new Promise(() => undefined),
+    leave: () => new Promise(() => undefined),
     needs: () => new Promise(() => undefined),
     since: () => new Promise(() => undefined),
     history: () => new Promise(() => undefined),

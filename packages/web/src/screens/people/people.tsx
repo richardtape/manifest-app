@@ -242,8 +242,13 @@ export function People({
       return
     }
     if (!live.current) return
-    // Taken off themselves: the app is no longer theirs to see.
-    if (member.userId === me.id) return navigate('/')
+    // Taken off themselves: the app is no longer theirs to see. Our server told first (the
+    // whole-branch review's I1): no page of theirs will hand our watch again, and if they made it,
+    // nothing else tells it who left. Your apps all the same if it cannot be told.
+    if (member.userId === me.id) {
+      await ours.leave(project.id).catch(() => undefined)
+      return navigate('/')
+    }
     setPressing(null)
     setConfirming(null)
     setStatus(p.takenOff(member.displayName, project.name))

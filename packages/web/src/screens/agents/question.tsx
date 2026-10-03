@@ -11,6 +11,20 @@ import { countOf, LIMITS, tooLong } from '../limits.js'
 import { StepUpCard } from '../trying-out/parts.js'
 import { around } from './model.js'
 
+/**
+ * THE WHOLE-BRANCH REVIEW'S I2: the question a [Yes, once] left for its second sign-in, kept for the
+ * way back (as People keeps its form, Decision 15). Its id alone; never a secret.
+ */
+export const askedKey = (slug: string) => `manifest-app.agents.${slug}`
+/** The question kept for the way back, if any (read, never removed: the page removes it). */
+export function askedOf(slug: string): string | null {
+  try {
+    return sessionStorage.getItem(askedKey(slug))
+  } catch {
+    return null
+  }
+}
+
 const q = words.agents.question
 
 /** The four a token is refused and asks a person about (D24), in words; any other is its summary. */
@@ -101,7 +115,16 @@ export function Question({
       setPressing(null)
       const refusal = refusalOf(error)
       const code = refusal.kind === 'refused' ? refusal.code : null
-      if (code === 'STEP_UP_REQUIRED') return setStepUp(true)
+      if (code === 'STEP_UP_REQUIRED') {
+        // Which question, for the way back (the whole-branch review's I2): the platform asks the
+        // second sign-in before it says one is no longer waiting.
+        try {
+          sessionStorage.setItem(askedKey(project.slug), action.id)
+        } catch {
+          // Kept nowhere: its card says so itself, if it is still waiting.
+        }
+        return setStepUp(true)
+      }
       if (code === 'PENDING_ACTION_RESOLVED') return onAnswered('gone')
       const failed = pressFailed(
         error,

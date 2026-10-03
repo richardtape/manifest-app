@@ -18,6 +18,7 @@ import type { Then } from '../../router.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
 import { Agents } from './agents.js'
+import { askedKey } from './question.js'
 import { MINTABLE } from './model.js'
 
 /**
@@ -220,6 +221,10 @@ function stage(
     minted: (projectId: string) => {
       calls.push(['minted', projectId])
       return Promise.resolve(options.kept ?? KEPT)
+    },
+    keeping: (projectId: string) => {
+      calls.push(['keeping', projectId])
+      return new Promise(() => undefined)
     },
     keepAgent: (
       projectId: string,
@@ -753,6 +758,47 @@ describe('their agent’s questions, at the top (F6b Task 12; Decision 16; (S1: 
     expect(screen.getAllByText(words.goingLive.letIn.again)).toHaveLength(1)
     expect(s.called('confirmPendingAction')).toEqual([])
     expect(s.called('rejectPendingAction')).toEqual([])
+  })
+
+  it('back from the second sign-in, that question no longer waiting (the whole-branch review’s I2): it has stopped waiting, said once, nothing pressed', async () => {
+    sessionStorage.setItem(askedKey(PROJECT.slug), QUESTIONS[1]!.id)
+    const s = stage()
+    open(s, 'owner', 'agents')
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe(q.stopped))
+    expect(screen.getAllByText(words.goingLive.letIn.again)).toHaveLength(1)
+    expect(sessionStorage.getItem(askedKey(PROJECT.slug))).toBeNull()
+    expect(s.called('confirmPendingAction')).toEqual([])
+  })
+
+  it('back from the second sign-in with no question left at all: signed in again, and it has stopped waiting', async () => {
+    sessionStorage.setItem(askedKey(PROJECT.slug), QUESTIONS[0]!.id)
+    open(stage({ questions: [QUESTIONS[1]!] }), 'owner', 'agents')
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe(q.stopped))
+    expect(screen.getAllByText(words.goingLive.letIn.again)).toHaveLength(1)
+    expect(cards()).toBeNull()
+  })
+
+  it('back from the second sign-in, that question still waiting: its card, nothing said of it', async () => {
+    sessionStorage.setItem(askedKey(PROJECT.slug), QUESTIONS[0]!.id)
+    open(stage(), 'owner', 'agents')
+    await firstCard()
+    expect(screen.getByRole('status').textContent).toBe('')
+    expect(sessionStorage.getItem(askedKey(PROJECT.slug))).toBeNull()
+  })
+
+  it('Yes, once to an agent’s members question: our watch looked at again (the whole-branch review’s I1: it may have taken our watch’s maker off)', async () => {
+    const s = stage()
+    open(s)
+    await press(within(await firstCard()).getByRole('button', { name: q.yes }))
+    await waitFor(() => expect(s.called('keeping')).toEqual([[PROJECT.id]]))
+  })
+
+  it('No to it: our watch left alone', async () => {
+    const s = stage()
+    open(s)
+    await press(within(await firstCard()).getByRole('button', { name: q.no }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe(q.saidNo))
+    expect(s.called('keeping')).toEqual([])
   })
 
   it('a helper: an owner answers each, and nothing to press on them', async () => {

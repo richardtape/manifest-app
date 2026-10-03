@@ -37,6 +37,8 @@ function fakeKeeper(did: string[]) {
   let answer: () => Promise<'kept' | 'current' | 'stranger'> = async () => 'kept'
   let watching = false
   let mintedBy: string | null = null
+  /** Whether the keeper kept the one leaving (the review's I1). */
+  let lefts = true
   /** Task 6's watch, as each app's outage reads. */
   const outages = new Map<string, Outage>()
   const keeper: Keeper = {
@@ -45,6 +47,10 @@ function fakeKeeper(did: string[]) {
     forget: (projectId) => void did.push(`forget ${projectId}`),
     workEnded: () => undefined,
     onRemoved: () => undefined,
+    left: (projectId, personId) => {
+      did.push(`left ${projectId} ${personId}`)
+      return lefts
+    },
     outage: (projectId) =>
       outages.get(projectId) ?? { state: 'answering', recovered: null },
     async hand(projectId, handed, personId) {
@@ -66,6 +72,7 @@ function fakeKeeper(did: string[]) {
       watching = true
       mintedBy = by
     },
+    keptNobody: () => void (lefts = false),
   }
 }
 
@@ -135,7 +142,7 @@ function setUp() {
     })
   /** Any request of ours, as the page sends it: the person's cookie, and our Origin for a change. */
   const ask = (
-    method: 'GET' | 'DELETE',
+    method: 'GET' | 'DELETE' | 'POST',
     url: string,
     cookie: string | null = AS_ALICE,
     headers: Record<string, string> = {},
@@ -874,6 +881,45 @@ describe('DELETE /api/apps/:projectId (Decision 11: a deleted draft forgotten)',
     const t = setUp()
     expect((await t.ask('DELETE', url())).statusCode).toBe(404)
     expect((await t.ask('DELETE', url('not-a-project'))).statusCode).toBe(404)
+    expect(t.did).toEqual([])
+  })
+})
+
+describe('POST /api/apps/:projectId/leave (the whole-branch review’s I1: someone who took themselves off)', () => {
+  const leave = (
+    t: ReturnType<typeof setUp>,
+    cookie: string | null = AS_ALICE,
+    projectId = PROJECT,
+    headers: Record<string, string> = {},
+  ) => t.ask('POST', `/api/apps/${projectId}/leave`, cookie, headers)
+
+  it('204: the keeper told that the person asking left, and no one else', async () => {
+    const t = setUp()
+    const response = await leave(t)
+    expect(response.statusCode).toBe(204)
+    expect(t.did).toEqual([`left ${PROJECT} ${ALICE.id}`])
+  })
+
+  it('someone the keeper does not keep on it: 404, as a stranger meets every app route', async () => {
+    const t = setUp()
+    t.keptNobody()
+    expect([
+      (await leave(t, AS_BOB)).statusCode,
+      (await leave(t, AS_BOB)).json(),
+    ]).toEqual([404, { error: { code: 'NOT_FOUND' } }])
+  })
+
+  it('from another Origin is 403 ORIGIN_REFUSED; signed out 401; an id that is not one 404: nothing told', async () => {
+    const t = setUp()
+    const evil = await leave(t, AS_ALICE, PROJECT, {
+      origin: 'https://reading-responses.manifest.internal',
+    })
+    expect([evil.statusCode, evil.json()]).toEqual([
+      403,
+      { error: { code: 'ORIGIN_REFUSED' } },
+    ])
+    expect((await leave(t, null)).statusCode).toBe(401)
+    expect((await leave(t, AS_ALICE, 'not-a-project')).statusCode).toBe(404)
     expect(t.did).toEqual([])
   })
 })

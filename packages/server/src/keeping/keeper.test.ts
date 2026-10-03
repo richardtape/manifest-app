@@ -965,6 +965,29 @@ describe('someone taken off the app: their work here ends, once (F6b Task 4, Dec
     expect(t.removed).toEqual([[P1, BOB]])
   })
 
+  it('left (the whole-branch review’s I1): someone who took themselves off, by their own word: kept no more, their work ended once, nobody emailed', async () => {
+    const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
+    expect(t.keeper.left(P1, BOB)).toBe(true)
+    await settle()
+    expect(t.removed).toEqual([[P1, BOB]])
+    expect(t.store.members(P1)).toEqual([member(ALICE), carol])
+    expect(t.sent).toEqual([])
+    // Twice is once; someone we never kept, or an app we keep nobody for: nothing.
+    expect(t.keeper.left(P1, BOB)).toBe(false)
+    expect(t.keeper.left(P1, 'dddddddd-dddd-4ddd-8ddd-dddddddddddd')).toBe(false)
+    expect(t.keeper.left(P2, ALICE)).toBe(false)
+    expect(t.removed).toEqual([[P1, BOB]])
+  })
+
+  it('left, by someone still on it: the next members read keeps them again (only their own standing was lowered)', async () => {
+    const t = await live()
+    expect(t.keeper.left(P1, BOB)).toBe(true)
+    t.handlers.reconnected()
+    await settle()
+    expect(t.store.members(P1)).toEqual([member(ALICE), member(BOB, 'collaborator')])
+    expect(t.removed).toEqual([[P1, BOB]])
+  })
+
   it('a re-read that still lists everyone: nothing ended', async () => {
     const t = await live()
     t.handlers.reconnected()

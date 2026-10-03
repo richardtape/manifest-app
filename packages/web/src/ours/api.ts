@@ -259,6 +259,11 @@ export interface Ours {
    * platform's `listTokens`). Anyone outside the app's kept members is refused `404`.
    */
   minted(projectId: string): Promise<KeptTokens>
+  /**
+   * THE WHOLE-BRANCH REVIEW'S I1: they took themselves off the app (People, after the platform's
+   * removeMember): our server keeps them no more, and ends their work here. Only their own.
+   */
+  leave(projectId: string): Promise<void>
   /** An agent of their own, just minted on *Agents*: its id, name and expiry, never its secret. */
   keepAgent(
     projectId: string,
@@ -447,6 +452,9 @@ export function createOurs(): Ours {
     },
     minted: async (projectId) =>
       (await call('GET', app(projectId, '/minted'))) as KeptTokens,
+    leave: async (projectId) => {
+      await call('POST', app(projectId, '/leave'))
+    },
     keepAgent: async (projectId, made) => {
       await call('POST', app(projectId, '/agents'), {
         tokenId: made.tokenId,

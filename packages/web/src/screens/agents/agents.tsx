@@ -8,6 +8,7 @@ import { linkTo, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { PressNotice } from '../change/notice.js'
 import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
+import { ensureWatch } from '../keeping/watch.js'
 import { dayWords } from '../going-live/steps.js'
 import { whenOf } from '../going-live/live.js'
 import { countOf } from '../limits.js'
@@ -23,7 +24,10 @@ import {
   type Asking,
   type Row,
 } from './model.js'
-import { Question } from './question.js'
+import { askedKey, askedOf, Question } from './question.js'
+
+/** People's: our server hears a closed watch a little after (FE-48's page half). */
+const RECHECK_MS = 5_000
 
 const a = words.agents
 const t = a.theirs
@@ -128,6 +132,9 @@ export function Agents({
   const [days, setDays] = useState<number>(30)
   /** An answer given here: the second sign-in's line has done its work. */
   const [answered, setAnswered] = useState(false)
+  /** The question a [Yes, once] left for the second sign-in (the whole-branch review's I2). */
+  const [asked] = useState(() => (then === 'agents' ? askedOf(project.slug) : null))
+  const askedRead = useRef(false)
   /** The key, the one time it exists: in this component alone, never stored (Review Focus 4). */
   const [made, setMade] = useState<string | null>(null)
   const revokes = useRef(new Map<string, HTMLDivElement>())
@@ -274,8 +281,34 @@ export function Agents({
     revoked(tokenId)
   }
 
+  // Back from the second sign-in (the whole-branch review's I2): the platform asks it before it
+  // says a question is no longer waiting, so the one they pressed may be gone. Said, once.
+  useEffect(() => {
+    if (asked === null) return
+    try {
+      sessionStorage.removeItem(askedKey(project.slug))
+    } catch {
+      // A browser that keeps nothing kept nothing.
+    }
+  }, [asked, project.slug])
+  useEffect(() => {
+    if (asked === null || askedRead.current || loaded.state !== 'ready') return
+    askedRead.current = true
+    if (loaded.questions.some(({ action }) => action.id === asked)) return
+    setStatus(a.question.stopped)
+    setFocusOn('status')
+  }, [asked, loaded])
+
   /** Their agent's question answered, or found no longer waiting: said, and read again. */
-  const onAnswered = (answer: 'yes' | 'no' | 'gone') => {
+  const onAnswered = (answer: 'yes' | 'no' | 'gone', action?: string) => {
+    // A yes to who's on it may take off the one whose token we watch with (the whole-branch
+    // review's I1, FE-48's page half, as People's): our watch looked at again, now and in a moment.
+    if (answer === 'yes' && action === 'members:manage') {
+      void ensureWatch(platform, ours, project, new Date())
+      setTimeout(() => {
+        if (live.current) void ensureWatch(platform, ours, project, new Date())
+      }, RECHECK_MS)
+    }
     setAnswered(true)
     setSaid(undefined)
     setStatus(
@@ -368,6 +401,10 @@ export function Agents({
       ) : loaded.state === 'ready' && loaded.stale !== undefined ? (
         <TroubleNotice trouble={loaded.stale} onRetry={retry} />
       ) : null}
+      {/* The second sign-in's line, card or none (the whole-branch review's I2). */}
+      {loaded.state === 'ready' && then === 'agents' && !answered ? (
+        <p className="body">{words.goingLive.letIn.again}</p>
+      ) : null}
       {loaded.state === 'ready' ? (
         <>
           {loaded.questions.length === 0 ? null : (
@@ -375,9 +412,6 @@ export function Agents({
               <h2 className="heading" id="agents-questions">
                 {a.question.title}
               </h2>
-              {then === 'agents' && !answered ? (
-                <p className="body">{words.goingLive.letIn.again}</p>
-              ) : null}
               {loaded.questions.map(({ action, tokenName }) => (
                 <Question
                   key={action.id}
@@ -389,7 +423,7 @@ export function Agents({
                   now={() => clock.current()}
                   timeZone={timeZone}
                   expire={expire}
-                  onAnswered={onAnswered}
+                  onAnswered={(answer) => onAnswered(answer, action.action)}
                 />
               ))}
             </section>

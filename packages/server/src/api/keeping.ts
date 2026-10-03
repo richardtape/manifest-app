@@ -253,6 +253,23 @@ export function registerKeeping(
     },
   )
 
+  // THE WHOLE-BRANCH REVIEW'S I1: SOMEONE WHO TOOK THEMSELVES OFF, by their own word (People, after
+  // the platform's removeMember). If they minted our watch, the platform closed it as they went and
+  // `member.removed` never reaches us (FE-48), and no page of theirs hands a new one: until another
+  // member visits, they would stay a kept member here, emailed about work that is no longer theirs.
+  // Only the asker's own standing is lowered; the next members read keeps anyone still on it.
+  app.post<{ Params: { projectId: string } }>(
+    '/api/apps/:projectId/leave',
+    async (request, reply) => {
+      const who = await check(request, reply)
+      if (who === undefined) return reply
+      const { projectId } = request.params
+      if (!ID.test(projectId) || !keeper.left(projectId, who.person.id))
+        return refuse(reply, 404, 'NOT_FOUND')
+      return reply.code(204).send()
+    },
+  )
+
   app.get<{ Params: { projectId: string } }>(
     '/api/apps/:projectId/keeping',
     async (request, reply) => {

@@ -115,7 +115,13 @@ const OURS = {
     kept.push(['keeping', projectId])
     return new Promise(() => undefined)
   },
+  leave: (projectId: string) => {
+    kept.push(['leave', projectId])
+    return leaving()
+  },
 } as unknown as Ours
+/** What our server answers a leave (the whole-branch review's I1). */
+let leaving: () => Promise<void> = () => Promise.resolve()
 
 function open(s: ReturnType<typeof stage>, then: Then = null, me = ME) {
   return render(
@@ -504,5 +510,34 @@ describe('an owner taking themselves off (the design’s hand-over: add an owner
     await press(button(p.leave))
     expect(s.called('removeMember').map((c) => c[1])).toEqual([ME.id])
     await waitFor(() => expect(window.location.pathname).toBe('/'))
+  })
+
+  it('our server told they left, before Your apps (the whole-branch review’s I1: no page of theirs hands our watch again)', async () => {
+    kept.length = 0
+    let told!: () => void
+    leaving = () => new Promise<void>((resolve) => (told = resolve))
+    window.history.pushState({}, '', '/apps/reading-responses/people')
+    open(stage())
+    await press(
+      within(await rowOf('Alex Owner')).getByRole('button', { name: p.takeOff }),
+    )
+    await press(button(p.leave))
+    await waitFor(() => expect(kept).toEqual([['leave', PROJECT.id]]))
+    expect(window.location.pathname).toBe('/apps/reading-responses/people')
+    await act(async () => told())
+    await waitFor(() => expect(window.location.pathname).toBe('/'))
+    leaving = () => Promise.resolve()
+  })
+
+  it('our server could not be told: Your apps all the same (the platform has them off)', async () => {
+    leaving = () => Promise.reject(new Error('no'))
+    window.history.pushState({}, '', '/apps/reading-responses/people')
+    open(stage())
+    await press(
+      within(await rowOf('Alex Owner')).getByRole('button', { name: p.takeOff }),
+    )
+    await press(button(p.leave))
+    await waitFor(() => expect(window.location.pathname).toBe('/'))
+    leaving = () => Promise.resolve()
   })
 })

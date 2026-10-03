@@ -306,6 +306,7 @@ function stage(start: Partial<World> = {}) {
     handWatch: never,
     minted: never,
     keepAgent: never,
+    leave: never,
     needs: never,
     since: never,
     history: never,

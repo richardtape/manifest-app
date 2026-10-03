@@ -185,6 +185,7 @@ function stage(options: { mint?: (n: number) => unknown } = {}) {
     handWatch: never,
     minted: never,
     keepAgent: never,
+    leave: never,
     needs: never,
     since: never,
     history: never,

@@ -91,6 +91,13 @@ export interface Keeper {
    * first. `buildServer` ends their work here with it.
    */
   onRemoved(listener: (projectId: string, personId: string) => void): void
+  /**
+   * THE WHOLE-BRANCH REVIEW'S I1: someone who took themselves off, by their own word (People, after
+   * the platform's `removeMember`): kept no more, and their work here ended, as a removal's is. It
+   * lowers only their own standing: the next members read keeps them again if they are still on
+   * it. `false` when we kept no such member.
+   */
+  left(projectId: string, personId: string): boolean
 }
 
 /** Decision 5: a token with less than this left is replaced by the next one a page hands over. */
@@ -530,6 +537,16 @@ export function createKeeper({
     onRemoved(listener) {
       removed = listener
     },
+
+    left(projectId, personId) {
+      const kept = store.members(projectId)
+      if (!kept.some((member) => member.userId === personId)) return false
+      keepMembers(
+        projectId,
+        kept.filter((member) => member.userId !== personId),
+      )
+      return true
+    },
   }
 }
 
@@ -543,4 +560,5 @@ export const idleKeeper: Keeper = {
   workEnded: () => undefined,
   outage: () => ({ state: 'answering', recovered: null }),
   onRemoved: () => undefined,
+  left: () => false,
 }

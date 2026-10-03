@@ -200,6 +200,7 @@ function stage(
     handWatch: never,
     minted: never,
     keepAgent: never,
+    leave: never,
     needs: never,
     since: never,
     history: never,

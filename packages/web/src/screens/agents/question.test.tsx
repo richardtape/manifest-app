@@ -6,7 +6,7 @@ import { stepUpHref } from '../../auth.js'
 import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
-import { ACTION_WORDS, Question } from './question.js'
+import { ACTION_WORDS, askedKey, Question } from './question.js'
 
 /**
  * F6b TASK 12: THEIR AGENT'S QUESTION, the card at the top of *Agents* (design §4, D4; Decisions 13,
@@ -204,6 +204,16 @@ describe('[Yes, once] and [No] (Decision 13)', () => {
     )
     expect(s.onAnswered).not.toHaveBeenCalled()
     expect(s.called('confirmPendingAction')).toHaveLength(1)
+  })
+
+  it('Yes, once asks the second sign-in: which question, kept for the way back (the whole-branch review’s I2)', async () => {
+    sessionStorage.clear()
+    const s = stage({ confirm: { status: 403, code: 'STEP_UP_REQUIRED' } })
+    open(s)
+    await press(button(q.yes))
+    await screen.findByRole('link', { name: words.tryingOut.stepUp.again })
+    expect(sessionStorage.getItem(askedKey(PROJECT.slug))).toBe(ID)
+    sessionStorage.clear()
   })
 
   it('No, with their words: rejected with exactly them (trimmed)', async () => {
