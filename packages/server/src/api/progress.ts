@@ -68,9 +68,14 @@ export interface LineView {
   place: number
   /**
    * The conversation holding the app: null only between one ending and the next starting. `by`
-   * is its person's name (F6b D3): *"Sam is working on it"*.
+   * is its person (F6b D3, m77: the id beside the name): *"Sam is working on it"*, or yours.
    */
-  holder: { id: string; title: string; waitingForYou: boolean; by: string } | null
+  holder: {
+    id: string
+    title: string
+    waitingForYou: boolean
+    by: { id: string; name: string }
+  } | null
 }
 
 /** One row of an app's conversations (F4 Task 6): where each piece of work left it. */
@@ -230,11 +235,12 @@ export interface RoundView {
     resetsAt: string | null
   }
   /**
-   * F6b Decision 6: a stopped round says who stopped it when it was not its own person (an owner
-   * freeing the app, *"Stopped by Alex."*), or that its person was taken off the app (`removed`,
-   * named as its person). Null otherwise: its own person's Stop says nothing new.
+   * F6b Decision 6: who stopped a stopped round (m77: the id beside the name), and why: a Stop, by
+   * its own person or an owner of the app; or its person taken off the app (`removed`, `by` being
+   * them). The page says *"Stopped by Alex."* only when `by` is not the conversation's own person.
+   * Null unless it is stopped with a record (a round from before F6b has none).
    */
-  stopped: { name: string; why: 'stopped' | 'removed' } | null
+  stopped: { by: { id: string; name: string }; why: 'stopped' | 'removed' } | null
 }
 
 /**

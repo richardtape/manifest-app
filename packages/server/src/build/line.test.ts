@@ -183,7 +183,7 @@ describe('the line (Review Focus 1)', () => {
         id: a.id,
         title: 'Word count',
         waitingForYou: false,
-        by: ALICE.displayName,
+        by: { id: ALICE.id, name: ALICE.displayName },
       },
     })
   })

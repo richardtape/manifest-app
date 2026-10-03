@@ -141,20 +141,18 @@ export function roundOf(store: Store, conversationId: string): RoundView | null 
     })),
     draft: detail.draft,
     cost: detail.cost,
-    stopped: stoppedOf(store, conversationId, run),
+    stopped: stoppedOf(store, run),
   }
 }
 
 /**
- * F6b DECISION 6: WHO STOPPED IT, to whoever reads it: only while it is stopped, and only when it
- * says something its own person did not do (an owner's Stop, or their removal).
+ * F6b DECISION 6: WHO STOPPED IT, to whoever reads it, while it is stopped (m77: by id and name, so
+ * the page judges whether it says so).
  */
-function stoppedOf(store: Store, conversationId: string, run: Run): RoundView['stopped'] {
+function stoppedOf(store: Store, run: Run): RoundView['stopped'] {
   const stopped = run.detail?.stopped ?? null
   if (run.status !== 'stopped' || stopped === null) return null
-  const personId = store.conversationById(conversationId)?.personId
-  if (stopped.why === 'stopped' && stopped.by === personId) return null
-  return { name: store.personName(stopped.by), why: stopped.why }
+  return { by: { id: stopped.by, name: store.personName(stopped.by) }, why: stopped.why }
 }
 
 /**

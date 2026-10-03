@@ -961,9 +961,10 @@ describe('working on it together (F6b D3, Task 2)', () => {
     const waiting = changeOf(s, ALICE, 'waiting', 'Bigger title.')
     const listed = (await get(s, `/api/apps/${PROJECT.id}/conversations`, AS_ALICE))
       .body as AppConversation[]
-    expect(listed.find((c) => c.id === waiting.id)?.line?.holder?.by).toBe(
-      BOB.displayName,
-    )
+    expect(listed.find((c) => c.id === waiting.id)?.line?.holder?.by).toEqual({
+      id: BOB.id,
+      name: BOB.displayName,
+    })
   })
 
   /** Every change route, the state its own person may press it in, and a body it would take. */
@@ -1011,14 +1012,14 @@ describe('working on it together (F6b D3, Task 2)', () => {
     await until(() => s.store.getConversation(next.id, ALICE.id)?.state === 'plan-ready')
   })
 
-  it('the round says who stopped it, to whoever reads it; its own person’s Stop names nobody', async () => {
+  it('the round says who stopped it, by id and name, to whoever reads it, its own person’s Stop too: the page judges (m77)', async () => {
     const s = setUp(AT_BUILD)
     together(s)
     const bobs = await bobsRound(s)
     await post(s, bobs.id, 'stop')
     await until(() => roundOf(s.store, bobs.id)?.status === 'stopped')
     expect(roundOf(s.store, bobs.id)?.stopped).toEqual({
-      name: ALICE.displayName,
+      by: { id: ALICE.id, name: ALICE.displayName },
       why: 'stopped',
     })
 
@@ -1027,7 +1028,10 @@ describe('working on it together (F6b D3, Task 2)', () => {
     const own = await bobsRound(t)
     await post(t, own.id, 'stop', {}, as(AS_BOB))
     await until(() => roundOf(t.store, own.id)?.status === 'stopped')
-    expect(roundOf(t.store, own.id)?.stopped).toBeNull()
+    expect(roundOf(t.store, own.id)?.stopped).toEqual({
+      by: { id: BOB.id, name: BOB.displayName },
+      why: 'stopped',
+    })
   })
 
   it("a helper's Stop on another's conversation is 404, and the round works on", async () => {
@@ -1214,7 +1218,7 @@ describe('working on it together (F6b D3, Task 2)', () => {
     expect((await get(s, `/api/conversations/${bobs.id}`, AS_BOB)).status).toBe(404)
     expect((await get(s, `/api/conversations/${bobs.id}`, AS_ALICE)).status).toBe(200)
     expect(roundOf(s.store, bobs.id)?.stopped).toEqual({
-      name: BOB.displayName,
+      by: { id: BOB.id, name: BOB.displayName },
       why: 'removed',
     })
     expect(await get(s, `/api/apps/${PROJECT.id}/conversations`, AS_BOB)).toEqual({

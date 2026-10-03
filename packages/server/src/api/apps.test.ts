@@ -290,7 +290,7 @@ describe('POST /api/apps/:projectId/conversations: Ask for a change', () => {
         id: planning.id,
         title: planning.title,
         waitingForYou: false,
-        by: ALICE.displayName,
+        by: { id: ALICE.id, name: ALICE.displayName },
       },
     })
     // Each keeps its own token.
@@ -647,7 +647,7 @@ describe('GET /api/apps/:projectId/conversations: every piece of work on it', ()
           id: change.id,
           title: change.title,
           waitingForYou: false,
-          by: ALICE.displayName,
+          by: { id: ALICE.id, name: ALICE.displayName },
         },
       },
       by: { id: ALICE.id, name: ALICE.displayName },

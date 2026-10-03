@@ -406,7 +406,7 @@ describe('the line: a waiting conversation (Decision 5)', () => {
     id: 'c-1',
     title: 'Word count',
     waitingForYou: false,
-    by: ME.displayName,
+    by: { id: ME.id, name: ME.displayName },
   }
 
   it("its top reads waiting on someone: the holder's title, a link to it, and its place; its message box takes words", async () => {
@@ -584,7 +584,7 @@ describe("the app's conversations (/apps/:slug/conversations)", () => {
           id: 'c-2',
           title: 'Word count',
           waitingForYou: false,
-          by: ME.displayName,
+          by: { id: ME.id, name: ME.displayName },
         },
       },
       by: { id: ME.id, name: ME.displayName },
