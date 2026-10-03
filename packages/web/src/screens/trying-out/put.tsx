@@ -414,7 +414,12 @@ export function PutOnTryingOut({
     })
     setPhase(failed(incident))
     if (incident !== undefined) return
-    const later = await incidentLater(platform, held.stagingId, attemptId)
+    const later = await incidentLater(
+      platform,
+      held.stagingId,
+      attemptId,
+      () => live.current,
+    )
     if (later === undefined || !live.current) return
     setPhase((p) => (p.at === 'failed' && p.held === held ? failed(later) : p))
   }

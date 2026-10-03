@@ -893,6 +893,24 @@ describe('M2: [What went wrong] is fed by THIS attempt’s incident, never the n
   })
 })
 
+describe('minors m43: the one re-read is never made once the page has gone', () => {
+  it('the page left before the 2 s: no read of the incidents after it', async () => {
+    withTimeouts()
+    const s = await open(stage())
+    await putOn(s)
+    s.world.incidents = [OLDER_INCIDENT]
+    s.world.staging = [THERE, fresh('failed')]
+    await s.answer(bare(fresh('failed')))
+    expect(
+      await within(region()).findByText("Didn't start. Nobody lost anything."),
+    ).toBeTruthy()
+    const reads = incidentReads(s)
+    cleanup()
+    await tick(5000)
+    expect(incidentReads(s)).toBe(reads)
+  })
+})
+
 describe('M1: our deadline is not the platform’s answer (Review Focus 3)', () => {
   it('a deploy our deadline cut is unsure, never "couldn’t": said so, nothing reported, and the new instance still read every second to its end', async () => {
     const s = await open(stage())

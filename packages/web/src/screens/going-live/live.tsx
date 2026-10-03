@@ -468,7 +468,12 @@ export function LetStudentsIn({
     })
     setPhase(failed(incident))
     if (incident !== undefined) return
-    const later = await incidentLater(platform, production.id, attemptId)
+    const later = await incidentLater(
+      platform,
+      production.id,
+      attemptId,
+      () => live.current,
+    )
     if (later === undefined || !live.current) return
     setPhase((p) => (p.at === 'failed' && p.sent === sent ? failed(later) : p))
   }

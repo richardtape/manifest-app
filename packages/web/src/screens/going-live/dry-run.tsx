@@ -273,7 +273,7 @@ export function DryRun({
       if (attempt === null) return
       const found =
         (await incidentOf(platform, production.id, attempt.id)) ??
-        (await incidentLater(platform, production.id, attempt.id))
+        (await incidentLater(platform, production.id, attempt.id, () => live.current))
       if (found === undefined) return
       set((p) =>
         p.at === 'didnt-start' ? { at: 'didnt-start', incidentId: found.id } : p,

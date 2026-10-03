@@ -67,14 +67,17 @@ export async function incidentOf(
 
 /**
  * M2: none of its own yet (the platform may write it a moment after the attempt ends): read once
- * more, 2 s later, and never again. Still none, undefined: the facts stand without the button.
+ * more, 2 s later, and never again. Still none, undefined: the facts stand without the button. A
+ * page gone by then (`alive`, its own) reads nothing (minors m43).
  */
 export async function incidentLater(
   platform: Platform,
   environmentId: string,
   instanceId: string,
+  alive: () => boolean,
 ): Promise<Schemas['Incident'] | undefined> {
   await new Promise((resolve) => setTimeout(resolve, INCIDENT_AGAIN_MS))
+  if (!alive()) return undefined
   return incidentOf(platform, environmentId, instanceId).catch(() => undefined)
 }
 

@@ -299,7 +299,12 @@ function Redeploy({
     })
     setPhase(failed(found))
     if (found !== undefined) return
-    const later = await incidentLater(platform, environmentId, attemptId)
+    const later = await incidentLater(
+      platform,
+      environmentId,
+      attemptId,
+      () => live.current,
+    )
     if (later === undefined || !live.current) return
     setPhase((p) => (p.at === 'failed' && p.incident === null ? failed(later) : p))
   }
