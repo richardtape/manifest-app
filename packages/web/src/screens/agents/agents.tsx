@@ -86,11 +86,12 @@ function mayOf(capabilities: string[]): ReactNode {
  * with access to the app (`listTokens`, in the person's own session), the active alone. **Ours**
  * are told by the ids our server keeps (`ours.minted`), named for what they do, and never revocable
  * here: they end with their conversation, or with the app. **Theirs** say what each may do in words,
- * when it was last used and when it stops; **[Revoke]** where it may succeed (Decision 4; FE-49:
- * the platform names no minter, and anyone but the minter is refused `404`), answering *no* first to
- * what that agent still waits on (Decision 16; FE-52). **One of their own let in**: exactly what
- * they chose minted, its id, name and expiry handed to our server, **its key shown once and sent
- * nowhere** (Review Focus 4). Every change is the person's own call; the platform still decides.
+ * when it was last used and when it stops; **[Revoke]** on the reader's own alone, by the platform's
+ * `Token.mintedBy` (FE-49; anyone but the maker is refused `404`), and anyone else's says who made
+ * it (`listMembers`'s name), answering *no* first to what that agent still waits on (Decision 16;
+ * FE-52). **One of their own let in**: exactly what they chose minted, its id, name and expiry
+ * handed to our server, **its key shown once and sent nowhere** (Review Focus 4). Every change is
+ * the person's own call; the platform still decides.
  */
 export function Agents({
   platform,
@@ -163,12 +164,14 @@ export function Agents({
       platform.listTokens(project.id),
       ours.minted(project.id),
       platform.listPendingActions(project.id),
+      // Who made each, by name (FE-49's `mintedBy` is an id).
+      platform.listMembers(project.id),
     ]).then(
-      ([tokens, kept, actions]) =>
+      ([tokens, kept, actions, members]) =>
         current &&
         setLoaded({
           state: 'ready',
-          rows: rowsOf(tokens, kept, clock.current()),
+          rows: rowsOf(tokens, kept, members, clock.current()),
           questions: askingOf(actions, tokens, clock.current()),
         }),
       (error: unknown) => {
@@ -357,8 +360,8 @@ export function Agents({
       focusMake()
       return
     }
-    // Our server keeps its id, name and expiry, so *Agents* says it is theirs: never its key. If
-    // it cannot, the key is still shown (the only time), and the row reads as one we did not make.
+    // Our server keeps its id, name and expiry (its emails name it): never its key. If it cannot,
+    // the key is still shown (the only time); the row is theirs by its maker all the same.
     try {
       await ours.keepAgent(project.id, {
         tokenId: minted.token.id,
@@ -366,7 +369,7 @@ export function Agents({
         expiresAt: minted.token.expiresAt,
       })
     } catch {
-      // Not kept: it is listed with [Revoke], which its maker may still press.
+      // Not kept: still listed as theirs, by its maker (FE-49); our emails then say "An agent".
     }
     if (!live.current) return
     setPressing(null)
@@ -481,8 +484,7 @@ export function Agents({
             <ul className="agents__list">
               {theirRows.map((row) => {
                 const { token, minter } = row
-                const yours = minter !== null && minter.id === me.id
-                const theirs = minter !== null && !yours
+                const yours = minter.id === me.id
                 const used =
                   token.lastUsedAt === null
                     ? t.neverUsed
@@ -501,9 +503,11 @@ export function Agents({
                     </p>
                     <p className="agents__about body-small">
                       {[used, ...(stops === null ? [] : [t.stops(stops)])].join(' · ')}
-                      {theirs ? ` · ${t.madeBy(minter.name)}` : ''}
+                      {!yours && minter.name !== null
+                        ? ` · ${t.madeBy(minter.name)}`
+                        : ''}
                     </p>
-                    {theirs ? (
+                    {!yours ? (
                       <p className="agents__about body-small">{t.onlyMinter}</p>
                     ) : confirming === token.id ? (
                       <div className="agents__confirm">

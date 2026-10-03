@@ -1458,7 +1458,7 @@ export const words = {
       neverUsed: 'Never used',
       stops: (day: string) => `Stops working ${day}`,
       yours: '(yours)',
-      /** Ours: an agent our page made for someone else on the app. */
+      /** Ours: an agent someone else on the app made (`Token.mintedBy`, FE-49). */
       madeBy: (who: string) => `Made by ${who}`,
       revoke: 'Revoke',
       onlyMinter: 'Only the person who made it can revoke it.',

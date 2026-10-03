@@ -14,16 +14,19 @@ import {
 /**
  * F6b TASK 11: *AGENTS*' WORDS AND ROWS, pure. What a token may do in words (the eleven a person
  * may mint; an unknown one by its name, never dropped), and which tokens are listed: active only,
- * ours told from theirs by the ids our server keeps (D5), an agent's minter where our page made it.
+ * ours told from theirs by the ids our server keeps (D5), each one's maker as the platform names it
+ * (`Token.mintedBy`, FE-49) and as the members' list names them.
  */
 const NOW = new Date('2026-10-03T12:00:00Z')
+const ALEX = { userId: 'a0000000-0000-4000-8000-000000000001', displayName: 'Alex Owner' }
+const SAM = { userId: 'a0000000-0000-4000-8000-000000000002', displayName: 'Sam Helper' }
+const MEMBERS = [ALEX, SAM]
 const token = (id: string, over: Partial<Schemas['Token']> = {}): Schemas['Token'] => ({
   id,
   projectId: 'p0000000-0000-4000-8000-000000000000',
   name: `token ${id}`,
-  // Contract 1.6.0's Token.mintedBy, required since the platform's Task 13 (FE-49), read by
-  // nothing of ours yet: the mock's own person, as the mock's TOKEN fixture says.
-  mintedBy: '11111111-1111-4111-8111-111111111111',
+  // Made by the reader unless a test says otherwise (minors m127: each maker true to its story).
+  mintedBy: ALEX.userId,
   capabilities: ['project:read'],
   rateLimit: 600,
   expiresAt: '2026-11-01T00:00:00Z',
@@ -94,7 +97,10 @@ describe('which tokens are listed', () => {
       token('d', { expiresAt: '2026-10-03T11:59:59Z' }),
       token('e'),
     ]
-    expect(rowsOf(tokens, NONE, NOW).map((row) => row.token.id)).toEqual(['a', 'e'])
+    expect(rowsOf(tokens, NONE, MEMBERS, NOW).map((row) => row.token.id)).toEqual([
+      'a',
+      'e',
+    ])
     expect(activeOf(tokens[0]!, NOW)).toBe(true)
     expect(activeOf(tokens[3]!, NOW)).toBe(false)
   })
@@ -113,7 +119,12 @@ describe('which tokens are listed', () => {
       ],
       agents: [],
     }
-    const rows = rowsOf([token('c'), token('x'), token('w'), token('p')], kept, NOW)
+    const rows = rowsOf(
+      [token('c'), token('x'), token('w'), token('p')],
+      kept,
+      MEMBERS,
+      NOW,
+    )
     expect(rows.map((row) => [row.token.id, row.ours])).toEqual([
       [
         'c',
@@ -125,16 +136,42 @@ describe('which tokens are listed', () => {
     ])
   })
 
-  it('names who made an agent our page minted, and no one for any other', () => {
+  it('names who made each, ours and theirs, as the platform says (mintedBy) and the members’ list names them', () => {
     const kept: KeptTokens = {
-      ours: [],
-      agents: [{ tokenId: 'mine', by: { id: 'u-1', name: 'Alex Owner' } }],
+      ours: [{ tokenId: 'w', purpose: 'watch', conversationId: null, title: null }],
+      agents: [],
     }
-    const rows = rowsOf([token('mine'), token('theirs')], kept, NOW)
-    expect(rows.map((row) => [row.token.id, row.ours, row.minter])).toEqual([
-      ['mine', null, { id: 'u-1', name: 'Alex Owner' }],
-      ['theirs', null, null],
+    const rows = rowsOf(
+      [
+        token('mine'),
+        token('sams', { mintedBy: SAM.userId }),
+        token('w', { mintedBy: SAM.userId }),
+      ],
+      kept,
+      MEMBERS,
+      NOW,
+    )
+    expect(rows.map((row) => [row.token.id, row.minter])).toEqual([
+      ['mine', { id: ALEX.userId, name: 'Alex Owner' }],
+      ['sams', { id: SAM.userId, name: 'Sam Helper' }],
+      ['w', { id: SAM.userId, name: 'Sam Helper' }],
     ])
+  })
+
+  it('a maker the members’ list does not name: by their id alone, never someone else’s name', () => {
+    const gone = 'a0000000-0000-4000-8000-000000000009'
+    const [row] = rowsOf([token('x', { mintedBy: gone })], NONE, MEMBERS, NOW)
+    expect(row?.minter).toEqual({ id: gone, name: null })
+  })
+
+  it('a member’s word is never a maker: an id someone handed our server as theirs still names its real maker (minors m122)', () => {
+    // The shape our server answered before FE-49: a claimant's id kept beside an outside token.
+    const kept = {
+      ours: [],
+      agents: [{ tokenId: 'x', by: { id: ALEX.userId, name: 'Alex Owner' } }],
+    } as unknown as KeptTokens
+    const [row] = rowsOf([token('x', { mintedBy: SAM.userId })], kept, MEMBERS, NOW)
+    expect(row?.minter).toEqual({ id: SAM.userId, name: 'Sam Helper' })
   })
 })
 

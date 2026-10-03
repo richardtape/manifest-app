@@ -166,7 +166,8 @@ export function emailsFor(happening: Happening, context: Context): Outgoing[] {
 /**
  * F6b TASK 12 (Decision 14): THEIR AGENT'S QUESTION, once to each owner (who may answer it: FE-50),
  * as work waiting (D3's four kinds stand), keyed by the question. Never to a helper, and not to its
- * maker as such: the platform names none (FE-49). Its name is ours when our page made it.
+ * maker as such (the platform's `Token.mintedBy` names them, FE-49, but the watch token cannot read
+ * `listTokens`). Its name is ours when our page made it.
  */
 export function questionEmails(
   question: WaitingQuestion,

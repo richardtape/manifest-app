@@ -245,10 +245,11 @@ half_one() {
     "$(jq -nc --arg id "$(uuid)" --arg u "$UNTIL" '{tokenId: $id, name: "mft_live_0123456789abcdef", expiresAt: $u}')"
   AS_NAME="$STATUS $(jq -r '.error.code // empty' "$BODY")"
   call GET "/api/apps/$PROJECT/minted"
-  AGENTS=$(jq -c --arg a "$AGENT_ID" '[.agents[] | select(.tokenId == $a) | .by.name]' "$BODY")
+  # Its id alone: who made it is the platform's Token.mintedBy (FE-49), never our word.
+  AGENTS=$(jq -c --arg a "$AGENT_ID" '[.agents[] | select(.tokenId == $a)]' "$BODY")
   if [ "$KEPT" = 201 ] && [ "$WITH_SECRET" = '400 AGENT_INVALID' ] && [ "$AS_NAME" = '400 AGENT_INVALID' ] &&
-    [ "$AGENTS" = "[$(printf '%s' "$ME" | jq '.displayName')]" ]; then
-    ok 7 "an agent kept by its id → $KEPT, listed as made by $(printf '%s' "$AGENTS" | jq -r '.[0]'); with a secret beside it → $WITH_SECRET; a secret as its name → $AS_NAME"
+    [ "$AGENTS" = "[{\"tokenId\":\"$AGENT_ID\"}]" ]; then
+    ok 7 "an agent kept by its id → $KEPT, listed by its id alone ($AGENTS); with a secret beside it → $WITH_SECRET; a secret as its name → $AS_NAME"
   else
     no 7 "an agent's id" "kept → $KEPT; with a secret → $WITH_SECRET; as its name → $AS_NAME; listed $AGENTS"
   fi

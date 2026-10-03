@@ -425,10 +425,11 @@ export type Need =
 export type SinceLine = Line & { app: AppRef }
 
 /**
- * F6b D5: WHICH TOKENS ON AN APP ARE OURS, and who made an agent's (`GET /api/apps/:projectId/minted`),
- * for *Agents* to join with the platform's `listTokens`. Ids alone, never a secret. `ours`: our
- * watch (F6), each conversation's (its title) and *Suggesting privacy answers*'; `agents`: an agent
- * of their own, made on our page, and who made it (FE-49).
+ * F6b D5: WHICH TOKENS ON AN APP ARE OURS (`GET /api/apps/:projectId/minted`), for *Agents* to join
+ * with the platform's `listTokens`. Ids alone, never a secret. `ours`: our watch (F6), each
+ * conversation's (its title) and *Suggesting privacy answers*'; `agents`: each agent of their own
+ * made on our page, by id alone. **Who made a token is the platform's `Token.mintedBy`** (FE-49, its
+ * faculty-ready Task 13), never ours: the maker we kept went with it (a member's word, minors m122).
  */
 export interface KeptTokens {
   ours: {
@@ -437,5 +438,5 @@ export interface KeptTokens {
     conversationId: string | null
     title: string | null
   }[]
-  agents: { tokenId: string; by: { id: string; name: string } }[]
+  agents: { tokenId: string }[]
 }

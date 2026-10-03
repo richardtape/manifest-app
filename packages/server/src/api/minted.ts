@@ -7,11 +7,13 @@ import { guard } from './guard.js'
 import type { KeptTokens } from './progress.js'
 
 /**
- * F6b D5: THE IDS OF THE TOKENS OUR PAGE MINTS, kept so *Agents* tells ours from theirs, and says
- * who made an agent's (FE-49). Every token is the person's own mint, in the browser (D5); our
- * server is handed the id beside a conversation's secret (F2's hand-over, F4's change), or the id
- * alone for an agent of their own. **Never a secret** (Review Focus 4): `POST …/agents` takes
- * exactly its three fields. Both routes answer the app's kept members alone (F6), else `404`.
+ * F6b D5: THE IDS OF THE TOKENS OUR PAGE MINTS, kept so *Agents* tells ours from theirs. Every token
+ * is the person's own mint, in the browser (D5); our server is handed the id beside a conversation's
+ * secret (F2's hand-over, F4's change), or the id, name and expiry alone for an agent of their own
+ * (its name for our emails, its expiry for its questions'). **Who made a token is the platform's
+ * `Token.mintedBy`** (FE-49): we no longer answer a maker. **Never a secret** (Review Focus 4):
+ * `POST …/agents` takes exactly its three fields. Both routes answer the app's kept members alone
+ * (F6), else `404`.
  */
 const refuse = (reply: FastifyReply, status: number, code: string) =>
   reply.code(status).send({ error: { code } })
@@ -115,10 +117,7 @@ export function registerMinted(
         ],
         agents: minted
           .filter((row) => row.purpose === 'agent')
-          .map((row) => ({
-            tokenId: row.tokenId,
-            by: { id: row.personId, name: store.personName(row.personId) },
-          })),
+          .map((row) => ({ tokenId: row.tokenId })),
       }
       return answer
     },

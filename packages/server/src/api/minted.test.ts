@@ -16,10 +16,10 @@ import {
 } from './testing.js'
 
 /**
- * F6b TASK 3 (D5): WHICH TOKENS ON AN APP ARE OURS, AND WHO MADE AN AGENT'S. Our page mints every
- * token, in the person's session, and hands our server the id beside a conversation's secret, or
- * the id alone for an agent of their own (`POST …/agents`): never a secret. *Agents* reads them
- * back here, for the app's kept members alone.
+ * F6b TASK 3 (D5): WHICH TOKENS ON AN APP ARE OURS. Our page mints every token, in the person's
+ * session, and hands our server the id beside a conversation's secret, or the id alone for an agent
+ * of their own (`POST …/agents`): never a secret. *Agents* reads them back here, for the app's kept
+ * members alone. Who made one is the platform's `Token.mintedBy` (FE-49), never answered here.
  */
 const ORIGIN = 'https://app.manifest.internal'
 const STUDENT_APP = 'https://reading-responses.staging.manifest.internal'
@@ -126,8 +126,8 @@ function ours(s: ReturnType<typeof setUp>) {
   return change
 }
 
-describe('GET /api/apps/:projectId/minted: ours, and who made an agent’s (F6b D5)', () => {
-  it('to a kept member: our watch, each conversation’s token with its title, and each agent’s maker', async () => {
+describe('GET /api/apps/:projectId/minted: ours, and the agents let in (F6b D5)', () => {
+  it('to a kept member: our watch, each conversation’s token with its title, and each agent’s id alone (its maker is the platform’s mintedBy, FE-49)', async () => {
     const s = setUp()
     const change = ours(s)
     expect((await s.keepAgent(AGENT)).statusCode).toBe(201)
@@ -143,8 +143,10 @@ describe('GET /api/apps/:projectId/minted: ours, and who made an agent’s (F6b 
           title: 'Word count',
         },
       ],
-      agents: [{ tokenId: AGENT_ID, by: { id: BOB.id, name: BOB.displayName } }],
+      agents: [{ tokenId: AGENT_ID }],
     } satisfies KeptTokens)
+    // Nobody named as its maker: a member's word is no maker (minors m122).
+    expect(JSON.stringify(answer.json())).not.toContain(BOB.id)
   })
 
   it('a watch replaced (the review’s I2): every watch we were handed is ours until it expires, the current one once', async () => {

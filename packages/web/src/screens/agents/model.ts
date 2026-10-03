@@ -6,7 +6,7 @@ import { words } from '../../words.js'
  * F6b TASK 11: *AGENTS*, PURE (design §4, D5). What a token may do, in words: the eleven a person
  * may mint (`mintToken` refuses the rest, `TOKEN_CAPABILITY_FORBIDDEN`), and an unknown one by its
  * name, never dropped. Which tokens are listed: the active alone, ours told from theirs by the ids
- * our server keeps, an agent's minter where our page made it (FE-49: the platform names none).
+ * our server keeps, and each one's maker as the platform names it (`Token.mintedBy`, FE-49).
  */
 export const CAPABILITY_WORDS: Record<string, string> = words.agents.capabilities
 
@@ -53,14 +53,22 @@ export interface Row {
     title: string | null
     conversationId: string | null
   } | null
-  /** Who made an agent, when our page minted it (Decision 4); otherwise nobody we know. */
-  minter: { id: string; name: string } | null
+  /**
+   * Who made it, the only person who may revoke it: the platform's `Token.mintedBy` (FE-49, its
+   * faculty-ready Task 13), named as `listMembers` names them, `null` when the list does not.
+   */
+  minter: { id: string; name: string | null }
 }
 
 /** The active tokens, in the platform's order (newest first), each told as ours or theirs. */
-export function rowsOf(tokens: Schemas['Token'][], kept: KeptTokens, now: Date): Row[] {
+export function rowsOf(
+  tokens: Schemas['Token'][],
+  kept: KeptTokens,
+  members: Pick<Schemas['Member'], 'userId' | 'displayName'>[],
+  now: Date,
+): Row[] {
   const ours = new Map(kept.ours.map((one) => [one.tokenId, one]))
-  const agents = new Map(kept.agents.map((one) => [one.tokenId, one.by]))
+  const names = new Map(members.map((member) => [member.userId, member.displayName]))
   return tokens
     .filter((token) => activeOf(token, now))
     .map((token) => {
@@ -71,7 +79,7 @@ export function rowsOf(tokens: Schemas['Token'][], kept: KeptTokens, now: Date):
           one === undefined
             ? null
             : { what: one.purpose, title: one.title, conversationId: one.conversationId },
-        minter: agents.get(token.id) ?? null,
+        minter: { id: token.mintedBy, name: names.get(token.mintedBy) ?? null },
       }
     })
 }
@@ -90,9 +98,11 @@ export interface Asking {
 
 /**
  * F6b TASK 12: THE QUESTIONS ASKED, in the platform's order (newest first): still `pending`, not
- * past its day, and **its agent still able to act** (Decision 16, FE-52: a revoked or expired
- * token's question stays `pending` on the platform, and a yes to it does nothing). `listPendingActions`
- * takes no `?state=` ((S1: M4)): filtered here.
+ * past its own expiry, and **its agent still able to act** (Decision 16). Since the platform's
+ * faculty-ready Task 13 (FE-52) a revoke, a removal or a switch-off ends the token's questions at
+ * once (`expired`), and a question never outlives its token; the token's check stays, as a
+ * question's own state does, for whatever is read between the two. `listPendingActions` takes no
+ * `?state=` ((S1: M4)): filtered here.
  */
 export function askingOf(
   actions: Schemas['PendingAction'][],

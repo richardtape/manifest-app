@@ -171,9 +171,10 @@ create table if not exists watched (
   noted_at text not null
 );
 
--- F6b D5: THE IDS OF THE TOKENS OUR PAGE MINTS, never a secret: *Agents* tells ours from theirs by them,
--- and an agent's says who made it (FE-49: the platform's Token names no minter). F6's watch keeps its own
--- id in watch_tokens. `name` is the token's own name, as minted; an expiry only when the page said one.
+-- F6b D5: THE IDS OF THE TOKENS OUR PAGE MINTS, never a secret: *Agents* tells ours from theirs by them (who
+-- made each is the platform's Token.mintedBy, FE-49; `person_id` is who handed it over, forgotten at a removal).
+-- F6's watch keeps its own id in watch_tokens. `name` is the token's own name, as minted (the keeper's email
+-- names an agent by it); an expiry only when the page said one (a question's wait is capped by it).
 create table if not exists minted (
   token_id text primary key,
   project_id text not null,

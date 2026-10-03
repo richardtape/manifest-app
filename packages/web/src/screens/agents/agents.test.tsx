@@ -37,6 +37,24 @@ const PROJECT: Schemas['Project'] = {
 }
 const ME: Schemas['Me'] = { ...fixtures.ME, displayName: 'Alex Owner' }
 const SAM = { id: 'c0000000-0000-4000-8000-000000000001', name: 'Sam Helper' }
+/** Someone who made a token and is not on the members' list as read (taken off meanwhile). */
+const GONE_ID = 'c0000000-0000-4000-8000-000000000009'
+const member = (
+  userId: string,
+  displayName: string,
+  role: Schemas['Member']['role'],
+): Schemas['Member'] => ({
+  userId,
+  puid: `puid-${userId.slice(-4)}`,
+  cwlLogin: displayName.split(' ')[0]!.toLowerCase(),
+  displayName,
+  email: `${displayName.split(' ')[0]!.toLowerCase()}@example.ubc.ca`,
+  role,
+})
+const MEMBERS = [
+  member(ME.id, ME.displayName, 'owner'),
+  member(SAM.id, SAM.name, 'collaborator'),
+]
 const TZ = 'America/Vancouver'
 /** Noon in Vancouver, 3 October. */
 const NOW = new Date('2026-10-03T19:00:00Z')
@@ -45,8 +63,7 @@ const token = (id: string, over: Partial<Schemas['Token']> = {}): Schemas['Token
   id,
   projectId: PROJECT.id,
   name: `token ${id}`,
-  // Contract 1.6.0's Token.mintedBy, required since the platform's Task 13 (FE-49), read by
-  // nothing of ours yet: the mock's own person, as the mock's TOKEN fixture says.
+  // Made by the reader, unless its story says someone else (minors m127).
   mintedBy: ME.id,
   capabilities: ['project:read'],
   rateLimit: 600,
@@ -66,7 +83,11 @@ const MINE = token('20000000-0000-4000-8000-000000000001', {
   // 9:00am in Vancouver, the same day.
   lastUsedAt: '2026-10-03T16:00:00Z',
 })
-const SAMS = token('20000000-0000-4000-8000-000000000002', { name: 'Sam’s builder' })
+const SAMS = token('20000000-0000-4000-8000-000000000002', {
+  name: 'Sam’s builder',
+  mintedBy: SAM.id,
+})
+/** The reader's own, made elsewhere (the console): our server never kept its id. */
 const ELSE = token('20000000-0000-4000-8000-000000000003', {
   name: 'from the console',
   capabilities: ['project:read', 'quota:peek'],
@@ -92,10 +113,7 @@ const KEPT: KeptTokens = {
     },
     { tokenId: PRIV.id, purpose: 'privacy', conversationId: null, title: null },
   ],
-  agents: [
-    { tokenId: MINE.id, by: { id: ME.id, name: ME.displayName } },
-    { tokenId: SAMS.id, by: SAM },
-  ],
+  agents: [{ tokenId: MINE.id }, { tokenId: SAMS.id }],
 }
 const question = (
   id: string,
@@ -135,6 +153,7 @@ function stage(
     tokens?: Schemas['Token'][]
     kept?: KeptTokens
     questions?: Schemas['PendingAction'][]
+    members?: Schemas['Member'][]
     revoke?: Answer[]
     reject?: Answer[]
     confirm?: Answer[]
@@ -174,6 +193,10 @@ function stage(
     listPendingActions: (projectId: string) => {
       calls.push(['listPendingActions', projectId])
       return Promise.resolve(questions)
+    },
+    listMembers: (projectId: string) => {
+      calls.push(['listMembers', projectId])
+      return Promise.resolve(options.members ?? MEMBERS)
     },
     rejectPendingAction: (id: string, reason: string, key: string) => {
       calls.push(['rejectPendingAction', id, reason, key])
@@ -220,7 +243,7 @@ function stage(
       })
     },
   } as unknown as Platform
-  // As our server does: an agent's id kept is listed as theirs, by its maker, at the next read.
+  // As our server does: an agent's id kept, listed at the next read (its maker is the token's).
   let kept = options.kept ?? KEPT
   const ours = {
     minted: (projectId: string) => {
@@ -237,13 +260,7 @@ function stage(
     ) => {
       calls.push(['keepAgent', projectId, made])
       return answered(next('keepAgent'), () => {
-        kept = {
-          ...kept,
-          agents: [
-            ...kept.agents,
-            { tokenId: made.tokenId, by: { id: ME.id, name: ME.displayName } },
-          ],
-        }
+        kept = { ...kept, agents: [...kept.agents, { tokenId: made.tokenId }] }
       })
     },
   } as unknown as Ours
@@ -322,6 +339,8 @@ describe('the list (design §4)', () => {
     await rowOf('Claude Code')
     expect(s.called('listTokens')).toEqual([[PROJECT.id]])
     expect(s.called('minted')).toEqual([[PROJECT.id]])
+    // Who made each, by name: FE-49's mintedBy is an id.
+    expect(s.called('listMembers')).toEqual([[PROJECT.id]])
   })
 
   it('never lists a revoked or an expired token', async () => {
@@ -388,27 +407,52 @@ describe('the list (design §4)', () => {
   })
 })
 
-describe('[Revoke] (Decision 4; FE-49; (S1: M5))', () => {
-  it('on an agent we made for the reader: (yours), and Revoke', async () => {
+describe('[Revoke] (Decision 4; FE-49, Token.mintedBy; (S1: M5))', () => {
+  it('on an agent the reader made: (yours), and Revoke', async () => {
     open(stage())
     const mine = within(await rowOf('Claude Code'))
     expect(mine.getByText(a.theirs.yours)).toBeTruthy()
     expect(mine.getByRole('button', { name: a.theirs.revoke })).toBeTruthy()
   })
 
-  it('on an agent we made for someone else: who made it, and only they can revoke it', async () => {
+  it('on an agent someone else made: who made it, and only they can revoke it', async () => {
     open(stage())
     const sams = await rowOf('Sam’s builder')
     expect(sams.textContent).toContain(a.theirs.madeBy(SAM.name))
     expect(sams.textContent).toContain(a.theirs.onlyMinter)
+    expect(sams.textContent).not.toContain(a.theirs.yours)
     expect(within(sams).queryByRole('button')).toBeNull()
   })
 
-  it('on any token we did not make: Revoke (the platform decides)', async () => {
-    open(stage())
+  it('by its maker, never by our kept ids: one the reader made elsewhere is (yours), with Revoke; one our server kept for someone else is theirs', async () => {
+    // Our server kept MINE as the reader's and SAMS as Sam's; the platform says otherwise.
+    open(
+      stage({
+        tokens: [
+          { ...MINE, mintedBy: SAM.id },
+          { ...SAMS, mintedBy: ME.id },
+          ELSE,
+          WATCH,
+          CONV,
+          PRIV,
+        ],
+      }),
+    )
     const other = within(await rowOf('from the console'))
+    expect(other.getByText(a.theirs.yours)).toBeTruthy()
     expect(other.getByRole('button', { name: a.theirs.revoke })).toBeTruthy()
-    expect(other.queryByText(a.theirs.yours)).toBeNull()
+    const mine = await rowOf('Claude Code')
+    expect(mine.textContent).toContain(a.theirs.madeBy(SAM.name))
+    expect(within(mine).queryByRole('button')).toBeNull()
+    expect(within(await rowOf('Sam’s builder')).getByText(a.theirs.yours)).toBeTruthy()
+  })
+
+  it('someone else’s, its maker not on the members’ list: no name and no press, only they can revoke it', async () => {
+    open(stage({ tokens: [{ ...SAMS, mintedBy: GONE_ID }] }))
+    const sams = await rowOf('Sam’s builder')
+    expect(sams.textContent).toContain(a.theirs.onlyMinter)
+    expect(sams.textContent).not.toContain('Made by')
+    expect(within(sams).queryByRole('button')).toBeNull()
   })
 
   it('asked in place first; Keep it sends nothing', async () => {
@@ -685,13 +729,16 @@ describe('Let an agent of your own in (Review Focus 4)', () => {
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: m.title }))
   })
 
-  it('our server not keeping its id: the key is still shown (it is the only time)', async () => {
+  it('our server not keeping its id: the key is still shown (it is the only time), and it is still theirs, by its maker', async () => {
     const s = stage({ keepAgent: [{ status: 503, code: 'UNAVAILABLE' }] })
     open(s)
     await screen.findByRole('heading', { name: m.title })
     fill('My agent', ['project:read'])
     await press(button(m.button))
     expect(await screen.findByText(SECRET)).toBeTruthy()
+    await waitFor(async () =>
+      expect(within(await rowOf('My agent')).getByText(a.theirs.yours)).toBeTruthy(),
+    )
   })
 
   it('refused: we couldn’t, nothing has changed, a support reference; nothing kept, their choices as left', async () => {
