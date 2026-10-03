@@ -36,7 +36,8 @@ type Reading = {
  *   sign-in back at `?then=new-version`); a helper reads that an owner does it;
  * - **the sign-off unmet** (re-escalated, undecided or refused): what changed when re-escalated
  *   (`reescalated`, never `sensitiveFields` alone, S1: M2), in Task 8's words, and F5b's sign-off: the
- *   ask, the asked row, a refusal's reason and *[Talk it through]*;
+ *   ask, the asked row, a refusal's reason and *[Talk it through]*, **for any member** (minors m120,
+ *   Rich: *"Yes, any member"*: the platform's `COLLABORATOR` holds `approval:request`, as before launch);
  * - **anything else unmet**: said here, UBC's two in our words and the rest in F5's rows (after a
  *   launch, Going live says only that it is live: the review's I2).
  * The panel reads its own checklist (the Overview reads one only before a launch), and keeps a press
@@ -185,20 +186,16 @@ export function NewVersion({
             : kindWords(readiness.sensitiveFields)}
         </p>
       ) : null}
-      {owner ? (
-        <SignOff
-          row={signOffRow(approval, true, reading.decided, timeZone, now())}
-          decided={reading.decided}
-          candidate={candidate}
-          platform={platform}
-          ours={ours}
-          project={project}
-          expire={expire}
-          onAsked={readAgain}
-        />
-      ) : (
-        theirs
-      )}
+      <SignOff
+        row={signOffRow(approval, true, reading.decided, timeZone, now())}
+        decided={reading.decided}
+        candidate={candidate}
+        platform={platform}
+        ours={ours}
+        project={project}
+        expire={expire}
+        onAsked={readAgain}
+      />
     </>
   ) : (
     <>

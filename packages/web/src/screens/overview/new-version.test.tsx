@@ -251,6 +251,20 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     expect(machineryIn(shown())).toEqual([])
   })
 
+  it.each(['helper', 'unknown'] as const)(
+    're-escalated, read by a %s (minors m120, Rich: "Yes, any member"): the same sign-off and its ask, as before a launch; never "An owner lets…"',
+    async (role) => {
+      draw(stage(REESCALATED), { role })
+      expect(
+        await screen.findByRole('button', {
+          name: words.goingLive.rows.approval.ask,
+        }),
+      ).toBeTruthy()
+      expect(screen.queryByText(HELPER)).toBeNull()
+      expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
+    },
+  )
+
   it('re-escalated and already asked: waiting on a Manifest administrator, no ask again', async () => {
     draw(
       stage({
