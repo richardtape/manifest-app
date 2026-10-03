@@ -57,6 +57,35 @@ describe('intakeRefused', () => {
       then: 'naming',
     })
   })
+  // FE-29 (contract 1.6.0): the platform says when its limit lifts. Our rule is only what it
+  // says when it says nothing (`resetsAt: null`, or no limit at all).
+  it('the person’s day: the platform’s own reset when it gives one (1am, where our rule says midnight)', () => {
+    expect(
+      intakeRefused(
+        'INTAKE_DAILY_LIMIT_REACHED',
+        AT,
+        VANCOUVER,
+        '2026-09-28T08:00:00.000Z',
+      ),
+    ).toEqual({ words: words.describe.pausedToday('1am'), then: 'naming' })
+  })
+  it('the platform’s month: its own reset when it gives one (5pm on 1 October, not 30 September)', () => {
+    expect(
+      intakeRefused('INTAKE_BUDGET_EXHAUSTED', AT, VANCOUVER, '2026-10-02T00:00:00.000Z')
+        .words,
+    ).toBe(
+      "Describing new apps is paused for everyone until 5pm on 1 October, when this month's allowance resets. You can still name it yourself.",
+    )
+  })
+  it('the platform saying no reset (null) is our rule, as before', () => {
+    expect(intakeRefused('INTAKE_DAILY_LIMIT_REACHED', AT, VANCOUVER, null).words).toBe(
+      words.describe.pausedToday('midnight'),
+    )
+    expect(intakeRefused('INTAKE_BUDGET_EXHAUSTED', AT, VANCOUVER, null).words).toContain(
+      'until 5pm on 30 September',
+    )
+  })
+
   it.each(['INTAKE_MODEL_UNAVAILABLE', 'AI_CATALOGUE_DISABLED'])(
     '%s waits on an administrator, and on to naming',
     (code) => {

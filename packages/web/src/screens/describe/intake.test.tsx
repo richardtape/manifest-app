@@ -508,6 +508,31 @@ describe('the follow-up questions (moment 3)', () => {
 })
 
 describe('the intake refused at the start (Rich’s words: whose limit, and when it resets)', () => {
+  it('FE-29: the day’s limit says the platform’s own reset, never our copy of its rule', async () => {
+    // A reset at :17 past an hour: our rule (the next midnight in Vancouver) never says that.
+    const at = new Date(Date.now() + 3 * 3_600_000)
+    at.setUTCMinutes(17, 0, 0)
+    const error = new ManifestApiError(
+      409,
+      {
+        error: {
+          code: 'INTAKE_DAILY_LIMIT_REACHED',
+          message: 'sha256:9b2c machinery',
+          requestId: '1f758a00-2575-409b-bf48-dfbc4218b118',
+          limit: { scope: 'person', period: 'day', resetsAt: at.toISOString(), count: 5 },
+        },
+      } as never,
+      'test',
+    )
+    const s = stage({ start: () => Promise.reject(error) })
+    await describeAndCarryOn(s)
+    await waitFor(() => expect(s.called('intake')).toEqual([['c-1', { skip: true }]]))
+    s.state({ state: 'naming' })
+    const notice = await screen.findByRole('alert')
+    expect(notice.textContent).toMatch(/That resets at \d{1,2}:17(am|pm)\./)
+    expect(notice.textContent).not.toContain('midnight')
+  })
+
   it('BUILDING_NOT_OPEN (they may no longer build, D7): nothing said, reported or skipped here, as the shell follows', async () => {
     const s = stage({ start: () => Promise.reject(refused(403, 'BUILDING_NOT_OPEN')) })
     await describeAndCarryOn(s)

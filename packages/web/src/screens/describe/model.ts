@@ -4,6 +4,11 @@ import { words } from '../../words.js'
  * MOMENT 3'S REFUSALS, IN WORDS (Rich's, after F2 sitting 1). Read by code, never by
  * message. A limit says whose it is and when it resets, in the person's own time zone; each
  * goes on to Name it with no suggestions. A gateway that did not answer may be tried again.
+ *
+ * **When it resets is the platform's to say** (FE-29, contract 1.6.0: `error.limit.resetsAt`).
+ * The two rules below are our copy of the contract's prose, and are said only when the
+ * platform states no time (`null`, or no limit at all): Rich asked that a person always hear
+ * when, and the contract's rule is the best we have then.
  */
 
 /** The platform's month resets at the first of the next month, 00:00 UTC (the contract's rule). */
@@ -90,18 +95,23 @@ export function intakeRefused(
   code: string,
   now = new Date(),
   timeZone?: string,
+  /** The platform's `error.limit.resetsAt` (FE-29), when the refusal carried one. */
+  resetsAt?: string | null,
 ): IntakeRefused {
+  const stated = typeof resetsAt === 'string' ? new Date(resetsAt) : undefined
   switch (code) {
     case 'INTAKE_DAILY_LIMIT_REACHED':
       return {
         words: words.describe.pausedToday(
-          timeWords(vancouverMidnightAfter(now), timeZone),
+          timeWords(stated ?? vancouverMidnightAfter(now), timeZone),
         ),
         then: 'naming',
       }
     case 'INTAKE_BUDGET_EXHAUSTED':
       return {
-        words: words.describe.pausedForEveryone(whenWords(monthResetsAt(now), timeZone)),
+        words: words.describe.pausedForEveryone(
+          whenWords(stated ?? monthResetsAt(now), timeZone),
+        ),
         then: 'naming',
       }
     case 'INTAKE_MODEL_UNAVAILABLE':

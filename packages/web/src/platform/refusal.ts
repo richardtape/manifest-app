@@ -1,4 +1,4 @@
-import { ManifestApiError } from '@manifest/contract'
+import { ManifestApiError, type Schemas } from '@manifest/contract'
 
 /**
  * WHAT A FAILED READ MEANS TO A SCREEN: by kind and by code, NEVER by message. A platform
@@ -19,6 +19,11 @@ export type Refusal =
        * platform's line too. Never shown itself (C3).
        */
       requestId?: string
+      /**
+       * FE-29 (contract 1.6.0): a limit's facts, as the platform states them, on its three limit
+       * refusals: whose, over what, and when it lifts (`resetsAt`, `null` when it does not know).
+       */
+      limit?: Schemas['Limit']
     }
 
 /** The edge answers these with no envelope when the control plane is down (F1 M7). */
@@ -35,6 +40,9 @@ export function refusalOf(error: unknown): Refusal {
       code: error.code,
       status: error.status,
       ...(error.requestId === null ? {} : { requestId: error.requestId }),
+      ...(error.envelope?.error.limit === undefined
+        ? {}
+        : { limit: error.envelope.error.limit }),
     }
   }
   // `fetch` rejects with a TypeError when nothing answers: a closed port, no network.

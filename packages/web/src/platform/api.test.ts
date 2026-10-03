@@ -640,7 +640,7 @@ describe('refusalOf: by kind and code, never by message', () => {
     expect(JSON.stringify(r)).not.toMatch(/sha256|§|D23/)
   })
 
-  it("FE-30: a refusal at the mock carries the platform's request id, a UUID", async () => {
+  it("FE-30 and FE-29: a refusal at the mock carries the platform's request id and its limit's facts", async () => {
     await withMock(
       async (origin) => {
         const error = await thrown(() =>
@@ -655,9 +655,21 @@ describe('refusalOf: by kind and code, never by message', () => {
         const id = r.kind === 'refused' ? r.requestId : undefined
         expect(id).toMatch(UUID)
         expect(id).toBe((error as ManifestApiError).requestId)
+        // FE-29: and the limit's facts, as the platform states them.
+        expect(r.kind === 'refused' ? r.limit : undefined).toEqual({
+          scope: 'person',
+          period: 'day',
+          resetsAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+          count: expect.any(Number),
+        })
       },
       { intake: 'daily-limit' },
     )
+  })
+
+  it('FE-29: a refusal with no limit carries none', () => {
+    const r = refusalOf(new ManifestApiError(409, envelopeWith('SOMETHING_NEW'), 'x'))
+    expect(r.kind === 'refused' && 'limit' in r).toBe(false)
   })
 
   it("FE-30: a refusal carries the envelope's request id, a UUID, and still no message", () => {

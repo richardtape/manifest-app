@@ -197,7 +197,13 @@ export function Describing({
       return void unpress()
     // The platform's request id rides the report (FE-30).
     const report = reported(refusal)
-    const said = intakeRefused(report.code, now(), timeZone)
+    // FE-29: when a limit lifts is the platform's to say.
+    const said = intakeRefused(
+      report.code,
+      now(),
+      timeZone,
+      refusal.kind === 'refused' ? refusal.limit?.resetsAt : undefined,
+    )
     show(said, { ...report, operation })
     return said.then
   }
