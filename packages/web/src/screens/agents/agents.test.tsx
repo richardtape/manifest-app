@@ -45,6 +45,9 @@ const token = (id: string, over: Partial<Schemas['Token']> = {}): Schemas['Token
   id,
   projectId: PROJECT.id,
   name: `token ${id}`,
+  // Contract 1.6.0's Token.mintedBy, required since the platform's Task 13 (FE-49), read by
+  // nothing of ours yet: the mock's own person, as the mock's TOKEN fixture says.
+  mintedBy: ME.id,
   capabilities: ['project:read'],
   rateLimit: 600,
   expiresAt: '2026-11-01T19:00:00Z',
