@@ -4,14 +4,15 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-03, ~03:45 PDT: **the overnight minors sitting closed** (`manifest-app-minors-2`, mock
-mode): **thirty minors fixed** at Rich's *"Its pick, no decisions"*, each test-first, one commit each (`a947482`..`c1412af`);
-[`minors.md`](./minors.md)'s dated entry has them, what it skipped and why. **F1–F6 and F4a, F6b executed**; our server in
-**mock mode**. **Contract 1.6.0 has landed** in the platform's working tree and commits (`71df40d`, its Task 4's limit and
-session facts `95843e2`): **our four gates are green on it unadopted**; the adoption (row 1 below) is next. The platform's
-faculty-ready **sitting 2** (`manifest-71`) finished its test runs (FREE 03:25) and closes docs-only; its **sitting 3** (the
-`__Host-` cookies) starts next and holds our Vitest only at its own close; **holds and frees come through `manifest-3d`**,
-the night's coordinator, Rich asleep)*:
+**Where things stand** *(2026-10-03, ~05:20 PDT: **the 1.6.0 adoption, part one, closed** (overnight, mock mode, spawned by
+`manifest-3d`): **contract 1.6.0 is adopted** (`4c5144f`..`3518242`): the platform's request id kept beside our reference in
+every problem row, report and refused-read line, never shown (FE-30); moment 3's limits say the platform's own reset (FE-29); its
+record is [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md)'s *Part one*.
+**F1–F6 and F4a, F6b executed**; our server in **mock mode**. The platform's faculty-ready **sitting 3** (`plat-s3`, the
+`__Host-` cookies, **Task 5 at `7b85326`**, its review's `d4291dd`) **closed at `f6b9ee8`** (7100 restored on real GitHub at
+`d4291dd`); its **sitting 4** starts next, holding only for contract or mock edits. **Part two, the cookie adoption
+(row 1), is next**, and until it lands **edge mode's `whoIs` finds nobody on a 7100 that runs `7b85326`** (mock mode
+untouched). **Holds and frees come through `manifest-3d`**, the night's coordinator, Rich asleep)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
@@ -23,16 +24,17 @@ the night's coordinator, Rich asleep)*:
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **The faculty-ready adoption, part one: contract 1.6.0** (the error envelope's required `requestId`, `x-request-id`, a limit's and the session's facts, `listed`; the mock's id) | Ready at `manifest-3d`'s word | 1.6.0 is committed (`71df40d`; Task 4's facts `95843e2`); the platform's sitting 2's tests done (`manifest-71`, FREE 03:25); `manifest-3d` starts it | Prepared: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md). **Our gates already pass on 1.6.0 unadopted** (2689 tests, typecheck clean at `c1412af`): the adoption is using it, not mending reds. **Restart `pnpm mock` first**: the one on 7102 still runs the fixtures it read before 1.6.0 |
-  | 2 | **Minors, again** ([`minors.md`](./minors.md)): its dated entry 2026-10-03 lists the S ones *not reached* and needing no decision | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | Thirty fixed tonight; m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
-  | 3 | The faculty-ready adoption, part two: `__Host-` cookies on https (whoIs and edge mode change in one window with its restart) | Blocked | the platform's sitting 3 (its Task 5 messages us first) | The same note; **FE-49's `Token.mintedBy`** (its Task 13, sitting 4) lets *Agents* name every maker, and closes m122 |
-  | 4 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | Blocked | after the platform's sitting 2 (Rich: *"After platform sitting 2"*), on a fresh 7100 and contract 1.6.0: people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
-  | 5 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
-  | 6 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open (F6b is executed) |
+  | 1 | **The faculty-ready adoption, part two: `__Host-` cookies on https** (`whoIs` reads the origin's name and asks through the edge; the fake control plane and the scripts' jars exact) | Ready at `manifest-3d`'s word, after the platform's sitting 3 closes | Task 5 is **committed** (`7b85326`): `createManifestClient` names the cookie by its origin's scheme (`sessionCookieFor`), so our replay to `http://127.0.0.1:7100` sends the plain name the control plane no longer reads on https | [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md): steps 3–6, the platform's answers 1–7, and *Part one*'s last section. Its proof on 7100 is Rich's word. **FE-49's `Token.mintedBy`** (Task 13, sitting 4) lets *Agents* name every maker, and closes m122 |
+  | 2 | **Minors, again** ([`minors.md`](./minors.md)): its dated entry 2026-10-03 lists the S ones *not reached* and needing no decision; **m126** (the 1.6.0 adoption's) needs none | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
+  | 3 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | Blocked | **row 1 first** (edge mode's `whoIs` needs it on `7b85326`); after the platform's sitting 2 (Rich: *"After platform sitting 2"*), on a fresh 7100 and contract 1.6.0: people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
+  | 4 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
+  | 5 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open (F6b is executed) |
 
   - **First, always:** `ListAgents` (`manifest-3d` coordinates tonight: holds and frees come through it; tell it and the
-    platform's live session your name and ports, and **run no Vitest while a HOLD stands**), `pgrep -fl vitest`, Step 0
-    (contract **1.6.0**, 72 operations, since manifest `71df40d` and `95843e2`; our gates green on it, unadopted).
+    platform's live session your name and ports, and **run no Vitest while a HOLD stands**: read the flag file
+    `manifest-3d` names before **every** run, and gate the run on it, never `cat` beside it), `pgrep -fl vitest`, Step 0
+    (contract **1.6.0**, 72 operations, 142 codes, adopted; manifest `7b85326` moved the client's cookie name, not the
+    version).
 - **DOING A SITTING ON 7100** (F5b's sitting 1 next, after the platform's sitting 2; the steps F6's walk and F6b's sittings
   1 and 6 proved, gathered from §2, §7 and the plans):
   1. **Rich's word, every time.** If a platform session is live, ask it for a window: no restart of the control plane, no
@@ -70,6 +72,18 @@ the night's coordinator, Rich asleep)*:
   7. **Before a click on an app our fresh database never saw** (F6b sitting 6): moving `app.sqlite` aside forgets every id
      our page minted before, so *Agents* would list old tokens under *Your agents*: **`together-7100.ts tidy` revokes every
      active token our server does not know, as its minter**.
+- **The 1.6.0 adoption, part one, DONE** (2026-10-03, overnight, mock mode, spawned by `manifest-3d`; the record:
+  `research/2026-10-01-faculty-ready-adoption.md`, *Part one*): `4c5144f` (Step 0 in `api-findings.md`), `5ea2275` (our
+  `/api/problems` keeps `requestId`, a UUID, in `platform_request_id`), `b331142` (`refusalOf` carries `requestId`;
+  **`reported()`**, what a report of a refusal carries, used by every report from a platform refusal; `UNEXPECTED`'s status 0
+  no longer sent, which lost those reports), `3746337` (`PlatformRefusal.requestId`: the round's, the work's and a secret's
+  rows and lines), `79cf355` (FE-29: moment 3's limits read `error.limit.resetsAt`; our copy of the rules only when it states
+  none), `fa80bf0` (**`refusedLine()`**: every refused read's console line names the id), `d5e1274` (m125: a session start
+  refused as the model's keeps the id, `ModelError.requestId`), `3518242` (m124: our refusals relaying the platform's carry it as
+  `error.platformRequestId`, read by `OurRefusal` and reported by **`ourReported()`**; and the shell's refused `getMe` and *Name
+  it*'s mint, missed at first). **Ours, for Rich:** the person is shown our reference alone, never the UUID (no new words).
+  `error.session` unused (each start a fresh key); FE-31, FE-50, FE-51 move nothing. **2722 tests twice**; the seven acceptance
+  scripts from a fresh dev database, three times. m124 and m125 found and fixed; **m126** open.
 - **F6b sitting 6, DONE: F6b EXECUTED** (2026-10-03, `manifest-app-a1`, mock mode, then **edge mode** in `manifest-71`'s
   7100 window; the plan's entry *Sitting 6*): `fee43d9` (**`scripts/check-together.sh` and `.ts`**: half one our API as the
   mock's one person, an owner; half two four people, our server and keeper in-process, real email to Mailpit; the mock
@@ -164,6 +178,10 @@ the night's coordinator, Rich asleep)*:
 - **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)): moments 10–15, Rich's own
   app live on 7100 (*Class check-ins*, 2026-10-01 03:45Z). The platform's truncations have since removed it from 7100.
 - **Open for Rich:**
+  - **The 1.6.0 adoption's** (`research/2026-10-01-faculty-ready-adoption.md`, *Part one*): **its question 11, answered ours**:
+    a faculty member is shown our reference alone, whose row names the platform's request; never the platform's UUID (the
+    platform's guide says *"show it to the person"*; C3 and F2's Decision 11 say how). No new words. And its Decision 2:
+    our copy of the platform's reset rules is said only when the platform states no time.
   - **F6b sitting 6's** (its entry): **m120** (a helper offered no sign-off ask after launch: sitting 4's ruling rests on a
     premise the platform's authz answers the other way), **m123** (the change planner wrote *"environment variables
     provided by the platform"* into a plan, on 7100), m121–m122; the review's I1 and I2 fixed with no new words (I2 says
@@ -232,7 +250,8 @@ the night's coordinator, Rich asleep)*:
   **F4a** (2026-10-01), **F6** (2026-10-02), **F6b** (2026-10-03): Rich clicked each on the real platform. The walk-through is the design ([`walkthrough.md`](./walkthrough.md)).
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
   - **Who is who** *(names change at every handover: `ListAgents` first)*: `manifest-60` its planning session (Rich's
-    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); `manifest-6d` ran its sitting 9 (Task 12; **closed at `4a6f6c6`**, 2026-10-01, `a1d4baa` and its fix wave `a230c1a` adopted); `manifest-3d` ran its sitting 10 (Tasks 13 and 14; **closed at `8ff925f`**, 2026-10-01, ~22:00 PDT): the mock's `0969d45` (real packages and a draft in the records' fixtures, the ACS `/auth/ubcshib/callback`, the launch-path operations refusing as the platform would with no option set, FE-40's opt-in switches `MANIFEST_MOCK_RECORDS`, `_STEP_UP`, `_APPROVAL`, `_REHEARSAL`, `_QUEUE`), the console's `e55b0bf`, the text pass `b571471` (1.5.0, text only: no section, decision or phase cited), `9e43588` and the fix wave `6d76459` (the mock plays the gate while a launch is scripted; `_STEP_UP` asks a session only): **each adopted with no change of ours** (F6 sitting 6); its sitting 12 (Task 15, the acceptance) **CLOSED at `d5c76d5`** in `manifest-5a` (2026-10-02, ~19:55 PDT: the launch-path plan EXECUTED; it held 7100 for F6's walk and click before, and sent F6b's sittings 2 and 3 its holds); **`manifest-96`** (2026-10-02, ~21:00 PDT, started by Rich with no task: gave F6b sitting 1 its 7100 window, read back operator's grant, checked FE-51 and FE-52 in its code; then **opened and closed the faculty-ready plan's sitting 1 at `2e63cb4`**, docs only, Rich placing FE-49, FE-50 and F7 in it and FE-46/47/5 after it); its faculty-ready sitting 2 then went to **`manifest-71`** (2026-10-03: Spec actions 1–4 applied at Rich's word, `9914bab`, `3fc92a2`; it held its Vitest for F6b sitting 6's window and runs sitting 2 since our *"7100 released"*); **`manifest-3d`** is the night's coordinator Rich set up (2026-10-03, ~01:10 PDT, his decisions at manifest `29f4922`): holds, frees, the 1.6.0 notice and the platform's close-outs come through it, and it spawns our overnight sittings; a new session of ours tells the running platform sitting its own name; `manifest-s5-b3` Rich's S5 spike,
+    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); `manifest-6d` ran its sitting 9 (Task 12; **closed at `4a6f6c6`**, 2026-10-01, `a1d4baa` and its fix wave `a230c1a` adopted); `manifest-3d` ran its sitting 10 (Tasks 13 and 14; **closed at `8ff925f`**, 2026-10-01, ~22:00 PDT): the mock's `0969d45` (real packages and a draft in the records' fixtures, the ACS `/auth/ubcshib/callback`, the launch-path operations refusing as the platform would with no option set, FE-40's opt-in switches `MANIFEST_MOCK_RECORDS`, `_STEP_UP`, `_APPROVAL`, `_REHEARSAL`, `_QUEUE`), the console's `e55b0bf`, the text pass `b571471` (1.5.0, text only: no section, decision or phase cited), `9e43588` and the fix wave `6d76459` (the mock plays the gate while a launch is scripted; `_STEP_UP` asks a session only): **each adopted with no change of ours** (F6 sitting 6); its sitting 12 (Task 15, the acceptance) **CLOSED at `d5c76d5`** in `manifest-5a` (2026-10-02, ~19:55 PDT: the launch-path plan EXECUTED; it held 7100 for F6's walk and click before, and sent F6b's sittings 2 and 3 its holds); **`manifest-96`** (2026-10-02, ~21:00 PDT, started by Rich with no task: gave F6b sitting 1 its 7100 window, read back operator's grant, checked FE-51 and FE-52 in its code; then **opened and closed the faculty-ready plan's sitting 1 at `2e63cb4`**, docs only, Rich placing FE-49, FE-50 and F7 in it and FE-46/47/5 after it); its faculty-ready sitting 2 then went to **`manifest-71`** (2026-10-03: Spec actions 1–4 applied at Rich's word, `9914bab`, `3fc92a2`; it held its Vitest for F6b sitting 6's window, ran sitting 2 from our *"7100 released"* and **closed it at `1b404f2`**); its
+sitting 3 (Task 5, the `__Host-` cookies) is **`plat-s3`** (`7b85326`, `d4291dd`; **closed at `f6b9ee8`**); **`manifest-3d`** is the night's coordinator Rich set up (2026-10-03, ~01:10 PDT, his decisions at manifest `29f4922`): holds, frees, the 1.6.0 notice and the platform's close-outs come through it, and it spawns our overnight sittings; a new session of ours tells the running platform sitting its own name; `manifest-s5-b3` Rich's S5 spike,
     **finished** (2026-10-01, its findings at manifest `0bb544c`): nothing of it runs, and it no longer needs telling of
     our test runs.
   - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
@@ -247,11 +266,15 @@ the night's coordinator, Rich asleep)*:
     ours. **FE-46, FE-47 and FE-5 are CONFIRMED by Rich** (`ddc76d7`), each awaiting a spec action from its planning
     session; sitting 10's mock keeps the records as they are until then. **Sitting 10 CLOSED** at `8ff925f`
     (`manifest-3d`: the console and the mock, the guides, the published-text pass). **Sitting 12 CLOSED** (`d5c76d5`: the launch path EXECUTED), then its
-    **faculty-ready plan**:
-    contract 1.6.0, `__Host-` cookies on https (its Task 5 messages us first; **our adoption is prepared** in
+    **faculty-ready plan**: sitting 2 **closed at `1b404f2`** (contract 1.6.0: **adopted, part one**); sitting 3's Task 5,
+    the `__Host-` cookies, **committed at `7b85326`** (part two, row 1:
     [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md): whoIs and edge
     mode change in one window with its restart). `api-findings.md` has each shape.
-  - **The contract is 1.5.0, 72 operations** (the platform's sitting 9, `a1d4baa`: `requestApproval` and `approval:request`, `listQueue`, `approval.requested`, `409 RELEASE_REJECTED`, `IamRegistration.changeRequestedFrom` (required), the fleet's `name`, `state` and `archivedAt`; its fix wave `a230c1a`: `QueueItem.project` without `state`, descriptions; both adopted with no change of ours, `api-findings.md`).
+  - **The contract is 1.6.0, 72 operations, 142 codes** (the faculty-ready sitting 2, `71df40d`, `95843e2`, `e355d10`; closed at
+    `1b404f2`): `x-request-id` on every answer and `error.requestId` on every refusal (FE-30), `error.limit` and `error.session`
+    (FE-29), the fixture unlisted (FE-31), `TOKEN_ACTION_PENDING`'s words (FE-50, FE-51). **Adopted** (part one, above).
+    **Its sitting 3's `7b85326`** (still 1.6.0): `__Host-` cookie names on https and `sessionCookieFor(baseUrl)`, which the
+    contract's client now uses: **part two adopts it** (row 1).
   - **Mailpit, for F6** (`manifest-60`): SMTP `127.0.0.1:7111` (no authentication, no TLS); the inbox
     `http://127.0.0.1:7112`, its API under `/api/v1/` (`GET /api/v1/messages`, `GET /api/v1/search?query=…`, `DELETE
     /api/v1/messages` with `{"IDs":[…]}`). **Host `127.0.0.1` or `localhost` only** (any other is `403`). In memory, at most
@@ -263,11 +286,14 @@ the night's coordinator, Rich asleep)*:
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-03, ~03:45 PDT)*:
-  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, its log in
-    `manifest-app-minors-2`'s scratchpad), on **a fresh dev database** (**version 7**) started for the minors sitting's
-    acceptance runs, against **our mock on 7102** (`pnpm mock`, its default stage, **started before 1.6.0 landed: restart
-    it at the adoption**). The databases before are kept in `.data/`: `app-minors2-acceptance-1.sqlite` (the minors sitting's first acceptance
+- **The machine** *(2026-10-03, ~04:10 PDT)*:
+  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, its log in the 1.6.0
+    adoption's scratchpad, `…/scratchpad/adopt-160/dev-mock.log`), on **a fresh dev database** (**version 7**) holding that
+    sitting's third acceptance run, against **our mock on 7102** (`pnpm mock`, its default stage, **restarted at 03:35 on
+    1.6.0**: it sends `x-request-id`; restart it again whenever the platform's mock changes). The databases before are kept
+    in `.data/`: `app-adopt160-acceptance-1.sqlite` and `-2` (the adoption's first two acceptance runs),
+    **`app-adopt160-before-acceptance.sqlite`** (the minors sitting's second acceptance run),
+    `app-minors2-acceptance-1.sqlite` (the minors sitting's first acceptance
     run), **`app-minors2-before-acceptance.sqlite`** (F6b sitting 6's last acceptance, then the minors sitting's walks,
     which wrote nothing), **`app-edge-f6b-s6.sqlite`** (edge mode, F6b sitting 6's walk and Rich's click: our watch of
     `f6b-measure-1`), `app-f6b-s6-acceptance.sqlite` (sitting 6's first acceptance), `app-f6b-s6-before-acceptance.sqlite`
@@ -284,9 +310,9 @@ the night's coordinator, Rich asleep)*:
     `packages/server/.keys/keeping.key`, seals the watch tokens our page hands over. **Its keeper sends email** in both
     modes, to Mailpit, from *Manifest &lt;manifest@app.manifest.internal&gt;*, and **looks at live addresses only in edge
     mode**. Switch to edge mode before anyone clicks the real platform, and say so.
-  - **7100 is the platform's**, **real GitHub**: released by us at ~01:30 PDT to its faculty-ready **sitting 2**
-    (`manifest-71`), whose first test run **truncates it** (the four people, operator's grant, `f6b-measure-1`) and which
-    moves the contract to 1.6.0. `manifest-3d` coordinates its holds and frees tonight. **LiteLLM on 7106; Mailpit on
+  - **7100 is the platform's**, **real GitHub**: truncated by its faculty-ready sittings (the four people, operator's grant,
+    `f6b-measure-1` gone), restored by its sitting 3 at 05:00 on `d4291dd`, which holds `7b85326`: **our edge mode's `whoIs`
+    finds nobody there until part two lands**. `manifest-3d` coordinates its holds and frees tonight. **LiteLLM on 7106; Mailpit on
     7111/7112** (in memory; F6b sitting 6's emails were deleted by its scripts, the walk's and the click's left there).
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.

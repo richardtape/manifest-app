@@ -427,3 +427,88 @@ recommendation and tells us at its Task 1's close.*
 platform keeps recommendation 1: its failing test asserts the request goes to `https://app.manifest.internal/v1/me` with
 exactly `__Host-manifest_session=S`, and our server then needs to trust the platform's CA (`pnpm dev` already runs with `--use-system-ca`; check that
 the system store holds the platform's root, or set `NODE_EXTRA_CA_CERTS`). Steps 3–5 land before the platform's Task 5 Step 6 restart (answer 7).
+
+---
+
+## Part one, adopted: contract 1.6.0 — 2026-10-03 (the 1.6.0 adoption sitting, overnight, mock mode)
+
+*Spawned by `manifest-3d`, the night's coordinator, at Rich's night plan (manifest's `docs/superpowers/2026-09-30-decisions.md`,
+2026-10-03 ~01:10 PDT: *"the contract 1.6.0 adoption once sitting 2 lands"*). Against manifest `1b404f2` (the faculty-ready
+sitting 2's close), then `7b85326` (its sitting 3's Task 5) under us. Our server in mock mode throughout; 7100 untouched.*
+
+**What landed** (Step 0, re-read from `openapi.json`): **1.6.0, 72 operations, 142 codes**, none added or removed. FE-30
+(`71df40d`), FE-29 (`95843e2`), FE-31 (`3d73adf`), FE-50 and FE-51 (`e355d10`), the review's `70c3964`; `api-findings.md` has
+each. The answers above held: `requestId` is the envelope's **last** key (answer 5), and `ManifestApiError`'s fourth argument is
+optional (answer 2), so none of our three-argument constructions moved.
+
+**What we built**, test-first, one commit each:
+- `5ea2275` (server): `POST /api/problems` takes `requestId`, a UUID or `null`, into `problems.platform_request_id`, the column F2
+  left waiting; anything else under the key is `400 PROBLEM_INVALID`.
+- `b331142` (web): `refusalOf`'s refused kind carries `requestId`; **`reported(refusal)`** is the one statement of what a report of
+  a refusal carries (code, an HTTP status, the id; never a message), used by every report made from a platform refusal:
+  `TroubleNotice`, `pressFailed`, *Describe*, *Name it* (both), *Building*, the plan. In passing: `UNEXPECTED`'s status `0` was
+  sent and our server refused it (`status < 100`), so those reports were lost; it is no longer sent.
+- `3746337` (server): `PlatformRefusal.requestId` (`CommitRefused` too); a round's needs-you reference, a step our work runs
+  (`work.ts`), and a sandbox secret refused keep it in the row and the operator line. Never in a frame or a view.
+- `79cf355` (web, FE-29): moment 3's two limit sentences read `error.limit.resetsAt`.
+- `fa80bf0` (web): **`refusedLine(refusal)`**, every refused read's console line, names the id (six places).
+- `d5e1274` (server, m125): a session start the platform refused, worded as the model's (`AGENT_BUDGET_EXHAUSTED`, the `AI_*`
+  codes), keeps its id: `ModelError.requestId`, into the round's and the work's rows.
+- `3518242` (both, m124): our refusals that relay the platform's (the project's hand-over, a change's ask, the watch's
+  hand-over) carry its id as `error.platformRequestId` beside our code; `OurRefusal.requestId` and **`ourReported()`** report it.
+  And two reports `b331142` missed: *Name it*'s `mintToken`, and the shell's refused `getMe`.
+
+**Decided here (ours), with what changing course costs:**
+1. **The person is shown our reference, as before, and never the platform's id** (C3; F2's Decision 11, Rich's: *"If you contact
+   support, quote 7F3A-9C21."*). The platform's guide says *"Show a refusal's id to the person and keep it in your own log"*: ours
+   is shown **through** the reference, whose row now names the platform's request, and kept in our logs. No new words. *Rejected:*
+   a second line with the UUID (machinery to a faculty member, and two references to quote); replacing our reference with the
+   platform's id (a problem of ours, or nothing answering, has no platform id, and the person would meet two kinds of reference).
+   *Cost to change:* `SupportReference` takes an optional id and one sentence, Rich's. **This is open question 11 above,
+   answered our way; Rich confirms or changes it.**
+2. **The platform's `resetsAt` first; our copy of its two rules only when it states none.** When the platform says `null` (the
+   gateway reported no reset) or sends no limit, the sentence still says when, from the contract's own rule (the next Vancouver
+   midnight; the first of the month, 00:00 UTC), as before: Rich asked that a person always hear when. The daily limit's
+   `resetsAt` is computed by the platform's database and never `null`, so for it our rule is now a fallback that should never be
+   said. *Rejected:* time-less sentences for `null` (new words, and less than Rich asked); keeping our rule first (the drift
+   FE-29 was about). *Cost to change:* delete `vancouverMidnightAfter` and `monthResetsAt`'s two uses here and add two sentences.
+3. **The agent budget's month card and moment 5's allowance are unchanged.** They already read `getAgentBudget`'s `resetsAt`,
+   the same gateway fact as `AGENT_BUDGET_EXHAUSTED`'s `limit.resetsAt` (both `null` before a first session), so reading the
+   refusal's would remove none of our copy. The stale-budget case is m126. *(The platform's notice said "F5b's limit cards": F5b has
+   none; it meant these, F2's and F3's.)*
+4. **`error.session` has no use here**: every start we make takes a fresh `Idempotency-Key` (the intake's per press, the agent
+   session's per call), so `*_SESSION_ALREADY_STARTED` never reaches us, and nothing of ours guesses a session by name. A start whose
+   answer is lost still leaves an orphan that spends nothing and expires. *Rejected:* replaying the key on *Carry on* to learn the
+   orphan's id and end it (a key kept across a leg, for an hour's unspent orphan).
+5. **FE-31, FE-50, FE-51: nothing of ours moves** (`api-findings.md`).
+
+**Negative controls**, each a mutation in a script in the sitting's scratchpad, watched red, restored: the report's key out of
+`KEYS` (1 red) and its UUID check off (2); `refusalOf` without the id (4), `reportProblem` without it (2), the notice reporting
+the old way (1), status `0` kept (1), `pressFailed` without the helper (1); `refusalFrom` without it, the round's reference without
+it, `work.ts` without it, `publishRefusal` without it (1, 1, 1, 2); `intakeRefused` ignoring the platform's time (3), `refusalOf`
+without the limit (2), *Describe* passing none (1); `refusedLine` without the id (2); `asked()` without it, the round's
+model branch without it (1, 1); the three routes relaying none (3), `OurRefusal` reading none (1), `pressFailed`'s ours branch
+without it (1), the shell's refusal without it (1). **FE-29's code and m124/m125's were written during a platform HOLD, before
+their tests could run**: for those, the controls are the evidence the tests guard the code.
+
+**The gates at the close** (on the final code tree, `3518242`): `pnpm test` **2722 tests, 106 files, twice** (2689 before: 33
+new), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, all clean; **the seven acceptance scripts** in mock mode, each run
+from a fresh dev database, three times (the first on a tree mid-sitting): `check-seeing` 8, `check-going-live` 8, `check-slice`
+8, `check-describing` 18, `check-building` 12, `check-together` 13, `check-keeping` 12, every one passing. **One slip, ours:** a
+single-file run at ~03:41 started a minute after the flag turned HOLD (it was read beside the run, not gating it); every run
+after was gated on the flag.
+
+**Found** (`minors.md`): m124 and m125, fixed the same sitting (above); **m126 open**: the stale-budget case could read
+`error.limit`.
+
+**For part two, the `__Host-` cookies** (the platform's sitting 3, Task 5, **committed at `7b85326`**, still 1.6.0):
+- **`createManifestClient` now names the cookie by the scheme of the origin it is given** (`sessionCookieFor(baseUrl)`:
+  `__Host-manifest_session` on https, the plain name on http; `SESSION_COOKIE` kept, deprecated, as the http name). Our `whoIs`
+  replays to `platformOrigin`, `http://127.0.0.1:7100` in edge mode, so the client sends the **plain** name, which the control plane
+  on an https origin (its `originOf` falls back to the console's) no longer reads: **once 7100 runs `7b85326`, edge mode's
+  `whoIs` is nobody until part two lands**. Mock mode (`http://127.0.0.1:7102`) is untouched: our suite was green on `7b85326`
+  (2714, then 2722). Answer 1's recommendation (b), `whoIs` asking through the edge, is the way the client's rule makes right,
+  and the platform now says so itself: its sitting 3's review (`d4291dd`) documents that `sessionCookieFor`'s `baseUrl` is an
+  origin Manifest serves, *"NOT the control plane's own port"*, names our `whoIs` as the client a replay to the port signs out,
+  and pins the port's name (`__Host-manifest_session`) in its `auth.test.ts`. Its sitting 3 closed at `f6b9ee8`.
+- Steps 3–6 above stand; step 2 (this part) is done, and `check-slice.sh:78`'s pattern held (`requestId` comes last).

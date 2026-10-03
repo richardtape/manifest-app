@@ -270,6 +270,14 @@ reviewer over `7a85693..f14a877`; its two Important and two minors re-graded Imp
 | m122 | The review's M3 | A member's word claims a token id (m83's kind, two more doors): `POST …/agents` takes any id seen in `listTokens`, and a watch hand-over's `current` branch notes `handed.tokenId` unchecked. The real maker of an outside token then reads *"Made by <claimant>"* and no [Revoke]. Check the id against the secret on a hand-over; the agents route until FE-49's `Token.mintedBy`. | `packages/server/src/api/minted.ts`, `keeping/keeper.ts` (`hand`). | S | code |
 | m123 | The walk on 7100 | The change planner, on the laptop's plan model (`default-chat`), wrote machinery into a plan's *Things we assumed*: *"permitted by the environment variables provided by the platform"*, *"our existing deployment limits"*, *"web scraping capability"* (C3). The model's prose, shown as it wrote it; nothing of ours checks a plan's words. Re-ask once when `machineryIn` finds any (as a refused answer is re-asked), or say less of the assumptions. F4's planner, not F6b's. | `packages/server/src/agents/change.ts` (the prompt), `api/plan.ts` (no check). | S | faculty-visible |
 
+**From the 1.6.0 adoption** (2026-10-03, overnight, mock mode; `research/2026-10-01-faculty-ready-adoption.md`, *Part one*): read
+while carrying the platform's request id (FE-30) and a limit's facts (FE-29). m124 and m125 were fixed the same sitting (*Already
+fixed*, below); m126 is open.
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m126 | The adoption's reading | After a start refused `AGENT_BUDGET_EXHAUSTED` (the budget read just before said there was money: seconds stale), moment 5's allowance says the amount and reset from that read, and the round reads the budget again; the refusal's own `error.limit` (`amountUsd`, `resetsAt`) is the platform's fresher word. The same gateway fact, seconds apart. | `packages/server/src/api/plan.ts` (`write`), `build/round.ts` (`fromError`). | S | faculty-visible (rarely) |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed
@@ -509,6 +517,18 @@ routine choices of ours, each a line to change; m95 and m116 change no word and 
 - **Not reached** (S, no decision found): m5, m6, m9–m13, m15–m18, m27–m29, m31, m32, m35–m43, m45, m46, m49, m57, m67,
   m70, m81–m84, m86, m93, m94, m98, m99, m101, m103, m105, m108, m114, m121. m13's premise wants a second look (a re-read
   after the not-open signal may be wanted), and m86's *MOMENT* item needs the contract's date-time read again first.
+
+### 2026-10-03 — m124 and m125, found and fixed by the 1.6.0 adoption (overnight, mock mode)
+
+- **m124** (`3518242`): our API's refusals that relay a platform refusal (the project's hand-over, a change's ask, the watch's
+  hand-over: our `TOKEN_NOT_FOR_PROJECT` or `PLATFORM_UNAVAILABLE`) carry the platform's id as `error.platformRequestId`;
+  `OurRefusal.requestId` reads it and `ourReported()` reports it (`pressFailed`, *Building*, the plan, *Describe*, *Name it*). The
+  same commit carries the id in two reports of a platform refusal the adoption's first pass missed: *Name it*'s `mintToken`, and
+  the shell's refused `getMe`.
+- **m125** (`d5e1274`): a session start the platform refused, worded as the model's (`AGENT_BUDGET_EXHAUSTED`, the `AI_*`
+  codes), keeps its id: `ModelError.requestId`, into the round's and the work's problem rows.
+
+Each test-first, its controls watched red (the sitting's record has them). The gates at the close: the adoption's record.
 
 ## No longer applies
 
