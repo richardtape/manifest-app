@@ -20,7 +20,7 @@ import { join } from 'node:path'
 import { CHROME, launchChrome } from './chrome.ts'
 import { Page } from './page.ts'
 import { Report } from './report.ts'
-import { Jar, signIn, signInHere } from './sign-in.ts'
+import { Jar, sessionCookie, signIn, signInHere } from './sign-in.ts'
 
 const out = process.argv[2] ?? mkdtempSync(join(tmpdir(), 'walk-self-test-'))
 const report = new Report(out)
@@ -143,14 +143,19 @@ const fixtures = await listen(async (req, res) => {
 
 // ---- a pretend app and a pretend IdP: the three hops, strict where the real ones are ----
 
-const pending = new Map<string, string>() // RelayState → the manifest_login the app set
+const pending = new Map<string, string>() // RelayState → the login cookie the app set
 const sessions = new Map<string, string>() // session → who
+/**
+ * The names the pretend app sets: the plain ones, as loopback http does. Section 8 switches it
+ * to an https origin's (`__Host-`, FE-28) for one sign-in, while it is still served on http.
+ */
+let NAMES = { session: 'manifest_session', login: 'manifest_login' }
 const app = await listen(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://x')
   const cookies = Object.fromEntries(
     (req.headers.cookie ?? '').split('; ').map((c) => [c.split('=')[0], c.split('=')[1]]),
   )
-  const who = sessions.get(cookies['manifest_session'] ?? '')
+  const who = sessions.get(cookies[NAMES.session] ?? '')
   if (url.pathname === '/auth/login' || url.pathname === '/auth/step-up') {
     const relay = crypto.randomUUID()
     const binding = crypto.randomUUID()
@@ -158,7 +163,7 @@ const app = await listen(async (req, res) => {
     const force = url.pathname === '/auth/step-up' ? '&ForceAuthn=true' : ''
     res.writeHead(302, {
       location: `${idp.origin}/sso?RelayState=${relay}&ReturnTo=${encodeURIComponent(url.searchParams.get('returnTo') ?? '/')}${force}`,
-      'set-cookie': `manifest_login=${binding}; Path=/; HttpOnly`,
+      'set-cookie': `${NAMES.login}=${binding}; Path=/; HttpOnly`,
     })
     res.end()
     return
@@ -168,7 +173,7 @@ const app = await listen(async (req, res) => {
     const relay = form.get('RelayState') ?? ''
     const [user, returnTo] = (form.get('SAMLResponse') ?? '').split('|')
     // The sign-in is bound to the "browser" that started it: hop 1's cookie must come back.
-    if (!user || pending.get(relay) !== cookies['manifest_login']) {
+    if (!user || pending.get(relay) !== cookies[NAMES.login]) {
       res.writeHead(403)
       res.end('not the browser that started this sign-in')
       return
@@ -178,8 +183,8 @@ const app = await listen(async (req, res) => {
     res.writeHead(302, {
       location: returnTo ?? '/',
       'set-cookie': [
-        `manifest_session=${session}; Path=/; HttpOnly`,
-        'manifest_login=; Max-Age=0',
+        `${NAMES.session}=${session}; Path=/; HttpOnly`,
+        `${NAMES.login}=; Max-Age=0`,
       ],
     })
     res.end()
@@ -587,8 +592,28 @@ const split = await signIn({ app: app.origin, user: 'carol', jar: new SplitJar()
 )
 report.check(
   "the trap, shown open: an ACS post without hop 1's cookie is refused",
-  /no session after the ACS \(403/.test(split),
+  /no manifest_session after the ACS \(403/.test(split),
   split,
+)
+// FE-28: an https origin's names, `__Host-manifest_login` (now at `Path=/`) and
+// `__Host-manifest_session`, set by an app still served on http. The jar carries hop 1's
+// `__Host-` login cookie to the ACS (it answers 302, not 403), and the sign-in still refuses:
+// the session it holds is not the name this origin reads.
+NAMES = { session: '__Host-manifest_session', login: '__Host-manifest_login' }
+const hosted = await signIn({ app: app.origin, user: 'erin' }).then(
+  () => 'signed in',
+  (error: Error) => error.message,
+)
+NAMES = { session: 'manifest_session', login: 'manifest_login' }
+report.check(
+  "sign-in: hop 1's __Host-manifest_login rides to the ACS, and only the origin's own session name signs in",
+  /no manifest_session after the ACS \(302/.test(hosted),
+  hosted,
+)
+report.check(
+  "sign-in: the session's name is the origin's (sessionCookieFor): __Host- on https, plain on http",
+  sessionCookie('https://app.manifest.internal') === '__Host-manifest_session' &&
+    sessionCookie('http://127.0.0.1:7105') === 'manifest_session',
 )
 const stepped = await alice.stepUp('/apps/x/going-live')
 report.check(

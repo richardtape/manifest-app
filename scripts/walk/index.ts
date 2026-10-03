@@ -21,7 +21,14 @@ import { Report } from './report.ts'
 export { launchChrome, type Chrome } from './chrome.ts'
 export { Page, type PageOptions, type Rewrite, type Trouble } from './page.ts'
 export { Report } from './report.ts'
-export { Jar, signIn, signInHere, type Person, type Answer } from './sign-in.ts'
+export {
+  Jar,
+  sessionCookie,
+  signIn,
+  signInHere,
+  type Person,
+  type Answer,
+} from './sign-in.ts'
 export { layoutProblems, wordsIn, LAYOUT_DEFAULTS, type LayoutOptions } from './layout.ts'
 
 /** Our server: 7105 in either mode. Through the edge: `https://app.manifest.internal`. */

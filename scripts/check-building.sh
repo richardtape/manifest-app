@@ -30,6 +30,18 @@ JAR="$WORK/jar"
 BODY="$WORK/body"
 FRAMES="$WORK/frames"
 : > "$JAR"
+
+# THE SESSION'S NAME ON $APP's ORIGIN (FE-28, contract 1.6.0's sessionCookieFor): `__Host-` on
+# https, the plain name on loopback http (the mock). jar_holds NAME [VALUE]: the jar holds a
+# cookie of EXACTLY that name (curl's sixth field), and that value when one is named. Never a
+# substring: `__Host-manifest_session` contains `manifest_session`.
+case "$APP" in
+  https://*) SESSION_NAME=__Host-manifest_session ;;
+  *) SESSION_NAME=manifest_session ;;
+esac
+jar_holds() {
+  awk -F'\t' -v n="$1" -v v="${2:-}" '$6 == n && $7 != "" && (v == "" || $7 == v) { found = 1 } END { exit !found }' "$JAR"
+}
 : > "$FRAMES"
 
 passed=0
@@ -137,7 +149,7 @@ if [ ! -f "$DB" ]; then
 fi
 
 call GET '/auth/login?returnTo=/'
-if [ "$STATUS" = 302 ] && grep -q 'manifest_session' "$JAR"; then
+if [ "$STATUS" = 302 ] && jar_holds "$SESSION_NAME"; then
   ok 0 "signed in through the mock's CWL"
 else
   no 0 "signing in" "wanted 302 and a session, got $STATUS"

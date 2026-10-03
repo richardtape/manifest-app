@@ -22,6 +22,18 @@ JAR="$WORK/jar"
 BODY="$WORK/body"
 : > "$JAR"
 
+# THE SESSION'S NAME ON $APP's ORIGIN (FE-28, contract 1.6.0's sessionCookieFor): `__Host-` on
+# https, the plain name on loopback http (the mock). jar_holds NAME [VALUE]: the jar holds a
+# cookie of EXACTLY that name (curl's sixth field), and that value when one is named. Never a
+# substring: `__Host-manifest_session` contains `manifest_session`.
+case "$APP" in
+  https://*) SESSION_NAME=__Host-manifest_session ;;
+  *) SESSION_NAME=manifest_session ;;
+esac
+jar_holds() {
+  awk -F'\t' -v n="$1" -v v="${2:-}" '$6 == n && $7 != "" && (v == "" || $7 == v) { found = 1 } END { exit !found }' "$JAR"
+}
+
 passed=0
 failed=0
 STATUS=''
@@ -84,12 +96,12 @@ check 3 "GET /api/me, signed out (ours)" 401 '^{"error":{"code":"UNAUTHENTICATED
 if [ "$MODE" = mock ]; then
   # 4. Sign in: the mock fakes CWL, sets the session and sends us back.
   get "$APP/auth/login?returnTo=/"
-  if [ "$STATUS" = 302 ] && grep -q 'manifest_session	mock-session' "$JAR"; then
+  if [ "$STATUS" = 302 ] && jar_holds "$SESSION_NAME" mock-session; then
     passed=$((passed + 1))
-    echo "ok   4  GET /auth/login?returnTo=/ → 302, the jar holds manifest_session"
+    echo "ok   4  GET /auth/login?returnTo=/ → 302, the jar holds exactly $SESSION_NAME=mock-session"
   else
     failed=$((failed + 1))
-    echo "FAIL 4  GET /auth/login?returnTo=/: wanted 302 and manifest_session in the jar, got $STATUS"
+    echo "FAIL 4  GET /auth/login?returnTo=/: wanted 302 and exactly $SESSION_NAME=mock-session in the jar, got $STATUS"
   fi
 
   # 5. The platform knows them.
@@ -113,14 +125,18 @@ if [ "$MODE" = mock ]; then
   #    did not issue, so a nonsense one is refused here as it is through the edge. The nonsense
   #    session is the ONLY cookie sent: the jar is emptied first.
   : > "$JAR"
-  get "$APP/api/me" -H 'cookie: manifest_session=nonsense'
-  check 7 "GET /api/me, a nonsense session" 401 '^{"error":{"code":"UNAUTHENTICATED"}}$'
+  get "$APP/api/me" -H "cookie: $SESSION_NAME=nonsense"
+  check 7 "GET /api/me, a nonsense $SESSION_NAME" 401 '^{"error":{"code":"UNAUTHENTICATED"}}$'
 else
   skip "4-6" "signing in is a person typing a password at the IdP (Task 8, Step 4)"
   # The nonsense session is the ONLY cookie sent: the jar is emptied first (the final review).
+  # Under the https origin's name, `__Host-manifest_session`, so our server asks the platform
+  # (through the edge) and relays its refusal. A plain `manifest_session` would be 401 too, but
+  # without asking anyone: this step cannot tell the two apart, and the unit tests
+  # (identity.test.ts, guard.test.ts) are the witness of which name is read and forwarded.
   : > "$JAR"
-  get "$APP/api/me" -H 'cookie: manifest_session=nonsense'
-  check 7 "GET /api/me, a nonsense session" 401 '^{"error":{"code":"UNAUTHENTICATED"}}$'
+  get "$APP/api/me" -H "cookie: $SESSION_NAME=nonsense"
+  check 7 "GET /api/me, a nonsense $SESSION_NAME" 401 '^{"error":{"code":"UNAUTHENTICATED"}}$'
 fi
 
 echo "$passed passed, $failed failed"

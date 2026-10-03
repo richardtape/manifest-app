@@ -3,8 +3,10 @@
  *
  * FROM NODE, through the edge, by manifest's three hops (`infra/lib/idp-login.sh`, ported in
  * F5 sitting 1): our app's `/auth/login` → the IdP's form → its assertion, posted to the ACS.
- * ONE JAR PER PERSON, KEYED BY HOST: the ACS post must carry the `manifest_login` cookie hop 1
- * set (a separate IdP jar loses it, and the sign-in is refused), and a jar shared by two
+ * ONE JAR PER PERSON, KEYED BY HOST: the ACS post must carry the login cookie hop 1 set
+ * (`__Host-manifest_login` through the edge, at `Path=/` since the platform's `7b85326`; the
+ * jar keeps any name and ignores `Path`, so it rides to the ACS as it is; a separate IdP jar
+ * loses it, and the sign-in is refused), and a jar shared by two
  * people signs the second in as the first (the IdP remembers who signed in). A step-up
  * forgets the IdP host's cookies first, so its form is served again.
  *
@@ -19,6 +21,18 @@
  * when there is one. Cookies and passwords are never printed.
  */
 import type { Page } from './page.ts'
+
+/**
+ * THE SESSION COOKIE'S NAME ON `app`'s ORIGIN, as the contract's `sessionCookieFor` names it
+ * (FE-28, the platform's `7b85326`, contract 1.6.0): `__Host-manifest_session` on https (through
+ * the edge), `manifest_session` on loopback http (the mock). An https origin does not read the
+ * plain name at all, so a sign-in that ends holding only that is no sign-in.
+ */
+export function sessionCookie(app: string): string {
+  return new URL(app).protocol === 'https:'
+    ? '__Host-manifest_session'
+    : 'manifest_session'
+}
 
 /** A cookie jar per host (host includes the port): name → value, and whether it was https. */
 export class Jar {
@@ -214,9 +228,9 @@ export async function signIn(options: {
     await follow(jar, idpUrl.href)
   } else {
     const back = await atTheIdp(jar, idpUrl.href, user, password)
-    if (!jar.names(app).some((name) => /manifest_session$/.test(name)))
+    if (!jar.names(app).includes(sessionCookie(app)))
       throw new Error(
-        `${user}: no session after the ACS (${back.status} → ${back.location})`,
+        `${user}: no ${sessionCookie(app)} after the ACS (${back.status} → ${back.location})`,
       )
   }
   const person = makePerson(app, jar, user, password)

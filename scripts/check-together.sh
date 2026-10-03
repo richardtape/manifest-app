@@ -42,6 +42,18 @@ trap 'rm -rf "$WORK"' EXIT
 JAR="$WORK/jar"
 BODY="$WORK/body"
 : > "$JAR"
+
+# THE SESSION'S NAME ON $APP's ORIGIN (FE-28, contract 1.6.0's sessionCookieFor): `__Host-` on
+# https, the plain name on loopback http (the mock). jar_holds NAME [VALUE]: the jar holds a
+# cookie of EXACTLY that name (curl's sixth field), and that value when one is named. Never a
+# substring: `__Host-manifest_session` contains `manifest_session`.
+case "$APP" in
+  https://*) SESSION_NAME=__Host-manifest_session ;;
+  *) SESSION_NAME=manifest_session ;;
+esac
+jar_holds() {
+  awk -F'\t' -v n="$1" -v v="${2:-}" '$6 == n && $7 != "" && (v == "" || $7 == v) { found = 1 } END { exit !found }' "$JAR"
+}
 SCAN=$DB
 
 passed=0
@@ -86,7 +98,7 @@ half_one() {
     return 2
   fi
   call GET '/auth/login?returnTo=/'
-  if [ "$STATUS" != 302 ] || ! grep -q 'manifest_session' "$JAR"; then
+  if [ "$STATUS" != 302 ] || ! jar_holds "$SESSION_NAME"; then
     no 0 "signing in" "wanted 302 and a session, got $STATUS"
     return 1
   fi
