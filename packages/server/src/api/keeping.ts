@@ -17,6 +17,7 @@ import { chipOf } from './apps.js'
 import type { Hub } from './events.js'
 import { guard } from './guard.js'
 import type { AppRef, Line, Need, SinceLine } from './progress.js'
+import { secretNames } from './token-names.js'
 
 /**
  * THE KEEPING WATCH TOKEN, HANDED OVER (F6 design §1). The page mints it in the person's session
@@ -51,6 +52,8 @@ function handedOf(body: unknown): Handed | undefined {
   const { token, tokenId, expiresAt } = b
   if (typeof token !== 'string' || !TOKEN.test(token)) return undefined
   if (typeof tokenId !== 'string' || !ID.test(tokenId)) return undefined
+  // m122: the id is the one its secret names, or a member could have another token noted ours.
+  if (!secretNames(token, tokenId)) return undefined
   if (typeof expiresAt !== 'string' || Number.isNaN(Date.parse(expiresAt)))
     return undefined
   return { token, tokenId, expiresAt }

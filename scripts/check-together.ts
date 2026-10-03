@@ -369,9 +369,11 @@ console.log(
 try {
   // 1. Alice hands our watch over through our API, as her page does: kept, and the keeper keeps
   //    the app's four members (the members every check below reads).
+  const watchId = randomUUID()
   const handed = await ask(ALICE, 'POST', `/api/apps/${APP.projectId}/keeping`, {
-    token: `mft_check_${RUN}_watch`,
-    tokenId: randomUUID(),
+    // Its secret names its id, as the platform's does (m122): another id is refused.
+    token: `mft_${watchId.replaceAll('-', '')}_check_${RUN}_watch`,
+    tokenId: watchId,
     expiresAt: new Date(Date.now() + 365 * 86_400_000).toISOString(),
   })
   // The first replay of an app never watched is its past: nothing in it is told.

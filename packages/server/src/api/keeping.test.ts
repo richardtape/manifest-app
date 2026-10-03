@@ -160,7 +160,14 @@ function setUp() {
   return { store, did, ...k, keepMembers, get, post, ask }
 }
 
-const GOOD = { token: 'mft_test_r_a_watch_token', tokenId: TOKEN_ID, expiresAt: UNTIL }
+/** A secret names its own row (`mft_<id without dashes>_<secret>`): this one names TOKEN_ID (m122). */
+const GOOD = {
+  token: 'mft_a0000000000040008000000000000001_r_a_watch_token',
+  tokenId: TOKEN_ID,
+  expiresAt: UNTIL,
+}
+/** Another token's id, as `listTokens` shows any member: never ours by a member's word (m122). */
+const ANOTHERS = 'b0000000-0000-4000-8000-000000000002'
 
 describe('GET /api/apps/:projectId/keeping', () => {
   it('without a person is 401', async () => {
@@ -244,6 +251,31 @@ describe('POST /api/apps/:projectId/keeping: the token handed over', () => {
     ])
   })
 
+  it("m122: the app already watched, a member's own token beside another token's id is 400, and the keeper is never handed it (nothing noted ours)", async () => {
+    const t = setUp()
+    t.keepMembers(ALICE.id)
+    t.watches(BOB.id)
+    t.answers(async () => 'current')
+    const response = await t.post({ ...GOOD, tokenId: ANOTHERS })
+    expect([response.statusCode, response.json()]).toEqual([
+      400,
+      { error: { code: 'KEEPING_INVALID' } },
+    ])
+    expect(t.hands).toEqual([])
+  })
+
+  it("m122: the mock's secret names its id with dashes: the same id, handed over", async () => {
+    const t = setUp()
+    t.answers(async () => {
+      t.watches(ALICE.id)
+      return 'kept'
+    })
+    const mocks = { ...GOOD, token: `mft_${TOKEN_ID}_ZmFrZS1zZWNyZXQ` }
+    const response = await t.post(mocks)
+    expect(response.statusCode).toBe(201)
+    expect(t.hands).toEqual([{ projectId: PROJECT, handed: mocks, personId: ALICE.id }])
+  })
+
   it('from a student app is 403 ORIGIN_REFUSED, and the keeper is never handed it', async () => {
     const t = setUp()
     const response = await t.post(GOOD, {
@@ -293,10 +325,12 @@ describe('POST /api/apps/:projectId/keeping: the token handed over', () => {
   it.each([
     ['another key', { ...GOOD, extra: 1 }],
     ['a key missing', { token: GOOD.token, tokenId: GOOD.tokenId }],
-    ['a token over 512 characters', { ...GOOD, token: `mft_${'x'.repeat(509)}` }],
-    ['a token with a space', { ...GOOD, token: 'mft_ x' }],
+    ['a token over 512 characters', { ...GOOD, token: GOOD.token.padEnd(513, 'x') }],
+    ['a token with a space', { ...GOOD, token: `${GOOD.token} x` }],
     ['an empty token', { ...GOOD, token: '' }],
     ['a token id that is not one', { ...GOOD, tokenId: 'token-1' }],
+    ['m122: a token id its secret does not name', { ...GOOD, tokenId: ANOTHERS }],
+    ['m122: a secret that names no id', { ...GOOD, token: 'mft_test_r_a_watch_token' }],
     ['an expiry that is not a time', { ...GOOD, expiresAt: 'next year' }],
     ['an array', [GOOD]],
     ['no JSON', '{not json'],
