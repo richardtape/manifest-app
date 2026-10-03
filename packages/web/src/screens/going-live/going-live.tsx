@@ -173,9 +173,17 @@ export function GoingLive({
   // SWITCHED OFF (F5b Decision 16): the platform refuses every press, so none is drawn.
   const off = project.state === 'archived'
 
+  // Seen now, for a handler that outlives a render.
+  const seenNow = useRef<Seen | undefined>(undefined)
+  seenNow.current = loaded.state === 'ready' ? loaded.seen : undefined
+  // m17: the next read is one nobody asked for (the page shown again).
+  const quiet = useRef(false)
+
   useEffect(() => {
     if (launched) return
     let live = true
+    const quietly = quiet.current
+    quiet.current = false
     read(platform, project, now(), timeZone).then(
       (seen) => {
         if (!live) return
@@ -188,7 +196,12 @@ export function GoingLive({
         if (!live) return
         const refusal = refusalOf(error)
         if (refusal.kind === 'signed-out') expire()
-        else setLoaded({ state: 'trouble', trouble: refusal })
+        // m17: a quiet read that fails keeps a good page as it stands, and reports nothing (each
+        // showing would file another while Manifest is out of reach): its line for us, and the
+        // next showing reads again. The trouble is said on a read they asked for.
+        else if (quietly && seenNow.current !== undefined) {
+          if (refusal.kind === 'refused') console.warn(refusedLine(refusal))
+        } else setLoaded({ state: 'trouble', trouble: refusal })
       },
     )
     return () => {
@@ -205,15 +218,14 @@ export function GoingLive({
   // Quietly: what is on the page stays until the new reading answers.
   useEffect(() => {
     const shown = () => {
-      if (document.visibilityState === 'visible') setAttempt((n) => n + 1)
+      if (document.visibilityState !== 'visible') return
+      quiet.current = true
+      setAttempt((n) => n + 1)
     }
     document.addEventListener('visibilitychange', shown)
     return () => document.removeEventListener('visibilitychange', shown)
   }, [])
 
-  // Seen now, for a handler that outlives a render.
-  const seenNow = useRef<Seen | undefined>(undefined)
-  seenNow.current = loaded.state === 'ready' ? loaded.seen : undefined
   const onGate = useCallback(() => {
     const seen = seenNow.current
     setPressed(false)

@@ -453,6 +453,37 @@ describe('the page: letting your students in (moment 11)', () => {
     expect(s.called('getLaunchRecords')).toHaveLength(2)
   })
 
+  it('m17: shown again and the read refused: the good page stays, nothing is reported, and the next showing reads again', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    let failing = false
+    const s = await open(
+      stage(
+        {},
+        { getLaunchReadiness: () => (failing ? refused(500, 'INTERNAL') : undefined) },
+      ),
+    )
+    await jobs()
+    const rowsBefore = screen.getAllByRole('listitem').length
+    failing = true
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'visible',
+    })
+    for (let showing = 0; showing < 2; showing++) {
+      await act(async () => {
+        document.dispatchEvent(new Event('visibilitychange'))
+      })
+      await act(async () => undefined)
+    }
+    await waitFor(() => expect(s.called('getLaunchReadiness')).toHaveLength(3))
+    await act(async () => undefined)
+    expect(screen.queryByText(words.refused.body)).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getAllByRole('listitem')).toHaveLength(rowsBefore)
+    expect(reports).toEqual([])
+    vi.restoreAllMocks()
+  })
+
   it('hidden again, it reads nothing (minors m48)', async () => {
     const s = await open()
     await jobs()

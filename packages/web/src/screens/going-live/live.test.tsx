@@ -578,7 +578,11 @@ describe('the card never outlives what the page reads (the final review’s I1 a
     await pressed(s)
     s.world.failing = ['getLaunchReadiness']
     await shown()
-    await screen.findByRole('button', { name: words.refused.button })
+    await waitFor(() => expect(s.called('getLaunchReadiness').length).toBeGreaterThan(2))
+    await act(async () => undefined)
+    // m17: a reading nobody asked for that fails keeps the page as it stands, the card with it.
+    expect(screen.queryByRole('button', { name: words.refused.button })).toBeNull()
+    expect(screen.getByRole('region', { name: l.button })).toBeTruthy()
     s.world.production = [fresh('healthy'), OLD]
     await s.answer(bare(fresh('healthy')))
     expect(await screen.findByText('Reading responses is live.')).toBeTruthy()
