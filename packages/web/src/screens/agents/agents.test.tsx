@@ -24,9 +24,10 @@ import { MINTABLE } from './model.js'
 /**
  * F6b TASK 11: *AGENTS* (design §4, D4, D5; *Throughout*'s *An agent of their own*), against a
  * recording `Platform` and `Ours`. Every agent with access: ours told from theirs by the ids our
- * server keeps, never revocable here; theirs revoked by whoever made it, after answering *no* to
- * what it still waits on (Decision 16); one of their own let in, its key shown once and sent
- * nowhere (Review Focus 4). Asserted by what was sent, never by what a fake answered.
+ * server keeps, never revocable here; theirs revoked by whoever made it (`Token.mintedBy`, FE-49),
+ * the platform ending what it still waits on in the same act (FE-52: nothing answered here); one of
+ * their own let in, its key shown once and sent nowhere (Review Focus 4). Asserted by what was
+ * sent, never by what a fake answered.
  */
 const a = words.agents
 const SLUG = 'reading-responses'
@@ -218,14 +219,21 @@ function stage(
     },
     revokeToken: (tokenId: string, key: string) => {
       calls.push(['revokeToken', tokenId, key])
-      if (options.revokedAnyway)
+      // As the platform does since its faculty-ready Task 13 (FE-52): revoked, and its waiting
+      // questions ended in the same act.
+      const revoke = () => {
         tokens = tokens.map((t) =>
           t.id === tokenId ? { ...t, revokedAt: NOW.toISOString() } : t,
         )
+        questions = questions.map((one) =>
+          one.tokenId === tokenId && one.state === 'pending'
+            ? { ...one, state: 'expired' as const }
+            : one,
+        )
+      }
+      if (options.revokedAnyway) revoke()
       return answered(next('revoke'), () => {
-        tokens = tokens.map((t) =>
-          t.id === tokenId ? { ...t, revokedAt: NOW.toISOString() } : t,
-        )
+        revoke()
         return tokens.find((t) => t.id === tokenId)!
       })
     },
@@ -309,6 +317,9 @@ const rowOf = async (name: string) =>
 /** The row of a token's name, if the list has one (its question's card names it too). */
 const listed = (name: string) =>
   screen.queryAllByText(name).some((found) => found.closest('li.agents__agent') !== null)
+/** The questions' section, if any card is drawn. */
+const cardsOf = () =>
+  screen.queryByRole('heading', { name: a.question.title })?.closest('section') ?? null
 /** The page's words, without what is in mono (a token's own name, its key, an address). */
 const prose = () => {
   const copy = document.body.cloneNode(true) as HTMLElement
@@ -469,36 +480,29 @@ describe('[Revoke] (Decision 4; FE-49, Token.mintedBy; (S1: M5))', () => {
     )
   })
 
-  it('revokes it, then answers no to what that agent still waits on; the list read again (the review’s I1)', async () => {
+  it('revokes it and answers nothing: the platform ended what it waited on in the same act (FE-52); the list read again, its question gone', async () => {
     const s = stage()
     open(s)
     const mine = within(await rowOf('Claude Code'))
+    expect(cardsOf()?.querySelectorAll('.agents__question')).toHaveLength(2)
     await press(mine.getByRole('button', { name: a.theirs.revoke }))
     await press(mine.getByRole('button', { name: a.theirs.revokeConfirm }))
     expect(s.called('revokeToken').map(([id]) => id)).toEqual([MINE.id])
-    // Only its own question, only the one still waiting, and only once it is revoked.
-    await waitFor(() =>
-      expect(s.called('rejectPendingAction').map(([id, reason]) => [id, reason])).toEqual(
-        [[QUESTIONS[0]!.id, a.theirs.answer]],
-      ),
-    )
-    const order = s.calls.map((c) => c[0])
-    expect(order.indexOf('revokeToken')).toBeLessThan(
-      order.indexOf('rejectPendingAction'),
-    )
-    // The page's own read, then one after the revoke, before its answer.
-    expect(
-      order
-        .slice(order.indexOf('revokeToken'), order.indexOf('rejectPendingAction'))
-        .filter((c) => c === 'listPendingActions'),
-    ).toHaveLength(1)
     await waitFor(() => expect(listed('Claude Code')).toBe(false))
     expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name))
+    // Read again once, after the revoke: no answer of ours (each would be 409 PENDING_ACTION_RESOLVED).
     expect(s.called('listTokens').length).toBe(2)
+    expect(s.called('listPendingActions').length).toBe(2)
+    expect(s.called('rejectPendingAction')).toEqual([])
+    // Its question is gone with it; another agent's still asks.
+    await waitFor(() =>
+      expect(cardsOf()?.querySelectorAll('.agents__question')).toHaveLength(1),
+    )
+    expect(cardsOf()?.textContent).toContain(ELSE.name)
   })
 
-  it('a question it could not answer once revoked (a helper, or answered meanwhile): still said revoked', async () => {
-    const s = stage({ reject: [{ status: 403, code: 'FORBIDDEN' }] })
+  it('a helper revoking their own: revoked the same, nothing answered', async () => {
+    const s = stage()
     open(s, 'helper')
     const mine = within(await rowOf('Claude Code'))
     await press(mine.getByRole('button', { name: a.theirs.revoke }))
@@ -506,6 +510,7 @@ describe('[Revoke] (Decision 4; FE-49, Token.mintedBy; (S1: M5))', () => {
     expect(s.called('revokeToken').map(([id]) => id)).toEqual([MINE.id])
     await waitFor(() => expect(listed('Claude Code')).toBe(false))
     expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name))
+    expect(s.called('rejectPendingAction')).toEqual([])
   })
 
   it('refused 404 at the press: only the person who made it can revoke it; no question answered for it; the list read again (the review’s I1)', async () => {
@@ -533,7 +538,7 @@ describe('[Revoke] (Decision 4; FE-49, Token.mintedBy; (S1: M5))', () => {
     expect(listed('Claude Code')).toBe(true)
   })
 
-  it('refused, but the list read again says it is revoked (the platform’s 503 after revoking): said revoked, and its questions answered no (the review’s minor 1)', async () => {
+  it('refused, but the list read again says it is revoked (the platform’s 503 after revoking): said revoked, nothing answered (the review’s minor 1; FE-52)', async () => {
     const s = stage({
       revoke: [{ status: 503, code: 'AI_CATALOGUE_DISABLED' }],
       revokedAnyway: true,
@@ -546,12 +551,8 @@ describe('[Revoke] (Decision 4; FE-49, Token.mintedBy; (S1: M5))', () => {
       expect(screen.getByRole('status').textContent).toBe(a.theirs.revoked(PROJECT.name)),
     )
     expect(screen.queryByRole('alert')).toBeNull()
-    await waitFor(() =>
-      expect(s.called('rejectPendingAction').map(([id]) => id)).toEqual([
-        QUESTIONS[0]!.id,
-      ]),
-    )
     await waitFor(() => expect(listed('Claude Code')).toBe(false))
+    expect(s.called('rejectPendingAction')).toEqual([])
   })
 
   it('refused, and the list cannot be read again: we can’t tell, said so, never "it still works"', async () => {
@@ -780,7 +781,8 @@ describe('their agent’s questions, at the top (F6b Task 12; Decision 16; (S1: 
     const s = stage({
       questions: [
         ...QUESTIONS,
-        // Its agent revoked (FE-52: still pending on the platform): not asked (Decision 16).
+        // Its agent revoked, the question read still pending (before FE-52, or read between the
+        // two): not asked (Decision 16).
         question('40000000-0000-4000-8000-000000000004', REVOKED.id),
         // Past its day, the platform not yet saying so.
         {

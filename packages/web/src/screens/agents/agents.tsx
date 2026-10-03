@@ -88,10 +88,10 @@ function mayOf(capabilities: string[]): ReactNode {
  * here: they end with their conversation, or with the app. **Theirs** say what each may do in words,
  * when it was last used and when it stops; **[Revoke]** on the reader's own alone, by the platform's
  * `Token.mintedBy` (FE-49; anyone but the maker is refused `404`), and anyone else's says who made
- * it (`listMembers`'s name), answering *no* first to what that agent still waits on (Decision 16;
- * FE-52). **One of their own let in**: exactly what they chose minted, its id, name and expiry
- * handed to our server, **its key shown once and sent nowhere** (Review Focus 4). Every change is
- * the person's own call; the platform still decides.
+ * it (`listMembers`'s name). A revoke ends what that agent still waits on, on the platform, in the
+ * same act (FE-52; Decision 16's reject step went with it). **One of their own let in**: exactly
+ * what they chose minted, its id, name and expiry handed to our server, **its key shown once and
+ * sent nowhere** (Review Focus 4). Every change is the person's own call; the platform still decides.
  */
 export function Agents({
   platform,
@@ -218,31 +218,17 @@ export function Agents({
   }
 
   /**
-   * DECISION 16 (FE-52), ONCE IT IS REVOKED (the review's I1): a revoked agent's questions would wait
-   * a day for a yes that does nothing, so each is answered no. Never before: a revoke refused would
-   * leave its question refused in their name, with a reason that is not true. One that cannot be
-   * answered (a helper's, FE-50; or answered meanwhile) is left; the band forgets it at its expiry.
+   * Revoked: said, and the list read again. The platform ended that agent's waiting questions in
+   * the same act (FE-52, its faculty-ready Task 13: `expired`, and `pending_action.expired` to the
+   * band), so the read finds none of them: Decision 16's answering *no* went (each would now be
+   * `409 PENDING_ACTION_RESOLVED`).
    */
-  const answerNo = async (tokenId: string) => {
-    try {
-      const waiting = (await platform.listPendingActions(project.id)).filter(
-        (action) => action.state === 'pending' && action.tokenId === tokenId,
-      )
-      for (const action of waiting)
-        await platform
-          .rejectPendingAction(action.id, t.answer, crypto.randomUUID())
-          .catch(() => undefined)
-    } catch {
-      // Not read: its questions wait out their day.
-    }
-  }
-
-  const revoked = (tokenId: string) => {
+  const revoked = () => {
     setPressing(null)
     setConfirming(null)
     setStatus(t.revoked(project.name))
     setFocusOn('status')
-    void answerNo(tokenId).then(() => live.current && readAgain())
+    readAgain()
   }
 
   const revoke = async (row: Row) => {
@@ -273,7 +259,7 @@ export function Agents({
         still = null
       }
       if (!live.current) return
-      if (still === false) return revoked(tokenId)
+      if (still === false) return revoked()
       setPressing(null)
       setConfirming(null)
       const failed = pressFailed(error, 'revokeToken')
@@ -289,7 +275,7 @@ export function Agents({
       return
     }
     if (!live.current) return
-    revoked(tokenId)
+    revoked()
   }
 
   // Back from the second sign-in (the whole-branch review's I2): the platform asks it before it
