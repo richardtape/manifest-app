@@ -371,7 +371,8 @@ const setAsides = (conversationId: string) =>
     .map((m) => m.body as { kind?: string; by?: string; why?: string })
     .filter((b) => b.kind === 'set-aside')
 
-const NEED_WORDS = `${APP.name}: your agent is asking something`
+// Its token is not one our page let in, so its maker is not named (m129): "an agent".
+const NEED_WORDS = `${APP.name}: an agent is asking something`
 
 console.log(
   `F6b acceptance, half two: our server and keeper in-process, four people, run ${RUN}; email to ${config.smtpUrl}, read from ${MAILPIT}`,

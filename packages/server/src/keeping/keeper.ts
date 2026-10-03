@@ -269,11 +269,20 @@ export function createKeeper({
     const kept = store.mintedOn(entry.projectId)
     const [question] = questionsOf([entry], now().getTime(), tokenEndsOf(kept))
     if (app === undefined || question === undefined) return
-    const tokenName =
-      kept.find((row) => row.tokenId === question.tokenId && row.purpose === 'agent')
-        ?.name ?? null
+    // Its name and who let it in, where our page did (m129: whose agent, to each owner).
+    const row = kept.find(
+      (one) => one.tokenId === question.tokenId && one.purpose === 'agent',
+    )
+    const tokenName = row?.name ?? null
+    const maker = row?.personId ?? null
     const members = store.members(entry.projectId)
-    for (const outgoing of questionEmails(question, { app, members, origin, tokenName }))
+    for (const outgoing of questionEmails(question, {
+      app,
+      members,
+      origin,
+      tokenName,
+      maker,
+    }))
       void deliver(store, mailer, outgoing, wait)
   }
 

@@ -1512,6 +1512,10 @@ export const words = {
       /** Ours: the cards' heading. */
       title: 'What your agents are asking',
       yourAgent: (name: string) => `Your agent '${name}'`,
+      /** m129, Rich's words (2026-10-03): another member's agent, by its maker's name. */
+      theirAgent: (maker: string, name: string) => `${maker}'s agent '${name}'`,
+      /** Ours (m129): an agent whose maker the members do not name (*"An agent"*, with its name). */
+      anAgentNamed: (name: string) => `An agent '${name}'`,
       anAgent: 'An agent',
       asked: (who: string, action: string) => `${who} asked to ${action}.`,
       /** Ours: an action we do not know, followed by the platform's own summary in mono. */

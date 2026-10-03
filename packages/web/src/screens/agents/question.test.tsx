@@ -6,6 +6,7 @@ import { stepUpHref } from '../../auth.js'
 import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
+import type { Asking } from './model.js'
 import { ACTION_WORDS, askedKey, Question } from './question.js'
 
 /**
@@ -77,6 +78,7 @@ function open(
   options: {
     action?: Schemas['PendingAction']
     tokenName?: string | null
+    whose?: Asking['whose']
     role?: 'owner' | 'helper' | 'unknown'
   } = {},
 ) {
@@ -86,6 +88,7 @@ function open(
       project={PROJECT}
       action={options.action ?? asking()}
       tokenName={options.tokenName === undefined ? 'Claude Code' : options.tokenName}
+      whose={options.whose ?? 'yours'}
       role={options.role ?? 'owner'}
       now={() => NOW}
       timeZone={TZ}
@@ -126,6 +129,23 @@ describe('what it says (design §4; FE-5 (a) honest)', () => {
   it('a day it is not today is said', () => {
     open(stage(), { action: asking({ expiresAt: '2026-10-04T18:00:00Z' }) })
     expect(text()).toContain('It stops waiting at 11:00am on 4 October.')
+  })
+
+  it('another member’s agent (m129, Rich’s words): theirs by name, its own name in mono', () => {
+    open(stage(), { whose: { name: 'Sam Helper' } })
+    expect(text()).toContain(
+      "Sam Helper's agent 'Claude Code' asked to change who's on Reading responses.",
+    )
+    expect(screen.getByText('Claude Code').className).toContain('mono')
+    expect(prose()).not.toContain('Your agent')
+  })
+
+  it('an agent whose maker the members do not name (m129): An agent, by its name', () => {
+    open(stage(), { whose: { name: null } })
+    expect(text()).toContain(
+      "An agent 'Claude Code' asked to change who's on Reading responses.",
+    )
+    expect(screen.getByText('Claude Code').className).toContain('mono')
   })
 
   it('an agent we cannot name: An agent', () => {

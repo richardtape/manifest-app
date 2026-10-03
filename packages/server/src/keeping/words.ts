@@ -46,6 +46,15 @@ export function howLong(from: string, to: string): string {
 
 const roleWords = { owner: 'an owner', collaborator: 'a helper' } as const
 
+/** m129: whose agent, to one owner: their own, another's by the kept members' name, or unnamed. */
+export type Whose = 'yours' | { name: string | null }
+const agentNamed = (whose: Whose, name: string) =>
+  whose === 'yours'
+    ? `Your agent '${name}'`
+    : whose.name === null
+      ? `An agent '${name}'`
+      : `${whose.name}'s agent '${name}'`
+
 /** The question 10: an administrator's reason, as they typed it, after what they did (the page's words). */
 const said = (reason: string | null) => (reason === null ? '' : `, and said: ‘${reason}’`)
 
@@ -195,10 +204,21 @@ export const mailWords = {
    * F6b TASK 12 (Decision 14; the plan's *Words proposed*): their agent's question, to each owner.
    * The action is said with the app in it (never "<app>'s"), so the body does not name it twice.
    */
+  /**
+   * m129 (Rich's words, 2026-10-03): whose agent, to each owner: *"your agent"* for their own,
+   * *"<Name>'s agent"* for another's, *"an agent"* when we cannot name its maker (the page's words).
+   */
   agentAsks: {
-    subject: (app: string) => `${app}: your agent is asking something`,
-    body: (app: string, tokenName: string | null, action: string, expiresAt: string) =>
-      `${tokenName === null ? 'An agent' : `Your agent '${tokenName}'`} asked to ${actionWords(action, app)}. It stops waiting at ${clockOf(expiresAt)} on ${dayOf(expiresAt)}. Answer it on its page:`,
+    subject: (app: string, whose: Whose) =>
+      `${app}: ${whose === 'yours' ? 'your agent' : whose.name === null ? 'an agent' : `${whose.name}'s agent`} is asking something`,
+    body: (
+      app: string,
+      tokenName: string | null,
+      whose: Whose,
+      action: string,
+      expiresAt: string,
+    ) =>
+      `${tokenName === null ? 'An agent' : agentNamed(whose, tokenName)} asked to ${actionWords(action, app)}. It stops waiting at ${clockOf(expiresAt)} on ${dayOf(expiresAt)}. Answer it on its page:`,
   },
   aDay: {
     subject: (app: string) => `${app}: still waiting for you`,

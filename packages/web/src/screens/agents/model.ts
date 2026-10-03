@@ -90,10 +90,17 @@ export function around(sentence: (said: string) => string): [string, string] {
   return [before, after]
 }
 
-/** A question to put to the person, and its agent's name (the list's). */
+/**
+ * m129 (Rich's words, 2026-10-03): whose agent asks, by `Token.mintedBy` (FE-49) against the reader:
+ * their own, or another's by the members' name for its maker (null: the list does not name them).
+ */
+export type Whose = 'yours' | { name: string | null }
+
+/** A question to put to the person, its agent's name (the list's), and whose agent it is. */
 export interface Asking {
   action: Schemas['PendingAction']
   tokenName: string
+  whose: Whose
 }
 
 /**
@@ -107,17 +114,24 @@ export interface Asking {
 export function askingOf(
   actions: Schemas['PendingAction'][],
   tokens: Schemas['Token'][],
+  members: Pick<Schemas['Member'], 'userId' | 'displayName'>[],
+  readerId: string,
   now: Date,
 ): Asking[] {
   const active = new Map(
-    tokens.filter((token) => activeOf(token, now)).map((token) => [token.id, token.name]),
+    tokens.filter((token) => activeOf(token, now)).map((token) => [token.id, token]),
   )
-  return actions.flatMap((action) => {
-    const tokenName = active.get(action.tokenId)
-    return action.state === 'pending' &&
-      Date.parse(action.expiresAt) > now.getTime() &&
-      tokenName !== undefined
-      ? [{ action, tokenName }]
-      : []
+  const names = new Map(members.map((member) => [member.userId, member.displayName]))
+  return actions.flatMap((action): Asking[] => {
+    const token = active.get(action.tokenId)
+    if (
+      action.state !== 'pending' ||
+      Date.parse(action.expiresAt) <= now.getTime() ||
+      token === undefined
+    )
+      return []
+    const whose: Whose =
+      token.mintedBy === readerId ? 'yours' : { name: names.get(token.mintedBy) ?? null }
+    return [{ action, tokenName: token.name, whose }]
   })
 }

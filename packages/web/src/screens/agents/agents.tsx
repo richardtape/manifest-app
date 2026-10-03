@@ -172,7 +172,7 @@ export function Agents({
         setLoaded({
           state: 'ready',
           rows: rowsOf(tokens, kept, members, clock.current()),
-          questions: askingOf(actions, tokens, clock.current()),
+          questions: askingOf(actions, tokens, members, me.id, clock.current()),
         }),
       (error: unknown) => {
         if (!current) return
@@ -409,13 +409,14 @@ export function Agents({
               <h2 className="heading" id="agents-questions">
                 {a.question.title}
               </h2>
-              {loaded.questions.map(({ action, tokenName }) => (
+              {loaded.questions.map(({ action, tokenName, whose }) => (
                 <Question
                   key={action.id}
                   platform={platform}
                   project={project}
                   action={action}
                   tokenName={tokenName}
+                  whose={whose}
                   role={role}
                   now={() => clock.current()}
                   timeZone={timeZone}

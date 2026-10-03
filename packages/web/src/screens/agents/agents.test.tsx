@@ -777,6 +777,20 @@ describe('their agent’s questions, at the top (F6b Task 12; Decision 16; (S1: 
       return found as HTMLElement
     })
 
+  it('a question from another member’s agent says whose (m129, Rich’s words): by the members’ name for its maker', async () => {
+    const s = stage({
+      questions: [question('40000000-0000-4000-8000-000000000006', SAMS.id)],
+    })
+    open(s)
+    await firstCard()
+    const said = [...cards()!.querySelectorAll('.agents__question .body-lead')].map(
+      (p) => p.textContent,
+    )
+    expect(said).toEqual([
+      "Sam Helper's agent 'Sam’s builder' asked to change who's on Reading responses.",
+    ])
+  })
+
   it('each question still waiting from an agent that can still act, its name joined from the list', async () => {
     const s = stage({
       questions: [

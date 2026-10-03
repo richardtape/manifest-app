@@ -9,7 +9,7 @@ import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
 import { clockWords, dayWords } from '../keeping/lines.js'
 import { countOf, LIMITS, tooLong } from '../limits.js'
 import { StepUpCard } from '../trying-out/parts.js'
-import { around } from './model.js'
+import { around, type Whose } from './model.js'
 
 /**
  * THE WHOLE-BRANCH REVIEW'S I2: the question a [Yes, once] left for its second sign-in, kept for the
@@ -30,10 +30,21 @@ const q = words.agents.question
 /** The four a token is refused and asks a person about (D24), in words; any other is its summary. */
 export const ACTION_WORDS: Record<string, (app: string) => string> = q.actions
 
-/** Who asked: their agent by the name it was given, in mono (its own words), or *"An agent"*. */
-function Who({ name }: { name: string | null }) {
+/**
+ * Who asked: an agent by the name it was given, in mono (its own words), and whose it is (m129, Rich's
+ * words): *"Your agent"*, *"Sam Helper's agent"*, or one whose maker we cannot name; with no name,
+ * *"An agent"*.
+ */
+function Who({ name, whose }: { name: string | null; whose: Whose }) {
   if (name === null) return <>{q.anAgent}</>
-  const [before, after] = around(q.yourAgent)
+  const maker = whose === 'yours' ? undefined : whose.name
+  const [before, after] = around(
+    maker === undefined
+      ? q.yourAgent
+      : maker === null
+        ? q.anAgentNamed
+        : (said: string) => q.theirAgent(maker, said),
+  )
   return (
     <>
       {before}
@@ -57,6 +68,7 @@ export function Question({
   project,
   action,
   tokenName,
+  whose,
   role,
   now,
   timeZone,
@@ -68,6 +80,8 @@ export function Question({
   action: Schemas['PendingAction']
   /** Its token's name (`listTokens`), or null when the page has none for it. */
   tokenName: string | null
+  /** m129: whose agent it is (`askingOf`). */
+  whose: Whose
   role: 'owner' | 'helper' | 'unknown'
   now: () => Date
   timeZone?: string | undefined
@@ -150,13 +164,13 @@ export function Question({
         {known ? (
           <>
             {around((who) => q.asked(who, ACTION_WORDS[action.action]!(project.name)))[0]}
-            <Who name={tokenName} />
+            <Who name={tokenName} whose={whose} />
             {around((who) => q.asked(who, ACTION_WORDS[action.action]!(project.name)))[1]}
           </>
         ) : (
           <>
             {around(q.askedThis)[0]}
-            <Who name={tokenName} />
+            <Who name={tokenName} whose={whose} />
             {around(q.askedThis)[1]} <span className="mono">{action.summary}</span>
           </>
         )}

@@ -1,7 +1,7 @@
 import type { Administrator, Conversation, Happening } from '../api/progress.js'
 import type { EmailKind, KeptApp, KeptMember, Outgoing } from '../store/keeping.js'
 import { actorOf, type WaitingQuestion } from './happenings.js'
-import { mailWords as w } from './words.js'
+import { mailWords as w, type Whose } from './words.js'
 
 /**
  * F6 TASK 5: WHO IS EMAILED WHAT (D3), pure. One email per happening and recipient, never a
@@ -185,26 +185,39 @@ export function questionEmails(
     members: KeptMember[]
     origin: string
     tokenName: string | null
+    /** m129: who let it in on our page (our `minted` row's person), or null when we did not. */
+    maker: string | null
   },
 ): Outgoing[] {
-  const { app, members, origin, tokenName } = context
-  const subject = w.agentAsks.subject(app.name)
-  const text = textOf(
-    w.agentAsks.body(app.name, tokenName, question.action, question.expiresAt),
-    appPage(origin, app, '/agents'),
-    w.lastLine.owner(app.name),
-  )
+  const { app, members, origin, tokenName, maker } = context
+  const makerName =
+    maker === null
+      ? null
+      : (members.find((member) => member.userId === maker)?.displayName ?? null)
   return members
     .filter((member) => member.role === 'owner' && member.email !== '')
-    .map((member) => ({
-      key: {
-        kind: 'waiting',
-        happening: `${app.projectId}:agent-asks:${question.pendingActionId}`,
-        recipient: member.email,
-      },
-      subject,
-      text,
-    }))
+    .map((member) => {
+      const whose: Whose = member.userId === maker ? 'yours' : { name: makerName }
+      return {
+        key: {
+          kind: 'waiting',
+          happening: `${app.projectId}:agent-asks:${question.pendingActionId}`,
+          recipient: member.email,
+        },
+        subject: w.agentAsks.subject(app.name, whose),
+        text: textOf(
+          w.agentAsks.body(
+            app.name,
+            tokenName,
+            whose,
+            question.action,
+            question.expiresAt,
+          ),
+          appPage(origin, app, '/agents'),
+          w.lastLine.owner(app.name),
+        ),
+      }
+    })
 }
 
 /** Decision 14: the person whose work it is, keyed as the keeper asks (by run, or by wait). */

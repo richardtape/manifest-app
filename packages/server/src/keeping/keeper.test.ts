@@ -854,6 +854,7 @@ describe('the emails (Task 5: D3, once each)', () => {
       })
       t.handlers.event(created(6))
       await settle()
+      // m129 (Rich's words): Alice let it in on our page, so it is hers to her, and Alice's to Carol.
       expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
         {
           to: 'alice@example.test',
@@ -861,11 +862,14 @@ describe('the emails (Task 5: D3, once each)', () => {
         },
         {
           to: 'carol@example.test',
-          subject: 'Reading responses: your agent is asking something',
+          subject: "Reading responses: Alice Instructor's agent is asking something",
         },
       ])
       expect(t.sent[0]!.text).toContain(
         "Your agent 'Claude Code' asked to change who's on",
+      )
+      expect(t.sent[1]!.text).toContain(
+        "Alice Instructor's agent 'Claude Code' asked to change who's on",
       )
       expect(t.sent[0]!.text).toContain(`${ORIGIN}/apps/reading-responses/agents`)
       // Written to history as every event is (the band reads it there).

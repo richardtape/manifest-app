@@ -460,12 +460,17 @@ describe('questionEmails: their agent’s question, to the owners (F6b Task 12, 
     at: '2026-10-03T17:12:00.000Z',
     expiresAt: '2026-10-04T17:12:00.000Z',
   })
-  const asked = (action?: string, tokenName: string | null = 'Claude Code') =>
+  const asked = (
+    action?: string,
+    tokenName: string | null = 'Claude Code',
+    maker: string | null = tokenName === null ? null : ALICE,
+  ) =>
     questionEmails(question(action), {
       app: APP,
       members: MEMBERS,
       origin: ORIGIN,
       tokenName,
+      maker,
     })
 
   it('once to each owner, keyed by the question, as work waiting; never to a helper', () => {
@@ -486,6 +491,7 @@ describe('questionEmails: their agent’s question, to the owners (F6b Task 12, 
           members,
           origin: ORIGIN,
           tokenName: null,
+          maker: null,
         }),
       ),
     ).toEqual(['alice@ubc.ca', 'dan@ubc.ca'])
@@ -501,6 +507,37 @@ describe('questionEmails: their agent’s question, to the owners (F6b Task 12, 
         "You're getting this because you own Reading responses on Manifest.",
       ].join('\n\n'),
     )
+  })
+
+  it('whose agent, to each owner (m129, Rich’s words of 2026-10-03): their own is theirs, another’s by the kept members’ name, one we cannot name an agent', () => {
+    const first = (one: Outgoing) => one.text.split('\n')[0]!
+    const to = (sent: Outgoing[], email: string) =>
+      sent.find((one) => one.key.recipient === email)!
+    const byAlice = asked('members:manage', 'Claude Code', ALICE)
+    expect(to(byAlice, 'alice@ubc.ca').subject).toBe(
+      'Reading responses: your agent is asking something',
+    )
+    expect(first(to(byAlice, 'alice@ubc.ca'))).toMatch(
+      /^Your agent 'Claude Code' asked to /,
+    )
+    expect(to(byAlice, 'carol@ubc.ca').subject).toBe(
+      "Reading responses: Alice Owner's agent is asking something",
+    )
+    expect(first(to(byAlice, 'carol@ubc.ca'))).toBe(
+      "Alice Owner's agent 'Claude Code' asked to change who's on Reading responses. It stops waiting at 10:12am on 4 October. Answer it on its page:",
+    )
+    // One question, one key: each owner's own words under it.
+    expect(new Set(byAlice.map((one) => one.key.happening)).size).toBe(1)
+    // A helper's agent: Bob's, to every owner.
+    expect(asked('members:manage', 'Claude Code', BOB).map(first)).toEqual(
+      OWNERS.map(
+        () =>
+          "Bob Helper's agent 'Claude Code' asked to change who's on Reading responses. It stops waiting at 10:12am on 4 October. Answer it on its page:",
+      ),
+    )
+    const elsewhere = asked('members:manage', 'Claude Code', STRANGER)
+    expect(elsewhere[0]!.subject).toBe('Reading responses: an agent is asking something')
+    expect(first(elsewhere[0]!)).toMatch(/^An agent 'Claude Code' asked to /)
   })
 
   it('an agent we did not make is "An agent"', () => {

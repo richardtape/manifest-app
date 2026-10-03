@@ -216,10 +216,35 @@ describe('which questions are asked (F6b Task 12; Decision 16; (S1: M4))', () =>
       asked('h', 'unknown-token'),
     ]
     expect(
-      askingOf(actions, tokens, NOW).map(({ action, tokenName }) => [
-        action.id,
-        tokenName,
-      ]),
+      askingOf(actions, tokens, MEMBERS, ALEX.userId, NOW).map(
+        ({ action, tokenName }) => [action.id, tokenName],
+      ),
     ).toEqual([['a', 'Claude Code']])
+  })
+
+  it('whose agent (m129, Rich’s words of 2026-10-03): the reader’s own, another member’s by name, or a maker the list does not name', () => {
+    const made = [
+      token('mine', { name: 'Claude Code' }),
+      token('sams', { name: 'Helper bot', mintedBy: SAM.userId }),
+      token('elsewhere', {
+        name: 'Console',
+        mintedBy: 'a0000000-0000-4000-8000-000000000009',
+      }),
+    ]
+    const actions = [asked('a', 'mine'), asked('b', 'sams'), asked('c', 'elsewhere')]
+    expect(
+      askingOf(actions, made, MEMBERS, ALEX.userId, NOW).map(({ action, whose }) => [
+        action.id,
+        whose,
+      ]),
+    ).toEqual([
+      ['a', 'yours'],
+      ['b', { name: 'Sam Helper' }],
+      ['c', { name: null }],
+    ])
+    // Sam reading it: Alex's agent is Alex's, and Sam's own is Sam's.
+    expect(
+      askingOf(actions, made, MEMBERS, SAM.userId, NOW).map(({ whose }) => whose),
+    ).toEqual([{ name: 'Alex Owner' }, 'yours', { name: null }])
   })
 })
