@@ -773,3 +773,100 @@ describe('keeping watch and switching (F6 Task 8), in the person’s session', (
     }
   })
 })
+
+describe('working on it together (F6b Task 5), in the person’s session', () => {
+  const P = '11111111-1111-4111-8111-111111111111'
+  const U = 'c0000000-0000-4000-8000-000000000001'
+  const A = 'd0000000-0000-4000-8000-000000000001'
+
+  it.each([
+    [
+      'listTokens',
+      `/v1/projects/${P}/tokens`,
+      (p: ReturnType<typeof createPlatform>) => p.listTokens(P),
+    ],
+    [
+      'listPendingActions',
+      `/v1/projects/${P}/pending-actions`,
+      (p: ReturnType<typeof createPlatform>) => p.listPendingActions(P),
+    ],
+  ] as const)('%s reads GET %s, with no key and no body', async (_name, url, read) => {
+    const answer = [{ id: 'listed' }]
+    const r = await recording(200, answer)
+    try {
+      expect(await read(createPlatform({ origin: r.origin }))).toEqual(answer)
+      expect(r.seen).toEqual([{ method: 'GET', url, key: undefined, body: undefined }])
+    } finally {
+      await r.close()
+    }
+  })
+
+  // addMember sends who and as what; removeMember no body; confirm the contract's EmptyRequest, `{}`;
+  // reject `{ reason }`, the platform's required 1–500 characters.
+  it.each([
+    [
+      'addMember',
+      'POST',
+      `/v1/projects/${P}/members`,
+      { email: 'sam@ubc.ca', role: 'collaborator' },
+      (p: ReturnType<typeof createPlatform>) =>
+        p.addMember(P, { email: 'sam@ubc.ca', role: 'collaborator' }, 'k-1'),
+    ],
+    [
+      'removeMember',
+      'DELETE',
+      `/v1/projects/${P}/members/${U}`,
+      undefined,
+      (p: ReturnType<typeof createPlatform>) => p.removeMember(P, U, 'k-1'),
+    ],
+    [
+      'confirmPendingAction',
+      'POST',
+      `/v1/pending-actions/${A}/confirm`,
+      {},
+      (p: ReturnType<typeof createPlatform>) => p.confirmPendingAction(A, 'k-1'),
+    ],
+    [
+      'rejectPendingAction',
+      'POST',
+      `/v1/pending-actions/${A}/reject`,
+      { reason: 'No reason given.' },
+      (p: ReturnType<typeof createPlatform>) =>
+        p.rejectPendingAction(A, 'No reason given.', 'k-1'),
+    ],
+  ] as const)(
+    '%s sends %s %s with the Idempotency-Key it is given and the body the contract asks, and answers what the platform said',
+    async (_name, method, url, body, press) => {
+      const answer = { id: 'answered' }
+      const r = await recording(200, answer)
+      try {
+        expect(await press(createPlatform({ origin: r.origin }))).toEqual(answer)
+        expect(r.seen).toEqual([{ method, url, key: 'k-1', body }])
+      } finally {
+        await r.close()
+      }
+    },
+  )
+
+  it('a member’s refusal is thrown with its code, for People to say (MEMBER_USER_NOT_FOUND)', async () => {
+    const r = await recording(400, {
+      error: { code: 'MEMBER_USER_NOT_FOUND', message: 'x' },
+    })
+    try {
+      const error = await thrown(() =>
+        createPlatform({ origin: r.origin }).addMember(
+          P,
+          { cwlLogin: 'sam', role: 'owner' },
+          'k-2',
+        ),
+      )
+      expect(refusalOf(error)).toEqual({
+        kind: 'refused',
+        code: 'MEMBER_USER_NOT_FOUND',
+        status: 400,
+      })
+    } finally {
+      await r.close()
+    }
+  })
+})

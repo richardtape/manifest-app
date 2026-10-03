@@ -157,6 +157,38 @@ export interface Platform {
    */
   revokeToken(tokenId: string, idempotencyKey: string): Promise<Schemas['Token']>
   /**
+   * F6b TASK 5: PEOPLE (moment 18), in the person's session, an owner's alone (`members:manage`),
+   * each asking a second sign-in within ten minutes (`STEP_UP_REQUIRED`). `addMember` adds someone,
+   * or changes the role of someone already on it (no other operation does); `removeMember` takes
+   * them off, and the platform revokes their tokens and ends their sessions (FE-11). One
+   * `Idempotency-Key` per press.
+   */
+  addMember(
+    projectId: string,
+    body: Schemas['AddMemberRequest'],
+    idempotencyKey: string,
+  ): Promise<Schemas['Member']>
+  removeMember(
+    projectId: string,
+    userId: string,
+    idempotencyKey: string,
+  ): Promise<Schemas['MemberList']>
+  /** Every token on the app, every minter's, revoked and expired included (session only). */
+  listTokens(projectId: string): Promise<Schemas['TokenList']>
+  /** Their agents' questions (D24's pending actions): a person sees every one on the app. */
+  listPendingActions(projectId: string): Promise<Schemas['PendingActionList']>
+  /** *[Yes, once]*: it asks a second sign-in. One `Idempotency-Key` per press. */
+  confirmPendingAction(
+    pendingActionId: string,
+    idempotencyKey: string,
+  ): Promise<Schemas['PendingAction']>
+  /** *[No]*, with a reason (the platform's 1–500 characters, required); never a second sign-in. */
+  rejectPendingAction(
+    pendingActionId: string,
+    reason: string,
+    idempotencyKey: string,
+  ): Promise<Schemas['PendingAction']>
+  /**
    * SWITCH IT OFF (F6, moment 20), in the person's session: its addresses say so, nothing runs,
    * and everything is kept. It may ask a second sign-in (S1: M4). One `Idempotency-Key` per press.
    */
@@ -420,6 +452,67 @@ export function createPlatform(options: {
           params: { path: { tokenId }, header: { 'Idempotency-Key': idempotencyKey } },
         }),
         'revokeToken',
+      )
+    },
+    async addMember(projectId, body, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/projects/{projectId}/members', {
+          params: { path: { projectId }, header: { 'Idempotency-Key': idempotencyKey } },
+          body,
+        }),
+        'addMember',
+      )
+    },
+    async removeMember(projectId, userId, idempotencyKey) {
+      return unwrap(
+        await client.DELETE('/v1/projects/{projectId}/members/{userId}', {
+          params: {
+            path: { projectId, userId },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+        }),
+        'removeMember',
+      )
+    },
+    async listTokens(projectId) {
+      return unwrap(
+        await client.GET('/v1/projects/{projectId}/tokens', {
+          params: { path: { projectId } },
+        }),
+        'listTokens',
+      )
+    },
+    async listPendingActions(projectId) {
+      return unwrap(
+        await client.GET('/v1/projects/{projectId}/pending-actions', {
+          params: { path: { projectId } },
+        }),
+        'listPendingActions',
+      )
+    },
+    async confirmPendingAction(pendingActionId, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/pending-actions/{pendingActionId}/confirm', {
+          params: {
+            path: { pendingActionId },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+          // The contract's EmptyRequest: required, and nothing in it.
+          body: {},
+        }),
+        'confirmPendingAction',
+      )
+    },
+    async rejectPendingAction(pendingActionId, reason, idempotencyKey) {
+      return unwrap(
+        await client.POST('/v1/pending-actions/{pendingActionId}/reject', {
+          params: {
+            path: { pendingActionId },
+            header: { 'Idempotency-Key': idempotencyKey },
+          },
+          body: { reason },
+        }),
+        'rejectPendingAction',
       )
     },
     async archiveProject(projectId, idempotencyKey) {

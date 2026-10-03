@@ -31,7 +31,38 @@ describe('the router', () => {
     // F6 Task 9: an app's history.
     ['/apps/mock-app/history', { name: 'app-history', slug: 'mock-app' }],
     ['/apps/mock-app/history/more', { name: 'unknown' }],
+    // F6b Task 5 (Decision 12): People and Agents, each its own page.
+    ['/apps/mock-app/people', { name: 'app-people', slug: 'mock-app', then: null }],
+    ['/apps/mock-app/agents', { name: 'app-agents', slug: 'mock-app', then: null }],
+    ['/apps/mock-app/people/more', { name: 'unknown' }],
+    ['/apps/mock-app/agents/more', { name: 'unknown' }],
   ])('%s', (path, route) => expect(parse(path)).toEqual(route))
+
+  it.each([
+    ['/apps/mock-app/people', '?then=people', 'app-people', 'people'],
+    ['/apps/mock-app/people', '?then=agents', 'app-people', null],
+    ['/apps/mock-app/agents', '?then=agents', 'app-agents', 'agents'],
+    ['/apps/mock-app/agents', '?then=people', 'app-agents', null],
+    ['/apps/mock-app/people', '?then=live', 'app-people', null],
+  ])(
+    '%s%s keeps `then` only for its own page (F6b Decision 12: back from the step-up)',
+    (path, search, name, then) =>
+      expect(parse(path, search)).toEqual({ name, slug: 'mock-app', then }),
+  )
+
+  it.each([
+    ['?then=new-version', 'new-version'],
+    ['?then=people', null],
+    ['?then=agents', null],
+  ])(
+    'the Overview’s `then` from %s is %s (F6b Decision 11: the students’ press after launch)',
+    (search, then) =>
+      expect(parse('/apps/mock-app', search)).toEqual({
+        name: 'app-overview',
+        slug: 'mock-app',
+        then,
+      }),
+  )
 
   it.each([
     ['?tab=trying-out', 'trying-out'],

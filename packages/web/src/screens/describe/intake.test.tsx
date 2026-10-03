@@ -221,6 +221,12 @@ function stage(
       calls.push(['revokeToken', tokenId])
       return new Promise(() => undefined)
     },
+    addMember: () => new Promise(() => undefined),
+    removeMember: () => new Promise(() => undefined),
+    listTokens: () => new Promise(() => undefined),
+    listPendingActions: () => new Promise(() => undefined),
+    confirmPendingAction: () => new Promise(() => undefined),
+    rejectPendingAction: () => new Promise(() => undefined),
     archiveProject: () => new Promise(() => undefined),
     restoreProject: () => new Promise(() => undefined),
     deleteProject: () => new Promise(() => undefined),

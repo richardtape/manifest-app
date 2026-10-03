@@ -474,6 +474,8 @@ export const words = {
       preview: 'Preview',
       conversations: 'Conversations',
       goingLive: 'Going live',
+      /** F6b (design §2): after Going live. *Agents* comes with its page (sitting 5). */
+      people: 'People',
     },
     /** Ours: the switcher's name for a screen reader (SegmentedControl's preview says so). */
     switcherLabel: 'Which address you are looking at',

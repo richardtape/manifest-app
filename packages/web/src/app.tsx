@@ -350,23 +350,27 @@ export function App({
                 ? { active: rail.preview }
                 : route.name === 'app-going-live'
                   ? { active: rail.goingLive }
-                  : route.name === 'app-conversations' ||
-                      route.name === 'app-change' ||
-                      (route.name === 'conversation' && route.slug !== undefined)
-                    ? { active: rail.conversations }
-                    : route.name === 'new' || route.name === 'conversation'
-                      ? { active: words.shell.startNew }
-                      : {})}
+                  : route.name === 'app-people'
+                    ? { active: rail.people }
+                    : route.name === 'app-conversations' ||
+                        route.name === 'app-change' ||
+                        (route.name === 'conversation' && route.slug !== undefined)
+                      ? { active: rail.conversations }
+                      : route.name === 'new' || route.name === 'conversation'
+                        ? { active: words.shell.startNew }
+                        : {})}
           {...(app === null
             ? {}
             : {
                 projectName: app.name,
-                // F5 Decision 2: the app's four pages. People and Agents come with their plans.
+                // F5 Decision 2: the app's pages; F6b's People after Going live, and Agents with its
+                // page (sitting 5).
                 items: [
                   { label: rail.overview, icon: 'overview', path: '' },
                   { label: rail.preview, icon: 'preview', path: '/preview' },
                   { label: rail.conversations, icon: 'talk', path: '/conversations' },
                   { label: rail.goingLive, icon: 'live', path: '/going-live' },
+                  { label: rail.people, icon: 'people', path: '/people' },
                 ].map(({ label, icon, path }) => ({
                   label,
                   icon,

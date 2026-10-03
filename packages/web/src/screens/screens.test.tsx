@@ -73,6 +73,15 @@ function platform(
     getEnvironment: (answers.getEnvironment ?? never) as Platform['getEnvironment'],
     listMembers: (answers.listMembers ?? never) as Platform['listMembers'],
     revokeToken: (answers.revokeToken ?? never) as Platform['revokeToken'],
+    addMember: (answers.addMember ?? never) as Platform['addMember'],
+    removeMember: (answers.removeMember ?? never) as Platform['removeMember'],
+    listTokens: (answers.listTokens ?? never) as Platform['listTokens'],
+    listPendingActions: (answers.listPendingActions ??
+      never) as Platform['listPendingActions'],
+    confirmPendingAction: (answers.confirmPendingAction ??
+      never) as Platform['confirmPendingAction'],
+    rejectPendingAction: (answers.rejectPendingAction ??
+      never) as Platform['rejectPendingAction'],
     archiveProject: (answers.archiveProject ?? never) as Platform['archiveProject'],
     restoreProject: (answers.restoreProject ?? never) as Platform['restoreProject'],
     deleteProject: (answers.deleteProject ?? never) as Platform['deleteProject'],

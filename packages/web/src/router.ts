@@ -11,12 +11,31 @@ export const TABS: Tab[] = ['draft', 'trying-out', 'students']
 /**
  * Where the step-up sends them back to: the press they were making. *Going live*'s are `live` and
  * `dry-run` (F5); the Overview's are F6's (Decision 10): `start-again`, `students` (*Start it for
- * your students*), `switch-off` and `delete`. Each page reads its own alone.
+ * your students*), `switch-off` and `delete`, and F6b's `new-version` (*Waiting to reach your
+ * students*, Decision 11); *People*'s is `people` and *Agents*' `agents` (F6b Decision 12). Each
+ * page reads its own alone.
  */
 export type Then =
-  'live' | 'dry-run' | 'start-again' | 'students' | 'switch-off' | 'delete' | null
+  | 'live'
+  | 'dry-run'
+  | 'start-again'
+  | 'students'
+  | 'switch-off'
+  | 'delete'
+  | 'new-version'
+  | 'people'
+  | 'agents'
+  | null
 const GOING_LIVE: Then[] = ['live', 'dry-run']
-const OVERVIEW: Then[] = ['start-again', 'students', 'switch-off', 'delete']
+const OVERVIEW: Then[] = [
+  'start-again',
+  'students',
+  'switch-off',
+  'delete',
+  'new-version',
+]
+const PEOPLE: Then[] = ['people']
+const AGENTS: Then[] = ['agents']
 const thenOf = (then: string | null, page: Then[]): Then =>
   page.find((one) => one === then) ?? null
 
@@ -52,6 +71,10 @@ export type Route =
   | { name: 'app-change'; slug: string }
   /** Everything that happened to an app (F6 Task 9, design §2): `/apps/:slug/history`. */
   | { name: 'app-history'; slug: string }
+  /** Who can change it (F6b, moment 18): `/apps/:slug/people`, `?then=people` back from the step-up. */
+  | { name: 'app-people'; slug: string; then: Then }
+  /** The agents with access to it (F6b, *Throughout*): `/apps/:slug/agents`, `?then=agents`. */
+  | { name: 'app-agents'; slug: string; then: Then }
   | { name: 'profile' }
   | { name: 'unknown' }
 
@@ -70,7 +93,7 @@ export function parse(pathname: string, search = ''): Route {
   if (pathname === '/new') return { name: 'new' }
   if (pathname === '/profile') return { name: 'profile' }
   const app =
-    /^\/apps\/([^/]+)(?:\/(conversations|change|preview|going-live|history))?(?:\/([^/]+))?$/.exec(
+    /^\/apps\/([^/]+)(?:\/(conversations|change|preview|going-live|history|people|agents))?(?:\/([^/]+))?$/.exec(
       pathname,
     )
   if (app !== null) {
@@ -87,6 +110,10 @@ export function parse(pathname: string, search = ''): Route {
     if (page === 'change') return { name: 'app-change', slug }
     if (page === 'history') return { name: 'app-history', slug }
     const query = new URLSearchParams(search)
+    if (page === 'people')
+      return { name: 'app-people', slug, then: thenOf(query.get('then'), PEOPLE) }
+    if (page === 'agents')
+      return { name: 'app-agents', slug, then: thenOf(query.get('then'), AGENTS) }
     if (page === 'going-live')
       return {
         name: 'app-going-live',
