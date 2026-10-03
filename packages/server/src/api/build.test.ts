@@ -1258,6 +1258,17 @@ describe('working on it together (F6b D3, Task 2)', () => {
     await until(() => s.store.conversationById(alices.id)?.state === 'plan-ready', 3000)
   })
 
+  it('taken off with their first plan waiting for Yes: it is set aside too, which their own Stop may not do (minors m85)', async () => {
+    const r = removing()
+    const s = setUp([], { keeper: r.keeper })
+    together(s)
+    const first = planReady(s, BOB.id)
+    expect(pieceOf(s.store, first.id).kind).toBe('first')
+    r.remove(s, BOB)
+    expect(s.store.conversationById(first.id)?.state).toBe('set-aside')
+    expect(pieceOf(s.store, first.id).stopped).toEqual({ by: BOB.id, why: 'removed' })
+  })
+
   it('taken off: their own conversation on it is 404 to them, and readable by the members, ended, saying so', async () => {
     const r = removing()
     const s = setUp(AT_BUILD, { keeper: r.keeper })
