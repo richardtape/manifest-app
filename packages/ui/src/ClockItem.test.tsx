@@ -96,6 +96,19 @@ describe('ClockItem, with a state of ours', () => {
       expect(card({ state }).textContent, state).not.toMatch(/weeks|Nothing counting yet/)
   })
 
+  it('words given as nothing say nothing (minors m9): never the reference’s defaults beside a state we cannot tell', () => {
+    for (const state of [undefined, 'notyet'] as const) {
+      const c = card({
+        state,
+        chip: 'We can’t tell right now',
+        clockLabel: '',
+        clockMeta: '',
+      })
+      expect(c.querySelector('.mf-bar__meta')!.textContent, String(state)).toBe('')
+      expect(c.textContent, String(state)).not.toMatch(/weeks|Nothing counting yet/)
+    }
+  })
+
   it('draws no button without an action, in any state', () => {
     for (const state of [undefined, 'notyet', 'waiting', 'steady'] as const) {
       const c = card({ state, admissionTitle: 'A', admissionBody: 'B' })

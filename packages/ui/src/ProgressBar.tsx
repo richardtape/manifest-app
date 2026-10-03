@@ -21,8 +21,9 @@ export function ProgressBar(props: ProgressBarProps) {
       <div className={props.className}>
         <div className="mf-clock" />
         <div className="mf-bar__meta" style={{ color: 'var(--waiting)' }}>
-          <span>{props.label || 'Nothing counting yet'}</span>
-          <span style={{ fontWeight: 600 }}>{props.meta || 'Takes weeks'}</span>
+          {/* The reference's words only when none are given: an empty one says nothing (minors m9). */}
+          <span>{props.label ?? 'Nothing counting yet'}</span>
+          <span style={{ fontWeight: 600 }}>{props.meta ?? 'Takes weeks'}</span>
         </div>
       </div>
     )
