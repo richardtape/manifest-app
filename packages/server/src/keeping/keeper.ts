@@ -157,6 +157,8 @@ export function createKeeper({
   const inFlight = new Set<string>()
   /** F6b Decision 5: who ends a removed member's work (`buildServer`'s). */
   let removed: (projectId: string, personId: string) => void = () => undefined
+  /** Someone taken off whose ending threw, by app: tried again at its next members read (m79). */
+  const unended = new Map<string, Set<string>>()
   /** A stream replaced or closed says nothing more: only the current one is heard. */
   const isCurrent = (projectId: string, one: Open) => open.get(projectId) === one
 
@@ -217,24 +219,31 @@ export function createKeeper({
   /**
    * THE MEMBERS, KEPT WHOLE (F6 Decision 3), and anyone kept before and not now taken off here,
    * once (F6b Decision 5): only someone we kept is ended, so a second read ends nobody again.
-   * Each ending is its own (minors m79): one that throws is said on the operator's log and kept,
-   * so the next read ends them again, and never stops the others.
+   * Each ending is its own (minors m79): one that throws is said on the operator's log, never stops
+   * the others, and is tried again at the app's next members read. They are no member meanwhile:
+   * a removal is never undone by a retry (the review of m79).
    */
   function keepMembers(projectId: string, members: KeptMember[]): void {
+    const on = (userId: string) => members.some((member) => member.userId === userId)
     const gone = store
       .members(projectId)
-      .filter((kept) => !members.some((member) => member.userId === kept.userId))
+      .filter((kept) => !on(kept.userId))
+      .map((kept) => kept.userId)
     store.putMembers(projectId, members)
-    const unended: KeptMember[] = []
-    for (const member of gone) {
+    const again = [...(unended.get(projectId) ?? [])].filter(
+      (userId) => !on(userId) && !gone.includes(userId),
+    )
+    const still = new Set<string>()
+    for (const userId of [...gone, ...again]) {
       try {
-        removed(projectId, member.userId)
+        removed(projectId, userId)
       } catch (error) {
         console.error(error)
-        unended.push(member)
+        still.add(userId)
       }
     }
-    if (unended.length > 0) store.putMembers(projectId, [...members, ...unended])
+    if (still.size > 0) unended.set(projectId, still)
+    else unended.delete(projectId)
   }
 
   /** D3: each owner told once, by the kept app and members. */
@@ -449,6 +458,7 @@ export function createKeeper({
   function forget(projectId: string): void {
     open.get(projectId)?.watch?.close()
     open.delete(projectId)
+    unended.delete(projectId)
     store.forgetApp(projectId)
   }
 

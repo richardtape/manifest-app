@@ -988,7 +988,7 @@ describe('someone taken off the app: their work here ends, once (F6b Task 4, Dec
     expect(t.removed).toEqual([[P1, BOB]])
   })
 
-  it('ending one person’s work throws (minors m79): the others are still ended, and that one is kept to be ended at the next read', async () => {
+  it('ending one person’s work throws (minors m79): the others are still ended, that one is no member meanwhile, and is ended at the next read', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
     let failing = true
@@ -1001,7 +1001,8 @@ describe('someone taken off the app: their work here ends, once (F6b Task 4, Dec
     await settle()
     expect(t.removed).toEqual([[P1, carol.userId]])
     expect(error).toHaveBeenCalledTimes(1)
-    expect(t.store.members(P1).map((m) => m.userId)).toEqual([ALICE, BOB])
+    // Taken off is taken off: no standing here while their ending waits (the review of m79).
+    expect(t.store.members(P1)).toEqual([member(ALICE)])
     failing = false
     t.handlers.reconnected()
     await settle()
@@ -1010,6 +1011,10 @@ describe('someone taken off the app: their work here ends, once (F6b Task 4, Dec
       [P1, BOB],
     ])
     expect(t.store.members(P1)).toEqual([member(ALICE)])
+    // Ended once: a read after it ends nobody again.
+    t.handlers.reconnected()
+    await settle()
+    expect(t.removed).toHaveLength(2)
     error.mockRestore()
   })
 
