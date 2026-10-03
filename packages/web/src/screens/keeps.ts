@@ -37,7 +37,13 @@ export function useKeeps(
   useEffect(() => {
     if (may || me === undefined) return
     let live = true
-    setKept({ me, keeps: LOADING })
+    // The same person read again (minors m13: `getMe` after a not-open signal) keeps what is drawn
+    // while it asks again; anyone else is loading until their own answer.
+    setKept((before) =>
+      before.me?.id === me.id && before.keeps.state !== 'trouble'
+        ? before
+        : { me, keeps: LOADING },
+    )
     platform.listProjects().then(
       (projects) =>
         live &&
@@ -58,5 +64,5 @@ export function useKeeps(
     }
   }, [platform, me, may, expire, attempt, retry])
   if (may) return BUILDS
-  return kept.me === me ? kept.keeps : LOADING
+  return kept.me !== undefined && kept.me.id === me?.id ? kept.keeps : LOADING
 }
