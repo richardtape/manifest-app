@@ -24,7 +24,7 @@ half (Rich on `app.` in edge mode) is owed at F5b sitting 1. **F1–F6 and F4a, 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
   | 1 | **Minors, a fourth time** ([`minors.md`](./minors.md)): its last dated entry (2026-10-03, `app-minors-3`) lists the S ones *not reached* with no decision found (m5, m6, m9, m11, m13, m16, m28, m35, m36, m40, m41, m43, m46, m67, m70, m81, m82, m84, m94, m98, m108); **m130 and m131 wait on FE-53** (Rich's word, 2026-10-03); m12 and m101 are small tasks of their own | Ready (mock mode) at Rich's or `manifest-3d`'s word | a FREE for its Vitest | m92/m111 need a 7100 walk, the rest of the open ones are Rich's or larger |
-  | 2 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`) | Blocked | Rich's word and a 7100 window (*"After platform sitting 2"*, which is closed; the `__Host-` adoption, which is done); people signed in again (Rich's yes), operator's admin grant again (Rich's), a new app (a real repository, his word); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
+  | 2 | **F5b sitting 1: the measurements on 7100** (**pre-authorised by Rich, 2026-10-03 ~14:30 PDT: *"After sitting 7"***: a new private repository in `Manifest-local-dev`, named in the record and his to delete; a platform session re-granting operator's admin, asked through `manifest-94`; the test sign-ins; his click on `app.` in edge mode still at its end; **not before `manifest-94` says 7100 is free**), M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`) | Blocked | **the platform's faculty-ready sitting 7 (the acceptance) closing, and `manifest-94`'s word that 7100 is free**: Rich's word is given (above); **not overnight** | Its own sitting; `f6b-measure-1` goes at sitting 2's truncation |
   | 3 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | Placed after the faculty-ready plan |
   | 4 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open (F6b is executed) |
 
@@ -213,6 +213,14 @@ half (Rich on `app.` in edge mode) is owed at F5b sitting 1. **F1–F6 and F4a, 
 - **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)): moments 10–15, Rich's own
   app live on 7100 (*Class check-ins*, 2026-10-01 03:45Z). The platform's truncations have since removed it from 7100.
 - **Open for Rich:**
+  - **Decided by Rich, 2026-10-03, ~14:30 PDT** (`manifest-94`'s question tool; recorded in `api-findings.md`, `minors.md`
+    and here): **m120 *"Yes, any member"*** (the sign-off row and its ask for any member after launch; fixed in the fourth
+    minors round); **THE WORDS BACKLOG *"Approve, change on sight"*: every word marked *ours* and listed for him to date is
+    APPROVED** (F6b sittings 3–6, the faculty-ready adoption's parts 1–3), his to change at his click; **not covered**, and
+    sent to `manifest-94` batched, each with options and a recommendation, at the minors round's close: m104, m107–m119 (m109,
+    m119 among them), m123, m69/m76; **F5b sitting 1 *"After sitting 7, pre-authorised"*** (row 2); **FE-44 (a)** (the
+    platform builds §24's load rehearsal as its own plan, after FE-46/47/5, before FE-32; no earlier warning); **FE-45 (a)**
+    (`archived` → `removed`, the owner's; an administrator's to list, restore or delete; after the vulnerability database).
   - **Decided by Rich, 2026-10-03, ~12:45 PDT** (manifest's `docs/superpowers/2026-09-30-decisions.md`, item 4; relayed by
     `manifest-94`; recorded in the adoption note, `minors.md` and `api-findings.md`): **question 9 confirmed** (a plain cookie
     beside `__Host-` ignored), **question 11 confirmed** (our reference alone, never the platform's UUID), **question 10 YES**
@@ -222,36 +230,31 @@ half (Rich on `app.` in edge mode) is owed at F5b sitting 1. **F1–F6 and F4a, 
     faculty-ready; m130 and m131 close when it lands), **m17, m83, m110, m66 accepted as made**.
   - **The 1.6.0 adoption's** (`research/2026-10-01-faculty-ready-adoption.md`, *Part one*): its Decision 2: our copy of the
     platform's reset rules is said only when the platform states no time.
-  - **F6b sitting 6's** (its entry): **m120** (a helper offered no sign-off ask after launch: sitting 4's ruling rests on a
-    premise the platform's authz answers the other way), **m123** (the change planner wrote *"environment variables
+  - **F6b sitting 6's** (its entry): m120 decided (above), **m123** (the change planner wrote *"environment variables
     provided by the platform"* into a plan, on 7100), m121–m122; the review's I1 and I2 fixed with no new words (I2 says
     *"It has stopped waiting."*, already his); m76 with m69 still his; **`Manifest-local-dev/f6b-measure-1`** gone from
     7100 at the platform's sitting 2, its repository his to remove with `keep-walk-1002` and `f6-watch`.
-  - **F6b sitting 5's** (its entry): its words marked *ours* (*Our agents*, *Your agents*, *Made by*, the revoke's confirm
-    and its after-words, the form's, *"Made. Give your agent this key:"*, the cards' heading, the honest lines for a version,
-    a secret and an amount, *Tell it why*'s hint, the answers' lines, the email's action words); its rulings (the revoke
+  - **F6b sitting 5's** (its entry): its words marked *ours*, **approved** (the backlog, above); its rulings (the revoke
     confirmed in place; *How an agent uses it* as two addresses, not a link; unknowns in mono; nothing ticked, 30 days);
-    **m107–m119**, m109 (a helper's band) and m119 (*"…it has been told."*) his words.
+    **m107–m119**, m109 (a helper's band) and m119 (*"…it has been told."*) his words, still his.
   - **FE-49 and FE-50 placed by Rich in the faculty-ready plan, and landed** (`Token.mintedBy`, `0d5a743`; FE-50's words,
     `e355d10`); FE-46, FE-47 and FE-5 after it.
   - **The faculty-ready adoption, part three's** (the note's *Part three*): its decisions, ours (the maker's name from
     `listMembers` read with the page; `pending_action.expired` says nothing of its own; a token made elsewhere keeps the
     band's day until FE-53). m129 and m130 decided (above).
-  - **F6b sitting 4's** (its entry): its words marked *ours* (the detail words, *"Manifest can't ask for it for you yet."*,
-    **[Leave it out]** and its change's words, *Waiting to reach your students*'s facts and lines, the press's after-launch
-    three, *"something reviewed at launch"*); its rulings (a helper is offered no ask; the versions' days with a time);
-    **m98–m106**, m104 (*[Leave it out]* over-says the kind) his to decide.
+  - **F6b sitting 4's** (its entry): its words marked *ours*, **approved** (the backlog, above); its rulings (the versions'
+    days with a time; *a helper is offered no ask* overruled by m120's *"Yes, any member"*); **m98–m106**, m104 (*[Leave it
+    out]* over-says the kind) his to decide.
   - **F6b sitting 1's** (its entry): **Decision 16** (ours: *Agents* asks only about an active agent's question; its [Revoke]
     answering *no* went when FE-52 landed, the adoption's part three); **FE-51** and **FE-52** (landed, the faculty-ready
     plan's sittings 2 and 4); **m97**; *"It has stopped waiting."* for `PENDING_ACTION_RESOLVED`, which means someone else answered.
   - **F6b sittings 2 and 3's** (their entries): **m76** (someone taken off mid-round is usually emailed *we need you*
     first; the fix is m69's own, his to choose: a departure from the plan's Review Focus 1); someone added since our last
-    read of the members meets 404 on their own new change for a moment (m82); **sitting 3's words marked ours** (People's
-    and working together's, listed in its entry); the plan's *Words proposed* and Decisions still stand for his word at
+    read of the members meets 404 on their own new change for a moment (m82); sitting 3's words marked ours **approved**
+    (the backlog, above); the plan's *Words proposed* and Decisions still stand for his word at
     each sitting; **FE-49 and FE-50** (in the platform's §8 *Open* too).
-  - **FE-44** (written, not carried): a large course's (several sections, ~5,000) or a public app can never launch on the
-    platform today: its load rehearsal is blocking and not built. Options (a) build it first, (b) not-built stops blocking,
-    (c) say so earlier.
+  - **FE-44** decided (a), above: a large course's or a public app cannot launch until the platform's load rehearsal plan
+    lands.
   - **FE-43**'s read half (nothing reads a dry run back; the platform's half, `REHEARSAL_RUNNING`, landed).
   - **FE-46, FE-47 and FE-5 (a)** (written 2026-10-01 in `manifest-app-d9`'s session): **CONFIRMED by Rich in
     `manifest-6d`'s session** (19:56 PDT, manifest `ddc76d7`). **Each needs a spec action** (the platform's planning session)
