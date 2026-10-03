@@ -22,6 +22,7 @@ const config = (mode: Config['mode'] = 'edge'): Config => ({
   port: 7105,
   origin: mode === 'edge' ? EDGE_ORIGIN : 'http://127.0.0.1:7105',
   platformOrigin: platform.origin,
+  sessionOrigin: platform.origin,
   modelGateway: 'http://127.0.0.1:7106/v1',
   planModel: 'default-chat',
   smtpUrl: 'smtp://127.0.0.1:7111',
@@ -61,18 +62,62 @@ describe('who (FE-2)', () => {
     expect(ran.read).toBe(0)
   })
 
-  it('a session the platform does not know is 401 too', async () => {
+  it('a session the platform does not know is 401 too, after asking it', async () => {
+    const { app } = appWith(config())
+    const before = platform.seen.length
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/thing',
+      headers: { cookie: '__Host-manifest_session=nonsense' },
+    })
+    expect([response.statusCode, response.json()]).toEqual([
+      401,
+      refusal('UNAUTHENTICATED'),
+    ])
+    expect(platform.seen.slice(before).map((s) => [s.url, s.headers.cookie])).toEqual([
+      ['/v1/me', 'manifest_session=nonsense'],
+    ])
+  })
+
+  it('a plain manifest_session through the edge is no session: 401, and the platform is never asked (FE-28: a sibling app can set it)', async () => {
+    const { app, ran } = appWith(config())
+    const before = platform.seen.length
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/thing',
+      headers: { cookie: 'manifest_session=alice-session' },
+    })
+    expect([response.statusCode, response.json()]).toEqual([
+      401,
+      refusal('UNAUTHENTICATED'),
+    ])
+    expect(platform.seen.slice(before)).toEqual([])
+    expect(ran.read).toBe(0)
+  })
+
+  it('a plain manifest_session beside __Host- is ignored: the person is the __Host- one (the platform’s Decision 8)', async () => {
     const { app } = appWith(config())
     const response = await app.inject({
       method: 'GET',
       url: '/api/thing',
-      headers: { cookie: 'manifest_session=nonsense' },
+      headers: { cookie: `manifest_session=bob-session; ${AS_ALICE}` },
     })
-    expect(response.statusCode).toBe(401)
+    expect([response.statusCode, response.json()]).toEqual([
+      200,
+      { person: { ...ALICE, mayBuild: true } },
+    ])
+  })
+
+  it('the test platform reads the plain name exactly, as an http origin does: the __Host- name sent straight to it is nobody', async () => {
+    const answer = (cookie: string) =>
+      fetch(`${platform.origin}/v1/me`, { headers: { cookie } }).then((r) => r.status)
+    expect(await answer('manifest_session=alice-session')).toBe(200)
+    expect(await answer(AS_ALICE)).toBe(401)
+    expect(await answer('x-manifest_session=alice-session')).toBe(401)
   })
 
   it('the platform unreachable is 502 PLATFORM_UNAVAILABLE', async () => {
-    const { app, ran } = appWith({ ...config(), platformOrigin: 'http://127.0.0.1:1' })
+    const { app, ran } = appWith({ ...config(), sessionOrigin: 'http://127.0.0.1:1' })
     const response = await app.inject({
       method: 'GET',
       url: '/api/thing',
@@ -165,11 +210,14 @@ describe('from where (Review Focus 1)', () => {
     'in %s mode, a POST from our own origin passes, and from the other mode’s is refused',
     async (mode, ours, theirs) => {
       const { app, ran } = appWith(config(mode))
+      // The session under the name each mode's origin reads: `__Host-` through the edge, the
+      // plain name on loopback http (FE-28).
+      const cookie = mode === 'edge' ? AS_ALICE : 'manifest_session=alice-session'
       const post = (origin: string) =>
         app.inject({
           method: 'POST',
           url: '/api/thing',
-          headers: { cookie: AS_ALICE, origin, 'content-type': 'application/json' },
+          headers: { cookie, origin, 'content-type': 'application/json' },
           payload: {},
         })
       expect((await post(ours)).statusCode).toBe(200)
@@ -193,7 +241,7 @@ describe('from where (Review Focus 1)', () => {
 describe('person optional (a problem report, Decision 11)', () => {
   it('passes with no person, and with the platform unreachable, but never from another origin', async () => {
     const { app, ran } = appWith(
-      { ...config(), platformOrigin: 'http://127.0.0.1:1' },
+      { ...config(), sessionOrigin: 'http://127.0.0.1:1' },
       'optional',
     )
     const post = (origin: string) =>

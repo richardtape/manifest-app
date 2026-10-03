@@ -144,7 +144,14 @@ const check = (n: number, name: string, good: boolean, detail: string) => {
 
 async function pretendPlatform(): Promise<{ server: Server; origin: string }> {
   const server = createServer((request, response) => {
-    const session = /manifest_session=([^;]+)/.exec(request.headers.cookie ?? '')?.[1]
+    // An http origin reads the plain name, EXACTLY (FE-28): our server, in edge mode, reads
+    // the browser's `__Host-manifest_session` and forwards it under the name this origin reads.
+    const session = (request.headers.cookie ?? '')
+      .split(';')
+      .map((part) => part.trim())
+      .filter((part) => part.startsWith('manifest_session='))
+      .map((part) => part.slice('manifest_session='.length))
+      .at(0)
     const who = PEOPLE.find((p) => p.session === session)
     response.setHeader('content-type', 'application/json')
     if (request.url === '/v1/me' && who !== undefined) {
@@ -250,6 +257,7 @@ const config: Config = {
   mode: 'edge',
   origin: ORIGIN,
   platformOrigin: platform.origin,
+  sessionOrigin: platform.origin,
 }
 const store = openStore(file)
 const hub = createHub()
@@ -292,7 +300,8 @@ async function ask(
     method,
     url,
     headers: {
-      cookie: `manifest_session=${who.session}`,
+      // What a browser sends us through the edge (FE-28, contract 1.6.0).
+      cookie: `__Host-manifest_session=${who.session}`,
       ...(method === 'GET' ? {} : { origin: ORIGIN }),
       ...(body === undefined ? {} : { 'content-type': 'application/json' }),
     },

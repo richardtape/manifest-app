@@ -47,7 +47,7 @@ export function guard(
 
     let person: Person | undefined
     try {
-      person = await whoIs(request.headers.cookie, config.platformOrigin)
+      person = await whoIs(request.headers.cookie, config)
     } catch {
       if (options.person === 'optional') return { person: undefined }
       return refuse(reply, 502, 'PLATFORM_UNAVAILABLE')

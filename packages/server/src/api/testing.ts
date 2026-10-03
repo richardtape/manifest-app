@@ -1,4 +1,5 @@
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
+import { sessionCookieFor } from '@manifest/contract'
 
 /**
  * FOR TESTS ONLY: nothing outside a test file imports this. A control plane that knows two
@@ -33,10 +34,31 @@ const SESSIONS: Record<string, typeof ALICE> = {
   'carol-session': CAROL,
   'dana-session': DANA,
 }
-export const AS_ALICE = 'manifest_session=alice-session'
-export const AS_BOB = 'manifest_session=bob-session'
-export const AS_CAROL = 'manifest_session=carol-session'
-export const AS_DANA = 'manifest_session=dana-session'
+/**
+ * WHAT A BROWSER SENDS US THROUGH THE EDGE: the session under the https origin's name (FE-28,
+ * contract 1.6.0). Every API test runs in edge mode at `https://app.manifest.internal`, where
+ * a plain `manifest_session` is no session at all.
+ */
+export const AS_ALICE = '__Host-manifest_session=alice-session'
+export const AS_BOB = '__Host-manifest_session=bob-session'
+export const AS_CAROL = '__Host-manifest_session=carol-session'
+export const AS_DANA = '__Host-manifest_session=dana-session'
+
+/**
+ * The one cookie a Cookie header holds under EXACTLY `name`, as a server's parser reads it:
+ * `__Host-manifest_session=` is not `manifest_session=`, and two of a name are none.
+ */
+export function cookieNamed(
+  header: string | undefined,
+  name: string,
+): string | undefined {
+  const values = (header ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter((part) => part.slice(0, part.indexOf('=')) === name)
+    .map((part) => part.slice(part.indexOf('=') + 1))
+  return values.length === 1 ? values[0] : undefined
+}
 
 export interface Seen {
   method: string | undefined
@@ -53,9 +75,12 @@ export async function fakeControlPlane(answer?: Answer): Promise<{
   close: () => Promise<void>
 }> {
   const seen: Seen[] = []
+  let origin = ''
   const server: Server = createServer((request, response) => {
     seen.push({ method: request.method, url: request.url, headers: request.headers })
-    const session = /manifest_session=([^;]+)/.exec(request.headers.cookie ?? '')?.[1]
+    // AN HTTP ORIGIN, SO THE PLAIN NAME, EXACTLY (`sessionCookieFor`): a test's server asks
+    // it as `sessionOrigin`, and the contract's client sends the session under this name.
+    const session = cookieNamed(request.headers.cookie, sessionCookieFor(origin))
     const person = session === undefined ? undefined : SESSIONS[session]
     response.setHeader('content-type', 'application/json')
     const answered =
@@ -88,8 +113,9 @@ export async function fakeControlPlane(answer?: Answer): Promise<{
     )
   })
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`
   return {
-    origin: `http://127.0.0.1:${(server.address() as { port: number }).port}`,
+    origin,
     seen,
     close: () => new Promise((resolve) => server.close(() => resolve())),
   }

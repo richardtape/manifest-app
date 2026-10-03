@@ -193,6 +193,7 @@ async function setUp(
     port: 7105,
     origin: ORIGIN,
     platformOrigin: platform.origin,
+    sessionOrigin: platform.origin,
     modelGateway: GATEWAY,
     planModel: 'default-chat',
     smtpUrl: 'smtp://127.0.0.1:7111',

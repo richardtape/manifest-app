@@ -142,7 +142,7 @@ export function buildServer(
   app.get('/api/me', async (request, reply) => {
     let person
     try {
-      person = await whoIs(request.headers.cookie, config.platformOrigin)
+      person = await whoIs(request.headers.cookie, config)
     } catch {
       return reply.code(502).send({ error: { code: 'PLATFORM_UNAVAILABLE' } })
     }

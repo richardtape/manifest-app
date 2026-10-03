@@ -1,4 +1,5 @@
 import type { Server } from 'node:http'
+import { sessionCookieFor } from '@manifest/contract'
 import { createMockServer, fixtures } from '@manifest/mock'
 import type { FastifyInstance } from 'fastify'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -49,6 +50,7 @@ const mock = (platformOrigin: string): Config => ({
   port: 7105,
   origin: 'http://127.0.0.1:7105',
   platformOrigin,
+  sessionOrigin: platformOrigin,
   modelGateway: 'http://127.0.0.1:7106/v1',
   planModel: 'default-chat',
   smtpUrl: 'smtp://127.0.0.1:7111',
@@ -59,6 +61,7 @@ const edge = (platformOrigin: string): Config => ({
   port: 7105,
   origin: 'https://app.manifest.internal',
   platformOrigin,
+  sessionOrigin: platformOrigin,
   modelGateway: 'http://127.0.0.1:7106/v1',
   planModel: 'default-chat',
   smtpUrl: 'smtp://127.0.0.1:7111',
@@ -75,6 +78,7 @@ describe('readConfig', () => {
       port: 7105,
       origin: 'https://app.manifest.internal',
       platformOrigin: 'http://127.0.0.1:7100',
+      sessionOrigin: 'https://app.manifest.internal',
       modelGateway: 'http://127.0.0.1:7106/v1',
       planModel: 'default-chat',
       smtpUrl: 'smtp://127.0.0.1:7111',
@@ -87,11 +91,28 @@ describe('readConfig', () => {
       port: 7105,
       origin: 'http://127.0.0.1:7105',
       platformOrigin: 'http://127.0.0.1:7102',
+      sessionOrigin: 'http://127.0.0.1:7102',
       modelGateway: 'http://127.0.0.1:7106/v1',
       planModel: 'default-chat',
       smtpUrl: 'smtp://127.0.0.1:7111',
       mailFrom: 'Manifest <manifest@app.manifest.internal>',
     })
+  })
+  it('asks who someone is through the edge in edge mode, never 7100 itself (FE-28; the platform’s d4291dd)', () => {
+    expect(readConfig({}).sessionOrigin).toBe('https://app.manifest.internal')
+    expect(readConfig({ MANIFEST_APP_MODE: 'mock' }).sessionOrigin).toBe(
+      'http://127.0.0.1:7102',
+    )
+  })
+  it('in each mode, the session cookie we read is the one we forward: the browser’s origin and the one we ask name it alike', () => {
+    for (const mode of ['edge', 'mock']) {
+      const config = readConfig({ MANIFEST_APP_MODE: mode })
+      expect(sessionCookieFor(config.sessionOrigin)).toBe(sessionCookieFor(config.origin))
+    }
+    expect(sessionCookieFor(readConfig({}).origin)).toBe('__Host-manifest_session')
+    expect(sessionCookieFor(readConfig({ MANIFEST_APP_MODE: 'mock' }).origin)).toBe(
+      'manifest_session',
+    )
   })
   it('sends email to Mailpit on the laptop from us, unless told otherwise (F6 D5)', () => {
     expect(readConfig({})).toMatchObject({
