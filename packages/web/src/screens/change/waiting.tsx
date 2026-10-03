@@ -11,6 +11,7 @@ import { linkTo } from '../../router.js'
 import { words } from '../../words.js'
 import { MessageBox } from '../building/thread.js'
 import { SupportReference } from '../reference.js'
+import { StartedBy, type Theirs } from './together.js'
 import { pressFailed } from './press.js'
 
 const w = words.change
@@ -70,6 +71,8 @@ export function WaitingScreen({
   intake,
   line,
   piece,
+  me,
+  theirs = null,
   expire,
 }: {
   ours: Ours
@@ -77,20 +80,41 @@ export function WaitingScreen({
   intake: Intake
   line: LineView | null
   piece: PieceView | null
+  /** The reader: a holder that is not theirs is named (F6b D3). */
+  me: { id: string }
+  /** F6b D3: not the reader's: read-only (a wait holds nothing, so there is no Stop to offer). */
+  theirs?: Theirs
   expire: () => void
 }) {
   const { send, notice } = usePress(expire)
   const id = conversation.id
   const slug = intake.project?.slug
   const holder = line?.holder ?? null
+  const holderHref =
+    holder === null || slug === undefined
+      ? undefined
+      : `/apps/${encodeURIComponent(slug)}/conversations/${encodeURIComponent(holder.id)}`
   return (
     <div className="waiting">
       <h1 className="page-title">{intake.project?.name ?? conversation.title}</h1>
+      <StartedBy theirs={theirs} />
       {notice}
       <Card tone="waiting" className="waiting__card">
         <StateChip state="waiting" label={w.waitingChip} />
         {holder === null ? (
           <p className="body-lead">{w.startsSoon}</p>
+        ) : holder.by.id !== me.id ? (
+          // F6b D3: another member holds the app: who, and what, and a way to see it.
+          <>
+            <p className="body-lead">
+              {words.together.holder(holder.by.name, holder.title)}
+            </p>
+            {holderHref === undefined ? null : (
+              <p>
+                <a {...linkTo(holderHref)}>{words.together.seeIt}</a>
+              </p>
+            )}
+          </>
         ) : (
           <p className="body-lead">
             {w.waitingBefore}
@@ -109,20 +133,27 @@ export function WaitingScreen({
           </p>
         )}
         {line === null ? null : <p>{w.place(line.place)}</p>}
-        <div className="describe__actions">
-          <Button kind="secondary" onClick={() => void send('stop', () => ours.stop(id))}>
-            {w.leave}
-          </Button>
-        </div>
+        {theirs === null ? (
+          <div className="describe__actions">
+            <Button
+              kind="secondary"
+              onClick={() => void send('stop', () => ours.stop(id))}
+            >
+              {w.leave}
+            </Button>
+          </div>
+        ) : null}
       </Card>
       <Asked piece={piece} />
-      <MessageBox
-        id="waiting-message"
-        label={w.addLabel}
-        hint={w.addHint}
-        send={w.send}
-        onMessage={(said) => void send('message', () => ours.message(id, said))}
-      />
+      {theirs === null ? (
+        <MessageBox
+          id="waiting-message"
+          label={w.addLabel}
+          hint={w.addHint}
+          send={w.send}
+          onMessage={(said) => void send('message', () => ours.message(id, said))}
+        />
+      ) : null}
     </div>
   )
 }
@@ -136,12 +167,15 @@ export function SetAsideScreen({
   conversation,
   intake,
   piece,
+  theirs = null,
   expire,
 }: {
   ours: Ours
   conversation: Conversation
   intake: Intake
   piece: PieceView | null
+  /** F6b D3: not the reader's: read-only. */
+  theirs?: Theirs
   expire: () => void
 }) {
   const { send, notice } = usePress(expire)
@@ -149,19 +183,22 @@ export function SetAsideScreen({
   return (
     <div className="waiting">
       <h1 className="page-title">{intake.project?.name ?? conversation.title}</h1>
+      <StartedBy theirs={theirs} />
       {notice}
       <Card tone="plain" className="waiting__card">
         <StateChip state="notyet" label={w.conversations.setAside} />
         <p className="body-lead">{w.setAside}</p>
       </Card>
       <Asked piece={piece} />
-      <MessageBox
-        id="set-aside-message"
-        label={w.instead}
-        hint={w.nextHint}
-        send={w.ask}
-        onMessage={(said) => void send('message', () => ours.message(id, said))}
-      />
+      {theirs === null ? (
+        <MessageBox
+          id="set-aside-message"
+          label={w.instead}
+          hint={w.nextHint}
+          send={w.ask}
+          onMessage={(said) => void send('message', () => ours.message(id, said))}
+        />
+      ) : null}
     </div>
   )
 }

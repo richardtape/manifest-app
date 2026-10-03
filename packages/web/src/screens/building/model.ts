@@ -16,13 +16,26 @@ export const ADMIN = new Set(['MODEL_NOT_AVAILABLE', 'MODEL_GATEWAY_REFUSED'])
 /** FE-37: the IdP refused the draft's sign-in: Manifest's to put right. */
 export const SIGN_IN_REFUSED = 'SIGN_IN_REFUSED'
 
-/** The five states only: where the round is, and who has it. */
-export function chipOf(round: RoundView | null): {
+/**
+ * The five states only: where the round is, and who has it. `whose`: the conversation's person,
+ * when the reader is someone else (F6b D3): its wait is theirs, never "you".
+ */
+export function chipOf(
+  round: RoundView | null,
+  whose: string | null = null,
+): {
   state: State
   label: string
   pulse?: boolean
 } {
-  const chip = words.building.chip
+  const chip =
+    whose === null
+      ? words.building.chip
+      : {
+          ...words.building.chip,
+          paused: words.together.paused(whose),
+          needsYou: words.together.needs(whose),
+        }
   const working = { state: 'working' as const, label: chip.working }
   if (round === null) return working
   const needs = round.needs

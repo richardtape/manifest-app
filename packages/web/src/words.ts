@@ -1296,6 +1296,28 @@ export const words = {
       PROJECT_LAST_OWNER: 'Someone has to own it. Make someone else an owner first.',
     },
   },
+  /**
+   * F6b (design §3, D3): WORKING ON IT TOGETHER. Every member reads every conversation on the app;
+   * only its own person acts in it; an owner may stop it. The design's words, and the plan's
+   * *Words proposed* (*"<Name> · <title>"*, a removal's sentence).
+   */
+  together: {
+    started: (who: string) =>
+      `${who} started this. Only ${who} can answer it or carry it on.`,
+    onlyThey: (who: string) => `Only ${who} can answer this.`,
+    stoppedBy: (who: string) => `Stopped by ${who}.`,
+    removed: (who: string, app: string) =>
+      `${who} was taken off ${app}. Their work on it stopped.`,
+    /** A row of the app's conversations: who started it, then its title (the link). */
+    row: (who: string, title: string) => `${who} · ${title}`,
+    you: '(you)',
+    holder: (who: string, title: string) => `${who} is working on it: ${title}.`,
+    seeIt: 'See it',
+    /** Ours: another's wait is theirs, never "you" (the chip, the thread's first line, a row). */
+    paused: (who: string) => `Paused, waiting for ${who}`,
+    needs: (who: string) => `Needs ${who}`,
+    asked: (who: string) => `What ${who} asked for`,
+  },
   /** §24's two answers, in words. */
   audience: {
     scale: {

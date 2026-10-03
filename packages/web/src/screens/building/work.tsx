@@ -79,6 +79,8 @@ export function Work({
   notice,
   end,
   presses,
+  stoppedBy = null,
+  whose = null,
   now,
   timeZone,
 }: {
@@ -88,10 +90,14 @@ export function Work({
   /** Once built, what comes next: try it, or put this version on trying-out (F4 Task 10). */
   end: ReactNode
   presses: Presses
+  /** F6b Decision 6: who stopped it, when it was not its own person. */
+  stoppedBy?: { said: string; removed: boolean } | null
+  /** F6b D3: whose it is, when not the reader's: the chip names them. */
+  whose?: string | null
   now: () => Date
   timeZone: string | undefined
 }) {
-  const chip = chipOf(round)
+  const chip = chipOf(round, whose)
   const working = round === null || round.status === 'working'
   const stoppable =
     round !== null && (round.status === 'working' || round.status === 'paused')
@@ -120,7 +126,13 @@ export function Work({
       </div>
       {notice}
       <div className="building__needs" aria-live="polite">
-        <RoundNeeds round={round} presses={presses} now={now} timeZone={timeZone} />
+        <RoundNeeds
+          round={round}
+          presses={presses}
+          stoppedBy={stoppedBy}
+          now={now}
+          timeZone={timeZone}
+        />
       </div>
       <LiveSteps steps={stepsOf(round)} />
       {round?.status === 'done' ? (
@@ -158,7 +170,7 @@ export function Work({
         />
       ) : null}
       {costLine === null ? null : <p className="building__cost">{costLine}</p>}
-      {stoppable ? (
+      {stoppable && presses.stop !== undefined ? (
         <div className="building__stop">
           <Button kind="secondary" onClick={presses.stop}>
             {words.building.stop}

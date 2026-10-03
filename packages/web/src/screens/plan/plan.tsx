@@ -18,6 +18,7 @@ import { words } from '../../words.js'
 import { monthResetsAt, whenWords } from '../describe/model.js'
 import { Making } from '../making/making.js'
 import { handOverToken } from '../making/token.js'
+import { StartedBy, type Theirs } from '../change/together.js'
 import { SupportReference } from '../reference.js'
 
 const ROWS: PlanRow[] = ['studentsSee', 'youSee', 'itKeeps', 'whoGetsIn', 'ai']
@@ -131,11 +132,17 @@ export function PlanScreen({
   expire,
   now,
   timeZone,
+  theirs = null,
 }: {
   platform: Platform
   ours: Ours
   conversation: Conversation
   intake: Intake
+  /**
+   * F6b D3: not the reader's (another member's): the plan to read, nothing started, renewed or
+   * agreed for it, and only an owner's Stop.
+   */
+  theirs?: Theirs
   plan: { version: number; plan: PlanView } | null
   /** F4: the piece of work; a change's plan shows only what changes. */
   piece?: PieceView | null
@@ -326,7 +333,8 @@ export function PlanScreen({
   // A REFUSAL ON THE STREAM: a token renewed once, without a word; anything else said, with the
   // reference our server already recorded.
   useEffect(() => {
-    if (refusal === undefined || refusal === before.current) return
+    // Another's: its own person's page answers what its work met (F6b D3).
+    if (theirs !== null || refusal === undefined || refusal === before.current) return
     setPressed(false)
     if (RENEW.has(refusal.code) && !renewed.current) {
       const agreed = agreement()
@@ -353,7 +361,7 @@ export function PlanScreen({
   // Making it's replay done, or its stream never opened: on to the plan, once.
   const started = useRef(false)
   const start = () => {
-    if (started.current) return
+    if (theirs !== null || started.current) return
     started.current = true
     writeIt()
   }
@@ -392,6 +400,7 @@ export function PlanScreen({
     return (
       <div className="plan-wait">
         <h1 className="page-title">{name}</h1>
+        <StartedBy theirs={theirs} />
         {noticeCard}
         <LiveSteps
           steps={(['reading', 'writing'] as const).map((key) => ({
@@ -399,7 +408,14 @@ export function PlanScreen({
             state: stateOf(key),
           }))}
         />
-        {!writing && notice === undefined ? (
+        {theirs !== null && theirs.mayStop && change ? (
+          <div>
+            <Button kind="secondary" onClick={leave}>
+              {words.building.stop}
+            </Button>
+          </div>
+        ) : null}
+        {theirs === null && !writing && notice === undefined ? (
           <div>
             <Button kind="primary" onClick={writeIt}>
               {words.describe.carryOn}
@@ -437,6 +453,7 @@ export function PlanScreen({
     <div className="plan">
       <div className="plan__main">
         <h1 className="page-title">{name}</h1>
+        <StartedBy theirs={theirs} />
         <h2 className="moment">{change ? words.change.planTitle : words.plan.title}</h2>
         <p className="body-lead">{words.plan.lead}</p>
         {noticeCard}
@@ -455,7 +472,18 @@ export function PlanScreen({
             </ul>
           </section>
         ) : null}
-        {shown.onlyYouKnow.length > 0 ? (
+        {theirs !== null && shown.onlyYouKnow.length > 0 ? (
+          // Another's: what it asks them, to read; only they answer (F6b D3).
+          <Card tone="waiting" title={words.plan.onlyYouKnow(shown.onlyYouKnow.length)}>
+            <ul className="plan__assumed">
+              {shown.onlyYouKnow.map((q) => (
+                <li key={q.id}>{q.ask}</li>
+              ))}
+            </ul>
+            <p className="body">{words.together.onlyThey(theirs.name)}</p>
+          </Card>
+        ) : null}
+        {theirs === null && shown.onlyYouKnow.length > 0 ? (
           <Card tone="waiting" title={words.plan.onlyYouKnow(shown.onlyYouKnow.length)}>
             {shown.onlyYouKnow.map((q) => (
               <FormField
@@ -475,62 +503,77 @@ export function PlanScreen({
           </Card>
         ) : null}
       </div>
-      <Card className="plan__aside" title={words.plan.yesTitle}>
-        <p className="body-lead">{change ? words.change.yesBody : words.plan.yesBody}</p>
-        {saving ? (
-          <StateChip state="working" label={words.steps.agreeing} />
-        ) : (
-          <div className="plan__actions">
-            <Button
-              kind="primary"
-              disabled={Object.values(given()).some((a) => tooLong(a, LIMITS.sentence))}
-              onClick={agreeIt}
-            >
-              {change ? words.change.yes : words.plan.yes}
-            </Button>
-            <Button kind="secondary" onClick={() => setCorrecting(true)}>
-              {words.plan.notQuite}
-            </Button>
-            {change ? (
-              <Button kind="tertiary" onClick={leave}>
-                {words.change.notNow}
-              </Button>
-            ) : null}
-          </div>
-        )}
-        {correcting && !saving ? (
-          <div className="plan__correction">
-            <FormField
-              id="plan-correction"
-              label={words.plan.correctionLabel}
-              value={correction}
-              onChange={(e) => setCorrection(e.target.value)}
-              {...countProp(correction)}
-            />
-            <div>
-              <Button
-                kind="primary"
-                disabled={
-                  correction.trim() === '' || tooLong(correction, LIMITS.sentence)
-                }
-                onClick={() =>
-                  void send(
-                    'correct',
-                    async () => {
-                      await ours.correct(id, correction.trim())
-                      setCorrecting(false)
-                      setCorrection('')
-                    },
-                    'write',
-                  )
-                }
-              >
-                {words.describe.carryOn}
+      {theirs !== null ? (
+        // Only a change is set aside: the first plan has nothing to go back to (F4).
+        theirs.mayStop && change ? (
+          <div className="plan__aside">
+            <div className="describe__actions">
+              <Button kind="secondary" onClick={leave}>
+                {words.building.stop}
               </Button>
             </div>
           </div>
-        ) : null}
-      </Card>
+        ) : null
+      ) : (
+        <Card className="plan__aside" title={words.plan.yesTitle}>
+          <p className="body-lead">
+            {change ? words.change.yesBody : words.plan.yesBody}
+          </p>
+          {saving ? (
+            <StateChip state="working" label={words.steps.agreeing} />
+          ) : (
+            <div className="plan__actions">
+              <Button
+                kind="primary"
+                disabled={Object.values(given()).some((a) => tooLong(a, LIMITS.sentence))}
+                onClick={agreeIt}
+              >
+                {change ? words.change.yes : words.plan.yes}
+              </Button>
+              <Button kind="secondary" onClick={() => setCorrecting(true)}>
+                {words.plan.notQuite}
+              </Button>
+              {change ? (
+                <Button kind="tertiary" onClick={leave}>
+                  {words.change.notNow}
+                </Button>
+              ) : null}
+            </div>
+          )}
+          {correcting && !saving ? (
+            <div className="plan__correction">
+              <FormField
+                id="plan-correction"
+                label={words.plan.correctionLabel}
+                value={correction}
+                onChange={(e) => setCorrection(e.target.value)}
+                {...countProp(correction)}
+              />
+              <div>
+                <Button
+                  kind="primary"
+                  disabled={
+                    correction.trim() === '' || tooLong(correction, LIMITS.sentence)
+                  }
+                  onClick={() =>
+                    void send(
+                      'correct',
+                      async () => {
+                        await ours.correct(id, correction.trim())
+                        setCorrecting(false)
+                        setCorrection('')
+                      },
+                      'write',
+                    )
+                  }
+                >
+                  {words.describe.carryOn}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </Card>
+      )}
     </div>
   )
 }

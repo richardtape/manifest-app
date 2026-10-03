@@ -303,6 +303,7 @@ export function App({
           key={lookup.project.id}
           ours={ours}
           project={lookup.project}
+          me={session.me}
           expire={expire}
           now={now ?? (() => new Date())}
           timeZone={timeZone}
@@ -323,6 +324,7 @@ export function App({
         {...(route.name === 'conversation' ? { id: route.id } : {})}
         {...(from === undefined ? {} : { from })}
         onProject={setTalking}
+        me={session.me}
       />
     )
   } else if (route.name === 'signed-out')

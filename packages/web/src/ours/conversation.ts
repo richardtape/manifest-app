@@ -16,7 +16,8 @@ import { conversationEvents, type StreamSource } from './api.js'
 export type Step = { step: StepKey; state: 'now' | 'done' | 'halted' }
 
 export interface ConversationView {
-  conversation?: Conversation
+  /** `byName`: its person's name (F6b D3), for whoever reads it. */
+  conversation?: Conversation & { byName: string }
   /** Moments 3 and 4 so far: the understanding, the answers, the names, the blueprint. */
   intake?: Intake
   /** Moment 5: the latest plan and its version, once one is written. */

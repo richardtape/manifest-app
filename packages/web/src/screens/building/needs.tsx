@@ -1,6 +1,6 @@
 import type { Needs, RoundView } from '@manifest-app/server/progress'
 import { Button, Card } from '@manifest-app/ui'
-import type { ReactNode } from 'react'
+import { Children, type ReactNode } from 'react'
 import { words } from '../../words.js'
 import { monthResetsAt, whenWords } from '../describe/model.js'
 import { SupportReference, useReported } from '../reference.js'
@@ -12,8 +12,10 @@ import { ADMIN, money, SIGN_IN_REFUSED } from './model.js'
  * behind it could only move on by Carry on, which spends (the whole-branch review's I1).
  */
 export interface Presses {
-  build: (way?: 'different') => void
-  stop: () => void
+  /** Absent for a conversation that is not the reader's (F6b D3): only its person carries it on. */
+  build?: (way?: 'different') => void
+  /** Absent unless it is theirs, or they own the app (F6b D3). */
+  stop?: () => void
 }
 
 /** `plain` is still: a Stop they chose (Rich), which is neither a problem nor a wait. */
@@ -22,36 +24,46 @@ type Tone = 'attention' | 'waiting' | 'plain'
 /** One card: what is true, its reference where it is a problem, and its buttons. */
 function NeedsCard({
   tone,
+  first = null,
   said,
   reference,
   children,
 }: {
   tone: Tone
+  /** Said before the rest: who stopped it (F6b Decision 6). */
+  first?: string | null
   said: string
   reference: string | null
   children?: ReactNode
 }) {
   return (
     <Card tone={tone}>
+      {first === null ? null : <p className="body-lead">{first}</p>}
       <p className="body-lead">{said}</p>
       {reference === null ? null : <SupportReference reference={reference} />}
-      {children === undefined ? null : (
+      {Children.toArray(children).length === 0 ? null : (
         <div className="describe__actions">{children}</div>
       )}
     </Card>
   )
 }
 
-const carryOn = (presses: Presses) => (
-  <Button kind="primary" onClick={() => presses.build()}>
-    {words.building.carryOn}
-  </Button>
-)
-const stopHere = (presses: Presses) => (
-  <Button kind="secondary" onClick={presses.stop}>
-    {words.building.stopHere}
-  </Button>
-)
+/** Each press, drawn only where the reader may make it (F6b D3). */
+const build = (presses: Presses, label: string, way?: 'different') => {
+  const pressed = presses.build
+  return pressed === undefined ? null : (
+    <Button kind="primary" onClick={() => (way === undefined ? pressed() : pressed(way))}>
+      {label}
+    </Button>
+  )
+}
+const carryOn = (presses: Presses) => build(presses, words.building.carryOn)
+const stopHere = (presses: Presses) =>
+  presses.stop === undefined ? null : (
+    <Button kind="secondary" onClick={presses.stop}>
+      {words.building.stopHere}
+    </Button>
+  )
 
 /** Our server restarted under their work (Review Focus 3): a problem, so a reference of ours. */
 function Interrupted({ presses }: { presses: Presses }) {
@@ -126,9 +138,7 @@ function needCard(
           said={said.tries(needs.step, needs.servingBefore)}
           reference={reference}
         >
-          <Button kind="primary" onClick={() => presses.build('different')}>
-            {words.building.tryDifferent}
-          </Button>
+          {build(presses, words.building.tryDifferent, 'different')}
           {stopHere(presses)}
         </NeedsCard>
       )
@@ -171,9 +181,7 @@ function needCard(
     case 'conflict':
       return (
         <NeedsCard tone="attention" said={said.conflict} reference={reference}>
-          <Button kind="primary" onClick={() => presses.build()}>
-            {words.building.tryAgain}
-          </Button>
+          {build(presses, words.building.tryAgain)}
           {stopHere(presses)}
         </NeedsCard>
       )
@@ -248,18 +256,31 @@ function needCard(
 export function RoundNeeds({
   round,
   presses,
+  stoppedBy = null,
   now,
   timeZone,
 }: {
   round: RoundView | null
   presses: Presses
+  /**
+   * F6b Decision 6: who stopped it, when it says something its own person did not do: *"Stopped
+   * by Alex."*, or its person taken off the app, said instead of the card.
+   */
+  stoppedBy?: { said: string; removed: boolean } | null
   now: () => Date
   timeZone: string | undefined
 }) {
   if (round === null) return null
   if (round.status === 'stopped')
-    return (
-      <NeedsCard tone="plain" said={words.building.needs.stopped} reference={null}>
+    return stoppedBy?.removed === true ? (
+      <NeedsCard tone="plain" said={stoppedBy.said} reference={null} />
+    ) : (
+      <NeedsCard
+        tone="plain"
+        first={stoppedBy?.said ?? null}
+        said={words.building.needs.stopped}
+        reference={null}
+      >
         {carryOn(presses)}
       </NeedsCard>
     )

@@ -10,7 +10,9 @@ import { refusalOf } from '../../platform/refusal.js'
 import { linkTo, navigate } from '../../router.js'
 import { words } from '../../words.js'
 import { BuildingScreen } from '../building/building.js'
+import type { Theirs } from '../change/together.js'
 import { SetAsideScreen, WaitingScreen } from '../change/waiting.js'
+import { useRole } from '../keeping/role.js'
 import { NameIt } from '../name-it/name-it.js'
 import { PlanScreen } from '../plan/plan.js'
 import { countOf, countProp, LIMITS, tooLong } from '../limits.js'
@@ -53,9 +55,15 @@ export function Describing({
   now = () => new Date(),
   timeZone,
   onProject,
+  me,
 }: {
   platform: Platform
   ours: Ours
+  /**
+   * F6b D3: the reader. A conversation on an app that is not theirs is read-only, and an owner of
+   * the app may stop it; the role is read here, for the conversation's own app (`useRole`).
+   */
+  me: Pick<Schemas['Me'], 'id'>
   /** The conversation, once there is one. */
   id?: string
   /** "That's not it": the conversation whose words to bring back. */
@@ -68,6 +76,13 @@ export function Describing({
 }) {
   const view = useConversation(id, ours.events)
   const project = view.intake?.project ?? null
+  const role = useRole(platform, view.conversation?.projectId ?? undefined, me)
+  const whose: Theirs =
+    view.conversation === undefined ||
+    view.conversation.projectId === null ||
+    view.conversation.personId === me.id
+      ? null
+      : { name: view.conversation.byName, mayStop: role === 'owner' }
   const projectKey = project === null ? '' : `${project.slug}\n${project.name}`
   useEffect(() => {
     onProject?.(project === null ? null : { name: project.name, slug: project.slug })
@@ -434,6 +449,7 @@ export function Describing({
         expire={expire}
         now={now}
         timeZone={timeZone}
+        theirs={whose}
       />
     )
 
@@ -460,6 +476,7 @@ export function Describing({
         expire={expire}
         now={now}
         timeZone={timeZone}
+        theirs={whose}
       />
     )
 
@@ -473,6 +490,8 @@ export function Describing({
         intake={intake}
         line={view.line ?? null}
         piece={view.piece ?? null}
+        me={me}
+        theirs={whose}
         expire={expire}
       />
     )
@@ -484,6 +503,7 @@ export function Describing({
         conversation={view.conversation}
         intake={intake}
         piece={view.piece ?? null}
+        theirs={whose}
         expire={expire}
       />
     )

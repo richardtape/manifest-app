@@ -10,9 +10,13 @@ import { PressNotice } from './notice.js'
 import { pressFailed, type Notice } from './press.js'
 
 const c = words.change.conversations
+const t = words.together
 
-/** A row's chip, in words: one of the five states, and a waiting one's place. */
-function said(row: AppConversation): string {
+/**
+ * A row's chip, in words: one of the five states, and a waiting one's place. Another's wait is
+ * theirs, never "you" (F6b D3).
+ */
+function said(row: AppConversation, me: string): string {
   switch (row.chip) {
     case 'waiting':
       return c.waiting(row.line?.place ?? 1)
@@ -23,7 +27,7 @@ function said(row: AppConversation): string {
     case 'working':
       return c.working
     case 'attention':
-      return c.attention
+      return row.by.id === me ? c.attention : t.needs(row.by.name)
   }
 }
 
@@ -34,12 +38,15 @@ function said(row: AppConversation): string {
 export function AppConversations({
   ours,
   project,
+  me,
   expire,
   now,
   timeZone,
 }: {
   ours: Ours
   project: Schemas['Project']
+  /** F6b D3: the reader, whose own are marked *(you)*. */
+  me: Pick<Schemas['Me'], 'id'>
   expire: () => void
   now: () => Date
   timeZone: string | undefined
@@ -86,13 +93,16 @@ export function AppConversations({
         <ul className="conversations__list" aria-labelledby="conversations-title">
           {rows.map((row) => (
             <li key={row.id} className="conversations__row">
+              <span className="conversations__by">
+                {`${row.by.id === me.id ? `${row.by.name} ${t.you}` : row.by.name} · `}
+              </span>
               <a
                 className="conversations__title"
                 {...linkTo(`/apps/${slug}/conversations/${encodeURIComponent(row.id)}`)}
               >
                 {row.title}
               </a>
-              <StateChip state={row.chip} label={said(row)} />
+              <StateChip state={row.chip} label={said(row, me.id)} />
               <span className="conversations__when">
                 {agoWords(new Date(row.updatedAt), now(), timeZone)}
               </span>

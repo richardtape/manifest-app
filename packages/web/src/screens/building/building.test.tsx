@@ -115,7 +115,10 @@ const never = () => new Promise<never>(() => undefined)
 /** What each call of ours refuses, by its name and how many times it has been called. */
 type Refusals = Partial<Record<string, (n: number) => unknown>>
 
-function stage(refusals: Refusals = {}) {
+function stage(
+  refusals: Refusals = {},
+  options: { members?: Schemas['MemberList'] } = {},
+) {
   const sources: FakeSource[] = []
   const calls: [string, ...unknown[]][] = []
   const counts: Record<string, number> = {}
@@ -152,7 +155,10 @@ function stage(refusals: Refusals = {}) {
     getApproval: never,
     requestApproval: never,
     getEnvironment: never,
-    listMembers: never,
+    listMembers:
+      options.members === undefined
+        ? never
+        : () => Promise.resolve(options.members ?? []),
     revokeToken: never,
     addMember: never,
     removeMember: never,
@@ -219,12 +225,12 @@ function stage(refusals: Refusals = {}) {
     })
   const state = (
     view: RoundView | null,
-    conversation: Partial<Conversation> = {},
+    conversation: Partial<Conversation & { byName: string }> = {},
     thread: Said[] = [],
   ) =>
     say({
       kind: 'state',
-      conversation: { ...CONVERSATION, ...conversation, byName: ME.displayName },
+      conversation: { ...CONVERSATION, byName: ME.displayName, ...conversation },
       intake: INTAKE,
       plan: null,
       round: view,
@@ -1585,5 +1591,164 @@ describe("the rail's project section, on a conversation", () => {
     })
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(nav().querySelector('.mf-rail__over')).toBeNull()
+  })
+})
+
+/**
+ * F6b TASK 7 (D3, Review Focus 2): ANOTHER PERSON'S CONVERSATION ON THE APP, read by a member. They
+ * see every frame, read-only: who started it and that only they act; no message box, no answer, no
+ * Carry on; an owner sees [Stop] and nothing else of theirs. Our server says `404` to any other
+ * press made by hand (its own tests).
+ */
+describe('another person’s conversation, read by a member (F6b Task 7)', () => {
+  const SAM = { id: 'c0000000-0000-4000-8000-000000000001', name: 'Sam Helper' }
+  const ALEX = { id: 'c0000000-0000-4000-8000-000000000002', name: 'Alex Owner' }
+  const t = words.together
+  const member = (
+    userId: string,
+    role: Schemas['Member']['role'],
+  ): Schemas['Member'] => ({
+    userId,
+    puid: `puid-${userId.slice(-4)}`,
+    cwlLogin: null,
+    displayName: userId === ME.id ? ME.displayName : SAM.name,
+    email: 'someone@ubc.ca',
+    role,
+  })
+  const AS_HELPER = [member(ME.id, 'collaborator'), member(SAM.id, 'owner')]
+  const AS_OWNER = [member(ME.id, 'owner'), member(SAM.id, 'collaborator')]
+  const sams = { personId: SAM.id, byName: SAM.name }
+  const question = {
+    id: 'q-1',
+    ask: 'When does it close?',
+    default: null,
+    answer: null,
+    answered: false,
+    secret: false,
+  }
+
+  it('working, read by a helper: who started it, only they act; no box, no Stop, and a question only they answer', async () => {
+    const s = stage({}, { members: AS_HELPER })
+    await open(s)
+    s.state(round({ questions: [question] }), sams)
+    expect(await screen.findByText(t.started(SAM.name))).toBeTruthy()
+    expect(screen.getByText(t.onlyThey(SAM.name))).toBeTruthy()
+    expect(screen.getByText(question.ask)).toBeTruthy()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    noButton(words.building.question.answer)
+    noButton(words.building.thread.send)
+    noButton(words.building.stop)
+    expect(machineryIn(wordsShown())).toEqual([])
+  })
+
+  it('paused or needing them: the chip and the thread say whose it is, never "you"', async () => {
+    const s = stage({}, { members: AS_OWNER })
+    await open(s)
+    s.state(round({ status: 'paused', questions: [question] }), sams)
+    expect(await screen.findByText(t.paused(SAM.name))).toBeTruthy()
+    expect(screen.getByText(t.asked(SAM.name))).toBeTruthy()
+    expect(screen.queryByText(words.building.chip.paused)).toBeNull()
+    expect(screen.queryByText(words.building.thread.asked)).toBeNull()
+    s.state(
+      round({
+        status: 'needs-you',
+        needs: { kind: 'checkpoint', capUsd: 2, monthLeftUsd: 10 },
+      }),
+      sams,
+    )
+    expect(await screen.findByText(t.needs(SAM.name))).toBeTruthy()
+    expect(screen.queryByText(words.building.chip.needsYou)).toBeNull()
+  })
+
+  it.each([
+    [
+      'needing them',
+      round({
+        status: 'needs-you',
+        needs: { kind: 'checkpoint', capUsd: 2, monthLeftUsd: 10 },
+      }),
+    ],
+    ['stopped', round({ status: 'stopped' })],
+    ['interrupted', round({ status: 'interrupted' })],
+  ])(
+    '%s, read by a helper: no Carry on, no Try a different way, no Stop here',
+    async (_, view) => {
+      const s = stage({}, { members: AS_HELPER })
+      await open(s)
+      s.state(view, sams)
+      await screen.findByText(t.started(SAM.name))
+      noButton(words.building.carryOn)
+      noButton(words.building.tryDifferent)
+      noButton(words.building.stopHere)
+    },
+  )
+
+  it('read by an owner: [Stop] while it works, and nothing else of theirs; pressed, it reaches our server', async () => {
+    const s = stage({}, { members: AS_OWNER })
+    await open(s)
+    s.state(round(), sams)
+    await press(await screen.findByRole('button', { name: words.building.stop }))
+    expect(s.called('stop')).toEqual([['c-1']])
+    expect(screen.queryByRole('textbox')).toBeNull()
+    noButton(words.building.carryOn)
+  })
+
+  it('a frame adding a question or a card while it is open adds no control', async () => {
+    const s = stage({}, { members: AS_HELPER })
+    await open(s)
+    s.state(round(), sams)
+    await screen.findByText(t.started(SAM.name))
+    s.state(
+      round({
+        status: 'needs-you',
+        needs: { kind: 'checkpoint', capUsd: 2, monthLeftUsd: 10 },
+        questions: [question],
+      }),
+      sams,
+    )
+    expect(await screen.findByText(t.onlyThey(SAM.name))).toBeTruthy()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    noButton(words.building.carryOn)
+  })
+
+  it('its token refused: a member mints nothing for it (only its person’s page hands one over)', async () => {
+    const s = stage({}, { members: AS_OWNER })
+    await open(s)
+    s.state(round({ status: 'needs-you', needs: { kind: 'token' } }), sams)
+    await screen.findByText(t.started(SAM.name))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(s.called('mintToken')).toEqual([])
+    expect(s.called('handProject')).toEqual([])
+  })
+
+  it('their own, stopped by an owner: "Stopped by Alex Owner.", and Carry on is still theirs', async () => {
+    const s = stage({}, { members: AS_HELPER })
+    await open(s)
+    s.state(round({ status: 'stopped', stopped: { by: ALEX, why: 'stopped' } }))
+    expect(await screen.findByText(t.stoppedBy(ALEX.name))).toBeTruthy()
+    expect(button(words.building.carryOn)).toBeTruthy()
+  })
+
+  it('their own Stop says nobody stopped it', async () => {
+    const s = stage({}, { members: AS_HELPER })
+    await open(s)
+    s.state(
+      round({
+        status: 'stopped',
+        stopped: { by: { id: ME.id, name: ME.displayName }, why: 'stopped' },
+      }),
+    )
+    await screen.findByRole('button', { name: words.building.carryOn })
+    expect(screen.queryByText(t.stoppedBy(ME.displayName))).toBeNull()
+  })
+
+  it('its person taken off the app: said so, to whoever reads it, and nothing to press', async () => {
+    const s = stage({}, { members: AS_OWNER })
+    await open(s)
+    s.state(round({ status: 'stopped', stopped: { by: SAM, why: 'removed' } }), sams)
+    expect(await screen.findByText(t.removed(SAM.name, PROJECT.name))).toBeTruthy()
+    noButton(words.building.carryOn)
   })
 })

@@ -202,6 +202,7 @@ export function Thread({
   built,
   onAnswer,
   onMessage,
+  theirs = null,
   timeZone,
 }: {
   description: string
@@ -212,9 +213,34 @@ export function Thread({
   built: boolean
   onAnswer: (questionId: string, words: string) => void
   onMessage: (words: string) => void
+  /**
+   * F6b D3: whose it is, when it is not the reader's: every question read-only (*"Only Sam can
+   * answer this."*), and no message box.
+   */
+  theirs?: string | null
   timeZone: string | undefined
 }) {
   const open = questions.filter((q) => !q.answered)
+  if (theirs !== null)
+    return (
+      <section className="building__talk" aria-label={words.building.thread.label}>
+        <ol className="thread">
+          <li className="said said--theirs">
+            <span className="said__who">{words.together.asked(theirs)}</span>
+            <p className="said__text">{description}</p>
+          </li>
+          {thread.map((said, i) => (
+            <SaidItem key={i} said={said} timeZone={timeZone} />
+          ))}
+        </ol>
+        {open.map((question) => (
+          <Card key={question.id} tone="waiting">
+            <p className="body-lead">{question.ask}</p>
+            <p className="body">{words.together.onlyThey(theirs)}</p>
+          </Card>
+        ))}
+      </section>
+    )
   return (
     <section className="building__talk" aria-label={words.building.thread.label}>
       <ol className="thread">

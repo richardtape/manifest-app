@@ -104,6 +104,7 @@ function stage(
   options: {
     mint?: () => unknown
     rows?: AppConversation[]
+    members?: Schemas['MemberList']
   } = {},
 ) {
   const sources: FakeSource[] = []
@@ -143,7 +144,10 @@ function stage(
     getApproval: never,
     requestApproval: never,
     getEnvironment: never,
-    listMembers: never,
+    listMembers:
+      options.members === undefined
+        ? never
+        : () => Promise.resolve(options.members ?? []),
     revokeToken: never,
     addMember: never,
     removeMember: never,
@@ -213,7 +217,7 @@ function stage(
       source.onmessage?.(new MessageEvent('message', { data: JSON.stringify(frame) }))
     })
   const state = (
-    conversation: Partial<Conversation>,
+    conversation: Partial<Conversation & { byName: string }>,
     extra: {
       plan?: { version: number; plan: PlanView } | null
       piece?: PieceView | null
@@ -222,7 +226,7 @@ function stage(
   ) =>
     say({
       kind: 'state',
-      conversation: { ...CONVERSATION, ...conversation, byName: ME.displayName },
+      conversation: { ...CONVERSATION, byName: ME.displayName, ...conversation },
       intake: INTAKE,
       plan: extra.plan ?? null,
       round: null,
@@ -657,5 +661,138 @@ describe("the app's conversations (/apps/:slug/conversations)", () => {
     await open(`/apps/${SLUG}/conversations`, s)
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toMatch(/quote [0-9A-F]{4}-[0-9A-F]{4}/)
+  })
+})
+
+/** F6b TASK 7 (D3): EVERY MEMBER SEES EVERY CONVERSATION, AND ACTS ON THEIR OWN. */
+describe('working on it together (F6b Task 7)', () => {
+  const t = words.together
+  const SAM = { id: 'c0000000-0000-4000-8000-000000000001', name: 'Sam Helper' }
+  const member = (
+    userId: string,
+    role: Schemas['Member']['role'],
+  ): Schemas['Member'] => ({
+    userId,
+    puid: `puid-${userId.slice(-4)}`,
+    cwlLogin: null,
+    displayName: userId === ME.id ? ME.displayName : SAM.name,
+    email: 'someone@ubc.ca',
+    role,
+  })
+  const AS_HELPER = [member(ME.id, 'collaborator'), member(SAM.id, 'owner')]
+  const AS_OWNER = [member(ME.id, 'owner'), member(SAM.id, 'collaborator')]
+  const sams = { personId: SAM.id, byName: SAM.name }
+
+  it('Conversations lists everyone’s, each with who started it, theirs marked (you)', async () => {
+    const rows: AppConversation[] = [
+      {
+        id: 'c-5',
+        title: 'Bigger titles',
+        state: 'paused',
+        chip: 'attention',
+        updatedAt: '2026-09-28T20:04:00.000Z',
+        line: null,
+        by: SAM,
+      },
+      {
+        id: 'c-1',
+        title: 'First build',
+        state: 'built',
+        chip: 'steady',
+        updatedAt: '2026-09-27T20:00:00.000Z',
+        line: null,
+        by: { id: ME.id, name: ME.displayName },
+      },
+    ]
+    await open(`/apps/${SLUG}/conversations`, stage({ rows }))
+    const list = await screen.findByRole('list', { name: 'Conversations' })
+    const [sam, mine] = within(list).getAllByRole('listitem')
+    expect(sam!.textContent).toContain(t.row(SAM.name, 'Bigger titles'))
+    // Its wait is Sam's, never "you".
+    expect(sam!.textContent).toContain(t.needs(SAM.name))
+    expect(sam!.textContent).not.toContain(words.change.conversations.attention)
+    expect(within(sam!).getByRole('link', { name: 'Bigger titles' })).toBeTruthy()
+    expect(mine!.textContent).toContain(
+      t.row(`${ME.displayName} ${t.you}`, 'First build'),
+    )
+    plain()
+  })
+
+  it('the line, held by another’s: "Sam Helper is working on it: Word count." and [See it]', async () => {
+    const s = await conversation()
+    s.state(
+      {},
+      {
+        line: {
+          place: 1,
+          holder: { id: 'c-1', title: 'Word count', waitingForYou: false, by: SAM },
+        },
+      },
+    )
+    expect(await screen.findByText(t.holder(SAM.name, 'Word count'))).toBeTruthy()
+    expect(screen.getByRole('link', { name: t.seeIt }).getAttribute('href')).toBe(
+      `/apps/${SLUG}/conversations/c-1`,
+    )
+    plain()
+  })
+
+  it('another’s waiting conversation: who started it; no Leave the line, no message box', async () => {
+    const s = await conversation(stage({ members: AS_OWNER }))
+    s.state(sams, {
+      line: {
+        place: 1,
+        holder: {
+          id: 'c-1',
+          title: 'Word count',
+          waitingForYou: false,
+          by: { id: ME.id, name: ME.displayName },
+        },
+      },
+    })
+    expect(await screen.findByText(t.started(SAM.name))).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Leave the line' })).toBeNull()
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  it('another’s change set aside: no message box', async () => {
+    const s = await conversation(stage({ members: AS_HELPER }))
+    s.state({ ...sams, state: 'set-aside' })
+    expect(await screen.findByText(t.started(SAM.name))).toBeTruthy()
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  it('another’s plan to agree, read by a helper: the plan, and no Yes, no Not quite, no Not now, no answers to type', async () => {
+    const s = await conversation(stage({ members: AS_HELPER }))
+    s.state(
+      { ...sams, state: 'plan-ready', title: 'Word count' },
+      { plan: { version: 1, plan: CHANGE } },
+    )
+    await screen.findByRole('heading', { name: "Here's what we'd change" })
+    expect(screen.getByText(t.started(SAM.name))).toBeTruthy()
+    expect(screen.getByText(CHANGE.studentsSee)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Yes, change it' })).toBeNull()
+    expect(screen.queryByRole('button', { name: words.plan.notQuite })).toBeNull()
+    expect(screen.queryByRole('button', { name: words.change.notNow })).toBeNull()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.queryByRole('button', { name: words.building.stop })).toBeNull()
+  })
+
+  it('another’s plan to agree, read by an owner: [Stop] frees the app, and nothing else of theirs', async () => {
+    const s = await conversation(stage({ members: AS_OWNER }))
+    s.state(
+      { ...sams, state: 'plan-ready', title: 'Word count' },
+      { plan: { version: 1, plan: CHANGE } },
+    )
+    await press(await screen.findByRole('button', { name: words.building.stop }))
+    expect(s.called('stop')).toEqual([['c-2']])
+    expect(screen.queryByRole('button', { name: 'Yes, change it' })).toBeNull()
+  })
+
+  it('another’s plan being written: no Carry on of theirs', async () => {
+    const s = await conversation(stage({ members: AS_OWNER }))
+    s.state({ ...sams, state: 'planning', title: 'Word count' })
+    expect(await screen.findByText(t.started(SAM.name))).toBeTruthy()
+    expect(screen.queryByRole('button', { name: words.describe.carryOn })).toBeNull()
+    expect(s.called('plan')).toEqual([])
   })
 })

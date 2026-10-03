@@ -8,6 +8,7 @@ import { refusalOf } from '../../platform/refusal.js'
 import { words } from '../../words.js'
 import { handOverToken } from '../making/token.js'
 import { SupportReference } from '../reference.js'
+import { StartedBy, type Theirs } from '../change/together.js'
 import { PutOnTryingOut } from '../trying-out/put.js'
 import type { Presses } from './needs.js'
 import { Thread } from './thread.js'
@@ -42,11 +43,17 @@ export function BuildingScreen({
   expire,
   now,
   timeZone,
+  theirs = null,
 }: {
   platform: Platform
   ours: Ours
   conversation: Conversation
   intake: Intake
+  /**
+   * F6b D3: not the reader's (another member's): read-only, nothing handed over for it, and only
+   * an owner's Stop.
+   */
+  theirs?: Theirs
   /** Null for the moment between agree and the round's first frame. */
   round: RoundView | null
   thread: Said[]
@@ -131,13 +138,30 @@ export function BuildingScreen({
     }
   }
 
-  const presses: Presses = {
-    build: (way) =>
-      void send('build', () =>
-        way === undefined ? ours.build(id) : ours.build(id, way),
-      ),
-    stop: () => void send('stop', () => ours.stop(id)),
-  }
+  const stop = () => void send('stop', () => ours.stop(id))
+  const presses: Presses =
+    theirs === null
+      ? {
+          build: (way) =>
+            void send('build', () =>
+              way === undefined ? ours.build(id) : ours.build(id, way),
+            ),
+          stop,
+        }
+      : theirs.mayStop
+        ? { stop }
+        : {}
+
+  // F6b DECISION 6: WHO STOPPED IT, when it says something its own person did not do.
+  const stopped = round?.status === 'stopped' ? round.stopped : null
+  const stoppedBy =
+    stopped === null
+      ? null
+      : stopped.why === 'removed'
+        ? { said: words.together.removed(stopped.by.name, name), removed: true }
+        : stopped.by.id === conversation.personId
+          ? null
+          : { said: words.together.stoppedBy(stopped.by.name), removed: false }
 
   // NEEDS: TOKEN. The round dropped its token when the platform refused it: a new one, minted
   // and handed over without a word, then carried on. Refused again before anything got done,
@@ -165,7 +189,8 @@ export function BuildingScreen({
   }
   const needsToken = round?.status === 'needs-you' && round.needs?.kind === 'token'
   useEffect(() => {
-    if (!needsToken || renewing.current) return
+    // Another's: only its own person's page hands a token over (F6b D3).
+    if (theirs !== null || !needsToken || renewing.current) return
     if (!renewed.current) return void renewAndCarryOn()
     setNotice({
       words: words.building.couldntPress,
@@ -216,14 +241,16 @@ export function BuildingScreen({
             {words.tryingOut.tryIt}
           </Button>
         </div>
-        <PutOnTryingOut
-          platform={platform}
-          ours={ours}
-          project={{ id: projectId, slug, name: intake.project?.name ?? slug }}
-          expire={expire}
-          now={now}
-          timeZone={timeZone}
-        />
+        {theirs === null ? (
+          <PutOnTryingOut
+            platform={platform}
+            ours={ours}
+            project={{ id: projectId, slug, name: intake.project?.name ?? slug }}
+            expire={expire}
+            now={now}
+            timeZone={timeZone}
+          />
+        ) : null}
       </div>
     )
 
@@ -231,6 +258,7 @@ export function BuildingScreen({
   return (
     <div className="building">
       <h1 className="page-title">{name}</h1>
+      <StartedBy theirs={theirs} />
       <div className="building__columns">
         <Work
           round={round}
@@ -238,6 +266,8 @@ export function BuildingScreen({
           notice={noticeCard}
           end={end}
           presses={presses}
+          stoppedBy={stoppedBy}
+          whose={theirs?.name ?? null}
           now={now}
           timeZone={timeZone}
         />
@@ -251,6 +281,7 @@ export function BuildingScreen({
             void send('answer', () => ours.answer(id, questionId, said))
           }
           onMessage={(said) => void send('message', () => ours.message(id, said))}
+          theirs={theirs?.name ?? null}
           timeZone={timeZone}
         />
       </div>
