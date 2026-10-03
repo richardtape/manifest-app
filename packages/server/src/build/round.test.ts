@@ -229,6 +229,8 @@ interface Options {
   ) => Incident | 'confidential' | undefined
   /** Why the platform ended each session (its index), when it did: models_withdrawn (FE-36). */
   endReason?: (n: number) => string | null
+  /** A session's start refused, as `platformAgentSessions` throws it (m125). */
+  startRefused?: Error
   /**
    * What each session's key holds now, when the platform narrowed it in place (its sitting 5,
    * `d061ad7`): undefined is what it started with.
@@ -269,6 +271,7 @@ function harness(options: Options, file?: string, store0?: Store) {
       }
     },
     start: async (token, projectId, name, opts) => {
+      if (options.startRefused !== undefined) throw options.startRefused
       sessionsStarted++
       sessionStarts.push({ token, options: opts })
       did.push(`startAgentSession ${projectId.slice(0, 4)} ${name}`)
@@ -1745,6 +1748,20 @@ describe('m19: the platform’s passing git failure (SOURCE_GIT_FAILED: “retry
         place: 'server',
         platform_request_id: ID,
       }),
+    ])
+  })
+
+  it("m125: a start the platform refused as the model's keeps its request id beside the reference", async () => {
+    const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      startRefused: new ModelError('MODEL_NOT_AVAILABLE', 503, null, ID),
+    })
+    await untilStatus(h, id, 'needs-you')
+    const reference = viewOf(h, id)?.reference
+    expect(reference).toMatch(/^[0-9A-F]{4}-[0-9A-F]{4}$/)
+    expect(JSON.parse(dumpAll(h.file)['problems']!)).toEqual([
+      expect.objectContaining({ reference, platform_request_id: ID }),
     ])
   })
 

@@ -40,6 +40,11 @@ export class ModelError extends Error {
     readonly code: ModelCode,
     readonly status: number | null = null,
     readonly received: Received | null = null,
+    /**
+     * FE-30: the platform's id for the request, when the platform refused it (an agent session's
+     * start, worded as the model's: `platform/agent-sessions.ts`). The gateway's own have none.
+     */
+    readonly requestId: string | null = null,
   ) {
     super(status === null ? code : `${code} (${status})`)
     this.name = 'ModelError'

@@ -120,7 +120,10 @@ export function createWork(
               code: known ? error.code : 'INTERNAL',
               operation: `conversation ${current ?? 'round'}`,
               allowance: error instanceof Refused ? error.allowance : undefined,
-              requestId: error instanceof PlatformRefusal ? error.requestId : null,
+              requestId:
+                error instanceof PlatformRefusal || error instanceof ModelError
+                  ? error.requestId
+                  : null,
             })
           },
         )

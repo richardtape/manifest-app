@@ -1480,6 +1480,7 @@ export function createRounds(deps: RoundDeps): Rounds {
           return needs(
             { kind: 'month', resetsAt: budget.resetsAt },
             'MODEL_BUDGET_EXHAUSTED',
+            error.requestId,
           )
         return needs({
           kind: 'checkpoint',
@@ -1488,13 +1489,13 @@ export function createRounds(deps: RoundDeps): Rounds {
         })
       }
       if (error.code === 'MODEL_UNREACHABLE')
-        return needs({ kind: 'unreachable', what: 'model' }, error.code)
+        return needs({ kind: 'unreachable', what: 'model' }, error.code, error.requestId)
       // Carry on re-asks, as from unreachable: a stall is never asked again by itself.
       if (error.code === 'MODEL_STALLED')
         return needs({ kind: 'stalled', why: 'quiet' }, error.code)
       if (error.code === 'MODEL_TOO_LONG')
         return needs({ kind: 'stalled', why: 'ceiling' }, error.code)
-      return needs({ kind: 'refused', code: error.code }, error.code)
+      return needs({ kind: 'refused', code: error.code }, error.code, error.requestId)
     }
     if (error instanceof PlatformRefusal) {
       if (error.status === 401) return needs({ kind: 'token' })

@@ -66,7 +66,9 @@ async function asked<T>(call: () => Promise<T>): Promise<T> {
   } catch (error) {
     const refusal: PlatformRefusal = refusalFrom(error)
     const model = AS_MODEL[refusal.code]
-    throw model === undefined ? refusal : new ModelError(model, refusal.status)
+    throw model === undefined
+      ? refusal
+      : new ModelError(model, refusal.status, null, refusal.requestId)
   }
 }
 

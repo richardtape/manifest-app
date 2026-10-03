@@ -1,5 +1,6 @@
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ModelError } from '../model/client.js'
 import { platformAgentSessions } from './agent-sessions.js'
 import { platformBuilds } from './builds.js'
 import { platformDetails } from './details.js'
@@ -881,6 +882,23 @@ describe('agent sessions, with their cap and their clock (Decision 9)', () => {
       name: 'Building — First build',
       capUsd: 2,
       durationMinutes: 240,
+    })
+  })
+
+  it("m125: a start refused as the model's (AGENT_BUDGET_EXHAUSTED) keeps the platform's request id", async () => {
+    const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const fake = await fakePlatform(() => ({
+      status: 409,
+      body: { error: { code: 'AGENT_BUDGET_EXHAUSTED', message: 'm', requestId: ID } },
+    }))
+    const error = await platformAgentSessions(fake.origin)
+      .start(TOKEN, PROJECT, 'Building — First build')
+      .catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(ModelError)
+    expect(error).toMatchObject({
+      code: 'MODEL_BUDGET_EXHAUSTED',
+      status: 409,
+      requestId: ID,
     })
   })
 
