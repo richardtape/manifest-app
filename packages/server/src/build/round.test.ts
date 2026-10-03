@@ -1223,6 +1223,32 @@ describe('the money and the clock (Decision 9)', () => {
     })
   })
 
+  it("m126: a start refused for the month (its budget read seconds stale) needs the month, from the refusal's own limit, never the checkpoint", async () => {
+    const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const { h, id } = await startedRound({
+      script: STRAIGHT,
+      // The read before the start and the read after it both say there is money (cached).
+      remainingUsd: 4,
+      startRefused: new ModelError('MODEL_BUDGET_EXHAUSTED', 409, null, ID, {
+        amountUsd: 10,
+        resetsAt: '2026-11-01T07:00:00.000Z',
+      }),
+    })
+    await untilStatus(h, id, 'needs-you')
+    expect(viewOf(h, id)?.needs).toEqual({
+      kind: 'month',
+      resetsAt: '2026-11-01T07:00:00.000Z',
+    })
+    const reference = viewOf(h, id)?.reference
+    expect(JSON.parse(dumpAll(h.file)['problems']!)).toEqual([
+      expect.objectContaining({
+        reference,
+        code: 'MODEL_BUDGET_EXHAUSTED',
+        platform_request_id: ID,
+      }),
+    ])
+  })
+
   it("the session's clock: an expired key mid-round is the same checkpoint", async () => {
     const { h, id } = await startedRound({
       script: { lead: [read('server.js'), new ModelError('MODEL_KEY_REFUSED', 401)] },

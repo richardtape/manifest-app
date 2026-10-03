@@ -165,9 +165,19 @@ export function registerPlan(
         sessions.start(token, project.id, conversation.title.slice(0, 64)),
       )
     } catch (error) {
-      // A budget read can be seconds stale ("spend lands a few seconds after a call").
+      // A budget read can be seconds stale ("spend lands a few seconds after a call"), and the
+      // platform caches it; its start reads the month fresh, and states it (m126): its limit is
+      // the allowance when it gave one, the read's amount only where it named none.
       if (error instanceof ModelError && error.code === 'MODEL_BUDGET_EXHAUSTED')
-        throw new Refused('MODEL_BUDGET_EXHAUSTED', allowance)
+        throw new Refused(
+          'MODEL_BUDGET_EXHAUSTED',
+          error.limit === null
+            ? allowance
+            : {
+                monthlyUsd: error.limit.amountUsd ?? allowance.monthlyUsd,
+                resetsAt: error.limit.resetsAt,
+              },
+        )
       throw error
     }
     try {

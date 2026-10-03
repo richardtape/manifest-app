@@ -900,6 +900,54 @@ describe('agent sessions, with their cap and their clock (Decision 9)', () => {
       status: 409,
       requestId: ID,
     })
+    // No `error.limit` in its body: nothing of the platform's to carry.
+    expect((error as ModelError).limit).toBeNull()
+  })
+
+  it("m126: a start refused AGENT_BUDGET_EXHAUSTED carries the platform's limit: the month's amount and when it lifts", async () => {
+    const ID = '1f758a00-2575-409b-bf48-dfbc4218b118'
+    const fake = await fakePlatform(() => ({
+      status: 409,
+      body: {
+        error: {
+          code: 'AGENT_BUDGET_EXHAUSTED',
+          message: 'm',
+          requestId: ID,
+          limit: {
+            scope: 'person',
+            period: 'month',
+            amountUsd: 25,
+            resetsAt: '2026-11-01T07:00:00.000Z',
+          },
+        },
+      },
+    }))
+    const error = await platformAgentSessions(fake.origin)
+      .start(TOKEN, PROJECT, 'Building — First build')
+      .catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(ModelError)
+    expect((error as ModelError).limit).toEqual({
+      amountUsd: 25,
+      resetsAt: '2026-11-01T07:00:00.000Z',
+    })
+  })
+
+  it('m126: a limit whose reset the gateway did not report keeps null, and an amount not stated is null', async () => {
+    const fake = await fakePlatform(() => ({
+      status: 409,
+      body: {
+        error: {
+          code: 'AGENT_BUDGET_EXHAUSTED',
+          message: 'm',
+          requestId: '1f758a00-2575-409b-bf48-dfbc4218b118',
+          limit: { scope: 'person', period: 'month', resetsAt: null },
+        },
+      },
+    }))
+    const error = await platformAgentSessions(fake.origin)
+      .start(TOKEN, PROJECT, 'Building — First build')
+      .catch((e: unknown) => e)
+    expect((error as ModelError).limit).toEqual({ amountUsd: null, resetsAt: null })
   })
 
   it('list reads each session’s spend, keeping null as null', async () => {

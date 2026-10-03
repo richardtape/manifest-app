@@ -1468,6 +1468,14 @@ export function createRounds(deps: RoundDeps): Rounds {
       // same withdrawal, renewed once like it (a new session that still lists it carries on).
       if (error.code === 'MODEL_NOT_AVAILABLE' && (await narrowedAway(live)))
         return needs({ kind: 'withdrawn' })
+      // m126: a start the platform refused for the month states its limit, read fresh: the month,
+      // never the checkpoint a cached budget read would make of it.
+      if (error.code === 'MODEL_BUDGET_EXHAUSTED' && error.limit !== null)
+        return needs(
+          { kind: 'month', resetsAt: error.limit.resetsAt },
+          'MODEL_BUDGET_EXHAUSTED',
+          error.requestId,
+        )
       if (error.code === 'MODEL_BUDGET_EXHAUSTED' || error.code === 'MODEL_KEY_REFUSED') {
         // The gateway's 429 is the session's cap or the month alike; an expired key is the
         // session's clock. The budget says which (Decision 9).

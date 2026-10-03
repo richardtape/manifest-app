@@ -418,6 +418,42 @@ describe('POST /api/conversations/:id/plan: written on the person’s agent sess
     })
   })
 
+  it("m126: the start's refusal states its limit: the allowance is the platform's fresher word, not the read before", async () => {
+    const s = await setUp(undefined, {
+      start: () =>
+        Promise.reject(
+          new ModelError('MODEL_BUDGET_EXHAUSTED', 409, null, null, {
+            amountUsd: 25,
+            resetsAt: '2026-11-01T07:00:00.000Z',
+          }),
+        ),
+    })
+    const conversation = made(s)
+    const answer = await post(s, conversation.id, 'plan')
+    expect(answer.refusal).toMatchObject({
+      code: 'MODEL_BUDGET_EXHAUSTED',
+      allowance: { monthlyUsd: 25, resetsAt: '2026-11-01T07:00:00.000Z' },
+    })
+  })
+
+  it("m126: a limit that states no amount and no reset keeps the read's amount, and says no reset (never a guess)", async () => {
+    const s = await setUp(undefined, {
+      start: () =>
+        Promise.reject(
+          new ModelError('MODEL_BUDGET_EXHAUSTED', 409, null, null, {
+            amountUsd: null,
+            resetsAt: null,
+          }),
+        ),
+    })
+    const conversation = made(s)
+    const answer = await post(s, conversation.id, 'plan')
+    expect(answer.refusal).toMatchObject({
+      code: 'MODEL_BUDGET_EXHAUSTED',
+      allowance: { monthlyUsd: 10, resetsAt: null },
+    })
+  })
+
   it('a budget the gateway could not read starts anyway', async () => {
     const s = await setUp(undefined, {
       budget: () =>

@@ -1,5 +1,10 @@
-import { createManifestClient, idempotencyKey, unwrap } from '@manifest/contract'
-import { ModelError, type ModelCode } from '../model/client.js'
+import {
+  createManifestClient,
+  idempotencyKey,
+  ManifestApiError,
+  unwrap,
+} from '@manifest/contract'
+import { ModelError, type Limit, type ModelCode } from '../model/client.js'
 import { PLATFORM_TIMEOUT_MS, PlatformRefusal, refusalFrom } from './refusal.js'
 
 /**
@@ -68,8 +73,16 @@ async function asked<T>(call: () => Promise<T>): Promise<T> {
     const model = AS_MODEL[refusal.code]
     throw model === undefined
       ? refusal
-      : new ModelError(model, refusal.status, null, refusal.requestId)
+      : new ModelError(model, refusal.status, null, refusal.requestId, limitOf(error))
   }
+}
+
+/** m126: the limit a refusal states (a spent month's), as fields; never its message. */
+function limitOf(error: unknown): Limit | null {
+  if (!(error instanceof ManifestApiError)) return null
+  const limit = error.envelope?.error.limit
+  if (limit === undefined) return null
+  return { amountUsd: limit.amountUsd ?? null, resetsAt: limit.resetsAt }
 }
 
 export function platformAgentSessions(origin: string): AgentSessions {

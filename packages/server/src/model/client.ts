@@ -32,6 +32,14 @@ export type ModelCode =
 export type Received = { chars: number; firstWordMs: number | null; ms: number }
 
 /**
+ * THE PLATFORM'S OWN FACTS ON A SPENT MONTH (FE-29, contract 1.6.0; m126): a start refused
+ * `AGENT_BUDGET_EXHAUSTED` states `error.limit`, read fresh where `getAgentBudget` may be cached.
+ * The month's amount (`null` when not stated) and when it lifts (`null` when the gateway does not
+ * report a reset: never a guess).
+ */
+export type Limit = { amountUsd: number | null; resetsAt: string | null }
+
+/**
  * A code and the gateway's status: never the key, the gateway's words, or the answer. A stall
  * carries what was received, so the trace says how much came and why it ended.
  */
@@ -45,6 +53,8 @@ export class ModelError extends Error {
      * start, worded as the model's: `platform/agent-sessions.ts`). The gateway's own have none.
      */
     readonly requestId: string | null = null,
+    /** m126: a start the platform refused for the month, with the limit it stated. */
+    readonly limit: Limit | null = null,
   ) {
     super(status === null ? code : `${code} (${status})`)
     this.name = 'ModelError'
