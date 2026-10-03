@@ -1,5 +1,5 @@
 import type { Schemas } from '@manifest/contract'
-import type { KeptTokens } from '@manifest-app/server/progress'
+import type { KeptTokens, Whose } from '@manifest-app/server/progress'
 import { words } from '../../words.js'
 
 /**
@@ -94,7 +94,7 @@ export function around(sentence: (said: string) => string): [string, string] {
  * m129 (Rich's words, 2026-10-03): whose agent asks, by `Token.mintedBy` (FE-49) against the reader:
  * their own, or another's by the members' name for its maker (null: the list does not name them).
  */
-export type Whose = 'yours' | { name: string | null }
+export type { Whose }
 
 /** A question to put to the person, its agent's name (the list's), and whose agent it is. */
 export interface Asking {

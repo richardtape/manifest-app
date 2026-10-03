@@ -435,7 +435,15 @@ export type Need =
       at: string
       expiresAt: string
       owner: boolean
+      /** m132: whose agent asks, to this reader (Rich's words for m129). */
+      whose: Whose
     }
+
+/**
+ * m129 and m132 (Rich's words, 2026-10-03): whose agent asks, to the one reading: their own, or
+ * another's by the members' name for its maker (null: we cannot name them).
+ */
+export type Whose = 'yours' | { name: string | null }
 
 /** *Since you were last here*: a line, and the app it is about. */
 export type SinceLine = Line & { app: AppRef }

@@ -1,3 +1,5 @@
+import type { Whose } from '@manifest-app/server/progress'
+
 /**
  * EVERY SENTENCE WE SHOW (F1 Decision 9), copied from the walk-through, which is the design.
  * The prototype's words were a starting point; where the walk-through changed one, this is
@@ -671,7 +673,9 @@ export const words = {
         `${app}: something on its way to your students needs you.`, // ✓
       goingLiveButton: 'Going live', // ✓
       /** F6b Task 12 (design §4): their agent's question, answered on *Agents*. */
-      agent: (app: string) => `${app}: your agent is asking something.`,
+      /** m132, Rich's words for m129 (2026-10-03): whose agent, to the one reading. */
+      agent: (app: string, whose: Whose) =>
+        `${app}: ${whose === 'yours' ? 'your agent' : whose.name === null ? 'an agent' : `${whose.name}'s agent`} is asking something.`,
       agents: 'Agents',
     },
     since: {

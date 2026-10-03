@@ -1,7 +1,7 @@
-import type { Administrator, Conversation, Happening } from '../api/progress.js'
+import type { Administrator, Conversation, Happening, Whose } from '../api/progress.js'
 import type { EmailKind, KeptApp, KeptMember, Outgoing } from '../store/keeping.js'
 import { actorOf, type WaitingQuestion } from './happenings.js'
-import { mailWords as w, type Whose } from './words.js'
+import { mailWords as w } from './words.js'
 
 /**
  * F6 TASK 5: WHO IS EMAILED WHAT (D3), pure. One email per happening and recipient, never a

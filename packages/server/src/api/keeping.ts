@@ -16,7 +16,7 @@ import type { KeptApp } from '../store/keeping.js'
 import { chipOf } from './apps.js'
 import type { Hub } from './events.js'
 import { guard } from './guard.js'
-import type { AppRef, Line, Need, SinceLine } from './progress.js'
+import type { AppRef, Line, Need, SinceLine, Whose } from './progress.js'
 import { secretNames } from './token-names.js'
 
 /**
@@ -189,10 +189,27 @@ export function registerKeeping(
       needs.push({ kind: 'answering-again', app, ...outage.recovered })
     const failed = changeFailed(kept)
     if (failed !== undefined) needs.push({ kind: 'change-failed', app, ...failed, owner })
-    // F6b TASK 12 (Decision 14): their agent's questions, from history, until answered or a day old.
-    const ends = tokenEndsOf(store.mintedOn(kept.projectId))
-    for (const question of questionsOf(store.historyOf(kept.projectId), now, ends))
-      needs.push({ kind: 'agent-asks', app, ...question, owner })
+    // F6b TASK 12 (Decision 14): their agent's questions, from history, until answered or a day old;
+    // whose, to this reader, where our page let it in (m132).
+    const minted = store.mintedOn(kept.projectId)
+    const ends = tokenEndsOf(minted)
+    for (const question of questionsOf(store.historyOf(kept.projectId), now, ends)) {
+      const maker = minted.find(
+        (row) => row.tokenId === question.tokenId && row.purpose === 'agent',
+      )?.personId
+      const whose: Whose =
+        maker === personId
+          ? 'yours'
+          : {
+              name:
+                maker === undefined
+                  ? null
+                  : (store
+                      .members(kept.projectId)
+                      .find((member) => member.userId === maker)?.displayName ?? null),
+            }
+      needs.push({ kind: 'agent-asks', app, ...question, owner, whose })
+    }
     return needs
   }
 

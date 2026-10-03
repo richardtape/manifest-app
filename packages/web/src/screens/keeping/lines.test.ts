@@ -318,11 +318,19 @@ describe('needWords: each need, its sentence and its button', () => {
         at: AT,
         expiresAt: '2026-10-02T17:03:00.000Z',
         owner,
+        whose: 'yours',
       }
       expect(needWords(need, TZ)).toEqual({
         says: 'Reading responses: your agent is asking something.',
         button: { label: 'Agents', href: '/apps/reading-responses/agents' },
       })
+      // m132 (Rich's words for m129): another's by name; one whose maker we cannot name, an agent.
+      expect(needWords({ ...need, whose: { name: 'Sam Helper' } }, TZ).says).toBe(
+        "Reading responses: Sam Helper's agent is asking something.",
+      )
+      expect(needWords({ ...need, whose: { name: null } }, TZ).says).toBe(
+        'Reading responses: an agent is asking something.',
+      )
       expect(machineryIn(needWords(need, TZ).says)).toEqual([])
     },
   )
@@ -348,6 +356,7 @@ describe('needsStillTrue: a switched-off app’s needs are its questions alone (
       at: AT,
       expiresAt: '2026-10-02T17:03:00.000Z',
       owner: true,
+      whose: 'yours',
     },
   ]
 

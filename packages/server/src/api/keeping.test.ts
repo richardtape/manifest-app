@@ -660,6 +660,8 @@ describe('GET /api/needs (design §2: the band)', () => {
         action: 'members:manage',
         at,
         expiresAt: new Date(Date.parse(at) + 24 * HOUR).toISOString(),
+        // Not one our page let in: whose it is, we cannot say (m132).
+        whose: { name: null },
       }
       expect((await t.ask('GET', '/api/needs')).json()).toEqual({
         needs: [{ ...need, owner: true }],
@@ -736,6 +738,31 @@ describe('GET /api/needs (design §2: the band)', () => {
       expect((await t.ask('GET', '/api/needs')).json()).toEqual({
         needs: [expect.objectContaining({ kind: 'agent-asks', expiresAt: ends })],
       })
+    })
+
+    it('whose agent, to the reader (m132, Rich’s words for m129): one Bob let in on our page is his to him, and Bob’s to Alice', async () => {
+      const t = setUp()
+      keep(t, PROJECT, [memberOf(ALICE), memberOf(BOB, 'collaborator')])
+      t.store.rememberPerson(BOB)
+      t.store.keepMinted({
+        tokenId: TOKEN,
+        projectId: PROJECT,
+        personId: BOB.id,
+        purpose: 'agent',
+        conversationId: null,
+        name: 'Claude Code',
+        expiresAt: null,
+        mintedAt: ago(HOUR),
+      })
+      asked(t)
+      const whose = async (cookie?: string) =>
+        (
+          (await t.ask('GET', '/api/needs', cookie)).json() as {
+            needs: { whose: unknown }[]
+          }
+        ).needs[0]?.whose
+      expect(await whose()).toEqual({ name: 'Bob Instructor' })
+      expect(await whose(AS_BOB)).toBe('yours')
     })
 
     it('a day old, with nothing heard since: gone, without an event (Review Focus 5)', async () => {

@@ -1,3 +1,5 @@
+import type { Whose } from '../api/progress.js'
+
 /**
  * EVERY SENTENCE OF EVERY EMAIL (F6 D3), in one file, as `packages/web/src/words.ts` holds the
  * page's. Plain text, two to four sentences, *we* everywhere, and no machinery (C3: the emails'
@@ -47,7 +49,6 @@ export function howLong(from: string, to: string): string {
 const roleWords = { owner: 'an owner', collaborator: 'a helper' } as const
 
 /** m129: whose agent, to one owner: their own, another's by the kept members' name, or unnamed. */
-export type Whose = 'yours' | { name: string | null }
 const agentNamed = (whose: Whose, name: string) =>
   whose === 'yours'
     ? `Your agent '${name}'`

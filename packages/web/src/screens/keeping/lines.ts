@@ -199,7 +199,7 @@ export function needWords(
     // F6b Task 12: to everyone on it; *Agents* says who may answer (FE-50).
     case 'agent-asks':
       return {
-        says: b.agent(name),
+        says: b.agent(name, need.whose),
         button: { label: b.agents, href: appPath(need.app, '/agents') },
       }
   }
