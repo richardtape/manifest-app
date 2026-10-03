@@ -1547,6 +1547,9 @@ not carried: for Rich, and the platform's to rule which is right.*
   - (a) The code is right: the hint says *"the identical request (the same body)"*, and drops the key.
   - (b) The hint is right: the confirmation is bound to the original key too.
 - **When:** the platform's next text pass, at Rich's word. Nothing of ours waits on it.
+- **Placed by Rich** (2026-10-02, ~22:10 PDT, relayed by `manifest-96`; manifest `71ce7f0`, docs only): the platform's
+  faculty-ready plan, **Task 12** (its sitting 2, its Decision 16): option (a), the hint, the remedy and the guides say
+  *"the same method, path and body from the same token, whatever its Idempotency-Key"*. Text only.
 
 ### FE-52 — A revoked agent's question stays open, and a yes to it does nothing
 
@@ -1576,6 +1579,13 @@ not carried: for Rich.*
   - (b) A `token.revoked` event (`{ tokenId, by }`), so a front-end can drop them itself.
   - (c) Leave it: our residual stays.
 - **When:** any platform sitting; nothing of F6b waits on it.
+- **Placed by Rich** (2026-10-02, ~22:10 PDT, relayed by `manifest-96`; manifest `71ce7f0`, docs only): the platform's
+  faculty-ready plan, **Task 13** (its sitting 4, its Decision 17), close to (a): `revokeToken` and a member's removal
+  expire the token's questions (`expired`) in the revoke's own transaction; a question's `expiresAt` is capped at its
+  token's; **a new event, `pending_action.expired { pendingActionId, tokenId, action, cause: 'token_revoked' |
+  'member_removed' | 'project_archived', by }`**, after the commit, one per question (the clock's own sweep stays
+  silent). **Our Decision 16's [Revoke]-answers-no-first can go when it lands** (our call then); its executing sitting
+  messages us before its contract commit.
 
 ## Not a gap: decisions that are Rich's
 

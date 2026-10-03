@@ -4,10 +4,10 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-02, ~21:45 PDT: **F6b sittings 1, 2 and 3 are DONE**; sitting 1, the measurements on
-7100, closed tonight (`manifest-app-30`, in `manifest-96`'s window): the plan corrected **(S1)**, FE-51, FE-52, m97,
-Decision 16; **sittings 4 and 5 are unblocked**; the platform idle at `d5c76d5`, awaiting Rich's FE-46/47/5; our server
-back in **mock mode**)*:
+**Where things stand** *(2026-10-02, ~23:15 PDT: **F6b sittings 1–4 are DONE**; sitting 4, a change after launch
+(moment 17), closed tonight (`manifest-app-30`, mock mode): the kind of change, the new detail's stop and [Leave it out],
+*Waiting to reach your students*, and its review's fixes; **sitting 5 (*Agents*) is next**; the platform idle at
+`d5c76d5` (Rich placed FE-51 and FE-52 in its faculty-ready plan, `71ce7f0`); our server in **mock mode**)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
@@ -16,10 +16,9 @@ back in **mock mode**)*:
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **F6b sitting 4: a change after launch (moment 17)**, Tasks 8, 9, 10 ([`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md), approved by Rich, native) | **Ready**: sitting 1 measured M1 and M2 (each correction marked **(S1)** in the plan) | Rich's word; mock mode, no 7100 | **The current plan, in its order, and the recommended next.** Read the plan's *Sitting 1* entry first: `auth.attributes` has a catalogue of five, and `reescalated`, never `sensitiveFields`, is the panel's signal |
-  | 2 | **F6b sitting 5: *Agents*, their agent's questions**, Tasks 11, 12 | **Ready**: M4, M5 measured; the page's six calls ready (sitting 3) | Rich's word; mock mode | After 4 by the plan's order (they share no files but `words.ts`); **Decision 16** (S1, ours) is new: a revoked agent's question is not asked |
+  | 1 | **F6b sitting 5: *Agents*, their agent's questions**, Tasks 11, 12 ([`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md), approved by Rich, native) | **Ready**: M4, M5 measured; the page's six calls ready (sitting 3); sitting 4 done | Rich's word; mock mode, no 7100 | **The current plan, in its order, and the recommended next.** Read the plan's *Sitting 1* entry (M4, M5) and **Decision 16** (S1, ours: a revoked agent's question is not asked); the platform's faculty-ready Task 13 (`pending_action.expired`, FE-52) may retire its [Revoke]-answers-no-first when it lands |
   | 3 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | Ready | Rich's word, a 7100 window (`manifest-96` gave tonight's), operator's admin grant **already given** (until the next truncation) | Its own sitting (Rich, tonight: *"Separate sitting"*); `f6b-measure-1` is live on 7100 to reuse, with instructor, colleague, student and operator signed in once |
-  | 4 | F6b sitting 6: the acceptance, the walk on 7100, Rich's click | Blocked | sittings 4 and 5 | Alone, and last |
+  | 4 | F6b sitting 6: the acceptance, the walk on 7100, Rich's click | Blocked | sitting 5 | Alone, and last |
   | 5 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | The platform's faculty-ready plan also waits on that |
   | 6 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a) | Does not hold F6b open |
   | — | The faculty-ready adoption (contract 1.6.0, `__Host-` cookies) | Blocked | that plan's Task 5, which messages us first | Prepared: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md) |
@@ -61,6 +60,14 @@ back in **mock mode**)*:
      - a finding is the next `FE-n`.
   6. **Close:** the plan corrected where a measurement disagrees, each marked **(S1)**; its entry, its sittings table, this
      section, the roadmap; our server back in mock mode; `pgrep -fl vitest`.
+- **F6b sitting 4, DONE** (2026-10-02, `manifest-app-30`, mock mode; the plan's entry *Sitting 4*): `093ff61` (Task 8:
+  each commit's sensitive fields kept, the kind of change said on the work panel), `7a3d476` (Task 9: a build refused
+  `SPEC_ATTRIBUTE_NOT_REGISTERED` stops at once, the details from `getSpec` minus the registration; the card and
+  **[Leave it out]**), `6efc46e` (Task 10: *Waiting to reach your students*, `screens/overview/new-version.tsx`; F5's
+  `LetStudentsIn` gains `afterLaunch`), the review's fixes `3c31dd0` (the kind only for rounds since launch, `null`
+  otherwise; the panel's sign-off unmet as F5b's `SignOff`, UBC's two named, no [Going live]; [Stop here] on the detail
+  card; a detail failure only read, or carried on, never a try). 2541 tests; walks 39/39 and 40/40 at 1440 and 375; the
+  six acceptance scripts from a fresh dev database, twice. Minors m98–m106.
 - **F6b sitting 1, DONE** (2026-10-02, `manifest-app-30`, **edge mode** in `manifest-96`'s 7100 window; the plan's entry
   *Sitting 1*): M1–M5 on `f6b-measure-1` (made, launched, a second version live). `52a1717` (M3–M5) and the close-out
   commit. **What moved:** `auth.attributes` is a catalogue of five, any other refused at the commit (`SPEC_INVALID`); an
@@ -122,6 +129,10 @@ back in **mock mode**)*:
 - **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)): moments 10–15, Rich's own
   app live on 7100 (*Class check-ins*, 2026-10-01 03:45Z). The platform's truncations have since removed it from 7100.
 - **Open for Rich:**
+  - **F6b sitting 4's** (its entry): its words marked *ours* (the detail words, *"Manifest can't ask for it for you yet."*,
+    **[Leave it out]** and its change's words, *Waiting to reach your students*'s facts and lines, the press's after-launch
+    three, *"something reviewed at launch"*); its rulings (a helper is offered no ask; the versions' days with a time);
+    **m98–m106**, m104 (*[Leave it out]* over-says the kind) his to decide.
   - **F6b sitting 1's** (its entry): **Decision 16** (ours: *Agents* asks only about an active agent's question, and our
     [Revoke] answers *no* to its waiting ones first, *"This agent was revoked."*); **FE-51** and **FE-52** (written, not
     carried); **m97**; *"It has stopped waiting."* for `PENDING_ACTION_RESOLVED`, which means someone else answered.
@@ -206,11 +217,13 @@ back in **mock mode**)*:
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
 - **The machine** *(2026-10-02, ~21:45 PDT)*:
-  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, PID 25430, one watcher, its log
-    in `manifest-app-30`'s scratchpad), on **the dev database from F6b sitting 3's last acceptance run** (**version 6**:
-    moved aside for sitting 1's edge mode and put back), against **our mock on 7102** (`pnpm mock`, its default stage; the
-    platform's packages unchanged since `6d76459` but `f619376`'s one description). The databases before are kept in
-    `.data/`: **`app-edge-f6b-s1.sqlite`** (edge mode, F6b sitting 1: our watch of `f6b-measure-1`), `app-f6b-s3-walks.sqlite` and
+  - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, its log in
+    `manifest-app-30`'s scratchpad), on **a fresh dev database** (**version 6**) started for F6b sitting 4's last
+    acceptance run, against **our mock on 7102** (`pnpm mock`, its default stage; the platform's packages unchanged since
+    `6d76459` but `f619376`'s one description). The databases before are kept in `.data/`: **`app-f6b-s4-walks-2.sqlite`**
+    (sitting 4's walks, two runs edited to stand for moment 17), `app-f6b-s4-acceptance.sqlite`, `app-before-f6b-s1.sqlite`
+    (sitting 3's last acceptance), **`app-edge-f6b-s1.sqlite`** (edge mode, F6b sitting 1: our watch of `f6b-measure-1`),
+    `app-f6b-s3-walks.sqlite` and
     `app-f6b-s3-walks-2.sqlite` (sitting 3's walks, a second person seeded), `app-f6b-s2-first-acceptance.sqlite` and
     `app-before-f6b-s2.sqlite` (sitting 2's), **`app-edge-f6-walk.sqlite`**
     (edge mode, 07:51–12:05: F6's walk and click, our watch of `keep-walk-1002`; version 5 until opened),
@@ -261,8 +274,11 @@ back in **mock mode**)*:
     `refusalWords`), `screens/change/together.tsx` (`Theirs`, `StartedBy`): a conversation that is not the reader's is
     read-only on every screen (`theirs` threaded through Building, Plan, Waiting, SetAside, Work, RoundNeeds, Thread), its
     role read by the conversation page itself (`useRole`); `/apps/:slug/agents` parses and draws the unknown page until
-    sitting 5. **Only `src/auth.ts` names an `/auth/` path** (sign in, sign
-    out, step-up).
+    sitting 5. **F6b (sitting 4):** `screens/building/kind.ts` (the kind of change in words, from `RoundView.sensitive`,
+    which our server makes `null` for a round begun before launch) and `detail.ts` (a new detail in words; [Leave it
+    out]'s words), the detail card in `needs.tsx`; `screens/overview/new-version.tsx` (*Waiting to reach your students*:
+    its own checklist read; F5's `LetStudentsIn` with `afterLaunch`; F5b's `SignOff` for the sign-off unmet). **Only
+    `src/auth.ts` names an `/auth/` path** (sign in, sign out, step-up).
     **Who may build (F4a)** is the platform's `Me.mayBuild`, read and never re-derived: `screens/keeps.ts`'s `useKeeps`
     (someone who may not build is asked `listProjects` once; its answer keyed to the person), `screens/not-open.tsx`
     (the screen, and `/new`'s two sentences), and `not-open.ts`, the signal a `BUILDING_NOT_OPEN` met part-way raises
@@ -306,7 +322,10 @@ back in **mock mode**)*:
       platform's `reason`; found again at `/rehearsals/:rehearsalId/conversation`), **an outage's fix** (`{ fix: { outage:
       { from, to } } }`, F6 sitting 4: no incident, the lead looks in the code; no lookup route yet, Task 10's), and the
       hand-over's two rows (`/plan?before=`),
-      and `api/plan.ts` a plan.
+      and `api/plan.ts` a plan. **F6b (sitting 4):** `api/sensitive.ts` (`unionOf`: the seven sensitive fields in the
+      platform's order); `platform/details.ts` (`getSpec`'s asked attributes and production's `registeredAttributes`,
+      with the conversation's token); the round keeps each run's fields and whether it began after launch
+      (`Projects.launched`), and stops at once on `SPEC_ATTRIBUTE_NOT_REGISTERED` (`needs: detail`).
     - `model/` asks a model for structured output only, and says which model answered. **Every call streams** (F5
       sitting 2): `model/stream.ts` reads the events, and `client.ts` holds three deadlines per use (`ROUND_DEADLINES`,
       `ASKING_DEADLINES`: a first word, words or reasoning arriving, a ceiling); an answer is counted (`received`), never
@@ -318,7 +337,7 @@ back in **mock mode**)*:
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (2476 tests, 99 files, at `3912ff3`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (2541 tests, 102 files, at `3c31dd0`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action; **and (F6) holds `keeping/` to the
       watch token's reads, and refuses `archive`, `restore` and a project's `DELETE` anywhere**;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`

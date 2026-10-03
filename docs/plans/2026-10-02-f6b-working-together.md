@@ -57,7 +57,7 @@ moments **17 and 18**, and *Throughout*'s **An agent of their own**.
 | 1 | 1 | **The measurements** that reading could not settle (M1–M5, below), on 7100 in the platform's window, at Rich's word, **with two people**. **Alone.** Sittings 2 and 3 may run before it (they need no platform); 4 and 5 after it | **done 2026-10-02** (`manifest-app-30`, edge mode, in `manifest-96`'s window): M1–M5 on `f6b-measure-1`, launched; the plan corrected **(S1)**; FE-51, FE-52, m97, Decision 16. *What executing this plan found*, its entry |
 | 2 | 2, 3, 4 | **Our server:** sharing (§3); the token ids kept (D5), store version 6; the keeper's removals (§2's last part) | **done 2026-10-02** (`manifest-app-b8`, mock mode): `a751003`, `2e3a21a`, `144d513`; the review's I1 and I3 `2169b13`; a flake `32887f1`. 2386 tests twice; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 3 | 5, 6, 7 | **The page:** the platform's six new calls, *People* and *Agents* in the rail; *People* (moment 18); working on it together (§3) | **done 2026-10-02** (`manifest-app-b8`, mock mode): m77 `9502d7c`; `005a552`, `1559bc6`, `842a403`; the review's fixes `3912ff3`. 2476 tests twice; walks of *People* and of two people on one app at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
-| 4 | 8, 9, 10 | **A change after launch** (moment 17): the kind of change; the new detail's stop and **[Leave it out]**; *Waiting to reach your students* | not started |
+| 4 | 8, 9, 10 | **A change after launch** (moment 17): the kind of change; the new detail's stop and **[Leave it out]**; *Waiting to reach your students* | **done 2026-10-02** (`manifest-app-30`, mock mode): `093ff61`, `7a3d476`, `6efc46e`; the review's fixes `3c31dd0`. Walks at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 5 | 11, 12 | ***Agents***: ours and theirs, **[Revoke]**, an agent of their own let in; their agent's questions (the band, the email, the card) | not started |
 | 6 | 13 | **The acceptance:** `scripts/check-together.sh` in mock mode; the whole-branch review; the walk on 7100 with two people; **Rich's click**. **Alone, and last** | not started |
 | 7 | 14, 15 | **When the platform lands them:** FE-47's **[Ask for it]**; FE-5 (a)'s question naming who or which version | **waits for FE-47 and FE-5 (a)** (confirmed by Rich, `ddc76d7`; their spec actions drafted at manifest `6c77c15`, not applied) |
@@ -270,7 +270,12 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
    round** (`RunDetail.sensitive: string[]`), carried as `RoundView.sensitive`. **The page says the kind only for a launched
    app**, and only the union: it may over-say *"needs a look"* (a later commit that reverts names the field again), never
    under-say. **What reaches students is decided by `getLaunchReadiness`** (Task 10), which the panel reads. *Rejected:*
-   asking the readiness from the round (the candidate is staging's release, not the draft's).
+   asking the readiness from the round (the candidate is staging's release, not the draft's). **(S4: the review's I1)**
+   as built: our server reads once a run whether the app had launched (`Projects.launched`, `RunDetail.launched`), and
+   `RoundView.sensitive` is **the union over this conversation's runs since launch** (a later round never under-says
+   what an earlier one left on the draft), **`null` for a run begun before launch or unread** (a first build's fields
+   are launch's); the page says nothing for `null`, nor for a stopped round, and reads no project itself. *Residual:*
+   another conversation's unpromoted change on the same draft is not counted (the readiness is the panel's authority).
 9. **The new detail** (Task 9): a build failure whose `build.failed.machineDetail.code` is
    **`SPEC_ATTRIBUTE_NOT_REGISTERED`** stops the round at once (never three tries: no retry can pass), as a new needs kind
    **`detail`** with **`details: string[]`**, the attributes **our committed manifest asks for minus production's
@@ -289,7 +294,12 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
     takes it), its step-up returning to `?then=new-version`. Re-escalated (`reescalated`): the fields in words and **F5b's
     sign-off press** (`SignOff`'s ask), then the press when approved. Any other unmet item: the panel says which, in F5's
     row words, and **[Going live]**. **A helper reads *"An owner lets your students have it."*** and no press (the platform's
-    `release:promote` is an owner's).
+    `release:promote` is an owner's). **(S4)** as built: F5's `LetStudentsIn` refused any press once launched, so it gained
+    an `afterLaunch` mode (its words, its failure *"Your students still have the version from …"*, its step-up to
+    `?then=new-version`); the panel reads its own checklist; **the review's I2:** the sign-off unmet, re-escalated,
+    undecided or **refused**, is F5b's `SignOff` (a refusal's reason and *[Talk it through]*); UBC's two items are named in
+    our words; **no [Going live]**, which after a launch says only that it is live; while the reader's role is unknown,
+    the facts alone (M6).
 12. **The rail** gains ***People*** and ***Agents*** after *Going live* (F5's Decision 2; `SideNav`'s six), each its own
     route: `/apps/:slug/people`, `/apps/:slug/agents`. **`Then`** gains `people`, `agents` (each page's step-up return) and
     `new-version` (the Overview's).
@@ -720,7 +730,7 @@ export function kindWords(sensitive: string[]): string  // [] → straight to st
   build (never three tries), from the manifest's `auth.attributes` minus the registered list, **never from the free-text
   `reason`** (a `reason` naming a different attribute changes nothing); another build failure → today's `tries`. The card:
   *"This change needs their last name from UBC's identity team, and they must agree to share it first. That may take several
-  days."*, *"Manifest can't ask for it for you yet."*, **[Leave it out]** alone (nothing pretends to ask); two details
+  days."*, *"Manifest can't ask for it for you yet."*, **[Leave it out]** alone (nothing pretends to ask; **(S4: the review's I3)** with F4's *[Stop here]* beside it, as every card of a round that holds its app); two details
   joined; an unknown one in its generic words; the press sends the seeded words and the new token's id, then stops the
   stuck one; `machineryIn` empty. **The building screen's needs switch** draws it (ORIENTATION §7: a new kind draws nothing
   until its card is added).
@@ -754,7 +764,8 @@ export function NewVersion(props: { platform: Platform; ours: Ours; project: Sch
   owner lets your students have it."*, no press; **re-escalated:** the fields in words (Task 8's `SENSITIVE_WORDS`) and
   F5b's **[Ask a Manifest administrator to sign this off]** (its note, its asked row), no deploy press (**(S1: M2)**: read
   `reescalated`, never `sensitiveFields`, which stays non-empty after the approval and the press); **another item
-  unmet:** its row's words and **[Going live]**; **a failed deploy:** *"Your students still have the version from 18
+  unmet:** its row's words and **[Going live]** (**(S4: the review's I2)**: no [Going live] after a launch; UBC's two
+  named in our words; a refused sign-off with its reason and *[Talk it through]*); **a failed deploy:** *"Your students still have the version from 18
   September."* and F5's **[What went wrong]**; `RELEASE_REESCALATED` met at the press: the panel read again;
   `machineryIn` empty.
 - [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the press shown to a helper (red); the press shown while
@@ -1115,3 +1126,68 @@ routed around the refusal. M3–M5 ran while it waited (`52a1717`).
 - **For Rich:** delete `Manifest-local-dev/f6b-measure-1` when he wishes (with `keep-walk-1002` and `f6-watch`);
   Decision 16 (ours); FE-51 and FE-52; the *"It has stopped waiting."* words (`PENDING_ACTION_RESOLVED` means someone
   else answered); m97.
+
+### 2026-10-02 — Sitting 4: a change after launch (Tasks 8, 9, 10) (session `manifest-app-30`, mock mode, natively)
+
+**At Rich's word** (*"please do the next sitting when it's possible, liaise with the other agent"*). `manifest-96` (the
+platform's session, no task of its own) told the sitting and its holds; it relayed Rich placing **FE-51 and FE-52 in its
+faculty-ready plan** (manifest `71ce7f0`, docs only). Contract 1.5.0, 72, unchanged. Nothing of ours touched 7100.
+
+- **What landed:**
+  - **`093ff61`, Task 8, the kind of change:** each commit's `sensitiveDiff.fields` reaches the round
+    (`Committed.sensitive`), kept on the run in the platform's order (`api/sensitive.ts`'s `unionOf`, any other field
+    after the seven), carried as `RoundView.sensitive`; the work panel says the kind (`screens/building/kind.ts`) as soon
+    as a commit names a field, and the round's end says it beside *"Ready on your draft address."*.
+  - **`7a3d476`, Task 9, a new detail:** a `build.failed` with `SPEC_ATTRIBUTE_NOT_REGISTERED` stops the round at once as
+    `needs { kind: 'detail', details }`: what `getSpec` says the built manifest asks minus production's
+    `registeredAttributes` (`platform/details.ts`, the conversation's token; S1: M1), never the free text. The card
+    (`detail.ts`, `needs.tsx`): the detail in our words, *"Manifest can't ask for it for you yet."*, **[Leave it out]**:
+    a token named for the change, the change started with our words and its id, the stuck one stopped, the new
+    conversation.
+  - **`6efc46e`, Task 10, *Waiting to reach your students*** (`screens/overview/new-version.tsx`) on a launched app's
+    Overview; F5's `LetStudentsIn` gains `afterLaunch`; the walk-through's moment 17 carries the departures.
+  - **`3c31dd0`, the review's fixes** (below).
+- **How it was built:** natively, each task test-first and its controls red, restored: the union replaced by the last
+  commit's; the kind said before launch; the code ignored; the details parsed from the reason; the press shown to a
+  helper; the press shown while re-escalated; the launched-meanwhile refusal kept after launch; the still-theirs line
+  dropped.
+- **Walks** (`scripts/walk/`, mock with `MANIFEST_MOCK_LAUNCHED=1`, two runs edited in the dev database to stand for a
+  change mid-round and one stopped on `sn`; the Overview's readiness rewritten in the browser): **39/39**, then after the
+  fixes **40/40** (one of the new checks was vacuous as written; the unit test and the shot cover it): the kind
+  mid-round; the detail card with **[Leave it out]** and **[Stop here]** (pressed: the new conversation opened, seeded);
+  the panel self-serve (an owner's press landed *"Your students have the version from …"*), re-escalated, unmet, a
+  helper; at 1440 and 375, fitting, no machinery.
+- **The whole-sitting review** (a fresh reviewer, `86c2156..6efc46e`): **no Critical; three Important, four minors
+  re-graded Important, all fixed test-first in `3c31dd0`:**
+  - **I1:** the kind was said on rounds that were no change after launch (a first build read after it, a run saved
+    before F6b, a later round under-saying, a stopped round). Our server now reads once a run whether the app had
+    launched (`Projects.launched`; `RunDetail.launched`), and `RoundView.sensitive` is the union over this
+    conversation's runs since launch, **`null`** otherwise; the page says nothing for `null` or stopped (Decision 8,
+    **(S4)**).
+  - **I2:** the panel's *"something on Going live"* linked to a page that after launch says only that it is live, never
+    named UBC's two items, and drew a refused sign-off as undecided: now the sign-off unmet is F5b's `SignOff` (a
+    refusal's reason and *[Talk it through]*), UBC's two in our words, no link (Decision 11, **(S4)**).
+  - **I3:** the detail card offers *[Stop here]* (F4 Decision 5).
+  - **M1, M2 (re-graded):** a new-detail failure only read is still the new detail; a read never overwrites the
+    stream's; carried on, or after its Stop, the round builds anew (else the lead was handed *"remove the attribute"*);
+    the built commit is the build's own (M3). **M5:** the press after launch never says *"Go live"*. **M6:** an owner
+    never reads *"An owner lets…"* while the members load. **M9:** re-escalated naming no field is *"something reviewed at
+    launch"*.
+  - The gates then found one regression of the pass (a conversation's stored project carrying `launchedAt`), fixed by
+    `Projects.launched` apart from `Made`, its test proven red.
+  - **Minors m100–m106** in [`minors.md`](../minors.md); the walk's **m98, m99**.
+- **Decided in executing** (each in the ledger with its cost): the asked details from `getSpec`, never our own YAML
+  parse; a build read carries no code, so a code-less failure asks the two reads; [Leave it out]'s Stop failing after the
+  new change started is swallowed (it waits in line, which says so); no reference on the detail card; `LetStudentsIn`'s
+  `afterLaunch` rather than a second press; the panel reads its own checklist; the versions' days are moment 9's
+  (*"today, 9:00am"*); a helper is offered no ask (the owner's, as the press); a launched app's Overview reads its
+  checklist once.
+- **Words for Rich** (each marked *ours* in `words.ts`): the detail words (*"their first name"*, *"their last name"*,
+  *"their email"*, *"whether they're a student or staff"*, *"a new detail about the people who sign in"*), *"Manifest
+  can't ask for it for you yet."*, **[Leave it out]**, *"Starting that change…"*, *"We couldn't start that change just
+  now. Nothing has changed."*, its change's first words; the panel's *"Waiting to reach your students"*, its facts,
+  *"Let your students have this version"*, *"An owner lets your students have it."*, *"Your students have / still have
+  the version from …"*, *"Before your students can have it, this needs doing first."*, UBC's two in our words, the
+  press's after-launch three; *"something reviewed at launch"*.
+- **For sitting 5** (*Agents*): Decision 16 (S1) stands; FE-52's platform fix (faculty-ready Task 13, `pending_action.expired`)
+  may retire our [Revoke]-answers-no-first when it lands.

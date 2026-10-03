@@ -262,6 +262,26 @@ six Important and one Minor re-graded Important fixed test-first in `3912ff3`, t
 |---|---|---|---|---|---|
 | m97 | M3, seen live | The history names people from the members we keep **now**, so once someone is taken off, every line about them (their adding, their new role, their removal) loses their name: *"Test Instructor took someone off it"*, *"… added someone"*. Seen in `/api/apps/:id/history` while `colleague` was off the app; their name came back when they were added again. Keep each person's name with the happening (or a name kept for former members), as F6 sitting 5's *"Alice took Bob off it"* meant. | `packages/server/src/keeping/happenings.ts` (`linesOf` → `nameOf(members, …)`); `emails.ts`'s `nameOf` reads the same members. | S | faculty-visible |
 
+**From F6b sitting 4's walk** (`manifest-app-30`, 2026-10-02, mock mode; the plan's entry *Sitting 4*).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m98 | The walk, 375 | On the Overview's *Waiting to reach your students*, re-escalated, F5b's sign-off row draws its owner (*"you"*) alone under the sentence: the row is drawn outside *Going live*'s grid. | `packages/web/src/screens/overview/new-version.tsx` (the `SignOff`'s `RowView`); `app.css`. | S | faculty-visible |
+| m99 | The walk | Self-serve, the panel names the version on trying-out twice: its facts (*"The version from today, 7:29pm is on your trying-out address…"*) and the press's own *"The version from today, 7:29pm goes to <address>…"*. Say the facts' first sentence only when no press is offered, or drop the press's. | `new-version.tsx`; `going-live/live.tsx` (`goes`). | S | faculty-visible |
+
+**From F6b sitting 4's whole-sitting review** (`manifest-app-30`, 2026-10-02, a fresh reviewer over `86c2156..6efc46e`; its
+three Important and four minors re-graded Important fixed test-first in `3c31dd0`, these seven here).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m100 | The review's M4 | A new-detail stop leaves `d.steps.build` from an earlier try in the same leg, so the halted *Building it* shows that old failure's note beside the card. Clear it at the stop. | `packages/server/src/build/round.ts` (the detail stop in `build`). | S | faculty-visible |
+| m101 | The review's M7 | The landed moment on *Waiting to reach your students* is lost if the Overview's quiet re-read fails (its trouble notice replaces the page), and kept under its heading until a reload, hiding a later version put on trying-out. | `packages/web/src/screens/overview/new-version.tsx` (`held`), `overview.tsx`. | S | faculty-visible |
+| m102 | The review's M8 | After the gate refuses the press, the old reading (ready) offers the press again for a moment until the re-read lands; Going live sets `ready: false` at once. | `new-version.tsx` (`readAgain` on `onGate`). | S | faculty-visible |
+| m103 | The review's M9 (second half) | Undated, the facts say *"A newer version… Your students have an earlier one."*, assuming the order. | `words.ts` (`overview.newVersion.facts`). | S | faculty-visible |
+| m104 | The review's M10 | **[Leave it out]**'s own commit removes the attribute, so the new conversation says it *"needs a Manifest administrator's look… because it changes who it learns about"* while the readiness will be self-serve. Decision 8 allows over-saying; every [Leave it out] does it. For Rich. | `api/sensitive.ts`'s union; the platform's `sensitiveDiff` names a removal too. | S | faculty-visible |
+| m105 | The review's M11 | Test gaps: no Overview-level test of the held press across the Overview's re-read; the failed-deploy test has no incident ([What went wrong] after launch unasserted). | `new-version.test.tsx`, `students.test.tsx`. | S | tests-only |
+| m106 | The review's M12 | Focus is lost when **[Leave it out]** becomes *"Starting that change…"*, and not restored on a failure. | `packages/web/src/screens/building/needs.tsx`, `building.tsx`. | S | accessibility |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed
