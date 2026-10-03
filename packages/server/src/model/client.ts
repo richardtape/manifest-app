@@ -26,10 +26,15 @@ export type ModelCode =
   | 'INTAKE_KEY_EXPIRED'
 
 /**
- * HOW MUCH OF AN ANSWER CAME, COUNTED AND NEVER KEPT (F5 Decision 14): its characters, when its
- * first word came (null: none did), and how long it took, each from the request.
+ * HOW MUCH OF AN ANSWER CAME, COUNTED AND NEVER KEPT (F5 Decision 14): its length (UTF-16 code
+ * units), when its first word came (null: none did), and how long it took, each from the request.
  */
-export type Received = { chars: number; firstWordMs: number | null; ms: number }
+export type Received = {
+  /** Its length as JavaScript counts a string: UTF-16 code units, not characters (m39). */
+  chars: number
+  firstWordMs: number | null
+  ms: number
+}
 
 /**
  * THE PLATFORM'S OWN FACTS ON A SPENT MONTH (FE-29, contract 1.6.0; m126): a start refused
