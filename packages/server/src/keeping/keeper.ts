@@ -182,7 +182,8 @@ export function createKeeper({
   }
 
   function watchWith(projectId: string, tokenId: string, token: string): void {
-    open.get(projectId)?.watch?.close()
+    const before = open.get(projectId)
+    before?.watch?.close()
     const first = !store
       .historyOf(projectId)
       .some((entry) => !entry.type.startsWith('keeping.'))
@@ -192,7 +193,8 @@ export function createKeeper({
       watch: undefined,
       held: new Set(),
       first,
-      asking: [],
+      // A replay's questions, its stream replaced before its report: the new one's (the review of m108).
+      asking: before?.asking.splice(0) ?? [],
       membersAsked: 0,
       membersBelieved: 0,
     }
@@ -238,7 +240,9 @@ export function createKeeper({
     const happening = one.first ? null : happeningOf(entry)
     // Someone added is named once the members are read again; someone removed, before.
     if (happening?.kind === 'member-added')
-      return void refresh(projectId, one, 'members').then(() => tell(entry, happening))
+      return void refresh(projectId, one, 'members').then((read) =>
+        tell(entry, happening, read),
+      )
     if (happening !== null) tell(entry, happening)
     // F6b Decision 5: told with the members as they were (above), then ended without them.
     if (happening?.kind === 'member-removed')
@@ -279,11 +283,18 @@ export function createKeeper({
     else unended.delete(projectId)
   }
 
-  /** D3: each owner told once, by the kept app and members. */
-  function tell(entry: HistoryEntry, happening: Happening): void {
+  /**
+   * D3: each owner told once, by the kept app and members; or by the members read its own event
+   * began, when a newer read is kept instead (the review of m81: it still names the one added).
+   */
+  function tell(
+    entry: HistoryEntry,
+    happening: Happening,
+    read: KeptMember[] | undefined = undefined,
+  ): void {
     const app = store.app(entry.projectId)
     if (app === undefined) return
-    const members = store.members(entry.projectId)
+    const members = read ?? store.members(entry.projectId)
     const administrator = administratorOf(entry)
     const context = { app, members, origin, at: entry.at, id: entry.id, administrator }
     for (const outgoing of emailsFor(happening, context))
@@ -491,11 +502,12 @@ export function createKeeper({
     })
   }
 
+  /** Reads the app, its members or both again; answers the members read, kept or not. */
   async function refresh(
     projectId: string,
     one: Open,
     what: 'app' | 'members' | 'both',
-  ): Promise<void> {
+  ): Promise<KeptMember[] | undefined> {
     try {
       if (what !== 'members') {
         const app = await watching.app(one.token, projectId)
@@ -504,18 +516,21 @@ export function createKeeper({
       if (what !== 'app') {
         const asked = ++one.membersAsked
         const members = await watching.members(one.token, projectId)
-        // Answered after a newer one, or after a member event it began before: not believed.
-        if (asked <= one.membersBelieved) return
-        one.membersBelieved = asked
         // Every app has an owner, so a read that lists nobody is not believed: it would end
-        // everyone's work (minors m80). The next read says again.
-        if (isCurrent(projectId, one) && members.length > 0)
+        // everyone's work (minors m80). The next read says again; it moves nothing believed.
+        if (members.length === 0) return undefined
+        // Answered after a newer one, or after a member event it began before: not kept (m81).
+        if (asked > one.membersBelieved && isCurrent(projectId, one)) {
+          one.membersBelieved = asked
           keepMembers(projectId, members)
+        }
+        return members
       }
     } catch {
       // A refused token's stream says so itself; anything else is read again at the next event
       // or reconnect. Never logged: nothing here may carry the token.
     }
+    return undefined
   }
 
   function forget(projectId: string): void {

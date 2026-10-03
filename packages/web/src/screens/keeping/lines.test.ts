@@ -187,6 +187,12 @@ describe('lineWords: every happening (the table in Words proposed for Rich)', ()
     )
   })
 
+  it('a line from a server older than the question 10, with no administrator field, says what it said (the review)', () => {
+    const old = { ...line({ kind: 'switched-off', by: 'a' }, 'Alice') } as Partial<Line>
+    delete old.administrator
+    expect(lineWords(old as Line)).toBe('Alice switched it off')
+  })
+
   it('the administrator is said, not the member, when both are known (a helper acting beyond their role, the platform’s Task 15)', () => {
     expect(
       lineWords(

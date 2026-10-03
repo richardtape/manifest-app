@@ -53,7 +53,8 @@ export function howLongWords(from: string, to: string): string {
  */
 export function lineWords(line: Line, timeZone?: string): string {
   const { administrator } = line
-  if (administrator === null) return sentenceOf(line, line.who, timeZone)
+  // `== null`: a server older than the question 10 sends no field at all.
+  if (administrator == null) return sentenceOf(line, line.who, timeZone)
   const sentence = sentenceOf(line, l.administrator(administrator.name), timeZone)
   return sentence === '' ? '' : l.said(sentence, administrator.reason)
 }

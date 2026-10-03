@@ -511,6 +511,20 @@ describe('events: written once, as the platform sent them (Decision 1)', () => {
     expect(t.store.members(P1)).toEqual([member(ALICE)])
   })
 
+  it('a members read that lists nobody never knocks out an older one that lists someone (the review of m81; m80)', async () => {
+    const t = await watched()
+    const first = t.w.answerLater()
+    const second = t.w.answerLater()
+    t.handlers.reconnected()
+    t.handlers.reconnected()
+    await settle()
+    second([])
+    await settle()
+    first([member(ALICE)])
+    await settle()
+    expect(t.store.members(P1)).toEqual([member(ALICE)])
+  })
+
   it('another event re-reads nothing', async () => {
     const t = await watched()
     const before = t.w.calls.length
@@ -819,6 +833,41 @@ describe('the emails (Task 5: D3, once each)', () => {
     ])
   })
 
+  it('two people added close together (the review of m81): each email names its person, from the read its own event began', async () => {
+    const t = await live([member(ALICE), carol])
+    const erin: KeptMember = {
+      userId: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+      role: 'collaborator',
+      displayName: 'Erin New',
+      email: 'erin@example.test',
+    }
+    const dan: KeptMember = {
+      ...erin,
+      userId: DAN,
+      displayName: 'Dan New',
+      email: 'dan@example.test',
+    }
+    const first = t.w.answerLater()
+    const second = t.w.answerLater()
+    const added = (n: number, who: string) =>
+      event(n, 'member.added', {
+        memberId: who,
+        role: 'collaborator',
+        previousRole: null,
+        userId: ALICE,
+      })
+    t.handlers.event(added(20, DAN))
+    t.handlers.event(added(21, erin.userId))
+    first([member(ALICE), carol, dan])
+    await settle()
+    second([member(ALICE), carol, dan, erin])
+    await settle()
+    expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
+      { to: 'carol@example.test', subject: 'Reading responses: Dan New was added' },
+      { to: 'carol@example.test', subject: 'Reading responses: Erin New was added' },
+    ])
+  })
+
   it('member.removed is emailed with the members as they were, naming the one removed', async () => {
     const t = await live([member(ALICE), member(BOB, 'collaborator'), carol])
     t.w.members.set(P1, [member(ALICE), carol])
@@ -987,6 +1036,20 @@ describe('the emails (Task 5: D3, once each)', () => {
         'alice@example.test',
         'carol@example.test',
       ])
+    })
+
+    it('a question a replay carried, its stream replaced before the replay was over (the review of m108): emailed at the new stream’s report', async () => {
+      const t = setUp()
+      // With 29 days left, the next hand replaces it (the question's own day still running).
+      await t.keeper.hand(P1, handed(TOKEN_A, ID_A, 29), ALICE)
+      t.open()[0]!.handlers.replayed!({ ids: [], overlapped: false })
+      t.open()[0]!.handlers.event(created(6), true)
+      expect(await t.keeper.hand(P1, handed(TOKEN_B, ID_B), ALICE)).toBe('kept')
+      const handlers = t.open()[0]!.handlers
+      handlers.event(created(6), true)
+      handlers.replayed!({ ids: [created(6).id], overlapped: false })
+      await settle()
+      expect(t.sent.map(({ to }) => to)).toEqual(['alice@example.test'])
     })
 
     it('its answer, and anything else of its kind, emails nobody', async () => {
