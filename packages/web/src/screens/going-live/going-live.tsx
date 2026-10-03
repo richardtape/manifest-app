@@ -154,7 +154,8 @@ export function GoingLive({
   const [attempt, setAttempt] = useState(0)
   // BACK FROM SIGNING IN AGAIN: said once, and `then` taken out of the address without a
   // navigation (the focus stays put), so a reload is not "back" again.
-  const [back] = useState(then === 'live')
+  // Said once: a gate refusal draws the card again, and it is not "back" again then (m10).
+  const [back, setBack] = useState(then === 'live')
   const [backToDryRun] = useState(then === 'dry-run')
   useEffect(() => {
     if (back || backToDryRun)
@@ -228,6 +229,7 @@ export function GoingLive({
 
   const onGate = useCallback(() => {
     const seen = seenNow.current
+    setBack(false)
     setPressed(false)
     setGate(seen?.rows ?? [])
     // The gate said it is not ready: no button while the checklist is read again.

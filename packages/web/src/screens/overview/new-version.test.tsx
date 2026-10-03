@@ -394,6 +394,21 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     ).toBeTruthy()
   })
 
+  it('m10: back from the second sign-in, then the gate refused: the press drawn again never says "signed in again" again', async () => {
+    const s = stage(SELF_SERVE, {
+      deploy: () => Promise.reject(refused(409, 'RELEASE_REESCALATED')),
+    })
+    draw(s, { arrived: true })
+    expect(await screen.findByText(words.goingLive.letIn.again)).toBeTruthy()
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    // Read again after the gate, ready again: the press is back.
+    expect(await screen.findByRole('button', { name: PRESS })).toBeTruthy()
+    expect(screen.queryByText(words.goingLive.letIn.again)).toBeNull()
+  })
+
   it('the gate refuses the press: no press offered again while the panel reads again (minors m102)', async () => {
     let reads = 0
     const s = stage(SELF_SERVE, {

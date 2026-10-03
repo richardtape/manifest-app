@@ -73,6 +73,8 @@ export function NewVersion({
   const [gated, setGated] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const [held, setHeld] = useState(false)
+  // Said once: a gate refusal draws the press again, and it is not "back" again then (m10).
+  const [back, setBack] = useState(arrived)
   const heading = useId()
   const served = asServed(production, true).instance?.releaseId ?? null
 
@@ -128,6 +130,7 @@ export function NewVersion({
   // The gate said it is not ready: nothing to press, and nothing said of what stands, until the
   // checklist is read again (minors m102): the old reading is the one the gate just refused.
   const onGate = useCallback(() => {
+    setBack(false)
     setGated(true)
     setAttempt((n) => n + 1)
   }, [])
@@ -151,7 +154,7 @@ export function NewVersion({
         candidate === null ? null : { releaseId: candidate, when: reading.trying }
       }
       production={production}
-      back={arrived}
+      back={back}
       expire={expire}
       now={now}
       timeZone={timeZone}

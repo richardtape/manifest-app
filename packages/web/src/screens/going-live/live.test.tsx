@@ -657,6 +657,20 @@ describe('the step-up: signing in once more, in place (Decision 10)', () => {
     expect(screen.queryByText(l.again)).toBeNull()
   })
 
+  it('m10: back with then=live, then the gate refused: the card drawn again never says "signed in again" again', async () => {
+    const s = stage()
+    await open(s, `/apps/${SLUG}/going-live?then=live`)
+    expect(await screen.findByText(l.again)).toBeTruthy()
+    await pressed(s)
+    s.world.readiness = REFUSED
+    await s.refuse(refused(409, 'RELEASE_PRODUCTION_GATE_UNAVAILABLE'))
+    await screen.findByText(l.gate)
+    s.world.readiness = READY
+    await shown()
+    expect(await letIn()).toBeTruthy()
+    expect(screen.queryByText(l.again)).toBeNull()
+  })
+
   it('back with then=live, and no longer ready: nothing to press, and then is still cleared', async () => {
     await open(stage({ readiness: REFUSED }), `/apps/${SLUG}/going-live?then=live`)
     await screen.findByRole('region', { name: g.shortJobs.title })
