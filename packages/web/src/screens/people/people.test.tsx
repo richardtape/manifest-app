@@ -340,6 +340,14 @@ describe('the second sign-in (Decision 15)', () => {
     expect(s.called('addMember')).toEqual([])
   })
 
+  it('back: the address loses then=people without a navigation, so a reload is not back again (minors m87)', async () => {
+    window.history.replaceState({}, '', `/apps/${SLUG}/people?then=people`)
+    open(stage(), 'people')
+    await rowOf('Sam Helper')
+    expect(window.location.pathname + window.location.search).toBe(`/apps/${SLUG}/people`)
+    expect(screen.getByText(words.goingLive.letIn.again)).toBeTruthy()
+  })
+
   it('a removal asked the second sign-in: the card, and back, pressed again by them', async () => {
     const s = stage({ remove: [{ status: 403, code: 'STEP_UP_REQUIRED' }] })
     open(s)

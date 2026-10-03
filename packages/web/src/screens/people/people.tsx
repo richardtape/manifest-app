@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
-import { navigate, type Then } from '../../router.js'
+import { navigate, remember, type Then } from '../../router.js'
 import { words } from '../../words.js'
 import { PressNotice } from '../change/notice.js'
 import { pressFailed, useFocusBack, type Notice } from '../change/press.js'
@@ -77,7 +77,12 @@ export function People({
   expire: () => void
   timeZone?: string | undefined
 }) {
-  const back = then === 'people'
+  // Back from signing in again: said once, and `then` taken out of the address without a
+  // navigation (the focus stays put), so a reload is not "back" again (minors m87).
+  const [back] = useState(then === 'people')
+  useEffect(() => {
+    if (back) remember(`/apps/${encodeURIComponent(project.slug)}/people`)
+  }, [back, project.slug])
   const [kept] = useState(() => (back ? keptOf(project.id) : undefined))
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' })
   const [reads, setReads] = useState(0)
