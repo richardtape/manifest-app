@@ -20,6 +20,8 @@ export const STOPPABLE: ReadonlySet<string> = new Set([...RUNNING, ...NOT_STARTE
  * - **Waiting in the line:** a stopped round goes back to its Stop; a change is set aside.
  * - **Planned, or planning:** set aside, and the app freed. The first plan's *Not now* is refused
  *   by the route before this: it has nothing to go back to.
+ * - **Its app still being made** (only a removal reaches it: Stop's route refuses `making`): set
+ *   aside, and the app freed, or it would hold the app for ever (minors m84).
  * Anything else has no work to end: nothing happens.
  */
 export function endWork(
@@ -33,7 +35,7 @@ export function endWork(
     line.released(conversation.projectId)
     return
   }
-  if (!NOT_STARTED.has(conversation.state)) return
+  if (!NOT_STARTED.has(conversation.state) && conversation.state !== 'making') return
   // A change set aside says who, and why (the sitting 3 review's I3): kept by its change.
   const setAside = () => {
     store.addMessage(conversation.id, 'we', {

@@ -14,6 +14,7 @@ import { storeTrace } from '../runtime/trace.js'
 import { openStore, type Conversation, type Store } from '../store/db.js'
 import { scratchDir } from '../store/testing.js'
 import { createHub, publishState, stateFrame, type Hub } from './events.js'
+import { holderOf } from './line-state.js'
 import { pieceOf } from './piece-state.js'
 import type { AppConversation, Progress } from './progress.js'
 import { roundOf } from './round-state.js'
@@ -1270,6 +1271,19 @@ describe('working on it together (F6b D3, Task 2)', () => {
     r.remove(s, BOB)
     expect(s.store.conversationById(first.id)?.state).toBe('set-aside')
     expect(pieceOf(s.store, first.id).stopped).toEqual({ by: BOB.id, why: 'removed' })
+  })
+
+  it('taken off while their app is still being made (minors m84): set aside, so it holds the app no more', async () => {
+    const r = removing()
+    const s = setUp([], { keeper: r.keeper })
+    together(s)
+    const first = planReady(s, BOB.id)
+    s.store.setState(first.id, 'making')
+    expect(holderOf(s.store, PROJECT.id, () => false)?.id).toBe(first.id)
+    r.remove(s, BOB)
+    expect(s.store.conversationById(first.id)?.state).toBe('set-aside')
+    expect(pieceOf(s.store, first.id).stopped).toEqual({ by: BOB.id, why: 'removed' })
+    expect(holderOf(s.store, PROJECT.id, () => false)).toBeUndefined()
   })
 
   it('taken off: their own conversation on it is 404 to them, and readable by the members, ended, saying so', async () => {
