@@ -1,6 +1,6 @@
 import type { Schemas } from '@manifest/contract'
 import { Button, Card, Choice, FormField } from '@manifest-app/ui'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
@@ -48,6 +48,19 @@ function keptOf(projectId: string): Kept | undefined {
 const codeOf = (error: unknown): string | null => {
   const refusal = refusalOf(error)
   return refusal.kind === 'refused' ? refusal.code : null
+}
+
+/** A hostname in a sentence is drawn in mono (C3; minors m95); the words stay one sentence. */
+function withAddress(text: string): ReactNode {
+  const at = text.indexOf(p.ourAddress)
+  if (at === -1) return text
+  return (
+    <>
+      {text.slice(0, at)}
+      <span className="mono">{p.ourAddress}</span>
+      {text.slice(at + p.ourAddress.length)}
+    </>
+  )
 }
 
 /**
@@ -392,7 +405,7 @@ export function People({
             <div role="alert">
               <Card tone="attention">
                 {said.kind === 'words' ? (
-                  <p className="body-lead">{said.text}</p>
+                  <p className="body-lead">{withAddress(said.text)}</p>
                 ) : (
                   <PressNotice
                     notice={said.notice}

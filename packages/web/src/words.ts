@@ -1379,6 +1379,8 @@ export const words = {
     confirmLeave: (app: string) => `Take yourself off ${app}? Your work on it stops.`,
     leave: 'Take me off',
     couldnt: "We couldn't change who's on it just now. Nothing has changed.",
+    /** The address in MEMBER_USER_NOT_FOUND's words, drawn in mono there (C3; minors m95). */
+    ourAddress: 'app.manifest.internal',
     refused: {
       MEMBER_USER_NOT_FOUND:
         "We don't know anyone by that name yet. They need to sign in to Manifest once: send them app.manifest.internal, then try again.",

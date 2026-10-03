@@ -365,6 +365,20 @@ describe('the second sign-in (Decision 15)', () => {
 })
 
 describe('refusals, by code (design §2): each says what is still true', () => {
+  it('not known yet: the address to send them is a hostname, drawn in mono (C3; minors m95)', async () => {
+    const s = stage({ add: [{ status: 400, code: 'MEMBER_USER_NOT_FOUND' }] })
+    open(s)
+    await rowOf('Sam Helper')
+    fireEvent.change(screen.getByLabelText(p.add.field), {
+      target: { value: 'kim@ubc.ca' },
+    })
+    await press(button(p.add.button))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toBe(p.refused.MEMBER_USER_NOT_FOUND)
+    expect(p.refused.MEMBER_USER_NOT_FOUND).toContain(p.ourAddress)
+    expect(alert.querySelector('.mono')?.textContent).toBe(p.ourAddress)
+  })
+
   it.each([
     ['MEMBER_USER_NOT_FOUND', 400],
     ['MEMBER_USER_AMBIGUOUS', 400],
