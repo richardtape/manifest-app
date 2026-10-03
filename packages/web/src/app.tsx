@@ -31,6 +31,23 @@ const OURS = createOurs()
 const rail = words.preview.rail
 
 /**
+ * THEIR SESSION ENDED WHILE WE LOOKED (a 401): sign in again, back here. One card, drawn alone
+ * while their apps are still read, or above the page (minors m29).
+ */
+function Expired({ here }: { here: string }) {
+  return (
+    <div role="alert">
+      <Card tone="attention">
+        <p className="body-lead">{words.expired.body}</p>
+        <Button kind="primary" href={signInHref(here)}>
+          {words.expired.button}
+        </Button>
+      </Card>
+    </div>
+  )
+}
+
+/**
  * THE SHELL: session, then route, then screen. Nothing is drawn while `getMe` is asked
  * (seconds, and no spinners: 20-states.md). Signed out is the sign-in screen, the only
  * one without a rail. Signed in, every screen sits beside the rail.
@@ -186,14 +203,7 @@ export function App({
     return framed(
       session.state === 'expired' ? (
         <main className="app-alone">
-          <div role="alert">
-            <Card tone="attention">
-              <p className="body-lead">{words.expired.body}</p>
-              <Button kind="primary" href={signInHref(here)}>
-                {words.expired.button}
-              </Button>
-            </Card>
-          </div>
+          <Expired here={here} />
         </main>
       ) : null,
     )
@@ -435,16 +445,7 @@ export function App({
         />
       </div>
       <main className="app-main" id="main" tabIndex={-1}>
-        {session.state === 'expired' ? (
-          <div role="alert">
-            <Card tone="attention">
-              <p className="body-lead">{words.expired.body}</p>
-              <Button kind="primary" href={signInHref(here)}>
-                {words.expired.button}
-              </Button>
-            </Card>
-          </div>
-        ) : null}
+        {session.state === 'expired' ? <Expired here={here} /> : null}
         {signOutFailed ? (
           <div role="alert">
             <Card tone="attention">
