@@ -4,10 +4,10 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-02, ~23:15 PDT: **F6b sittings 1–4 are DONE**; sitting 4, a change after launch
-(moment 17), closed tonight (`manifest-app-30`, mock mode): the kind of change, the new detail's stop and [Leave it out],
-*Waiting to reach your students*, and its review's fixes; **sitting 5 (*Agents*) is next**; the platform idle at
-`d5c76d5` (Rich placed FE-51 and FE-52 in its faculty-ready plan, `71ce7f0`); our server in **mock mode**)*:
+**Where things stand** *(2026-10-03, ~00:30 PDT: **F6b sittings 1–5 are DONE**; sitting 5, *Agents* and their agent's
+questions, closed tonight (`manifest-app-ba`, mock mode): *Agents*, the question in the band, its email and its card, and
+its review's fixes (store **version 7**); **sitting 6 (the acceptance on 7100, Rich's click) is next**; the platform at
+`2e63cb4` (its faculty-ready plan's sitting 1, docs only, closed by `manifest-96`); our server in **mock mode**)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
@@ -16,17 +16,16 @@ says which plan is current. This file states where things stand and the rules. I
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **F6b sitting 5: *Agents*, their agent's questions**, Tasks 11, 12 ([`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md), approved by Rich, native) | **Ready**: M4, M5 measured; the page's six calls ready (sitting 3); sitting 4 done | Rich's word; mock mode, no 7100 | **The current plan, in its order, and the recommended next.** Read the plan's *Sitting 1* entry (M4, M5) and **Decision 16** (S1, ours: a revoked agent's question is not asked); the platform's faculty-ready Task 13 (`pending_action.expired`, FE-52) may retire its [Revoke]-answers-no-first when it lands |
+  | 1 | **F6b sitting 6: the acceptance, the walk on 7100, Rich's click**, Task 13 ([`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md), approved by Rich, native) | **Ready**: sittings 1–5 done | Rich's word, a 7100 window (`manifest-96`'s, or whichever platform session is live; its faculty-ready sitting 2 will run Vitest and a Docker tier, so ask) | **The current plan, and its last sitting.** Step 1 (`scripts/check-together.sh` and `.ts`, mock mode) needs no platform and can run first; read the plan's *Sitting 5* entry's *For sitting 6*: **before Rich's click, list the walk app's active tokens and revoke any leftover *Keeping watch* as its minter** (Decision 4's residual) |
   | 3 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | Ready | Rich's word, a 7100 window (`manifest-96` gave tonight's), operator's admin grant **already given** (until the next truncation) | Its own sitting (Rich, tonight: *"Separate sitting"*); `f6b-measure-1` is live on 7100 to reuse, with instructor, colleague, student and operator signed in once |
-  | 4 | F6b sitting 6: the acceptance, the walk on 7100, Rich's click | Blocked | sitting 5 | Alone, and last |
   | 5 | F5b part two (its sittings 3–5) | Blocked | FE-46's spec action: **drafted, not applied** (manifest's `docs/superpowers/plans/2026-10-01-fe46-fe47-fe5-spec-actions.md`), Rich's to place | The platform's faculty-ready plan also waits on that |
-  | 6 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a) | Does not hold F6b open |
-  | — | The faculty-ready adoption (contract 1.6.0, `__Host-` cookies) | Blocked | that plan's Task 5, which messages us first | Prepared: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md) |
+  | 6 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a), **placed after the faculty-ready plan** by Rich | Does not hold F6b open |
+  | — | The faculty-ready adoption (contract 1.6.0, `__Host-` cookies; **FE-49's `Token.mintedBy` in its Task 13**) | Blocked | its sitting 2 (1.6.0), which waits on Rich's Spec actions 2 and 3 and asks our holds; its Task 5 messages us first | Prepared: [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md) |
   | — | Minors ([`minors.md`](./minors.md)), m76 with m69 | Rich's choice | Rich picks | Small; between sittings, at his word |
 
   - **First, always:** `ListAgents` (tell the platform's live session your name and ports, and hold every Vitest run of
     ours between its TIER START/END and CLOSING TESTS START/END), `pgrep -fl vitest`, Step 0 (contract 1.5.0, 72
-    operations; manifest at `d5c76d5`, its contract unchanged since `f619376`'s text).
+    operations; manifest at `2e63cb4`, its contract unchanged since `f619376`'s text).
 - **DOING A SITTING ON 7100** (F5b's sitting 1 next; F6b's walk at its sitting 6; the steps F6's walk and F6b's sitting
   1 proved, gathered from §2, §7 and the plan's Task 1):
   1. **Rich's word, every time.** If a platform session is live, ask it for a window: no restart of the control plane, no
@@ -60,6 +59,18 @@ says which plan is current. This file states where things stand and the rules. I
      - a finding is the next `FE-n`.
   6. **Close:** the plan corrected where a measurement disagrees, each marked **(S1)**; its entry, its sittings table, this
      section, the roadmap; our server back in mock mode; `pgrep -fl vitest`.
+  7. **F6b sitting 6 only:** moving `app.sqlite` aside forgets the ids of older *Keeping watch* tokens (store version 7's
+     `watched`): **list the walk app's active tokens before Rich's click and revoke any leftover *Keeping watch* as its
+     minter**, or *Agents* lists it under *Your agents*.
+- **F6b sitting 5, DONE** (2026-10-02/03, `manifest-app-ba`, mock mode; the plan's entry *Sitting 5*): `495af2b` (Task 11:
+  ***Agents***, `screens/agents/`: ours by our kept ids, theirs in words, **[Revoke]** asked in place where it can work, an
+  agent of their own let in, its key shown once and kept nowhere), `f14a877` (Task 12: **their agent's question**: the
+  keeper emails each owner once, the band's `agent-asks` need from history until answered or a day old, the card on
+  *Agents* for an agent that can still act, **[Yes, once]** behind the second sign-in, **[No]** with their words or *"No
+  reason given."*), `a96a907` (the walk's 375 fix), the review's fixes `4c44f2a` (**[Revoke] revokes first, then answers
+  *no***; **every watch id we were handed kept**, store **version 7** `watched`; a refused revoke says what is true; a
+  failed re-read keeps the key). 2638 tests; the walk 35/35 at 1440 and 375, twice; the six acceptance scripts from a
+  fresh dev database, twice. Minors m107–m119.
 - **F6b sitting 4, DONE** (2026-10-02, `manifest-app-30`, mock mode; the plan's entry *Sitting 4*): `093ff61` (Task 8:
   each commit's sensitive fields kept, the kind of change said on the work panel), `7a3d476` (Task 9: a build refused
   `SPEC_ATTRIBUTE_NOT_REGISTERED` stops at once, the details from `getSpec` minus the registration; the card and
@@ -129,13 +140,20 @@ says which plan is current. This file states where things stand and the rules. I
 - **F5, executed** ([`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md)): moments 10–15, Rich's own
   app live on 7100 (*Class check-ins*, 2026-10-01 03:45Z). The platform's truncations have since removed it from 7100.
 - **Open for Rich:**
+  - **F6b sitting 5's** (its entry): its words marked *ours* (*Our agents*, *Your agents*, *Made by*, the revoke's confirm
+    and its after-words, the form's, *"Made. Give your agent this key:"*, the cards' heading, the honest lines for a version,
+    a secret and an amount, *Tell it why*'s hint, the answers' lines, the email's action words); its rulings (the revoke
+    confirmed in place; *How an agent uses it* as two addresses, not a link; unknowns in mono; nothing ticked, 30 days);
+    **m107–m119**, m109 (a helper's band) and m119 (*"…it has been told."*) his words.
+  - **FE-49 and FE-50 placed by Rich in the faculty-ready plan** (`Token.mintedBy: Uuid`, its Task 13; FE-50's words, its
+    Task 12); FE-46, FE-47 and FE-5 after it.
   - **F6b sitting 4's** (its entry): its words marked *ours* (the detail words, *"Manifest can't ask for it for you yet."*,
     **[Leave it out]** and its change's words, *Waiting to reach your students*'s facts and lines, the press's after-launch
     three, *"something reviewed at launch"*); its rulings (a helper is offered no ask; the versions' days with a time);
     **m98–m106**, m104 (*[Leave it out]* over-says the kind) his to decide.
   - **F6b sitting 1's** (its entry): **Decision 16** (ours: *Agents* asks only about an active agent's question, and our
-    [Revoke] answers *no* to its waiting ones first, *"This agent was revoked."*); **FE-51** and **FE-52** (written, not
-    carried); **m97**; *"It has stopped waiting."* for `PENDING_ACTION_RESOLVED`, which means someone else answered.
+    [Revoke] answers *no* to its waiting ones, *"This agent was revoked."*, **once revoked**: S5); **FE-51** and **FE-52**
+    (placed in the faculty-ready plan); **m97**; *"It has stopped waiting."* for `PENDING_ACTION_RESOLVED`, which means someone else answered.
   - **F6b sittings 2 and 3's** (their entries): **m76** (someone taken off mid-round is usually emailed *we need you*
     first; the fix is m69's own, his to choose: a departure from the plan's Review Focus 1); someone added since our last
     read of the members meets 404 on their own new change for a moment (m82); **sitting 3's words marked ours** (People's
@@ -185,7 +203,7 @@ says which plan is current. This file states where things stand and the rules. I
   **F4a** (2026-10-01), **F6** (2026-10-02): Rich clicked each on the real platform. The walk-through is the design ([`walkthrough.md`](./walkthrough.md)).
 - **The platform** (the sessions in `/Users/rich/Developer/manifest`; §8):
   - **Who is who** *(names change at every handover: `ListAgents` first)*: `manifest-60` its planning session (Rich's
-    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); `manifest-6d` ran its sitting 9 (Task 12; **closed at `4a6f6c6`**, 2026-10-01, `a1d4baa` and its fix wave `a230c1a` adopted); `manifest-3d` ran its sitting 10 (Tasks 13 and 14; **closed at `8ff925f`**, 2026-10-01, ~22:00 PDT): the mock's `0969d45` (real packages and a draft in the records' fixtures, the ACS `/auth/ubcshib/callback`, the launch-path operations refusing as the platform would with no option set, FE-40's opt-in switches `MANIFEST_MOCK_RECORDS`, `_STEP_UP`, `_APPROVAL`, `_REHEARSAL`, `_QUEUE`), the console's `e55b0bf`, the text pass `b571471` (1.5.0, text only: no section, decision or phase cited), `9e43588` and the fix wave `6d76459` (the mock plays the gate while a launch is scripted; `_STEP_UP` asks a session only): **each adopted with no change of ours** (F6 sitting 6); its sitting 12 (Task 15, the acceptance) **CLOSED at `d5c76d5`** in `manifest-5a` (2026-10-02, ~19:55 PDT: the launch-path plan EXECUTED; it held 7100 for F6's walk and click before, and sent F6b's sittings 2 and 3 its holds); **`manifest-96`** (2026-10-02, ~21:00 PDT, started by Rich with no task: gave F6b sitting 1 its 7100 window, read back operator's grant, checked FE-51 and FE-52 in its code); its next is the faculty-ready plan, after Rich places FE-46/47/5; a new session of ours tells the running platform sitting its own name; `manifest-s5-b3` Rich's S5 spike,
+    decisions, anything cross-repo); `manifest-8e` ran its sitting 7 (closed; its session ended 17:10Z); `manifest-8d` ran its sitting 8 (Task 11; **closed at `c5116e0`**, 2026-10-01); `manifest-6d` ran its sitting 9 (Task 12; **closed at `4a6f6c6`**, 2026-10-01, `a1d4baa` and its fix wave `a230c1a` adopted); `manifest-3d` ran its sitting 10 (Tasks 13 and 14; **closed at `8ff925f`**, 2026-10-01, ~22:00 PDT): the mock's `0969d45` (real packages and a draft in the records' fixtures, the ACS `/auth/ubcshib/callback`, the launch-path operations refusing as the platform would with no option set, FE-40's opt-in switches `MANIFEST_MOCK_RECORDS`, `_STEP_UP`, `_APPROVAL`, `_REHEARSAL`, `_QUEUE`), the console's `e55b0bf`, the text pass `b571471` (1.5.0, text only: no section, decision or phase cited), `9e43588` and the fix wave `6d76459` (the mock plays the gate while a launch is scripted; `_STEP_UP` asks a session only): **each adopted with no change of ours** (F6 sitting 6); its sitting 12 (Task 15, the acceptance) **CLOSED at `d5c76d5`** in `manifest-5a` (2026-10-02, ~19:55 PDT: the launch-path plan EXECUTED; it held 7100 for F6's walk and click before, and sent F6b's sittings 2 and 3 its holds); **`manifest-96`** (2026-10-02, ~21:00 PDT, started by Rich with no task: gave F6b sitting 1 its 7100 window, read back operator's grant, checked FE-51 and FE-52 in its code; then **opened and closed the faculty-ready plan's sitting 1 at `2e63cb4`**, docs only, Rich placing FE-49, FE-50 and F7 in it and FE-46/47/5 after it); its next is that plan's sitting 2 (1.6.0, Vitest and the Docker tier: it asks our holds), after Rich decides its Spec actions 2 and 3; a new session of ours tells the running platform sitting its own name; `manifest-s5-b3` Rich's S5 spike,
     **finished** (2026-10-01, its findings at manifest `0bb544c`): nothing of it runs, and it no longer needs telling of
     our test runs.
   - **Its launch-path plan**: sittings 1–5, 4a, 5b and **5a CLOSED** (`003adf7`: `Me.mayBuild`, `403 BUILDING_NOT_OPEN`,
@@ -216,11 +234,13 @@ says which plan is current. This file states where things stand and the rules. I
     plane yourself. Every platform sitting's first test run truncates its database.
   - **The laptop's on-premise model is `qwen3.8:27b`**; the capable model `default-chat-large`, read from
     `session.models`. **The platform's `make doctor` asks our `GET /api/__doctor`**: keep it.
-- **The machine** *(2026-10-02, ~21:45 PDT)*:
+- **The machine** *(2026-10-03, ~00:30 PDT)*:
   - **Our server on 7105 is in MOCK mode** (`nohup pnpm dev:mock` from the main checkout, one watcher, its log in
-    `manifest-app-30`'s scratchpad), on **a fresh dev database** (**version 6**) started for F6b sitting 4's last
+    `manifest-app-ba`'s scratchpad), on **a fresh dev database** (**version 7**) started for F6b sitting 5's last
     acceptance run, against **our mock on 7102** (`pnpm mock`, its default stage; the platform's packages unchanged since
-    `6d76459` but `f619376`'s one description). The databases before are kept in `.data/`: **`app-f6b-s4-walks-2.sqlite`**
+    `6d76459` but `f619376`'s one description). The databases before are kept in `.data/`:
+    **`app-f6b-s5-acceptance.sqlite`** (sitting 5's first acceptance), `app-f6b-s5-before-acceptance.sqlite` (sitting 4's
+    last acceptance, then sitting 5's walks, which wrote nothing), **`app-f6b-s4-walks-2.sqlite`**
     (sitting 4's walks, two runs edited to stand for moment 17), `app-f6b-s4-acceptance.sqlite`, `app-before-f6b-s1.sqlite`
     (sitting 3's last acceptance), **`app-edge-f6b-s1.sqlite`** (edge mode, F6b sitting 1: our watch of `f6b-measure-1`),
     `app-f6b-s3-walks.sqlite` and
@@ -234,8 +254,9 @@ says which plan is current. This file states where things stand and the rules. I
     mode**. Switch to edge mode before anyone clicks the real platform, and say so.
   - **7100 is the platform's**: the control plane on `37b223d`, **real GitHub**, the capable model registered; its
     database holds the four laptop people (**operator an administrator**) and **`f6b-measure-1`, live** (F6b sitting 1;
-    `manifest-96`'s cleanup `--apply` kept every resource of it). The platform's next session is its faculty-ready plan,
-    after Rich places FE-46/47/5: ask `ListAgents` who is live (`manifest-96` tonight, idle, no task of its own). **LiteLLM
+    `manifest-96`'s cleanup `--apply` kept every resource of it; **its active tokens include sitting 1's *Keeping watch*,
+    which a moved-aside dev database no longer knows: sitting 6 revokes it as its minter**). The platform's next sitting
+    is its faculty-ready plan's sitting 2: ask `ListAgents` who is live (`manifest-96` tonight). **LiteLLM
     on 7106; Mailpit on 7111/7112** (Mailpit was empty at 04:15Z: in memory, restarted since F6).
   - Our dev script trusts the system's CAs; to switch modes, stop our server's whole tree (§7), then `pnpm dev` or
     `pnpm dev:mock`.
@@ -273,8 +294,10 @@ says which plan is current. This file states where things stand and the rules. I
     2 and 3):** `screens/people/` (*People*, `/apps/:slug/people`, `?then=people`: `model.ts`'s `whoOf` and
     `refusalWords`), `screens/change/together.tsx` (`Theirs`, `StartedBy`): a conversation that is not the reader's is
     read-only on every screen (`theirs` threaded through Building, Plan, Waiting, SetAside, Work, RoundNeeds, Thread), its
-    role read by the conversation page itself (`useRole`); `/apps/:slug/agents` parses and draws the unknown page until
-    sitting 5. **F6b (sitting 4):** `screens/building/kind.ts` (the kind of change in words, from `RoundView.sensitive`,
+    role read by the conversation page itself (`useRole`). **F6b (sitting 5):** `screens/agents/` (*Agents*,
+    `/apps/:slug/agents`, `?then=agents`: `model.ts`'s `rowsOf`, `askingOf`, `CAPABILITY_WORDS`, `MINTABLE`, all pure;
+    `agents.tsx` the page and the key shown once; `question.tsx` their agent's question, `ACTION_WORDS`), the band's
+    `agent-asks` line (`keeping/lines.ts`), *Agents* the rail's sixth. **F6b (sitting 4):** `screens/building/kind.ts` (the kind of change in words, from `RoundView.sensitive`,
     which our server makes `null` for a round begun before launch) and `detail.ts` (a new detail in words; [Leave it
     out]'s words), the detail card in `needs.tsx`; `screens/overview/new-version.tsx` (*Waiting to reach your students*:
     its own checklist read; F5's `LetStudentsIn` with `afterLaunch`; F5b's `SignOff` for the sign-off unmet). **Only
@@ -288,7 +311,9 @@ says which plan is current. This file states where things stand and the rules. I
     platform's `mayBuild` (a `getMe` without it builds), never stored, and `POST /api/conversations` refuses a new start
     `403 BUILDING_NOT_OPEN` (F4a). **`Person.email`** (F6) is kept in `persons`: an address is not a credential.
     - `store/` is its only database reader: one SQLite file in `.data/`, git-ignored, holding no credential **but F6's
-      sealed watch tokens** (D2; `watch_tokens.sealed`, never in the clear). **Version 6** (F6b D5): `minted`
+      sealed watch tokens** (D2; `watch_tokens.sealed`, never in the clear). **Version 7** (F6b sitting 5, the review's I2):
+      `watched`, the id and expiry of every watch token we were handed (never one we did not read the project with), so
+      *Agents* calls an older one ours until it expires. **Version 6** (F6b D5): `minted`
       (`store/minted.ts`), the ids of the tokens our page mints, never a secret. **Version 5** (F6): `apps`, `members`,
       `watch_tokens`, `history`, `emails` (`store/keeping.ts`), and `persons`' visits (`visit`, Decision 7).
     - **`keeping/` is the keeper** (F6, D4): `seal.ts` (AES-256-GCM; the key from `MANIFEST_APP_KEEPING_KEY` or
@@ -306,7 +331,9 @@ says which plan is current. This file states where things stand and the rules. I
       load a visit), `GET /api/apps/:projectId/history` (a member's alone), `DELETE /api/apps/:projectId` (an owner's,
       after the page's `deleteProject`). **F6b:** the keeper keeps the members whole and says once who was taken off
       (`Keeper.onRemoved`, which `buildServer` answers by ending their work); `Hub.watched` asks whose page holds a
-      stream. Started in `buildServer` after the line; `main.ts` reads the key before it
+      stream. **F6b sitting 5:** an agent's question (`pending_action.created`) is emailed once to each owner
+      (`emails.ts`'s `questionEmails`), and `happenings.ts`'s `questionsOf` reads the ones still waiting from history (the
+      band's `agent-asks` need, `api/keeping.ts`), never a line. Started in `buildServer` after the line; `main.ts` reads the key before it
       listens.
     - `api/` is our own API. Every change is guarded by `Origin`, and every request by the person. **Who someone is to a
       conversation is `api/sharing.ts`** (F6b D3: `standingOf`, pure, over the kept members; `reachable` with `mayRead`,
@@ -337,7 +364,7 @@ says which plan is current. This file states where things stand and the rules. I
       the person's session, and **never a deploy anywhere but the sandbox**. `platform/sign-in.ts` follows a draft's
       `/login` to the IdP.
   - **The gates:**
-    - `pnpm test` (2541 tests, 102 files, at `3c31dd0`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
+    - `pnpm test` (2638 tests, 105 files, at `4c44f2a`), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`; **`launch-actions.test.ts`** scans our
       server's text for every `/v1/` and `/auth/` path, and refuses a launch action; **and (F6) holds `keeping/` to the
       watch token's reads, and refuses `archive`, `restore` and a project's `DELETE` anywhere**;
     - `scripts/check-slice.sh` (F1's, 8), `scripts/check-describing.sh` (F2's, 18), `scripts/check-building.sh`
@@ -422,7 +449,7 @@ that runs.
 | [`plans/2026-10-01-f6-keeping-watch.md`](./plans/2026-10-01-f6-keeping-watch.md) | F6, *Keeping watch*, **executed 2026-10-02**: its sittings, Rich's decisions (in its design, [`…-design.md`](./plans/2026-10-01-f6-keeping-watch-design.md)) and ours |
 | [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md) | F5b, approved by Rich, native: part one on today's contract (sitting 2 merged; sitting 1, the measurements on 7100, owed), part two when FE-46 lands. Its design, [`…-design.md`](./plans/2026-10-01-f5b-the-clocks-design.md) |
 | [`plans/2026-10-01-f6b-working-together-design.md`](./plans/2026-10-01-f6b-working-together-design.md) | F6b's design (moments 17, 18, *Agents*), approved by Rich |
-| [`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md) | **The current plan: F6b**, approved by Rich, native: seven sittings, fifteen tasks; **sittings 2 and 3 done** (our server; the page's People and working together); sitting 1 (7100) next, then 4 and 5 |
+| [`plans/2026-10-02-f6b-working-together.md`](./plans/2026-10-02-f6b-working-together.md) | **The current plan: F6b**, approved by Rich, native: seven sittings, fifteen tasks; **sittings 1–5 done** (the measurements; our server; the page's People and working together; a change after launch; *Agents*); **sitting 6 next** (the acceptance on 7100, Rich's click) |
 | [`minors.md`](./minors.md) | Every deferred minor, checked against the code, for Rich to choose from |
 | [`research/2026-10-01-faculty-ready-adoption.md`](./research/2026-10-01-faculty-ready-adoption.md) | What the platform's faculty-ready plan (1.6.0, `__Host-` cookies) moves of ours, and the order to adopt it |
 | [`plans/2026-09-29-f5-going-live.md`](./plans/2026-09-29-f5-going-live.md) | F5, executed: its sittings, Rich's decisions and ours, and what waits on the platform (F5b) |

@@ -58,7 +58,7 @@ moments **17 and 18**, and *Throughout*'s **An agent of their own**.
 | 2 | 2, 3, 4 | **Our server:** sharing (§3); the token ids kept (D5), store version 6; the keeper's removals (§2's last part) | **done 2026-10-02** (`manifest-app-b8`, mock mode): `a751003`, `2e3a21a`, `144d513`; the review's I1 and I3 `2169b13`; a flake `32887f1`. 2386 tests twice; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 3 | 5, 6, 7 | **The page:** the platform's six new calls, *People* and *Agents* in the rail; *People* (moment 18); working on it together (§3) | **done 2026-10-02** (`manifest-app-b8`, mock mode): m77 `9502d7c`; `005a552`, `1559bc6`, `842a403`; the review's fixes `3912ff3`. 2476 tests twice; walks of *People* and of two people on one app at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 4 | 8, 9, 10 | **A change after launch** (moment 17): the kind of change; the new detail's stop and **[Leave it out]**; *Waiting to reach your students* | **done 2026-10-02** (`manifest-app-30`, mock mode): `093ff61`, `7a3d476`, `6efc46e`; the review's fixes `3c31dd0`. Walks at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
-| 5 | 11, 12 | ***Agents***: ours and theirs, **[Revoke]**, an agent of their own let in; their agent's questions (the band, the email, the card) | not started |
+| 5 | 11, 12 | ***Agents***: ours and theirs, **[Revoke]**, an agent of their own let in; their agent's questions (the band, the email, the card) | **done 2026-10-02** (`manifest-app-ba`, mock mode): `495af2b`, `f14a877`; the walk's 375 fix `a96a907`; the review's fixes `4c44f2a` (store **version 7**, `watched`). 2638 tests; the walk 35/35 at 1440 and 375; the six acceptance scripts from a fresh dev database. *What executing this plan found*, its entry |
 | 6 | 13 | **The acceptance:** `scripts/check-together.sh` in mock mode; the whole-branch review; the walk on 7100 with two people; **Rich's click**. **Alone, and last** | not started |
 | 7 | 14, 15 | **When the platform lands them:** FE-47's **[Ask for it]**; FE-5 (a)'s question naming who or which version | **waits for FE-47 and FE-5 (a)** (confirmed by Rich, `ddc76d7`; their spec actions drafted at manifest `6c77c15`, not applied) |
 
@@ -249,7 +249,11 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
    'conversation' | 'privacy' | 'agent', conversation_id, name, expires_at, minted_at }`**, never a secret (the no-credential scan
    reads it). The Keeping watch's id is F6's `watch_tokens.token_id`. **An *agent* row keeps its minter**, so *Agents* says
    *(yours)* and offers **[Revoke]** only where it may succeed, for what our page minted (FE-49 for the rest). *Rejected:*
-   telling ours from theirs by the token's name (free text: D5's own rejection).
+   telling ours from theirs by the token's name (free text: D5's own rejection). **(S5: the review's I2)** a watch token
+   replaced stays active on the platform (one minted by another member is left to expire; a revoke can fail), so our
+   server also keeps **every watch id it was handed** (store **version 7**, `watched`: ids and expiries, never one it did
+   not read the project with), and `…/minted` lists each as ours until it expires. *Residual:* a dev database moved aside
+   knows no older id (sitting 6's edge mode: revoke leftover *Keeping watch* tokens before the click).
 5. **A removed member's work ends here** (Task 4) on either signal: `member.removed` on the stream, **or a members re-read
    (a hand-over, a reconnect, the boot) that no longer lists someone we kept** (FE-48: removing our watch's minter closes the
    stream before the event). Their rounds stop as *Stop* does, recorded `{ why: 'removed' }`; a conversation waiting in the
@@ -319,8 +323,10 @@ reading cannot settle stays for sitting 1 (M1–M5 below).
 16. **A question from an agent that can no longer act is not asked** **(S1: M4, ours)**. The platform keeps a revoked
     token's questions `pending` for their 24 hours, and a yes to one does nothing (FE-52). So *Agents*' card lists a
     `pending` question only when its token is still active (`listTokens`: not revoked, not expired), and **our
-    [Revoke] first answers *no*** to that token's waiting questions (`rejectPendingAction`, *"This agent was revoked."*), so
-    their `.rejected` ends the band's need. *Residual:* a token revoked elsewhere (the console, a removal, which revokes the
+    [Revoke] then answers *no*** to that token's waiting questions (`rejectPendingAction`, *"This agent was revoked."*), so
+    their `.rejected` ends the band's need. **(S5: the review's I1) Only once the revoke succeeds**, never first: a revoke
+    refused (`404`: only its maker may, measured in S1: M5) had left its question refused in the person's name with an
+    untrue reason, and the agent working; the platform answers a reject of a revoked token's question (S1's tidy-up). *Residual:* a token revoked elsewhere (the console, a removal, which revokes the
     person's tokens) keeps its need in the band until its 24 hours end, with no card behind it. *Rejected:* a card with
     **[No]** alone for a revoked agent (a question nobody can act on, asked anyway); our keeper reading `listTokens` (a
     person's session only: the watch token cannot, and no event says when to).
@@ -794,24 +800,24 @@ export function Agents(props: { platform: Platform; ours: Ours; project: Schemas
   role: 'owner' | 'helper' | 'unknown'; then: Then; expire: () => void; now?: () => Date; timeZone?: string }): JSX.Element
 ```
 
-- [ ] **Step 1: Tests, failing first.**
+- [x] **Step 1: Tests, failing first.**
   - **The list** (`listTokens` and `ours.minted`): expired and revoked not listed; **ours** named *"Working on 'Add a word
     count'"* (a link to it), *"Keeping watch"*, *"Suggesting privacy answers"*, with *"These are ours. They end with their
     conversation, or with the app."* and **no [Revoke]**; **theirs**: the name, what it may do in words, *"Last used …"* /
     *"Never used"*, *"Stops working …"*.
   - **[Revoke]:** on a token we minted for `me` (Decision 4), and on any token we did not mint (FE-49); one minted by
     someone else here: *"Only the person who made it can revoke it."* and no press; **a `404` at the press says the same**
-    (**(S1: M5)**: an owner's press on a helper's token is `404` too); a success re-reads the list. **Before the revoke,
-    [Revoke] answers *no* to that token's `pending` questions** (Decision 16, **(S1: M4)**), then revokes.
+    (**(S1: M5)**: an owner's press on a helper's token is `404` too); a success re-reads the list. **After the revoke,
+    [Revoke] answers *no* to that token's `pending` questions** (Decision 16, **(S1: M4)**; **(S5)**: never before it).
   - **Let an agent of your own in:** a name; each mintable capability a checkbox in words; 7, 30 or 90 days; **[Make it]**
     → `mintToken` with exactly what was chosen, then `ours.keepAgent({ tokenId, name, expiresAt })` **with no secret** (Review
     Focus 4); the secret shown **once**, in mono, **[Copy]**, *"This is the only time we can show it. Keep it somewhere
     safe."*, a link to how an agent uses it; **nothing in `localStorage` or `sessionStorage`** after it; a re-render from a
     reload shows no secret.
   - `machineryIn` empty (the secret and the token's own name in `.mono` excluded, as hostnames are).
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the secret sent to `keepAgent` (red); a revoked token
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** the secret sent to `keepAgent` (red); a revoked token
   listed (red). Each restored. **Walk it** (1440, 375): the list, a mint, the secret's copy, a revoke.
-- [ ] **Step 5: Commit** `feat(web): Agents — ours and theirs told apart, revoke what's yours, and let an agent of your own in`.
+- [x] **Step 5: Commit** `feat(web): Agents — ours and theirs told apart, revoke what's yours, and let an agent of your own in`.
 
 ## Task 12: Their agent's question (sitting 5)
 
@@ -836,7 +842,7 @@ export function Question(props: { platform: Platform; action: Schemas['PendingAc
 export const ACTION_WORDS: Record<string, (app: string) => string>   // the four (Words proposed); unknown → summary
 ```
 
-- [ ] **Step 1: Tests, failing first.**
+- [x] **Step 1: Tests, failing first.**
   - **The keeper:** `pending_action.created` → a need for every member (`owner` true for owners); one email to each owner,
     keyed by the pending action, its subject and body (*Words proposed*), never to a helper; a replay sends nothing again;
     `.confirmed`, `.rejected`, or `expiresAt` passed → the need gone (Review Focus 5: no event needed for expiry).
@@ -854,9 +860,9 @@ export const ACTION_WORDS: Record<string, (app: string) => string>   // the four
     sharpen); **a helper:** *"An owner answers this."*, no presses (FE-50 **(S1: M4)**: a helper's confirm and reject are
     `403 FORBIDDEN` **even for their own agent's question**, before any step-up).
   - `machineryIn` empty over the four actions and an unknown one.
-- [ ] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** an email to a helper (red); an expired question still in
+- [x] **Step 2: Red. Step 3: Implement. Step 4: Green; controls:** an email to a helper (red); an expired question still in
   the band (red); `reject` with an empty reason (red). Each restored. **Walk it.**
-- [ ] **Step 5: Commit** `feat(server,web): their agent's question — in the band, emailed once, and answered on Agents`.
+- [x] **Step 5: Commit** `feat(server,web): their agent's question — in the band, emailed once, and answered on Agents`.
 
 ## Task 13: The acceptance (sitting 6, alone)
 
@@ -1191,3 +1197,78 @@ faculty-ready plan** (manifest `71ce7f0`, docs only). Contract 1.5.0, 72, unchan
   press's after-launch three; *"something reviewed at launch"*.
 - **For sitting 5** (*Agents*): Decision 16 (S1) stands; FE-52's platform fix (faculty-ready Task 13, `pending_action.expired`)
   may retire our [Revoke]-answers-no-first when it lands.
+
+### 2026-10-02 — Sitting 5: *Agents* and their agent's questions (Tasks 11, 12) (session `manifest-app-ba`, mock mode, natively)
+
+**At Rich's word** (*"please continue with the next sitting"*). `manifest-96` (the platform's session) told the sitting; it
+opened and **closed the faculty-ready plan's sitting 1 at manifest `2e63cb4`** meanwhile (docs only: no contract or mock
+change, no Vitest, 7100 untouched), and relayed Rich's placements: **FE-49** (`Token.mintedBy`, its Task 13) and **FE-50**
+(its words, Task 12) **in** faculty-ready; FE-46, FE-47 and FE-5 **after** it. Contract 1.5.0, 72, unchanged. Nothing of
+ours touched 7100.
+
+- **What landed:**
+  - **`495af2b`, Task 11, *Agents*** (`screens/agents/`, `/apps/:slug/agents`, the rail's sixth): every active token
+    (`listTokens`) with our kept ids (`…/minted`): **ours** named for what they do (*Keeping watch*, *Working on '…'*, a
+    link; *Suggesting privacy answers*), never revocable here; **theirs** with what each may do in words (an unknown
+    capability by its name, in mono), *Last used* / *Never used*, *Stops working*, *(yours)* or *Made by <name>*;
+    **[Revoke]** asked in place where it can work (*"Only the person who made it can revoke it."* otherwise, and at a
+    `404`); **Let an agent of your own in**: a name (counted to 64, never cut), the eleven in words, 7/30/90 days, exactly
+    what was chosen minted, its id, name and expiry handed to our server (`keepAgent`), **its key shown once**, in mono,
+    with *Copy*, *How an agent uses it* (the two addresses) and *Done*; kept nowhere.
+  - **`f14a877`, Task 12, their agent's question:** our keeper emails each owner once on `pending_action.created` (keyed
+    by the question, as work waiting; its agent named as our page kept it, else *"An agent"*; never a helper; never from
+    the first replay of an app never watched); the band's `agent-asks` need for every member, read from history
+    (`questionsOf`) until answered, lapsed (`pending_action.expired` read already, for FE-52) or a day old, gone on a
+    switched-off app; on *Agents*, a card per question still waiting **from an agent that can still act** (`askingOf`,
+    Decision 16): what it may say, the honest line per action until FE-5 (a), when it stops waiting (its day when not
+    today), **[Yes, once]** behind the second sign-in (back at `?then=agents`, said once), **[No]** with their words or
+    *"No reason given."*, *"It has stopped waiting."* at `PENDING_ACTION_RESOLVED`; a helper reads *"An owner answers
+    this."*
+  - **`a96a907`, the walk's fix** (375): the capability boxes stack; the guide's addresses break.
+  - **`4c44f2a`, the review's fixes** (below).
+- **How it was built:** natively, each task test-first and its controls red, restored: the key sent to `keepAgent`; a
+  revoked token listed; the answer-no loop emptied; Revoke drawn on another's agent; the key kept in `sessionStorage`; the
+  rail of five; an expired question in the band; answers ignored; a switched-off app's question kept; an email to a
+  helper; the first replay emailed; a reject with an empty reason; the presses shown to a helper; a revoked agent's
+  question asked.
+- **The walk** (`scripts/walk/`, mock mode; the walk answered our server's reads and the platform's tokens, questions,
+  members and presses, since the mock holds only its fixtures' ids, FE-27): **35/35** at 1440 and 375, before and after the
+  review's fixes: the list, three cards (one an unknown action's summary), a revoke, *No* with words, *Yes* asking the
+  second sign-in and back, a mint (the key once, *Copied*, in no storage, *Done*), a helper, the band's line and
+  **[Agents]** on the Overview, *Agents* after *People* in the rail. **Two defects found at 375 and fixed** (`a96a907`); four
+  of the walk's own bugs fixed (an apostrophe, a shadowed rule, rules re-armed one at a time, rules armed after sign-in, so
+  *Your apps*' `ensureEach` tried to hand a watch, blocked).
+- **The whole-sitting review** (a fresh reviewer, `7a85693..f14a877`): **no Critical; two Important, two minors re-graded
+  Important, all fixed test-first in `4c44f2a`:**
+  - **I1:** [Revoke] answered *no* before the revoke: refused `404`, its question was turned down in the person's name
+    with an untrue reason, and the agent kept working. Now it revokes first, answers *no* only after, and reads the list
+    again after any refusal (Decision 16, **(S5)**).
+  - **I2:** a replaced *Keeping watch* (left to expire, its revoke failed) was listed under *Your agents* with [Revoke].
+    Our server now keeps every watch id it was handed (store **version 7**, `watched`), never one it did not read the
+    project with (m83's kind) (Decision 4, **(S5)**).
+  - **Minor 1, re-graded:** *"It still works"* after the platform's `503` that had revoked it. A refused revoke reads the
+    tokens again and says what is true (revoked after all; still working; or *"We couldn't tell whether it was
+    revoked."*).
+  - **Minor 2, re-graded:** a read again that failed hid a key shown only once. What is drawn now stays, the notice beside
+    it.
+  - **Minors m108–m119** in [`minors.md`](../minors.md); the walk's **m107**.
+- **Decided in executing** (each in the ledger with its cost): [Revoke] asked in place; *How an agent uses it* is the two
+  addresses, not a link (the guide is `getDoc`'s JSON, for an agent); the page needs `listTokens`, `…/minted` and the
+  questions together, or says it could not read; `keepAgent` failing still shows the key; nothing ticked to begin with,
+  30 days chosen; an unknown capability, action or summary in mono; one walk for both tasks; a question is a need, never a
+  history line; the email says the action with the app in it (never *"<app>'s"*), an unknown one generically; the honest
+  line per action; the card's day when not today; the card's interface (the project, `expire`, `onAnswered(which)`; the
+  *signed in again* line the page's, once); *Tell it why* always there, optional; I2's ids a table of their own.
+- **Words for Rich** (each marked *ours* in `words.ts` or `keeping/words.ts`): *"Our agents"*, *"Your agents"*, *"No agent
+  of yours has access to it."*, *"It may …"*, *"Made by <name>"*, the revoke's confirm (*"Revoke it? It stops working at
+  once, and that can't be undone."*, **[Revoke it]**, **[Keep it]**), *"Revoked. It can't do anything on <App> now."*, *"We
+  couldn't revoke it just now. It still works."*, *"We couldn't tell whether it was revoked. Look at the list again in a
+  minute."*; the form's *"What do you call it?"*, *"Only so you can tell them apart later."*, *"What may it do?"*, *"How
+  long should it last?"*, *"Made. Give your agent this key:"*, the two address lines; the cards' *"What your agents are
+  asking"*, *"<agent> asked: <summary>"*, the honest lines for a version, a secret and an amount, *"If you like. It reads
+  your words exactly as you write them."*, *"You said yes. It can try that one request once."*, *"You said no, and it has
+  been told."*; the email's action words with the app in them, and the unknown one's.
+- **For sitting 6** (the acceptance, alone): `check-together.sh`'s four checks are unbuilt; **before Rich's click, list the
+  walk app's active tokens on 7100 and revoke any leftover *Keeping watch* as its minter** (Decision 4's residual: a
+  dev database moved aside knows no older id); our [Revoke] revokes first now (I1); FE-49's `Token.mintedBy` (faculty-ready
+  Task 13) will let *Agents* name every maker.

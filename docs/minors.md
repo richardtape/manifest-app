@@ -282,6 +282,25 @@ three Important and four minors re-graded Important fixed test-first in `3c31dd0
 | m105 | The review's M11 | Test gaps: no Overview-level test of the held press across the Overview's re-read; the failed-deploy test has no incident ([What went wrong] after launch unasserted). | `new-version.test.tsx`, `students.test.tsx`. | S | tests-only |
 | m106 | The review's M12 | Focus is lost when **[Leave it out]** becomes *"Starting that change…"*, and not restored on a failure. | `packages/web/src/screens/building/needs.tsx`, `building.tsx`. | S | accessibility |
 
+**From F6b sitting 5** (`manifest-app-ba`, 2026-10-02): its walk's m107, and the whole-sitting review's minors (a fresh
+reviewer over `7a85693..f14a877`; its two Important and two minors re-graded Important fixed test-first in `4c44f2a`).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m107 | The walk | *"You’re signed in again."* stays above the cards after a press that is not an answer (a mint, a revoke), until an answer or a navigation. | `packages/web/src/screens/agents/agents.tsx` (`answered`). | S | faculty-visible |
+| m108 | The review's Minor 3 | A reconnect's or restart's replay holding both a question and its answer emails the owners the question first. Send question emails after the replay's report, for what `questionsOf(history)` still lists. | `packages/server/src/keeping/keeper.ts` (`asked`). | S | faculty-visible (email) |
+| m109 | The review's Minor 4 | A helper's band says *"your agent is asking something"* with **[Agents]** for what only an owner answers; the need's `owner` is unused (F6's `down` tells a helper who can). The plan's words: Rich's. | `packages/web/src/screens/keeping/lines.ts`. | S | faculty-visible |
+| m110 | The review's Minor 5 | **[Done]** on the key's card moves the focus to an empty status, so a screen reader hears nothing. | `agents.tsx` (Done). | S | accessibility |
+| m111 | The review's Minor 6 | Every row's *Revoke* and every card's *Yes, once* / *No* share one accessible name (m92's kind): add the agent's name, visually hidden. | `agents.tsx`, `question.tsx`. | S | accessibility |
+| m112 | The review's Minor 7 | *"Stops working <day>"* has no year: a 365-day token reads *"Stops working 2 October"* on 2 October. | `agents.tsx` (`dayWords`). | S | faculty-visible |
+| m113 | The review's Minor 8 | `?then=agents` stays in the address, so a reload says *"signed in again"* again (m87's kind). | `agents.tsx`, `router.ts`. | S | faculty-visible |
+| m114 | The review's Minor 9 | Members unread, an owner's role stays unknown, and the card shows nothing to press and no sentence. | `question.tsx`, `keeping/role.ts`. | S | faculty-visible |
+| m115 | The review's Minor 10 | The mint test's comment says *"(yours) once our server keeps its id"*, but its fake never keeps it and nothing asserts it. | `agents.test.tsx`. | S | tests-only |
+| m116 | The review's Minor 11 | The visible *"What may it do?"* / *"How long should it last?"* repeat the groups' `aria-label`: a screen reader hears each twice. | `agents.tsx`. | S | accessibility |
+| m117 | The review's Minor 12 | A refused clipboard says nothing on the key's *Copy* (a key shown once). | `screens/preview/try-it-as.tsx` (`CopyButton`). | S | faculty-visible |
+| m118 | The review's Minor 13 | `q.didntSay[action.action]` is read without `Object.hasOwn`, unlike `ACTION_WORDS`. | `question.tsx`. | S | code |
+| m119 | The review's Minor 14 | *"You said no, and it has been told."* overstates: the agent learns it at its next try. Rich's words. | `words.ts` (`agents.question.saidNo`). | S | faculty-visible |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed
