@@ -1123,7 +1123,7 @@ describe('GET /api/apps/:projectId/plan: the hand-over’s two rows (F5 Task 9, 
     expect(answer.headers['access-control-allow-credentials']).toBeUndefined()
   })
 
-  it('a change to it is no route: a student app’s post is refused first, and ours finds nothing', async () => {
+  it('a change to it is no route: a post is 404 from a student app’s page and from ours alike (minors m50)', async () => {
     const s = setUp()
     const post = (origin: string) =>
       s.app.inject({
