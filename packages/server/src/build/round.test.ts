@@ -2869,6 +2869,24 @@ describe('a new detail about the people who sign in (F6b Task 9, Decision 9)', (
     expect(h.did).toContain(`getLaunchRecords ${TOKEN.slice(0, 10)}`)
   })
 
+  it('after an ordinary failed try in the same leg, the stop clears that try’s note (minors m100)', async () => {
+    const { h, id } = await startedRound({
+      script: lead,
+      asked: () => ASKED,
+      registered: () => REGISTERED,
+    })
+    await refuse(h, 1, { code: 'BUILD_FAILED', reason: 'npm ci failed' })
+    await until(
+      () => stepOf(h, id, 'build')?.note === EXPLAINED.note,
+      () => viewOf(h, id),
+    )
+    await refuse(h, 2, { code: 'SPEC_ATTRIBUTE_NOT_REGISTERED', reason: REASON('sn') })
+    await untilStatus(h, id, 'needs-you')
+    // (Its details are read at the first commit, so this second build names none.)
+    expect(viewOf(h, id)?.needs?.kind).toBe('detail')
+    expect(stepOf(h, id, 'build')?.note).toBeNull()
+  })
+
   it('never from the free-text reason: a reason naming another detail changes nothing', async () => {
     const { h, id } = await startedRound({
       script: lead,

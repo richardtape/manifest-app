@@ -1270,6 +1270,8 @@ export function createRounds(deps: RoundDeps): Rounds {
         : []
     if (outcome.code === NOT_REGISTERED || details.length > 0) {
       d.buildId = null
+      // An earlier try's note is not this stop's (minors m100): the card says what this is.
+      d.steps.build = { note: null, changed: null, exact: null }
       return needs({ kind: 'detail', details })
     }
     const log = await call(live, 'getBuildLog', buildId, () =>
