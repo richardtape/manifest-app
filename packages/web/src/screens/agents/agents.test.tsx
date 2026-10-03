@@ -660,6 +660,16 @@ describe('Let an agent of your own in (Review Focus 4)', () => {
     expect(screen.queryByText(SECRET)).toBeNull()
   })
 
+  it('Done: the focus goes to where the key was, the section’s heading, never an empty status (minors m110)', async () => {
+    open(stage())
+    await screen.findByRole('heading', { name: m.title })
+    fill('My agent', ['project:read'])
+    await press(button(m.button))
+    await screen.findByText(SECRET)
+    await press(button(m.done))
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: m.title }))
+  })
+
   it('our server not keeping its id: the key is still shown (it is the only time)', async () => {
     const s = stage({ keepAgent: [{ status: 503, code: 'UNAVAILABLE' }] })
     open(s)

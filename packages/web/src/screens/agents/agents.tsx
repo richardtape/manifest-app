@@ -124,9 +124,9 @@ export function Agents({
   const [said, setSaid] = useState<Said>()
   /** What the last press did, said in the page's status. */
   const [status, setStatus] = useState<string | null>(null)
-  const [focusOn, setFocusOn] = useState<{ tokenId: string } | 'status' | 'made' | null>(
-    null,
-  )
+  const [focusOn, setFocusOn] = useState<
+    { tokenId: string } | 'status' | 'made' | 'make' | null
+  >(null)
   const [name, setName] = useState('')
   const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set())
   const [days, setDays] = useState<number>(30)
@@ -146,6 +146,7 @@ export function Agents({
   const revokes = useRef(new Map<string, HTMLDivElement>())
   const statusRef = useRef<HTMLParagraphElement>(null)
   const madeRef = useRef<HTMLParagraphElement>(null)
+  const makeRef = useRef<HTMLHeadingElement>(null)
   const confirmRef = useRef<HTMLParagraphElement>(null)
   const { at: makeAt, back: focusMake } = useFocusBack<HTMLDivElement>()
   const live = useRef(true)
@@ -203,6 +204,7 @@ export function Agents({
     setFocusOn(null)
     if (focusOn === 'status') return statusRef.current?.focus()
     if (focusOn === 'made') return madeRef.current?.focus()
+    if (focusOn === 'make') return makeRef.current?.focus()
     revokes.current.get(focusOn.tokenId)?.querySelector('button')?.focus()
   })
 
@@ -561,7 +563,7 @@ export function Agents({
             {status ?? ''}
           </p>
           <section className="agents__section agents__make" aria-labelledby="agents-make">
-            <h2 className="heading" id="agents-make">
+            <h2 className="heading" id="agents-make" ref={makeRef} tabIndex={-1}>
               {m.title}
             </h2>
             {made === null ? null : (
@@ -585,7 +587,9 @@ export function Agents({
                     kind="secondary"
                     onClick={() => {
                       setMade(null)
-                      setFocusOn('status')
+                      // Where the key was: the section's heading, never the status, which says
+                      // nothing here (minors m110).
+                      setFocusOn('make')
                     }}
                   >
                     {m.done}
