@@ -74,11 +74,18 @@ function runtimeBuild(yaml: string): boolean {
   return false
 }
 
-/** What the lockfile depends on: every one of these must stay exactly as it was. */
+/**
+ * What the lockfile depends on: every one of these must stay exactly as it was. `npm ci` reads
+ * the peer and bundled ones against the lock too (minors m26); npm takes either spelling of the
+ * last.
+ */
 const LOCKED = [
   'dependencies',
   'devDependencies',
   'optionalDependencies',
+  'peerDependencies',
+  'bundleDependencies',
+  'bundledDependencies',
   'overrides',
 ] as const
 

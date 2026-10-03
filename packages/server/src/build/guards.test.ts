@@ -123,6 +123,19 @@ describe('commit: no dependency may be added (FE-32)', () => {
       (p: Record<string, unknown>) => (p['devDependencies'] = { vitest: '2.1.9' }),
     ],
     ['changing the overrides', (p: Record<string, unknown>) => (p['overrides'] = {})],
+    // minors m26: npm ci reads these against the lock too, and a change there fails the build.
+    [
+      'gaining a peerDependency',
+      (p: Record<string, unknown>) => (p['peerDependencies'] = { react: '19.0.0' }),
+    ],
+    [
+      'gaining bundleDependencies',
+      (p: Record<string, unknown>) => (p['bundleDependencies'] = ['express']),
+    ],
+    [
+      'gaining bundledDependencies (its other spelling)',
+      (p: Record<string, unknown>) => (p['bundledDependencies'] = ['express']),
+    ],
   ])('%s is refused too: the lockfile would no longer match', (_, edit) => {
     expect(guard([pkg(edit)])).toMatch(/cannot add a package/)
   })
