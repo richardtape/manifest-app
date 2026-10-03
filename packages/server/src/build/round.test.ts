@@ -1534,6 +1534,8 @@ describe('a restart (Review Focus 3)', () => {
     second.started.push(...first.h.started)
     second.rounds.interruptedOnBoot()
     expect(viewOf(second, first.id)?.status).toBe('interrupted')
+    // A restart under its work: a problem of ours, said with a reference (m12).
+    expect(viewOf(second, first.id)?.forgotten).toBe(false)
     expect(second.store.getConversation(first.id, ALICE.id)?.state).toBe('building')
 
     second.buildStatus.set('build-1', 'succeeded')
@@ -1553,6 +1555,29 @@ describe('a restart (Review Focus 3)', () => {
     )
     expect(second.sessionStarts[0]?.token).toBe(NEW_TOKEN)
     expect(second.store.latestRun(first.id)?.sessionIds).toEqual(['session-1', 'after-1'])
+  })
+
+  it('reaching the front of the line with no token held (withoutToken): interrupted, marked forgotten, since no work was under way (m12)', () => {
+    const h = harness({ script: { lead: [] } })
+    const conversation = agreed(h)
+    h.rounds.withoutToken(conversation)
+    expect(viewOf(h, conversation.id)).toMatchObject({
+      status: 'interrupted',
+      forgotten: true,
+    })
+  })
+
+  it('a forgotten run that carried on and was working at a restart is a restart under its work: not forgotten (m12)', () => {
+    const h = harness({ script: { lead: [] } })
+    const conversation = agreed(h)
+    h.rounds.withoutToken(conversation)
+    h.store.saveRun({ ...h.store.latestRun(conversation.id)!, status: 'working' })
+    const second = harness({ script: { lead: [] } }, h.file, h.store)
+    second.rounds.interruptedOnBoot()
+    expect(viewOf(second, conversation.id)).toMatchObject({
+      status: 'interrupted',
+      forgotten: false,
+    })
   })
 
   it('a paused run is interrupted at boot too, and its conversation is building again', async () => {

@@ -1853,7 +1853,9 @@ export function createRounds(deps: RoundDeps): Rounds {
 
     interruptedOnBoot() {
       for (const run of store.runsIn(['working', 'paused'])) {
-        store.saveRun({ ...run, status: 'interrupted' })
+        // A restart under its work: a problem of ours, said with a reference (m12).
+        const detail = run.detail === null ? null : { ...run.detail, forgotten: false }
+        store.saveRun({ ...run, status: 'interrupted', detail })
         store.setState(run.conversationId, 'building')
       }
     },
@@ -1862,7 +1864,9 @@ export function createRounds(deps: RoundDeps): Rounds {
       const saved = store.latestRun(conversation.id)
       const run =
         saved?.status === 'stopped' ? saved : newRun(conversation, 'interrupted')
-      store.saveRun({ ...run, status: 'interrupted' })
+      // No work was under way (m12): nothing of ours to report.
+      const detail = { ...(run.detail ?? structuredClone(NO_DETAIL)), forgotten: true }
+      store.saveRun({ ...run, status: 'interrupted', detail })
       publishState(hub, store, store.setState(conversation.id, 'building'))
     },
   }

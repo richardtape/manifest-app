@@ -259,6 +259,12 @@ export interface RoundView {
    * then says nothing of the kind of change (the review's I1).
    */
   sensitive: string[] | null
+  /**
+   * Minors m12: interrupted only because a restart forgot its token while it waited its turn in
+   * the app's line: no work was under way, so the page reports nothing and shows no reference.
+   * False for a restart under its work, and whenever it is not interrupted.
+   */
+  forgotten: boolean
 }
 
 /**

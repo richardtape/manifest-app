@@ -145,6 +145,7 @@ export function roundOf(store: Store, conversationId: string): RoundView | null 
     cost: detail.cost,
     stopped: stoppedOf(store, run),
     sensitive: sensitiveOf(store, conversationId, detail),
+    forgotten: run.status === 'interrupted' && detail.forgotten === true,
   }
 }
 

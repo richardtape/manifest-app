@@ -97,6 +97,12 @@ export interface RunDetail {
    * until read, and on a run saved before it. Only such a run's fields are a change after launch.
    */
   launched?: boolean
+  /**
+   * Minors m12: saved `interrupted` only because a restart forgot its token while it waited its
+   * turn (`withoutToken`): no work was under way, so nothing of ours to report. False after a
+   * restart under its work (`interruptedOnBoot`); absent on a run saved before it.
+   */
+  forgotten?: boolean
 }
 
 /** One question a round asked (F3 Decision 10). A secret's answer is never here. */

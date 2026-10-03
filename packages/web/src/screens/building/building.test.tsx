@@ -96,6 +96,7 @@ function round(
     cost: { conversationUsd: null, monthLeftUsd: null, resetsAt: null },
     stopped: null,
     sensitive: null,
+    forgotten: false,
     ...patch,
   }
 }
@@ -835,6 +836,21 @@ describe('what a round needs of them: one card each', () => {
     )
     await press(within(card).getByRole('button', { name: words.building.carryOn }))
     expect(s.called('build')).toEqual([['c-1']])
+  })
+
+  it('interrupted only because a restart forgot its token while it waited its turn: no reference, nothing reported, Carry on as ever (m12)', async () => {
+    const s = stage()
+    await open(s)
+    s.state(
+      round({ status: 'interrupted', forgotten: true }, { pages: { state: 'halted' } }),
+    )
+    const card = screen
+      .getByText(words.building.needs.interrupted)
+      .closest('.mf-card') as HTMLElement
+    expect(card.textContent).not.toMatch(/quote/)
+    await press(within(card).getByRole('button', { name: words.building.carryOn }))
+    expect(s.called('build')).toEqual([['c-1']])
+    expect(reports).toEqual([])
   })
 
   it('interrupted, it can be stopped here: a round that holds the app is never kept by a card with no Stop (F4 review I1)', async () => {

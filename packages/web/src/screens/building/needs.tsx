@@ -69,9 +69,30 @@ const stopHere = (presses: Presses) =>
     </Button>
   )
 
-/** Our server restarted under their work (Review Focus 3): a problem, so a reference of ours. */
-function Interrupted({ presses }: { presses: Presses }) {
+/**
+ * Our server restarted under their work (Review Focus 3): a problem, so a reference of ours; or
+ * (m12) only its token forgotten while it waited its turn: the same words, nothing to report.
+ */
+function Interrupted({ presses, forgotten }: { presses: Presses; forgotten: boolean }) {
+  return forgotten ? (
+    <InterruptedCard presses={presses} reference={null} />
+  ) : (
+    <InterruptedReported presses={presses} />
+  )
+}
+
+function InterruptedReported({ presses }: { presses: Presses }) {
   const reference = useReported({ code: 'ROUND_INTERRUPTED' })
+  return <InterruptedCard presses={presses} reference={reference} />
+}
+
+function InterruptedCard({
+  presses,
+  reference,
+}: {
+  presses: Presses
+  reference: string | null
+}) {
   return (
     <NeedsCard
       tone="attention"
@@ -334,7 +355,9 @@ export function RoundNeeds({
       </NeedsCard>
     )
   if (round.status === 'interrupted')
-    return theirs(presses) ?? <Interrupted presses={presses} />
+    return (
+      theirs(presses) ?? <Interrupted presses={presses} forgotten={round.forgotten} />
+    )
   const needs = round.needs
   if (needs === null || needs.kind === 'token') return null
   // A round needs them while it waits; once built, only what it could not add is said.
