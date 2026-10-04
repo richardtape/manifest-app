@@ -204,10 +204,11 @@ describe('what it says (design §4; FE-5 (a) honest)', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
-  it('a role not known (the members unread, or not listed): what it asked, who answers it, and nothing to press (m114)', () => {
+  it('a role not known (the members unread, or not listed): what it asked, that we can’t tell yet whether they can answer, and nothing to press (m114; never "an owner answers" to one who may be, as the Overview’s M6)', () => {
     open(stage(), { role: 'unknown' })
     expect(text()).toContain('asked to')
-    expect(text()).toContain(q.ownerAnswers)
+    expect(text()).toContain("We can't tell right now whether you can answer this.")
+    expect(text()).not.toContain(q.ownerAnswers)
     expect(screen.queryByRole('button')).toBeNull()
     expect(screen.queryByRole('textbox')).toBeNull()
   })

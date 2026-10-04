@@ -1561,6 +1561,12 @@ export const words = {
       /** Ours: a press under way. */
       answering: 'Answering…',
       ownerAnswers: 'An owner answers this.',
+      /**
+       * Ours (m114, under Rich's *"approve, change on sight"*): the reader's role not known (the
+       * members unread, or not listing them). Never *"An owner answers this."* to one who may be
+       * an owner (the Overview's M6), and never nothing.
+       */
+      roleUnknown: "We can't tell right now whether you can answer this.",
       /** Ours: what the answer did, said in the page's status. */
       saidYes: 'You said yes. It can try that one request once.',
       /** m119, Rich's words (2026-10-03): the agent learns it at its next try. */
