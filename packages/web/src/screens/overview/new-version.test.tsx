@@ -557,6 +557,31 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
   })
 })
 
+describe('minors m99 (Rich, 22:55 PDT: “Drop the press’s line after launch”)', () => {
+  it('the version on trying-out is named once, by the facts: never the press’s “goes to” line', async () => {
+    draw(stage(SELF_SERVE))
+    expect(await screen.findByText(FACTS)).toBeTruthy()
+    expect(screen.getByRole('button', { name: PRESS })).toBeTruthy()
+    expect(shown()).not.toContain('goes to')
+    expect(shown()).not.toContain('Your trying-out address stays as it is.')
+    expect(shown().split('The version from today, 9:00am').length - 1).toBe(1)
+  })
+
+  it('while it works: its stations, and still no “goes to” line', async () => {
+    draw(stage(SELF_SERVE, { deploy: never }))
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    expect(
+      await screen.findByRole('region', {
+        name: words.overview.newVersion.stationsLabel,
+      }),
+    ).toBeTruthy()
+    expect(shown()).not.toContain('goes to')
+  })
+})
+
 describe('minors m101: after a launch, the landed moment gives way to a later version', () => {
   /** The version a colleague put on trying-out meanwhile, from today at 11:00am in Vancouver. */
   const NEWER: Schemas['Release'] = {

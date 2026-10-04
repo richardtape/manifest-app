@@ -489,8 +489,13 @@ export function LetStudentsIn({
     setPhase((p) => (p.at === 'failed' && p.sent === sent ? failed(later) : p))
   }
 
-  /** "The version from 18 September goes to <address>. Your trying-out address stays as it is." */
+  /**
+   * "The version from 18 September goes to <address>. Your trying-out address stays as it is." A
+   * first launch's alone: after it, the panel's facts already name the version (minors m99, Rich,
+   * 2026-10-03, 22:55 PDT: "Drop the press's line after launch").
+   */
   const goes = (when: string | null) => {
+    if (afterLaunch) return null
     const [before, after] = l.goes(when)
     return (
       <p className="body-lead">
