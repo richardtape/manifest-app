@@ -3,8 +3,10 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildServer } from '../app.js'
 import type { Rounds } from '../build/round.js'
 import type { Config } from '../config.js'
+import { idleKeeper, type Keeper } from '../keeping/keeper.js'
 import { createConversationTokens } from '../platform/project.js'
 import { openStore, type Conversation, type Run, type Store } from '../store/db.js'
+import type { KeptMember } from '../store/keeping.js'
 import { dumpAll, scratchDir } from '../store/testing.js'
 import { DRY_RUN_FIX_WORDS, FIX_WORDS, OUTAGE_FIX_WORDS } from './apps.js'
 import { createHub, publishState, type Hub } from './events.js'
@@ -124,7 +126,7 @@ function recordingRounds(store: Store, hub: Hub, did: string[]): Rounds {
   }
 }
 
-function setUp(file?: string) {
+function setUp(file?: string, keeperOf?: (store: Store) => Keeper) {
   let where = file
   if (where === undefined) {
     const { dir, remove } = scratchDir()
@@ -151,6 +153,7 @@ function setUp(file?: string) {
     hub,
     tokens,
     rounds: () => recordingRounds(store, hub, did),
+    ...(keeperOf === undefined ? {} : { keeper: keeperOf(store) }),
     // A change's planner, at work for as long as a test runs (Task 7 tests what it writes).
     sessions: {
       budget: () => new Promise(() => undefined),
@@ -1284,5 +1287,64 @@ describe('a change’s token id, kept beside nothing secret (F6b D5, Task 3)', (
     expect(answer.statusCode).toBe(400)
     expect(answer.json()).toEqual({ error: { code: 'CHANGE_INVALID' } })
     expect(s.store.conversationsOn(PROJECT)).toHaveLength(1)
+  })
+})
+
+describe('a change asked by someone our kept members do not name (minors m82, Rich\'s "Re-read on a stranger")', () => {
+  const kept = (person: typeof ALICE, role: KeptMember['role']): KeptMember => ({
+    userId: person.id,
+    role,
+    displayName: person.displayName,
+    email: person.email,
+  })
+  /** A keeper whose members read records the token it is given, then keeps `then` (or fails). */
+  function reading(then: KeptMember[] | Error) {
+    const asked: string[] = []
+    const keeperOf = (store: Store): Keeper => ({
+      ...idleKeeper,
+      readMembers: async (projectId, token) => {
+        asked.push(`${projectId} ${token}`)
+        if (then instanceof Error) throw then
+        store.putMembers(projectId, then)
+      },
+    })
+    return { asked, keeperOf }
+  }
+
+  it('reads the members with that change’s own token before we answer, and their own change is theirs', async () => {
+    const r = reading([kept(ALICE, 'owner'), kept(BOB, 'collaborator')])
+    const s = setUp(undefined, r.keeperOf)
+    first(s, 'built', 'done')
+    s.store.putMembers(PROJECT, [kept(ALICE, 'owner')])
+    const answer = await s.ask({ words: WORDS, token: GOOD }, { cookie: AS_BOB })
+    expect(answer.statusCode).toBe(201)
+    expect(r.asked).toEqual([`${PROJECT} ${GOOD}`])
+    const made = answer.json() as Conversation
+    expect((await s.get(`/api/conversations/${made.id}`, AS_BOB)).statusCode).toBe(200)
+  })
+
+  it('a kept member’s change, or one on an app we keep nobody for, reads nothing', async () => {
+    const r = reading([kept(ALICE, 'owner')])
+    const s = setUp(undefined, r.keeperOf)
+    first(s, 'built', 'done')
+    expect(
+      (await s.ask({ words: WORDS, token: GOOD }, { cookie: AS_BOB })).statusCode,
+    ).toBe(201)
+    s.store.putMembers(PROJECT, [kept(ALICE, 'owner')])
+    expect((await s.ask({ words: WORDS, token: SECOND })).statusCode).toBe(201)
+    expect(r.asked).toEqual([])
+  })
+
+  it('a read that fails: the change is still made, and the members we kept stand (its 404 stays until our next read)', async () => {
+    const r = reading(new Error('the platform did not answer'))
+    const s = setUp(undefined, r.keeperOf)
+    first(s, 'built', 'done')
+    s.store.putMembers(PROJECT, [kept(ALICE, 'owner')])
+    const answer = await s.ask({ words: WORDS, token: GOOD }, { cookie: AS_BOB })
+    expect(answer.statusCode).toBe(201)
+    expect(r.asked).toEqual([`${PROJECT} ${GOOD}`])
+    expect(s.store.members(PROJECT)).toEqual([kept(ALICE, 'owner')])
+    const made = answer.json() as Conversation
+    expect((await s.get(`/api/conversations/${made.id}`, AS_BOB)).statusCode).toBe(404)
   })
 })

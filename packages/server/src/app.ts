@@ -250,7 +250,7 @@ export function buildServer(
   registerIntake(app, { config, store, work, intakeModel, intakeKeys })
   registerProject(app, { config, store, hub, projects, tokens, intakeKeys })
   registerBuild(app, { config, store, hub, work, tokens, rounds, line })
-  registerApps(app, { config, store, hub, projects, tokens, line })
+  registerApps(app, { config, store, hub, projects, tokens, line, keeper })
   registerMinted(app, { config, store })
 
   // MOCK MODE ONLY: the browser reaches only us, so we carry `/v1` (and its event stream's

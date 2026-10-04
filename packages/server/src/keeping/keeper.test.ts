@@ -1245,6 +1245,51 @@ describe('someone taken off the app: their work here ends, once (F6b Task 4, Dec
   })
 })
 
+describe('readMembers: a stranger\'s change, read with its own token (minors m82, Rich\'s "Re-read on a stranger")', () => {
+  const CHANGES = 'mft_test_k_a_changes_token'
+  const carol = {
+    ...member('cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+    displayName: 'Carol',
+  }
+
+  it('while we do not watch the app: read with the token it is given, and kept', async () => {
+    const t = setUp()
+    t.store.putApp(appOf(P1))
+    t.store.putMembers(P1, [member(ALICE)])
+    t.w.members.set(P1, [member(ALICE), member(BOB, 'collaborator')])
+    await t.keeper.readMembers(P1, CHANGES)
+    expect(t.w.calls).toEqual([`members ${CHANGES} ${P1}`])
+    expect(t.store.members(P1)).toEqual([member(ALICE), member(BOB, 'collaborator')])
+  })
+
+  it('kept as our own read is: someone no longer listed is taken off, once (F6b Decision 5)', async () => {
+    const t = setUp()
+    const removed: [string, string][] = []
+    t.keeper.onRemoved((projectId, personId) => removed.push([projectId, personId]))
+    await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    t.open()[0]!.handlers.replayed!({ ids: [], overlapped: false })
+    t.w.members.set(P1, [member(ALICE), carol])
+    await t.keeper.readMembers(P1, CHANGES)
+    expect(t.store.members(P1)).toEqual([member(ALICE), carol])
+    expect(removed).toEqual([[P1, BOB]])
+  })
+
+  it('a read that lists nobody is not believed (m80); one that fails rejects; the members stay as they were', async () => {
+    const t = setUp()
+    t.store.putApp(appOf(P1))
+    t.store.putMembers(P1, [member(ALICE)])
+    t.w.members.set(P1, [])
+    await t.keeper.readMembers(P1, CHANGES)
+    expect(t.store.members(P1)).toEqual([member(ALICE)])
+    const refused = new PlatformRefusal('PLATFORM_UNAVAILABLE', 502)
+    t.w.watching.members = async () => {
+      throw refused
+    }
+    await expect(t.keeper.readMembers(P1, CHANGES)).rejects.toBe(refused)
+    expect(t.store.members(P1)).toEqual([member(ALICE)])
+  })
+})
+
 describe('your work is waiting (Decision 14)', () => {
   const runOf = (conversationId: string, status: Run['status']): Run => ({
     id: `run-${conversationId}-1`,

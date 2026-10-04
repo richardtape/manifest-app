@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify'
 import type { Line } from '../build/line.js'
 import type { Config } from '../config.js'
+import type { Keeper } from '../keeping/keeper.js'
 import type { FixEnvironment } from '../platform/instances.js'
 import type { ConversationTokens, Made, Projects } from '../platform/project.js'
 import { PlatformRefusal } from '../platform/refusal.js'
@@ -218,6 +219,7 @@ export function registerApps(
     projects,
     tokens,
     line,
+    keeper,
   }: {
     config: Config
     store: Store
@@ -225,6 +227,8 @@ export function registerApps(
     projects: Projects
     tokens: ConversationTokens
     line: Line
+    /** Minors m82: the members read again, with a change's own token, when it is a stranger's. */
+    keeper: Pick<Keeper, 'readMembers'>
   },
 ): void {
   const check = guard(config)
@@ -251,6 +255,18 @@ export function registerApps(
         return refuse(reply, 502, 'PLATFORM_UNAVAILABLE', refusal.requestId)
       }
       if (made.id !== projectId) return refuse(reply, 400, 'TOKEN_NOT_FOR_PROJECT')
+      // MINORS m82 (Rich, "Re-read on a stranger"): someone our kept members do not name has just
+      // shown, by this token's read of the project, that they are on it; the members are read
+      // again with it and kept as the keeper keeps its own, so their own change is theirs. A read
+      // that fails keeps the members we had, and their change answers 404 until our next read.
+      const kept = store.members(projectId)
+      if (kept.length > 0 && !kept.some((member) => member.userId === who.person.id)) {
+        try {
+          await keeper.readMembers(projectId, asked.token)
+        } catch {
+          // Never logged: nothing of the read may carry the token.
+        }
+      }
 
       // No await from here to the line's answer: two asked in one tick are one and the next.
       store.rememberPerson(who.person)

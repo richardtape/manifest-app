@@ -48,6 +48,7 @@ function fakeKeeper(did: string[]) {
     deleting: (projectId) => void did.push(`deleting ${projectId}`),
     workEnded: () => undefined,
     onRemoved: () => undefined,
+    readMembers: () => Promise.resolve(),
     left: (projectId, personId) => {
       did.push(`left ${projectId} ${personId}`)
       return lefts

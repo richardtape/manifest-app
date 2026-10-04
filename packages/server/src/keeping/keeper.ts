@@ -110,6 +110,14 @@ export interface Keeper {
    * it. `false` when we kept no such member.
    */
   left(projectId: string, personId: string): boolean
+  /**
+   * MINORS m82 (Rich, "Re-read on a stranger"): someone our kept members do not name has asked a
+   * change, its token having read the project. The members read with that token, and kept as our
+   * own read is: someone no longer listed taken off (F6b Decision 5), a list of nobody not believed
+   * (m80), a read answered after a newer one of our stream's not kept (m81). Rejects when it
+   * cannot read; the members stay as they were.
+   */
+  readMembers(projectId: string, token: string): Promise<void>
 }
 
 /** Decision 5: a token with less than this left is replaced by the next one a page hands over. */
@@ -864,6 +872,18 @@ export function createKeeper({
       )
       return true
     },
+
+    async readMembers(projectId, token) {
+      const one = open.get(projectId)
+      const asked = one === undefined ? 0 : ++one.membersAsked
+      const members = await watching.members(token, projectId)
+      if (members.length === 0) return
+      if (one !== undefined) {
+        if (asked <= one.membersBelieved || !isCurrent(projectId, one)) return
+        one.membersBelieved = asked
+      }
+      keepMembers(projectId, members)
+    },
   }
 }
 
@@ -879,4 +899,5 @@ export const idleKeeper: Keeper = {
   outage: () => ({ state: 'answering', recovered: null }),
   onRemoved: () => undefined,
   left: () => false,
+  readMembers: () => Promise.resolve(),
 }
