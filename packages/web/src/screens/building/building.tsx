@@ -148,6 +148,9 @@ export function BuildingScreen({
       let step = 'mintToken'
       try {
         await handOver()
+        // m46's review: a token their press handed over counts as the renewal, so one refused
+        // again before anything got done is said, never renewed again unasked.
+        renewed.current = true
         step = operation
         await call()
       } catch (again_) {

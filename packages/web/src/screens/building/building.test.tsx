@@ -964,6 +964,21 @@ describe('a token our server no longer holds (F2 handOverToken), without a word'
       ]),
     )
   })
+
+  it('m46’s review: a token their own press handed over, refused again straight after, is said, never renewed again unasked', async () => {
+    const s = stage({
+      build: (n) => (n === 1 ? new OurRefusal('TOKEN_MISSING', 409) : undefined),
+    })
+    await open(s)
+    s.state(round({ status: 'needs-you', needs: { kind: 'token' } }))
+    await press(await screen.findByRole('button', { name: words.building.carryOn }))
+    await waitFor(() => expect(s.called('build')).toHaveLength(2))
+    s.state(round({ status: 'working' }))
+    s.state(round({ status: 'needs-you', needs: { kind: 'token' } }))
+    const notice = await screen.findByRole('alert')
+    expect(within(notice).getByText(words.building.couldntPress)).toBeTruthy()
+    expect(s.called('mintToken')).toHaveLength(1)
+  })
 })
 
 describe('questions, inline, as needs-you cards', () => {
