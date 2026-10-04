@@ -909,9 +909,10 @@ describe('a token our server no longer holds (F2 handOverToken), without a word'
     expect(s.called('handProject')).toEqual([])
   })
 
-  it('needs: token: minted, handed over, and carried on, with no card', async () => {
+  it('needs: token, while the page watched: minted, handed over, and carried on, with no card', async () => {
     const s = stage()
     await open(s)
+    s.state(round({ status: 'working' }))
     s.state(round({ status: 'needs-you', needs: { kind: 'token' } }))
     await waitFor(() => expect(s.called('build')).toEqual([['c-1']]))
     expect(s.calls.map((c) => c[0])).toEqual(['mintToken', 'handProject', 'build'])
@@ -928,6 +929,7 @@ describe('a token our server no longer holds (F2 handOverToken), without a word'
   it('a token refused again straight after: said, with a reference, and Carry on tries once more', async () => {
     const s = stage()
     await open(s)
+    s.state(round({ status: 'working' }))
     s.state(round({ status: 'needs-you', needs: { kind: 'token' } }))
     await waitFor(() => expect(s.called('build')).toHaveLength(1))
     s.state(round({ status: 'working' }))
@@ -938,6 +940,29 @@ describe('a token our server no longer holds (F2 handOverToken), without a word'
     expect(s.called('mintToken')).toHaveLength(1)
     await press(within(notice).getByRole('button', { name: words.building.tryAgain }))
     await waitFor(() => expect(s.called('mintToken')).toHaveLength(2))
+  })
+
+  it('minors m46 (Rich\'s "Interrupted card"): opened on a round already at needs: token, nothing is minted until a press; the interrupted card, unreported, and its Carry on hands one over', async () => {
+    const s = stage({
+      build: (n) => (n === 1 ? new OurRefusal('TOKEN_MISSING', 409) : undefined),
+    })
+    await open(s)
+    s.state(round({ status: 'needs-you', needs: { kind: 'token' } }))
+    expect(await screen.findByText(words.building.needs.interrupted)).toBeTruthy()
+    await act(async () => undefined)
+    expect(s.calls).toEqual([])
+    // A refused token is no problem of ours: nothing reported, no reference (m12's card).
+    expect(referenceIn(document.body)).toBeUndefined()
+    expect(screen.getByText(words.building.chip.needsYou)).toBeTruthy()
+    await press(button(words.building.carryOn))
+    await waitFor(() =>
+      expect(s.calls.map((c) => c[0])).toEqual([
+        'build',
+        'mintToken',
+        'handProject',
+        'build',
+      ]),
+    )
   })
 })
 

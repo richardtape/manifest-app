@@ -248,16 +248,25 @@ export function BuildingScreen({
     }
   }
   const needsToken = round?.status === 'needs-you' && round.needs?.kind === 'token'
+  // MINORS m46 (Rich, "Interrupted card"): renewed by itself only when this page watched the round
+  // go there. One it opened on, already needing a token (refused while nobody watched, however
+  // long ago), is drawn as interrupted, with nothing to report, and its Carry on hands one over
+  // as every press does: a session is started only by a press.
+  const [watched, setWatched] = useState(false)
+  useEffect(() => {
+    if (round !== null && !needsToken) setWatched(true)
+  }, [round, needsToken])
+  const arrived = theirs === null && needsToken && !watched
   useEffect(() => {
     // Another's: only its own person's page hands a token over (F6b D3).
-    if (theirs !== null || !needsToken || renewing.current) return
+    if (theirs !== null || !needsToken || !watched || renewing.current) return
     if (!renewed.current) return void renewAndCarryOn()
     setNotice({
       words: words.building.couldntPress,
       reference: reportProblem({ code: 'TOKEN_REFUSED', operation: 'build' }),
       retry: () => void renewAndCarryOn(),
     })
-  }, [needsToken, round?.round])
+  }, [needsToken, round?.round, watched])
 
   // A step newly done is progress: a token may be renewed again for a later refusal.
   const done = (round?.steps ?? []).filter((s) => s.state === 'done').length
@@ -323,7 +332,11 @@ export function BuildingScreen({
       <StartedBy theirs={theirs} />
       <div className="building__columns">
         <Work
-          round={round}
+          round={
+            arrived
+              ? { ...round!, status: 'interrupted', needs: null, forgotten: true }
+              : round
+          }
           connecting={connecting}
           notice={noticeCard}
           end={end}
