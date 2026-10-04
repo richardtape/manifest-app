@@ -2057,6 +2057,31 @@ describe('a new detail about the people who sign in (F6b Task 9, Decision 9)', (
     expect(window.location.pathname).toBe('/new/c-1')
   })
 
+  it('minors m106: the focus follows the press, onto “Starting that change…” while it starts, never lost to the page', async () => {
+    const s = stage()
+    s.ours.startChange = () => new Promise(() => undefined)
+    await open(s)
+    s.state(stuck(['sn']), { state: 'paused' })
+    await press(await screen.findByRole('button', { name: LEAVE_OUT }))
+    const starting = await screen.findByText(words.building.detail.leavingOut)
+    expect(document.activeElement).toBe(starting.closest('[role="status"]'))
+    expect(document.activeElement).not.toBe(document.body)
+  })
+
+  it('minors m106: a change that would not start gives the focus back to [Leave it out]', async () => {
+    const s = stage()
+    started(s, new OurRefusal('CONVERSATION_INVALID', 400))
+    await open(s)
+    s.state(stuck(['sn']), { state: 'paused' })
+    await press(await screen.findByRole('button', { name: LEAVE_OUT }))
+    await screen.findByRole('alert')
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: LEAVE_OUT }),
+      ),
+    )
+  })
+
   it("another member's: it waits on its person, and nothing is theirs to press", async () => {
     const SAM = 'c0000000-0000-4000-8000-000000000001'
     const s = stage(

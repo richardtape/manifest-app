@@ -1,6 +1,6 @@
 import type { Needs, RoundView } from '@manifest-app/server/progress'
 import { Button, Card, StateChip } from '@manifest-app/ui'
-import { Children, type ReactNode } from 'react'
+import { Children, useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { words } from '../../words.js'
 import { monthResetsAt, whenWords } from '../describe/model.js'
 import { SupportReference, useReported } from '../reference.js'
@@ -31,6 +31,7 @@ function NeedsCard({
   first = null,
   said,
   reference,
+  actions,
   children,
 }: {
   tone: Tone
@@ -38,6 +39,8 @@ function NeedsCard({
   first?: string | null
   said: string
   reference: string | null
+  /** Its buttons' row, for a card that moves the focus among them (m106). */
+  actions?: RefObject<HTMLDivElement | null>
   children?: ReactNode
 }) {
   return (
@@ -46,7 +49,9 @@ function NeedsCard({
       <p className="body-lead">{said}</p>
       {reference === null ? null : <SupportReference reference={reference} />}
       {Children.toArray(children).length === 0 ? null : (
-        <div className="describe__actions">{children}</div>
+        <div ref={actions} className="describe__actions">
+          {children}
+        </div>
       )}
     </Card>
   )
@@ -101,6 +106,57 @@ function InterruptedCard({
     >
       {carryOn(presses)}
       {stopHere(presses)}
+    </NeedsCard>
+  )
+}
+
+/**
+ * F6b DECISION 9: UBC's identity team must agree first; until FE-47, nothing pretends to ask.
+ * MINORS m106: THE FOCUS FOLLOWS [LEAVE IT OUT] (the sign-off's pattern): onto *Starting that
+ * change…* while it starts, and back to the card's first button when it did not go through (its
+ * notice says why), never lost to the page.
+ */
+function DetailCard({
+  details,
+  presses,
+}: {
+  details: Extract<Needs, { kind: 'detail' }>['details']
+  presses: Presses
+}) {
+  const d = words.building.detail
+  const leaving = presses.leaving === true
+  const workingRef = useRef<HTMLSpanElement>(null)
+  const actionsRef = useRef<HTMLDivElement>(null)
+  const was = useRef(leaving)
+  useEffect(() => {
+    const before = was.current
+    was.current = leaving
+    if (leaving && !before) workingRef.current?.focus()
+    else if (!leaving && before) actionsRef.current?.querySelector('button')?.focus()
+  }, [leaving])
+  return (
+    <NeedsCard
+      tone="attention"
+      first={d.needs(detailWords(details))}
+      said={d.cannotAskYet}
+      reference={null}
+      actions={actionsRef}
+    >
+      {leaving ? (
+        <span ref={workingRef} tabIndex={-1} role="status">
+          <StateChip state="working" label={d.leavingOut} />
+        </span>
+      ) : (
+        <>
+          {presses.leaveOut === undefined ? null : (
+            <Button kind="primary" onClick={presses.leaveOut}>
+              {d.leaveOut}
+            </Button>
+          )}
+          {/* F4 Decision 5: a round that holds its app can always be stopped here. */}
+          {stopHere(presses)}
+        </>
+      )}
     </NeedsCard>
   )
 }
@@ -240,32 +296,8 @@ function needCard(
       return (
         <NeedsCard tone="waiting" said={said.cannot(needs.what)} reference={reference} />
       )
-    case 'detail': {
-      // F6b Decision 9: UBC's identity team must agree first; until FE-47, nothing pretends to ask.
-      const d = words.building.detail
-      return (
-        <NeedsCard
-          tone="attention"
-          first={d.needs(detailWords(needs.details))}
-          said={d.cannotAskYet}
-          reference={null}
-        >
-          {presses.leaving === true ? (
-            <StateChip state="working" label={d.leavingOut} />
-          ) : (
-            <>
-              {presses.leaveOut === undefined ? null : (
-                <Button kind="primary" onClick={presses.leaveOut}>
-                  {d.leaveOut}
-                </Button>
-              )}
-              {/* F4 Decision 5: a round that holds its app can always be stopped here. */}
-              {stopHere(presses)}
-            </>
-          )}
-        </NeedsCard>
-      )
-    }
+    case 'detail':
+      return <DetailCard details={needs.details} presses={presses} />
     case 'refused':
       if (needs.code === SIGN_IN_REFUSED)
         return (
