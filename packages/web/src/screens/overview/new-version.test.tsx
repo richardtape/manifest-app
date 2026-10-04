@@ -567,7 +567,10 @@ describe('minors m101: after a launch, the landed moment gives way to a later ve
   const LANDED = 'Your students have the version from today, 9:00am.'
 
   /** Pressed and landed; then the Overview reads its addresses again, the students on NEW. */
-  async function landedThenRead(after: Schemas['LaunchReadiness']) {
+  async function landedThenRead(
+    after: Schemas['LaunchReadiness'],
+    whileLanded: () => void = () => undefined,
+  ) {
     let readiness = SELF_SERVE
     const s = stage(() => readiness, {
       getRelease: (id) =>
@@ -586,6 +589,7 @@ describe('minors m101: after a launch, the landed moment gives way to a later ve
       fireEvent.click(pressed)
     })
     expect(await screen.findByText(LANDED)).toBeTruthy()
+    whileLanded()
     readiness = after
     const reads = s.calls.length
     view.rerender(
@@ -641,7 +645,8 @@ describe('minors m101: after a launch, the landed moment gives way to a later ve
     await act(async () => {
       fireEvent.click(first)
     })
-    await screen.findByRole('status')
+    // m136: the facts are a status region too, so the changed words are found by their own.
+    await screen.findByText(words.overview.newVersion.changed)
     const again = screen.getByRole('button', { name: PRESS })
     await act(async () => {
       fireEvent.click(again)
@@ -687,5 +692,89 @@ describe('minors m101: after a launch, the landed moment gives way to a later ve
     ).toBeTruthy()
     expect(screen.queryByText(LANDED)).toBeNull()
     expect(screen.getByRole('button', { name: PRESS })).toBeTruthy()
+  })
+
+  it('minors m136: the give-way is said to a screen reader, the later one’s facts in a live region the panel already held', async () => {
+    let region: HTMLElement | undefined
+    await landedThenRead(
+      { ...SELF_SERVE, candidateReleaseId: NEWER.id, baselineReleaseId: NEW.id },
+      () => {
+        // While the moment holds, the facts' region stays, empty: their return is a change in it.
+        region = screen.getAllByRole('status').find((el) => el.textContent === '')
+        expect(region).toBeDefined()
+      },
+    )
+    await waitFor(() =>
+      expect(region!.textContent).toBe(
+        'The version from today, 11:00am is on your trying-out address. Your students have the version from today, 9:00am.',
+      ),
+    )
+    expect(region!.isConnected).toBe(true)
+  })
+})
+
+describe('minors m136: shown again, the panel reads again', () => {
+  /** The version a colleague put on trying-out while they were away, from today at 11:00am. */
+  const NEWER: Schemas['Release'] = {
+    ...fixtures.RELEASE,
+    id: '88888888-8888-4888-8888-888888888883',
+    createdAt: '2026-10-03T18:00:00.000Z',
+  }
+  const visibility = (state: 'visible' | 'hidden') =>
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => state,
+    })
+  const showAgain = async (state: 'visible' | 'hidden' = 'visible') => {
+    visibility(state)
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+  }
+  afterEach(() => Reflect.deleteProperty(document, 'visibilityState'))
+
+  it('a version put on trying-out while they were away: its facts once the page is shown again, never while hidden', async () => {
+    let readiness = SELF_SERVE
+    const s = stage(() => readiness, {
+      getRelease: (id) =>
+        Promise.resolve(id === NEWER.id ? NEWER : id === NEW.id ? NEW : OLD),
+    })
+    draw(s)
+    expect(await screen.findByText(FACTS)).toBeTruthy()
+    readiness = { ...SELF_SERVE, candidateReleaseId: NEWER.id }
+    await showAgain('hidden')
+    expect(s.calls).toHaveLength(1)
+    await showAgain()
+    expect(
+      await screen.findByText(
+        'The version from today, 11:00am is on your trying-out address. Your students have the version from 18 September, 3:12pm.',
+      ),
+    ).toBeTruthy()
+    expect(s.calls).toHaveLength(2)
+  })
+
+  it('shown again and the read refused: the panel stands as it was, its press with it', async () => {
+    let failing = false
+    const s = stage(() => {
+      if (failing) throw refused(500, 'INTERNAL')
+      return SELF_SERVE
+    })
+    draw(s)
+    expect(await screen.findByText(FACTS)).toBeTruthy()
+    failing = true
+    await showAgain()
+    await waitFor(() => expect(s.calls).toHaveLength(2))
+    await act(async () => undefined)
+    expect(screen.getByText(FACTS)).toBeTruthy()
+    expect(screen.getByRole('button', { name: PRESS })).toBeTruthy()
+  })
+
+  it('a panel no longer drawn reads nothing when the page is shown again', async () => {
+    const s = stage(SELF_SERVE)
+    const view = draw(s)
+    expect(await screen.findByText(FACTS)).toBeTruthy()
+    view.unmount()
+    await showAgain()
+    expect(s.calls).toHaveLength(1)
   })
 })

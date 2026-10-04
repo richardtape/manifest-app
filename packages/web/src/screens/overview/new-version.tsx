@@ -143,6 +143,15 @@ export function NewVersion({
   }, [platform, project.id, served, attempt, timeZone, expire])
 
   const readAgain = useCallback(() => setAttempt((n) => n + 1), [])
+  // MINORS m136: SHOWN AGAIN, READ AGAIN (Going live's Decision 16): a version put on trying-out
+  // while they were away (another tab, a colleague). Quietly: a reading lost keeps the panel.
+  useEffect(() => {
+    const shown = () => {
+      if (document.visibilityState === 'visible') readAgain()
+    }
+    document.addEventListener('visibilitychange', shown)
+    return () => document.removeEventListener('visibilitychange', shown)
+  }, [readAgain])
   const onHold = useCallback((hold: boolean) => setHeld(hold), [])
   // The gate said it is not ready: nothing to press, and nothing said of what stands, until the
   // checklist is read again (minors m102): the old reading is the one the gate just refused.
@@ -239,9 +248,13 @@ export function NewVersion({
       <h2 className="heading" id={heading}>
         {nv.title}
       </h2>
-      {held ? null : (
-        <p className="body-lead">{nv.facts(reading.trying, reading.students)}</p>
-      )}
+      {/* m136: the facts' region stays while a press holds the panel, empty, so a landed moment
+          giving way to a later version (m101) is said to a screen reader, as `changed` says its own. */}
+      <div role="status">
+        {held ? null : (
+          <p className="body-lead">{nv.facts(reading.trying, reading.students)}</p>
+        )}
+      </div>
       {what}
     </section>
   )
