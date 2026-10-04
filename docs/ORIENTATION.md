@@ -4,18 +4,16 @@
 joining. **The next job is always in the current plan's sittings table**, and [`plans/roadmap.md`](./plans/roadmap.md)
 says which plan is current. This file states where things stand and the rules. It states no sitting's story.
 
-**Where things stand** *(2026-10-03, ~23:50 PDT: **a seventh minors round is DONE** (`manifest-app-cf`, coordinated by
-`manifest-af`, mock mode; [`minors.md`](./minors.md)'s dated entry): **m134** (`steps.ts`'s *not needed* key, owed before F5b
-part two: done), **m136** (the panel reads again when shown again; its give-way said to a screen reader), **m135** (the change
-planner on an app with no plan says what we cannot see), **m99 at Rich's ruling of 23:31 PDT** (*"Line only while the press
-works"*, re-asked after his 22:55 answer rested on a wrong premise; **m45 accepted**), m73, m106, m103, m105; the review's fixes;
-**m137–m139 new**. **F1–F6, F4a and F6b executed; F5b's sittings 1 and 2 done**, part two waiting for FE-46. Our server in
-**mock mode**. **The platform's NEXT plan is the UBC AI Gateway** (its sitting 2's Docker tier held our Vitest 22:20–23:05
-tonight; its acceptance, sitting 3, follows, F32 with it), **then the U1 classification plan** (Rich, 21:48 and 22:21: Manifest's
-data classes become UBC's U1 levels, the old three as aliases; approved 23:22 with its review's fixes; contract 1.7.0, an FE
-ask then: **nothing to build against yet**), then FE-46/47/5 (FE-53 with `tokenMintedBy`, FE-54 for m104), A1, B, FE-32,
-Phase 3, A2. **7100 holds `f5b-measure-1`, launched, until the platform truncates it.** Holds and frees come through the
-platform's live session; **with no coordinator live, Rich's word is the window**)*:
+**Where things stand** *(2026-10-04, 01:20 PDT, by the platform's coordinator `manifest-af`'s end-of-day sweep, at Rich's word: **the seventh minors round is DONE** (`manifest-app-cf`, `6dd8ba4`; [`minors.md`](./minors.md)'s dated entry: m134, m136, m135, m99 at
+Rich's 23:31 ruling, m45 accepted, m73, m106, m103, m105; m137–m139 new). **F1–F6, F4a and F6b executed; F5b's sittings 1 and 2 done**,
+part two waiting for FE-46. Our server in **mock mode**. **The platform's UBC AI Gateway plan is EXECUTED** (2026-10-04, its close at 01:20, `4032539`): the capable
+model is answered through UBC's gateway, and **the platform's LiteLLM is now 1.102.0** (re-pinned for F32, streamed calls undercharged).
+**The contract is still `1.6.0`** — nothing owed to us. **The platform's NEXT plan is the U1 classification plan** (Rich, 21:48 and 22:21:
+Manifest's data classes become UBC's U1 levels `low | medium | high | very-high`, the old three kept as aliases; approved 23:22): **contract
+`1.7.0`, additive, with an FE ask and a NOTICE at its contract commit** — the platform answers `very-high` where it said `confidential` (its
+S6). **Then FE-46/47/5, whose contract is now `1.8.0`**, then A1, B, FE-32, Phase 3, A2. **7100: real GitHub, its tables EMPTY** (the gateway
+plan's close truncated them; `f5b-measure-1`'s rows are gone and Rich removed its containers at 23:13 — the repository stays on GitHub, his to
+delete). **No coordinator is assumed: with none live, Rich's word is the window**)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
@@ -27,8 +25,9 @@ platform's live session; **with no coordinator live, Rich's word is the window**
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
   | 1 | **Minors, an eighth time** ([`minors.md`](./minors.md)'s last dated entry, *Skipped, and why*): **m137** (the panel's shown-again read and the students' side), **m138** (a reading during a press pins m101's `named`), **m139** (a quiet read that fails in part), all S and needing no ruling; **m104 closes when FE-54 lands**, **m130 and m131 when FE-53 does**; m111 and m92 need 7100; m97 a store change (larger) | Ready (mock mode) at Rich's word (or a coordinator's) | a FREE for its Vitest | While row 2 waits; the rest need Rich, 7100 or the platform |
-  | 2 | F5b part two (its sittings 3–5); m134, owed first, fixed (`f191d2b`) | Blocked | the platform building **FE-46** (its spec action **applied** at Rich's word, manifest `8def435`), placed after the UBC AI Gateway plan (Rich's 15:28 order; the plan is approved, FE-54 its Task 2b) | His order. Sitting 1's corrections (S1) are in the plan |
-  | 3 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a) (spec actions applied, `8def435`), placed after the UBC AI Gateway plan, in the approved FE-46/47/5 plan | Does not hold F6b open (F6b is executed) |
+  | 2 | F5b part two (its sittings 3–5); m134, owed first, fixed (`f191d2b`) | Blocked | the platform building **FE-46** (its spec action **applied** at Rich's word, manifest `8def435`), placed after the U1 plan, itself after the UBC AI Gateway plan (EXECUTED 2026-10-04) — Rich's 15:28 and 21:48 order; the FE-46/47/5 plan is approved, FE-54 its Task 2b, its contract now `1.8.0` | His order. Sitting 1's corrections (S1) are in the plan |
+  | 3 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a) (spec actions applied, `8def435`), placed after the U1 plan (Rich, 21:48), in the approved FE-46/47/5 plan | Does not hold F6b open (F6b is executed) |
+  | 4 | **The U1 adoption**: contract `1.7.0` — U1's level names (`low`, `medium`, `high`, `very-high`) read and written, the old three as aliases; the platform's FE ask names the screens (the lead agent's `lead.ts:125` line, FE-36's words) | Blocked | the platform's U1 plan committing its contract (its Task 1; a NOTICE comes to our live session) | Before F5b part two and F6b sitting 7, since FE-46/47/5 builds on `1.8.0` |
   | — | **For Rich:** FE-55 (carry it or not); `f5b-measure-1` and `f6b-measure-1` on GitHub (his to delete) | His word | — | Not a sitting |
 
   - **First, always:** `ListAgents` (tell the coordinator, if one is live, and the platform's live session your name and ports: 7102 our mock,
@@ -41,11 +40,10 @@ platform's live session; **with no coordinator live, Rich's word is the window**
   1. **Rich's word, every time.** If a platform session is live, ask it for a window: no restart of the control plane, no
      test tier, no `make verify`, and our Vitest held in its windows. If none is live, Rich's word is the window. Never
      run anything in `/Users/rich/Developer/manifest`: read it.
-  2. **7100 now:** truncated by the gateway plan's Task 0 (2026-10-03, ~20:30), then F5b's sitting 1 made, measured and
-     launched **`f5b-measure-1`** there and granted operator admin (Rich's own run). **The platform's next `pnpm test`
-     truncates it all again**, operator's grant included (both repositories, `f5b-measure-1` and `f6b-measure-1`, stay on
-     GitHub, Rich's to remove). **Every restart of the control plane signs everyone out.** Read the latest close-out before
-     planning a walk.
+  2. **7100 now** (2026-10-04 01:19, measured by `manifest-af`): **its tables are EMPTY** — 0 projects, 0 users, operator no administrator —
+     after the UBC AI Gateway plan's close; real GitHub; **30 project-less `mf-` demo containers and 22 Docker networks** (the platform's
+     `ci-acceptance` apps). `f5b-measure-1` and `f6b-measure-1` stay on GitHub, Rich's to remove. **Every restart of the control plane signs
+     everyone out.** Read the latest close-out before planning a walk.
   3. **Our server to edge mode, and say so:**
      - stop the mock-mode tree by pid (§7);
      - move `packages/server/.data/app.sqlite` (and its `-wal`, `-shm`) aside under the sitting's name;

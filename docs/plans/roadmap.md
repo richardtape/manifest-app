@@ -46,6 +46,6 @@ m16 and m67's guard accepted as they are); m41, m101 (both halves) and m98 (the 
 seventh minors round DONE** that night (`manifest-app-cf`, mock mode, its dated entry): **m134** (F5b part two's first owed fix),
 m136, m135 (the change planner on an app with no plan), **m99 at Rich's 23:31 *"Line only while the press works"***, m73, m106,
 m103, m105; **m45 accepted**; the review's fixes; m137–m139 new. The platform's order after faculty-ready (Rich, 15:28; the U1
-plan placed at 23:22): the UBC AI Gateway → **the U1 classification plan** (Manifest's data classes become UBC's U1 levels,
-contract 1.7.0, an FE ask then) → FE-46/47/5 (FE-46 for F5b part two; FE-47 and FE-5 for F6b sitting 7) → A1 → B → FE-32 →
-Phase 3 → A2.
+plan placed at 21:48): the UBC AI Gateway (**EXECUTED 2026-10-04**, LiteLLM now 1.102.0, contract unchanged) → **the U1 classification plan,
+NEXT** (Manifest's data classes become UBC's U1 levels, contract 1.7.0, an FE ask then — our next-job row 4) → FE-46/47/5 (**contract 1.8.0**; FE-46 for F5b
+part two; FE-47 and FE-5 for F6b sitting 7) → A1 → B → FE-32 → Phase 3 → A2.
