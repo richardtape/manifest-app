@@ -99,6 +99,49 @@ describe('the history page', () => {
     expect(page.indexOf(gap)).toBeLessThan(page.indexOf('1 October'))
   })
 
+  it('minors m73: a gap inside one of their days says its times, the day once, and the day’s heading is never repeated after it', async () => {
+    const answer = {
+      from: '2026-09-18T16:00:00.000Z',
+      // 29 September in Vancouver, 9:00am to 11:30am: a line at 1:00pm above it, one at 8:00am below.
+      gaps: [{ from: '2026-09-29T16:00:00.000Z', to: '2026-09-29T18:30:00.000Z' }],
+      lines: [
+        line('b', '2026-09-29T20:00:00.000Z'),
+        line('a', '2026-09-29T15:00:00.000Z'),
+      ],
+    }
+    render(
+      <History ours={oursWith(async () => answer)} project={project} timeZone={TZ} />,
+    )
+    await screen.findByRole('heading', { level: 1, name: h.title })
+    const days = screen.getAllByRole('heading', { level: 2 }).map((d) => d.textContent)
+    expect(days).toEqual(['29 September'])
+    const page = document.body.textContent ?? ''
+    const gap = h.gap('29 September, 9:00am', '11:30am')
+    expect(page).toContain(gap)
+    expect(page).not.toContain(h.gap('29 September', '29 September'))
+    expect(page.indexOf('1:00pm')).toBeLessThan(page.indexOf(gap))
+    expect(page.indexOf(gap)).toBeLessThan(page.indexOf('8:00am'))
+  })
+
+  it('minors m73: a gap across their days keeps its days, and each day its heading', async () => {
+    const answer = {
+      from: '2026-09-18T16:00:00.000Z',
+      // 11:00pm on 28 September to 1:00am on 29 September, in Vancouver.
+      gaps: [{ from: '2026-09-29T06:00:00.000Z', to: '2026-09-29T08:00:00.000Z' }],
+      lines: [
+        line('b', '2026-09-29T20:00:00.000Z'),
+        line('a', '2026-09-29T05:00:00.000Z'),
+      ],
+    }
+    render(
+      <History ours={oursWith(async () => answer)} project={project} timeZone={TZ} />,
+    )
+    await screen.findByRole('heading', { level: 1, name: h.title })
+    const days = screen.getAllByRole('heading', { level: 2 }).map((d) => d.textContent)
+    expect(days).toEqual(['29 September', '28 September'])
+    expect(document.body.textContent).toContain(h.gap('28 September', '29 September'))
+  })
+
   it('nothing held yet: it says so, with no From', async () => {
     render(
       <History

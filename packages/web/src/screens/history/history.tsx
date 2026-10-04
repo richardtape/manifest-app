@@ -13,9 +13,13 @@ type Loaded =
   | { state: 'missing' }
   | { state: 'ready'; history: Read }
 
-/** A day's lines, or a gap where we were not watching: in the order they happened, newest first. */
+/**
+ * A day's lines, or a gap where we were not watching: in the order they happened, newest first. A
+ * day's lines that a gap parts are its lines still: `again` draws them without the day's heading.
+ */
 type Piece =
-  { kind: 'day'; day: string; lines: Line[] } | { kind: 'gap'; from: string; to: string }
+  | { kind: 'day'; day: string; lines: Line[]; again: boolean }
+  | { kind: 'gap'; from: string; to: string }
 
 /**
  * Each gap goes where it happened: before the first line older than its end. A line AT its end is
@@ -36,10 +40,29 @@ function piecesOf(history: Read, timeZone: string | undefined): Piece[] {
     const day = dayWords(line.at, timeZone)
     const last = pieces.at(-1)
     if (last?.kind === 'day' && last.day === day) last.lines.push(line)
-    else pieces.push({ kind: 'day', day, lines: [line] })
+    else {
+      // m73: the same day on both sides of a gap is headed once, above it.
+      const before = pieces.findLast((piece) => piece.kind === 'day')
+      pieces.push({ kind: 'day', day, lines: [line], again: before?.day === day })
+    }
   }
   gapsUntil(-Infinity)
   return pieces
+}
+
+/**
+ * MINORS m73: a gap inside one of their days says its times, its day once (*"between 29 September,
+ * 9:00am and 11:30am"*), never *"between 29 September and 29 September"*; across days, its days.
+ */
+function gapWords(from: string, to: string, timeZone: string | undefined): string {
+  const day = dayWords(from, timeZone)
+  const until = dayWords(to, timeZone)
+  return day === until
+    ? words.keeping.history.gap(
+        `${day}, ${clockWords(from, timeZone)}`,
+        clockWords(to, timeZone),
+      )
+    : words.keeping.history.gap(day, until)
 }
 
 /**
@@ -105,11 +128,11 @@ export function History({
           {piecesOf(loaded.history, timeZone).map((piece) =>
             piece.kind === 'gap' ? (
               <p key={`gap-${piece.to}`} className="history__gap body-small">
-                {h.gap(dayWords(piece.from, timeZone), dayWords(piece.to, timeZone))}
+                {gapWords(piece.from, piece.to, timeZone)}
               </p>
             ) : (
               <section key={`day-${piece.lines[0]!.id}`} className="history__day">
-                <h2 className="heading">{piece.day}</h2>
+                {piece.again ? null : <h2 className="heading">{piece.day}</h2>}
                 <ul className="history__lines">
                   {piece.lines.map((line) => (
                     <li key={line.id} className="history__line">
