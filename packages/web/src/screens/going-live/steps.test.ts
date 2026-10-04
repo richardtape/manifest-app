@@ -525,6 +525,41 @@ describe('not needed: an app that signs nobody in (S1 M2 read from the platform�
     expect(steps[0]).toMatchObject({ kind: 'submitted', current: true })
   })
 
+  it('an app that signed people in, drafted both, then stopped keeps its drafts: both still not needed (m134, measured on 7100)', () => {
+    const steps = stepsOf(
+      input({
+        records: records({
+          stagingRegistration: draftedIam('staging', 'assessed'),
+          iamRegistration: draftedIam('production', 'assessed'),
+        }),
+        readiness: readiness(NOT_CWL),
+      }),
+    )
+    for (const s of [steps[1], steps[2]])
+      expect(s).toMatchObject({
+        kind: 'not-needed',
+        state: 'steady',
+        label: 'Not needed: it doesn’t sign anyone in.',
+        current: false,
+      })
+    expect(steps[0]).toMatchObject({ kind: 'submitted', current: true })
+  })
+
+  it('a registration in force is never read as signing nobody in, whatever its state (a launched app’s change with UBC: the item is met)', () => {
+    // The platform's `liveRegistrationItem`: after a launch, a change on file keeps `registeredAt`,
+    // and the item stays met while it covers the release.
+    const registered = IAM({
+      state: 'change_requested',
+      changeRequestedFrom: 'active',
+    })
+    expect(registered.registeredAt).not.toBeNull()
+    const s = one('staging', {
+      records: records({ stagingRegistration: null, iamRegistration: registered }),
+      readiness: readiness(item('iam-registration')),
+    })
+    expect(s.kind).not.toBe('not-needed')
+  })
+
   it('every step done or not needed: none current', () => {
     const steps = stepsOf(
       input({

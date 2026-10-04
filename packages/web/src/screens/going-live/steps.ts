@@ -214,10 +214,15 @@ function own(
   }
 
   // (S1: M2, read from the platform's NOT_CWL_ITEM) An app that signs nobody in: the checklist's
-  // registration item is met with no registration on file, and neither address registers anything.
+  // registration item is met with no registration in force, and neither address registers anything.
+  // MINORS m134 (measured on 7100): an app that signed people in, drafted, then stopped keeps its
+  // drafts, so the key is no registration in force, never none on file. A CWL app's item is met
+  // only once production's is (`readiness.ts`: `active` before a launch, `registeredAt` after it).
+  const production = records.iamRegistration
   const signsNobodyIn =
     id !== 'assessment' &&
-    records.iamRegistration === null &&
+    (production === null ||
+      (production.state !== 'active' && production.registeredAt === null)) &&
     items.some((i) => i.id === 'iam-registration' && i.state === 'met') &&
     (record === null || record.state === 'draft')
   if (signsNobodyIn)
