@@ -208,6 +208,7 @@ export function createKeeper({
   lookEveryMs = MINUTE_MS,
 }: KeeperDeps): Keeper {
   const open = new Map<string, Open>()
+  let firstScan: ReturnType<typeof setTimeout> | undefined
   let scanning: ReturnType<typeof setInterval> | undefined
   let looking: ReturnType<typeof setInterval> | undefined
   /** Task 6: each watched app's outage, once looked at; before that, our history says it. */
@@ -643,7 +644,10 @@ export function createKeeper({
     )
   }
 
-  /** Once an hour: each conversation waiting on its person for a day, said once per wait. */
+  /**
+   * Once an hour, the first a minute after a start (m67): each conversation waiting on its person
+   * for a day, said once per wait.
+   */
   function scan(): void {
     const before = new Date(now().getTime() - A_DAY_MS).toISOString()
     for (const conversation of store.idleConversations(before))
@@ -760,8 +764,17 @@ export function createKeeper({
       stopped = false
       // Review Focus 1: what a stop left claimed and unsent goes now, and never twice.
       void deliverUnfinished(store, mailer, wait)
-      scanning ??= setInterval(scan, HOUR_MS)
-      scanning.unref?.()
+      // Minors m67 (Rich, "A minute after start"): the first a minute after a start, then hourly,
+      // so a server restarted more often than hourly still scans (each wait is said once: its key).
+      if (firstScan === undefined && scanning === undefined) {
+        firstScan = setTimeout(() => {
+          firstScan = undefined
+          scan()
+          scanning = setInterval(scan, HOUR_MS)
+          scanning.unref?.()
+        }, MINUTE_MS)
+        firstScan.unref?.()
+      }
       if (probing) {
         looking ??= setInterval(look, lookEveryMs)
         looking.unref?.()
@@ -784,6 +797,8 @@ export function createKeeper({
       // m76: a held *we need you* is decided now, never lost to a stop (F6 Review Focus 1).
       for (const runId of [...held.keys()]) release(runId)
       stopped = true
+      clearTimeout(firstScan)
+      firstScan = undefined
       clearInterval(scanning)
       scanning = undefined
       clearInterval(looking)

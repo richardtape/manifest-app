@@ -1690,8 +1690,15 @@ describe('your work is waiting (Decision 14)', () => {
     expect([...working.sent, ...unkept.sent]).toEqual([])
   })
 
+  /** The scan's timers, and the clock it reads (m67: its first is a minute after a start). */
+  const scanTimers = () =>
+    vi.useFakeTimers({
+      now: NOW,
+      toFake: ['Date', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'],
+    })
+
   it('once an hour: waiting on its person, untouched for a day, is still waiting for you, once', async () => {
-    vi.useFakeTimers({ now: NOW, toFake: ['Date', 'setInterval', 'clearInterval'] })
+    scanTimers()
     try {
       const t = await waiting('building', 'needs-you')
       t.keeper.start()
@@ -1709,6 +1716,46 @@ describe('your work is waiting (Decision 14)', () => {
       expect(t.sent.map(({ to, subject }) => ({ to, subject }))).toEqual([
         { to: 'alice@example.test', subject: 'Reading responses: still waiting for you' },
       ])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('minors m67 (Rich, "A minute after start"): a start scans a minute after, then hourly; a wait already a day old is told then, never an hour later', async () => {
+    scanTimers()
+    try {
+      const t = await waiting('building', 'needs-you')
+      // Down for more than a day: the wait is a day old when we start again.
+      t.later(25 * HOUR)
+      t.keeper.start()
+      vi.advanceTimersByTime(59_000)
+      await settle()
+      expect(t.sent).toEqual([])
+      vi.advanceTimersByTime(1_000)
+      await settle()
+      expect(t.sent.map(({ subject }) => subject)).toEqual([
+        'Reading responses: still waiting for you',
+      ])
+      // Hourly after it, and the wait said once.
+      t.later(HOUR)
+      vi.advanceTimersByTime(HOUR)
+      await settle()
+      expect(t.sent).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('minors m67: stopped within that minute, it never scans', async () => {
+    scanTimers()
+    try {
+      const t = await waiting('building', 'needs-you')
+      t.later(25 * HOUR)
+      t.keeper.start()
+      t.keeper.stop()
+      vi.advanceTimersByTime(2 * HOUR)
+      await settle()
+      expect(t.sent).toEqual([])
     } finally {
       vi.useRealTimers()
     }
