@@ -38,4 +38,7 @@ after the faculty-ready plan; m131 closes with it. **A fourth minors round** the
 dated entry): Rich's words of 14:42 PDT built (m69/m76 *"A different email"*, a first build's its own; m109, m119; m123
 *"Re-ask once"*), the four he left to us (m107, m112, m114, m117), and m11, m12, m70; **m104 asked of the platform as FE-54**
 (its FE-46/47/5 plan, Task 2b; open until it lands); FE-53 widened by `tokenMintedBy`. **F5b
-sitting 1** is pre-authorised by Rich, after the platform's faculty-ready sitting 7, at `manifest-94`'s word that 7100 is free.
+sitting 1** is pre-authorised by Rich, after the platform's faculty-ready sitting 7 — **which closed 2026-10-03, 19:35 (the faculty-ready
+plan is EXECUTED)** — so it waits only for a 7100 window, never beside the platform's UBC AI Gateway sittings (its next plan); a coordinator,
+or with none live Rich, says which goes first. **m133 is ruled "Fix it"** (Rich, 17:23). The platform's order after faculty-ready (Rich,
+15:28): the UBC AI Gateway → FE-46/47/5 (FE-46 for F5b part two; FE-47 and FE-5 for F6b sitting 7) → A1 → B → FE-32 → Phase 3 → A2.

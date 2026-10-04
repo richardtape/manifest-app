@@ -221,7 +221,9 @@ other findings fixed in the same round, below).
 |---|---|---|---|---|---|
 | m133 | The fifth round's review, I4 (m70's other half) | An idle watcher refused 7105 still marks the live server's working rounds interrupted, and starts its waiting conversations into `withoutToken` (now `forgotten`): `rounds.interruptedOnBoot()` and `line.onBoot()` run inside `buildServer`, before it listens, **by Review Focus 3's design** (*"marked before this server can listen"*, `api/build.test.ts`'s restart test). Transient on the live server (its next save overwrites the run), but the page can see *Interrupted* meanwhile. | `packages/server/src/app.ts` (`interruptedOnBoot`, `onBoot`). | S | robustness |
 
-**m133.** A ruling first: move both into `onListen`, before the keeper starts (as m70 moved the keeper), and accept that a
+**m133. RULED BY RICH, 2026-10-03 17:23 PDT: "Fix it"** (through `manifest-94`; manifest's `2026-09-30-decisions.md`): a starting server
+makes sure it is the only one (it takes 7105, or a lock) before marking anything interrupted, which overrides F6b's Review Focus 3 wording.
+Which of the two shapes below is the next sitting's to choose and record. As written before the ruling: move both into `onListen`, before the keeper starts (as m70 moved the keeper), and accept that a
 request in the moment between listening and the hook reads a working run that nobody runs; or keep the marking before
 listen and have a refused listen undo nothing it marked (impossible: the marks are the live server's rows). Review Focus 3's
 restart test changes with it; `check-together.ts` (which never listens) calls them as it calls `keeper.start()`.

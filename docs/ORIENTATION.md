@@ -11,24 +11,32 @@ its person taken off, in his words, a first build's its own), m109 (`0c20ae2`), 
 once"*); **m104 asked of the platform as FE-54** (his (a), ~14:48 PDT: the platform's FE-46/47/5 plan, Task 2b; open until it
 lands); FE-53 widened by `tokenMintedBy` (15:09); **m107, m112, m114, m117 left to us by him** (15:16, *"Yes, its call"*) and
 fixed; m11, m12, m70 from row 3; **a fresh review's fixes** (`ad1eb6b`..`3066286`), its I4 a new minor, **m133**. **F1–F6 and
-F4a, F6b executed**; our server in **mock mode**. Holds and frees come through
-the platform's live session and `manifest-94`)*:
+F4a, F6b executed**; our server in **mock mode**. **Since (19:46 PDT, `manifest-94`'s cold-start sweep):** Rich ruled **m133 "Fix it"** (17:23:
+a starting server makes sure it is the only one — it takes 7105, or a lock — before marking any round interrupted; this overrides F6b's Review
+Focus 3 wording). **The platform's faculty-ready plan is EXECUTED** (19:35; Rich clicked it), and its last commit `6b5d471` changed contract
+**1.6.0's text only** — the NOTICE: *`Manifest-Admin-Reason`'s and `EventActor.asAdministrator`'s descriptions now say a
+collaborator-administrator acting beyond their role is asked, and records `asAdministrator: true`; a reason sent unasked is part of the request
+(409 `IDEMPOTENCY_KEY_REUSED` if it changes on a retry), never 'ignored'* — nothing of ours parses those descriptions, so it is recorded, not
+adopted. **The platform's NEXT plan is the UBC AI Gateway** (its sitting 1's `pnpm test` truncates 7100), then FE-46/47/5 (FE-53 with
+`tokenMintedBy`, FE-54 for m104), A1, B, FE-32, Phase 3, A2. **7100 was `make reset` at 17:58**: no users, no projects, operator no
+administrator. Holds and frees come through the platform's live session; **`manifest-94` coordinated 2026-10-03 and may not be running — with
+no coordinator live, Rich's word is the window**)*:
 
 - **THE NEXT JOB, AND HOW TO CHOOSE IT.** Take the first row below that is **ready**, say to Rich why, and start at his
   word. A row is ready when what it waits on has happened: a platform landing, a 7100 window, or Rich's decision. **Check
   each *Waits on* before recommending**, because things move between sessions: `ListAgents` (is a platform session
-  live, and what is it doing? `manifest-94` coordinates the day), manifest's `git log` and its
+  live, and what is it doing? a coordinator such as `manifest-94` may or may not be), manifest's `git log` and its
   `docs/superpowers/ORIENTATION.md` §7e, and Rich's word (his decisions are recorded in manifest's
   `docs/superpowers/2026-09-30-decisions.md`, newest entry last).
 
   | # | Job | Ready? | Waits on | Why here |
   |---|---|---|---|---|
-  | 1 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`). **Pre-authorised by Rich** (2026-10-03, ~13:45 PDT, *"After sitting 7"*): a new private repository in `Manifest-local-dev` (named in the record, his to delete), a platform session re-granting operator's admin (asked through `manifest-94`), the test sign-ins (his standing yes); **his click on `app.` in edge mode still comes at its end** | **Blocked, then ready at `manifest-94`'s word** | **the platform's faculty-ready sitting 7 (its acceptance) closing** (sitting 5 closed 2026-10-03; a sitting 5b, `passport-ubcshib` 0.1.7-rc.1 in the blueprint, comes first), and **`manifest-94` saying 7100 is free**. 7100 was truncated at sitting 5's close (no users, no projects) | Its own sitting; **not overnight** |
-  | 2 | **Minors, a sixth time** ([`minors.md`](./minors.md)'s last dated entry, *Skipped, and why*): m41 and m101 small tasks of their own; m16, m46, m67, m82 with a ruling each; m98 needs a walk at 375; **m133** (new) a ruling on Review Focus 3; **m104 closes when FE-54 lands**, **m130 and m131 when FE-53 does**; m111 needs 7100 | Ready (mock mode) at Rich's or `manifest-94`'s word | a FREE for its Vitest | While row 1 waits; the rest need Rich, 7100 or the platform |
-  | 3 | F5b part two (its sittings 3–5) | Blocked | the platform building **FE-46** (its spec action **applied** at Rich's word, manifest `8def435`), placed after the faculty-ready plan | His order |
-  | 4 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a) (spec actions applied, `8def435`), placed after the faculty-ready plan | Does not hold F6b open (F6b is executed) |
+  | 1 | **F5b sitting 1: the measurements on 7100**, M1–M8 in [`plans/2026-10-01-f5b-the-clocks.md`](./plans/2026-10-01-f5b-the-clocks.md), **and the `__Host-` adoption's clicked half** (Rich on `app.` with our server in edge mode: DevTools shows `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out; then `MODE=edge bash scripts/check-slice.sh`). **Pre-authorised by Rich** (2026-10-03, ~13:45 PDT, *"After sitting 7"*): a new private repository in `Manifest-local-dev` (named in the record, his to delete), a platform session re-granting operator's admin (asked through the coordinator, or Rich), the test sign-ins (his standing yes); **his click on `app.` in edge mode still comes at its end** | **Ready once 7100 is free** | faculty-ready's sitting 7 **CLOSED 2026-10-03, 19:35** — so only **a 7100 window**: never beside the platform's UBC AI Gateway sittings (their `pnpm test` truncates 7100); a coordinator, or with none live **Rich**, says which goes first. 7100 was `make reset` at 17:58 (no users, no projects, operator no administrator — the pre-authorised re-grant covers it) | Its own sitting; **not overnight** |
+  | 2 | **Minors, a sixth time** ([`minors.md`](./minors.md)'s last dated entry, *Skipped, and why*): m41 and m101 small tasks of their own; m16, m46, m67, m82 with a ruling each; m98 needs a walk at 375; **m133: Rich ruled "Fix it"** (17:23; the server takes 7105 or a lock before marking rounds interrupted); **m104 closes when FE-54 lands**, **m130 and m131 when FE-53 does**; m111 needs 7100 | Ready (mock mode) at Rich's word (or a coordinator's) | a FREE for its Vitest | While row 1 waits; the rest need Rich, 7100 or the platform |
+  | 3 | F5b part two (its sittings 3–5) | Blocked | the platform building **FE-46** (its spec action **applied** at Rich's word, manifest `8def435`), placed after the UBC AI Gateway plan (Rich's 15:28 order; the plan is approved, FE-54 its Task 2b) | His order |
+  | 4 | F6b sitting 7: FE-47's *[Ask for it]*, FE-5 (a)'s question naming who | Blocked | the platform landing FE-47 and FE-5 (a) (spec actions applied, `8def435`), placed after the UBC AI Gateway plan, in the approved FE-46/47/5 plan | Does not hold F6b open (F6b is executed) |
 
-  - **First, always:** `ListAgents` (tell `manifest-94` and the platform's live session your name and ports: 7102 our mock,
+  - **First, always:** `ListAgents` (tell the coordinator, if one is live, and the platform's live session your name and ports: 7102 our mock,
     7105 our server), `pgrep -fl vitest`, and **run no Vitest while a HOLD stands**: gate every run on the platform's flag
     file inside the same command (`[ "$(cat /Users/rich/Developer/manifest/.superpowers/sdd/platform-window)" = FREE ] &&
     pnpm test …`), never `cat` it beside the run. Step 0: contract **1.6.0**, 72 operations, **143 codes**, adopted whole
