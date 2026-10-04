@@ -243,6 +243,70 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     expect(screen.queryByText(words.goingLive.letIn.nothingReached)).toBeNull()
   })
 
+  it('minors m105: a failed start with its own incident: [What went wrong] starts a fix of the live address, never of trying-out', async () => {
+    const ATTEMPT = '99999999-9999-4999-8999-999999999993'
+    const INCIDENT: Schemas['Incident'] = {
+      ...fixtures.INCIDENTS.incidents[0]!,
+      id: '44444444-4444-4444-8444-444444444441',
+      instanceId: ATTEMPT,
+      releaseId: NEW.id,
+      createdAt: '2026-10-03T18:59:40.000Z',
+    }
+    const asked: unknown[] = []
+    const s = stage(SELF_SERVE, {
+      deploy: (_environmentId, releaseId) =>
+        Promise.resolve({
+          ...fixtures.INSTANCE,
+          id: ATTEMPT,
+          releaseId,
+          state: 'failed',
+        } as Schemas['Instance']),
+      listEnvironments: () => Promise.resolve([PRODUCTION] as Schemas['EnvironmentList']),
+      listIncidents: (environmentId) =>
+        Promise.resolve({ environmentId, incidents: [INCIDENT] }),
+      mintToken: (projectId, request) => {
+        asked.push(['mintToken', projectId, request])
+        return Promise.resolve({
+          token: { id: 't-fix' },
+          secret: 'mft_test_fix',
+        } as Schemas['MintedToken'])
+      },
+    })
+    Object.assign(s.ours, {
+      fixFor: () => Promise.resolve(null),
+      startChange: (projectId: string, body: unknown) => {
+        asked.push(['startChange', projectId, body])
+        return Promise.resolve({ id: 'c-fix' })
+      },
+    })
+    draw(s)
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    const wentWrong = await screen.findByRole('button', {
+      name: words.tryingOut.whatWentWrong,
+    })
+    await act(async () => {
+      fireEvent.click(wentWrong)
+    })
+    await waitFor(() =>
+      expect(window.location.pathname).toBe(`/apps/${SLUG}/conversations/c-fix`),
+    )
+    expect(asked).toEqual([
+      ['mintToken', PROJECT.id, expect.objectContaining({ name: expect.any(String) })],
+      [
+        'startChange',
+        PROJECT.id,
+        {
+          fix: { incidentId: INCIDENT.id, environment: 'production' },
+          token: 'mft_test_fix',
+          tokenId: 't-fix',
+        },
+      ],
+    ])
+  })
+
   it("re-escalated: what changed in words, and F5b's ask; never the press", async () => {
     draw(stage(REESCALATED))
     expect(

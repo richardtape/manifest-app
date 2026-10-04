@@ -887,6 +887,81 @@ describe('F6 Task 11: end of term on the Overview (moment 20, design §5)', () =
   })
 })
 
+describe('minors m105: the landed moment on Waiting to reach your students outlasts the Overview’s read after it', () => {
+  it('pressed and landed, then the Overview reads its addresses again, the students now on that version: the moment stays, said once', async () => {
+    const CANDIDATE = fixtures.RELEASE.id
+    let landed = false
+    const s = stage({
+      launchedAt: LAUNCHED,
+      readiness: { ...fixtures.SELF_SERVE_READINESS, candidateReleaseId: CANDIDATE },
+      records: ALL_DONE,
+      production: {
+        ...fixtures.INSTANCE,
+        id: '99999999-9999-4999-8999-999999999991',
+        releaseId: '88888888-8888-4888-8888-888888888881',
+      },
+    })
+    const listed = s.platform.listEnvironments
+    s.platform.listEnvironments = (projectId) =>
+      listed(projectId).then((environments) =>
+        landed
+          ? environments.map((e) =>
+              e.kind === 'production'
+                ? {
+                    ...e,
+                    instance: {
+                      ...fixtures.INSTANCE,
+                      id: '99999999-9999-4999-8999-999999999992',
+                      releaseId: CANDIDATE,
+                    },
+                  }
+                : e,
+            )
+          : environments,
+      )
+    s.platform.listMembers = () =>
+      Promise.resolve([
+        {
+          userId: fixtures.ME.id,
+          role: 'owner',
+          displayName: fixtures.ME.displayName,
+          email: fixtures.ME.email,
+        } as Schemas['Member'],
+      ])
+    s.platform.deploy = (environmentId, releaseId) => {
+      landed = true
+      return Promise.resolve({
+        ...fixtures.INSTANCE,
+        id: '99999999-9999-4999-8999-999999999992',
+        environmentId,
+        releaseId,
+        state: 'healthy',
+      })
+    }
+    await open(`/apps/${SLUG}`, s)
+    await ready()
+    const reads = s.called('getLaunchReadiness').length
+    await press(
+      await screen.findByRole('button', { name: words.overview.newVersion.button }),
+    )
+    const LANDED = /^Your students have the version from /
+    expect(await screen.findByText(LANDED)).toBeTruthy()
+    // The Overview read again, and the panel with it, for the version the students now have.
+    await waitFor(() => expect(s.called('listEnvironments').length).toBeGreaterThan(1))
+    await waitFor(() =>
+      expect(s.called('getLaunchReadiness').length).toBeGreaterThan(reads + 1),
+    )
+    await act(async () => undefined)
+    expect(screen.getAllByText(LANDED)).toHaveLength(1)
+    expect(
+      screen.queryByRole('button', { name: words.overview.newVersion.button }),
+    ).toBeNull()
+    expect(
+      screen.getByRole('heading', { name: words.overview.newVersion.title }),
+    ).toBeTruthy()
+  })
+})
+
 describe('minors m101: the landed moment on Waiting to reach your students outlasts a quiet read that fails', () => {
   it('pressed and landed, then the Overview’s read again fails: the page stands, the moment with it, and nothing is said of the read', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
