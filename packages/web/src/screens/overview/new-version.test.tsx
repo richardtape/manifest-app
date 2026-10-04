@@ -582,6 +582,36 @@ describe('minors m99 (Rich, 22:55 PDT: “Drop the press’s line after launch�
   })
 })
 
+describe('minors m103: a version we cannot date is never said to be newer or earlier', () => {
+  const unread = () => Promise.reject(refused(500, 'INTERNAL'))
+  it.each([
+    [
+      'the one on trying-out',
+      [NEW.id],
+      'A different version is on your trying-out address. Your students have the version from 18 September, 3:12pm.',
+    ],
+    [
+      'the students’',
+      [OLD.id],
+      'The version from today, 9:00am is on your trying-out address. Your students have a different one.',
+    ],
+    [
+      'neither',
+      [NEW.id, OLD.id],
+      'Your trying-out address has a different version from the one your students have.',
+    ],
+  ])('%s undated: only what we know', async (_, undated, facts) => {
+    draw(
+      stage(SELF_SERVE, {
+        getRelease: (id) =>
+          undated.includes(id) ? unread() : Promise.resolve(id === NEW.id ? NEW : OLD),
+      }),
+    )
+    expect(await screen.findByText(facts)).toBeTruthy()
+    expect(shown()).not.toMatch(/newer|earlier/i)
+  })
+})
+
 describe('minors m101: after a launch, the landed moment gives way to a later version', () => {
   /** The version a colleague put on trying-out meanwhile, from today at 11:00am in Vancouver. */
   const NEWER: Schemas['Release'] = {

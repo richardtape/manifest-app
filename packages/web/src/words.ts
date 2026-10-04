@@ -772,8 +772,11 @@ export const words = {
      */
     newVersion: {
       title: 'Waiting to reach your students',
+      /** Ours where a day cannot be read (minors m103): never newer or earlier, which we cannot know. */
       facts: (trying: string | null, students: string | null) =>
-        `${trying === null ? 'A newer version' : `The version from ${trying}`} is on your trying-out address. Your students have ${students === null ? 'an earlier one' : `the version from ${students}`}.`,
+        trying === null && students === null
+          ? 'Your trying-out address has a different version from the one your students have.'
+          : `${trying === null ? 'A different version' : `The version from ${trying}`} is on your trying-out address. Your students have ${students === null ? 'a different one' : `the version from ${students}`}.`,
       button: 'Let your students have this version',
       helper: 'An owner lets your students have it.',
       landed: (when: string | null) =>
