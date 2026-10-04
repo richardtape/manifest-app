@@ -39,6 +39,8 @@ dated entry): Rich's words of 14:42 PDT built (m69/m76 *"A different email"*, a 
 *"Re-ask once"*), the four he left to us (m107, m112, m114, m117), and m11, m12, m70; **m104 asked of the platform as FE-54**
 (its FE-46/47/5 plan, Task 2b; open until it lands); FE-53 widened by `tokenMintedBy`. **F5b
 sitting 1 DONE** (2026-10-03, 20:35–21:17, after the platform's faculty-ready plan was EXECUTED at 19:35 and its gateway Task 0;
-`manifest-af` coordinating): the measurements, FE-55, m134, m135, and Rich's click. **A sixth minors round** is running
-(`manifest-app-c1`, mock mode). **m133 is ruled "Fix it"** (Rich, 17:23). The platform's order after faculty-ready (Rich,
+`manifest-af` coordinating): the measurements, FE-55, m134, m135, and Rich's click. **A sixth minors round DONE** the same
+evening (`manifest-app-c1`, mock mode, its dated entry): **m133** built at Rich's *"Fix it"* (the marks in `onListen`); his
+rulings of 20:07 and 20:21 built (m46 *"Interrupted card"*, m82 *"Re-read on a stranger"*, m67's *"A minute after start"*;
+m16 and m67's guard accepted as they are); m41, m101 (both halves) and m98 (the walk at 375); the review's fixes; **m136** new. The platform's order after faculty-ready (Rich,
 15:28): the UBC AI Gateway → FE-46/47/5 (FE-46 for F5b part two; FE-47 and FE-5 for F6b sitting 7) → A1 → B → FE-32 → Phase 3 → A2.
