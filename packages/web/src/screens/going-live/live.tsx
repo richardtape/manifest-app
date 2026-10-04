@@ -17,7 +17,8 @@ import {
   Secrets,
   Stations,
   StepUpCard,
-  UNSURE_READS,
+  readFor,
+  UNSURE_MS,
   WhatWentWrong,
   type Missing,
 } from '../trying-out/parts.js'
@@ -387,13 +388,9 @@ export function LetStudentsIn({
       instance: p.at === 'putting' ? p.instance : null,
       gaveUp: false,
     }))
-    let reads = 0
     let ended = false
     clearInterval(poll.current)
-    poll.current = setInterval(() => {
-      reads += 1
-      const last = reads >= UNSURE_READS
-      if (last) clearInterval(poll.current)
+    poll.current = readFor(POLL_MS, UNSURE_MS, (last) =>
       platform.listInstances(production.id).then(
         (list) => {
           if (!live.current || ended) return
@@ -415,8 +412,8 @@ export function LetStudentsIn({
           !ended &&
           last &&
           setPhase((p) => (p.at === 'unsure' ? { ...p, gaveUp: true } : p)),
-      )
-    }, POLL_MS)
+      ),
+    )
   }
 
   /**

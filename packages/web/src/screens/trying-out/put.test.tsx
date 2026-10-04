@@ -287,7 +287,8 @@ type Stage = ReturnType<typeof stage>
 const fetched: { url: string; body: string }[] = []
 beforeEach(() => {
   fetched.length = 0
-  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+  // m41: the clock too, which the five minutes more are read by.
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -834,7 +835,7 @@ const incidentReads = (s: Stage) =>
 function withTimeouts() {
   vi.useRealTimers()
   vi.useFakeTimers({
-    toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'],
+    toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'Date'],
     shouldAdvanceTime: true,
   })
 }
@@ -983,6 +984,35 @@ describe('M1: our deadline is not the platform’s answer (Review Focus 3)', () 
     await tick(5000)
     expect(polls()).toBe(stopped)
     expect(screen.queryByText(t.couldnt)).toBeNull()
+  })
+
+  it('minors m41: five minutes by the clock, however few seconds a hidden tab let through', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    await tick()
+    // Hidden: five minutes pass, and the tab lets one more second through.
+    vi.setSystemTime(Date.now() + 5 * 60_000)
+    await tick()
+    expect(await screen.findByText(t.unsureLong)).toBeTruthy()
+  })
+
+  it('minors m41: a read still out at the next second is never sent again beside it', async () => {
+    const s = await open(stage())
+    await putOn(s)
+    await s.refuse(ourDeadline())
+    await screen.findByText(t.unsure)
+    const listInstances = s.platform.listInstances
+    let sent = 0
+    // Ours alone, on staging: the Preview's own reads go on as they were.
+    s.platform.listInstances = (environmentId: string) => {
+      if (environmentId !== ID.staging) return listInstances(environmentId)
+      sent += 1
+      return never()
+    }
+    await tick(3000)
+    expect(sent).toBe(1)
   })
 
   it('cut: the Preview’s Trying out reads again, so what the give-up points at shows the attempt under way (the final review’s M4)', async () => {

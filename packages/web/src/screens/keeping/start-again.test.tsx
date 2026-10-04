@@ -221,7 +221,8 @@ function stage(world: Partial<World> = {}) {
 type Stage = ReturnType<typeof stage>
 
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+  // m41: the clock too, which the five minutes more are read by.
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => new Response(null, { status: 204 })),

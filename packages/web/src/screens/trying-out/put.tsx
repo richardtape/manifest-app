@@ -17,7 +17,8 @@ import {
   Secrets,
   Stations,
   StepUpCard,
-  UNSURE_READS,
+  readFor,
+  UNSURE_MS,
   WhatWentWrong,
   type Missing,
 } from './parts.js'
@@ -306,7 +307,6 @@ export function PutOnTryingOut({
       instance: p.at === 'putting' ? p.instance : null,
       gaveUp: false,
     }))
-    let reads = 0
     let ended = false
     const end = (then: () => Promise<void>) => {
       ended = true
@@ -315,16 +315,13 @@ export function PutOnTryingOut({
       void then()
     }
     clearInterval(poll.current)
-    poll.current = setInterval(() => {
-      reads += 1
-      const last = reads >= UNSURE_READS
-      if (last) clearInterval(poll.current)
+    poll.current = readFor(POLL_MS, UNSURE_MS, (last) => {
       const gaveUp = () =>
         live.current &&
         !ended &&
         last &&
         setPhase((p) => (p.at === 'unsure' ? { ...p, gaveUp: true } : p))
-      platform.listInstances(held.stagingId).then((list) => {
+      return platform.listInstances(held.stagingId).then((list) => {
         if (!live.current || ended) return
         const instance = newestAttempt(list.instances, listed)
         if (instance?.state === 'healthy') return end(() => arrive(held))
@@ -332,7 +329,7 @@ export function PutOnTryingOut({
           return end(() => neverAnswered(held, instance.id))
         setPhase((p) => (p.at === 'unsure' ? { ...p, instance, gaveUp: last } : p))
       }, gaveUp)
-    }, POLL_MS)
+    })
   }
 
   const refusedDeploy = async (error: unknown, held: Held) => {

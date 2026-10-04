@@ -10,7 +10,7 @@ import type { Then } from '../../router.js'
 import { words } from '../../words.js'
 import { machineryIn } from '../machinery.js'
 import { mintRequest } from '../making/token.js'
-import { DRY_RUN_POLL_MS, DRY_RUN_READS, forgetDryRuns } from './dry-run.js'
+import { DRY_RUN_FOR_MS, DRY_RUN_POLL_MS, forgetDryRuns } from './dry-run.js'
 import { GoingLive } from './going-live.js'
 
 /**
@@ -243,7 +243,8 @@ function stage(start: Partial<World> = {}) {
 type Stage = ReturnType<typeof stage>
 
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+  // m41: the clock too, which the five minutes more are read by.
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => new Response(null, { status: 204 })),
@@ -510,7 +511,7 @@ describe('the dry run, yours to start (F5 Task 7, FE-42 (a))', () => {
     const s = stage()
     const li = await press(s)
     await s.refuse(ourDeadline())
-    for (let i = 0; i < DRY_RUN_READS; i += 1)
+    for (let i = 0; i < DRY_RUN_FOR_MS / DRY_RUN_POLL_MS; i += 1)
       await act(async () => {
         vi.advanceTimersByTime(DRY_RUN_POLL_MS)
       })

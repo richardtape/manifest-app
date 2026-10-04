@@ -47,7 +47,32 @@ export const ENDED_BADLY = new Set<Schemas['Instance']['state']>([
 ])
 
 /** After our deadline, the new instance is read every second for up to five minutes more (M1). */
-export const UNSURE_READS = 300
+export const UNSURE_MS = 5 * 60_000
+
+/**
+ * MINORS m41: READ ON FOR A WHILE, BY THE CLOCK. `read` every `everyMs`, told it is the `last` once
+ * `forMs` have passed on the wall clock: a hidden tab stretches a count of ticks (five minutes of
+ * seconds became far longer), never the clock. A tick while the last read is still out is skipped,
+ * so a slow answer is never asked twice; the last goes once the one out has answered. The interval
+ * is returned for the caller's own `clearInterval`, as before.
+ */
+export function readFor(
+  everyMs: number,
+  forMs: number,
+  read: (last: boolean) => Promise<unknown>,
+): ReturnType<typeof setInterval> {
+  const until = Date.now() + forMs
+  let out = false
+  const answered = () => void (out = false)
+  const poll = setInterval(() => {
+    if (out) return
+    const last = Date.now() >= until
+    if (last) clearInterval(poll)
+    out = true
+    read(last).then(answered, answered)
+  }, everyMs)
+  return poll
+}
 /** M2: an attempt's incident not yet written is read once more, this long after. */
 export const INCIDENT_AGAIN_MS = 2000
 

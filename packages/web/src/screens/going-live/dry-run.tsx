@@ -13,6 +13,7 @@ import {
   cutByOurDeadline,
   incidentLater,
   incidentOf,
+  readFor,
   StepUpCard,
   WhatWentWrong,
 } from '../trying-out/parts.js'
@@ -26,8 +27,8 @@ const d = words.goingLive.dryRun
 
 /** After our deadline, the checklist is read this often for the row to move (Review Focus 3)… */
 export const DRY_RUN_POLL_MS = 5000
-/** …this many times: five minutes more. */
-export const DRY_RUN_READS = 60
+/** …for five minutes more, by the clock (minors m41). */
+export const DRY_RUN_FOR_MS = 5 * 60_000
 
 /**
  * The platform's answers that mean the page's reading is out of date: nothing on trying-out now,
@@ -292,15 +293,11 @@ export function DryRun({
   const readOn = (said: string) => {
     set({ at: 'unsure', said })
     const h = heldFor(project.id)
-    let reads = 0
     let ended = false
     const gaveUp = () =>
       set((p) => (p.at === 'unsure' ? { at: 'offer', said: d.unsureLong } : p))
     clearInterval(h.poll)
-    const poll = setInterval(() => {
-      reads += 1
-      const last = reads >= DRY_RUN_READS
-      if (last) clearInterval(poll)
+    const poll = readFor(DRY_RUN_POLL_MS, DRY_RUN_FOR_MS, (last) =>
       platform.getLaunchReadiness(project.id).then(
         (readiness) => {
           if (ended) return
@@ -314,8 +311,8 @@ export function DryRun({
           if (last) gaveUp()
         },
         () => !ended && last && gaveUp(),
-      )
-    }, DRY_RUN_POLL_MS)
+      ),
+    )
     h.poll = poll
   }
 

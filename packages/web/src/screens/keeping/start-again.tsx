@@ -18,7 +18,8 @@ import {
   incidentOf,
   Stations,
   StepUpCard,
-  UNSURE_READS,
+  readFor,
+  UNSURE_MS,
   WhatWentWrong,
 } from '../trying-out/parts.js'
 import { newestAttempt } from '../trying-out/stations.js'
@@ -185,7 +186,6 @@ function Redeploy({
         instance: p.at === 'putting' ? p.instance : null,
         gaveUp: false,
       }))
-      let reads = 0
       let ended = false
       const end = (outcome: Outcome) => {
         if (ended) return
@@ -194,12 +194,9 @@ function Redeploy({
         resolve(outcome)
       }
       clearInterval(poll.current)
-      poll.current = setInterval(() => {
+      poll.current = readFor(POLL_MS, UNSURE_MS, async (last) => {
         if (!live.current) return end({ end: 'gave-up' })
-        reads += 1
-        const last = reads >= UNSURE_READS
-        if (last) clearInterval(poll.current)
-        platform.listInstances(environmentId).then(
+        return platform.listInstances(environmentId).then(
           (list) => {
             if (ended) return
             const instance = newestAttempt(list.instances, listed)
@@ -212,7 +209,7 @@ function Redeploy({
           },
           () => last && end({ end: 'gave-up' }),
         )
-      }, POLL_MS)
+      })
     })
 
   /** ONE DEPLOY, watched: the stations on the instance not listed before it, to its end. */
