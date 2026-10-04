@@ -1297,18 +1297,25 @@ describe('a change asked by someone our kept members do not name (minors m82, Ri
     displayName: person.displayName,
     email: person.email,
   })
-  /** A keeper whose members read records the token it is given, then keeps `then` (or fails). */
+  /**
+   * A keeper whose members read records the token it is given, then keeps `then` (or fails), once
+   * `answer` is called: until then the read is out (the review: so a route that did not wait for it
+   * is seen).
+   */
   function reading(then: KeptMember[] | Error) {
     const asked: string[] = []
+    let answer: () => void = () => undefined
+    const answered = new Promise<void>((resolve) => (answer = resolve))
     const keeperOf = (store: Store): Keeper => ({
       ...idleKeeper,
       readMembers: async (projectId, token) => {
         asked.push(`${projectId} ${token}`)
+        await answered
         if (then instanceof Error) throw then
         store.putMembers(projectId, then)
       },
     })
-    return { asked, keeperOf }
+    return { asked, keeperOf, answer: () => answer() }
   }
 
   it('reads the members with that change’s own token before we answer, and their own change is theirs', async () => {
@@ -1316,7 +1323,19 @@ describe('a change asked by someone our kept members do not name (minors m82, Ri
     const s = setUp(undefined, r.keeperOf)
     first(s, 'built', 'done')
     s.store.putMembers(PROJECT, [kept(ALICE, 'owner')])
-    const answer = await s.ask({ words: WORDS, token: GOOD }, { cookie: AS_BOB })
+    let done = false
+    const asking = s
+      .ask({ words: WORDS, token: GOOD }, { cookie: AS_BOB })
+      .then((answer) => {
+        done = true
+        return answer
+      })
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(r.asked).toEqual([`${PROJECT} ${GOOD}`])
+    // The read is out: nothing is answered until it is kept.
+    expect(done).toBe(false)
+    r.answer()
+    const answer = await asking
     expect(answer.statusCode).toBe(201)
     expect(r.asked).toEqual([`${PROJECT} ${GOOD}`])
     const made = answer.json() as Conversation
@@ -1325,6 +1344,7 @@ describe('a change asked by someone our kept members do not name (minors m82, Ri
 
   it('a kept member’s change, or one on an app we keep nobody for, reads nothing', async () => {
     const r = reading([kept(ALICE, 'owner')])
+    r.answer()
     const s = setUp(undefined, r.keeperOf)
     first(s, 'built', 'done')
     expect(
@@ -1337,6 +1357,7 @@ describe('a change asked by someone our kept members do not name (minors m82, Ri
 
   it('a read that fails: the change is still made, and the members we kept stand (its 404 stays until our next read)', async () => {
     const r = reading(new Error('the platform did not answer'))
+    r.answer()
     const s = setUp(undefined, r.keeperOf)
     first(s, 'built', 'done')
     s.store.putMembers(PROJECT, [kept(ALICE, 'owner')])

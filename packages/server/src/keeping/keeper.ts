@@ -892,9 +892,11 @@ export function createKeeper({
       const one = open.get(projectId)
       const asked = one === undefined ? 0 : ++one.membersAsked
       const members = await watching.members(token, projectId)
-      if (members.length === 0) return
+      // A watch opened or replaced while it read keeps its own read, newer than this one (the
+      // review: its hand-over's, and any member event after it).
+      if (members.length === 0 || open.get(projectId) !== one) return
       if (one !== undefined) {
-        if (asked <= one.membersBelieved || !isCurrent(projectId, one)) return
+        if (asked <= one.membersBelieved) return
         one.membersBelieved = asked
       }
       keepMembers(projectId, members)

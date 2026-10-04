@@ -1274,6 +1274,18 @@ describe('readMembers: a stranger\'s change, read with its own token (minors m82
     expect(removed).toEqual([[P1, BOB]])
   })
 
+  it('a watch opened while it read (the review): the watch’s own read stands, never this older one', async () => {
+    const t = setUp()
+    const answer = t.w.answerLater()
+    const reading = t.keeper.readMembers(P1, CHANGES)
+    await t.keeper.hand(P1, handed(TOKEN_A, ID_A), ALICE)
+    await settle()
+    expect(t.store.members(P1)).toEqual([member(ALICE), member(BOB, 'collaborator')])
+    answer([member(ALICE), member(BOB, 'collaborator'), carol])
+    await reading
+    expect(t.store.members(P1)).toEqual([member(ALICE), member(BOB, 'collaborator')])
+  })
+
   it('a read that lists nobody is not believed (m80); one that fails rejects; the members stay as they were', async () => {
     const t = setUp()
     t.store.putApp(appOf(P1))
