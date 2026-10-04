@@ -598,7 +598,10 @@ fresh-database run is Rich's or an allowed session's. Stopping and restarting ou
 **Still owed** (§8 of this note's test-first order): Rich's own click on `app.` with our server in edge mode (DevTools shows
 `__Host-manifest_session`; a leftover plain cookie changes nothing; moment 14's step-up at `Path=/`; sign-out); and `MODE=edge
 bash scripts/check-slice.sh` against our server in edge mode. Both at the next sitting on 7100 (F5b sitting 1), which is no
-longer blocked by this.
+longer blocked by this. **Both DONE at F5b sitting 1, 2026-10-03** (`manifest-app-79`; the plan's dated entry): `MODE=edge
+check-slice.sh` 4 passed, 0 failed; the steps rehearsed headless 6/6 (the step-up's cookie is `__Host-manifest_stepup`, at
+`Path=/`); **Rich's click at 21:12 PDT** (manifest's decisions file): *"I did the walk, all looked great."*, a real launch of
+`f5b-measure-1` among its steps.
 
 **Beside it, the platform's Task 13** (sitting 4, in its working tree at 05:27): `Token.mintedBy` required turned our typecheck
 red at two hand-built fixtures; the minimal fix only (`5d17771`), at `manifest-3d`'s word. Using it is the next sitting's.

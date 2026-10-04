@@ -71,6 +71,7 @@ and has not been re-opened; open it before acting on it. `openapi:` lines are th
 | **Decided by Rich, 2026-10-03, ~13:45 PDT** (relayed by `manifest-94`) | **FE-44**, **FE-45** | The load rehearsal; a *removed* state | **FE-44 (a):** the platform builds §24's load rehearsal as a plan of its own, after FE-46/47/5 and before FE-32; no earlier warning. **FE-45 (a):** `archived` → `removed`, the owner's, person-only; only an administrator lists, restores or deletes it for good; after the vulnerability database. Nothing of ours changes yet |
 | **Decided by Rich, 2026-10-03, ~14:48 PDT** (relayed by `manifest-94`, after `manifest-app-f6` checked the premise) | **FE-54** | A change's sensitive fields can only be added up commit by commit, so an addition and its own removal never cancel (m104) | **Ask the platform (a)**: a commit's sensitive change against the last approved release, the gate's own; additive, no spec action; **the platform's FE-46/47/5 plan's Task 2b, sitting 2** (contract `1.7.0`, `SpecValidation.sensitiveSinceApproved`). m104 stays open; the work panel keeps over-saying (Decision 8 allows it) until it lands. Over (b) our own copy of the rule, and (c) [Leave it out]'s removal alone |
 | **Decided by Rich, 2026-10-03, 15:09 PDT** (relayed by `manifest-94`, from `manifest-app-5a`'s closing note) | **FE-53**, widened | An agent our page did not let in is *"an agent"* to its own maker on the band and in the email, while *Agents* says *"Your agent"* | **Yes, alongside FE-53**: `pending_action.created` also carries **`tokenMintedBy`**, the asking token's minter (as `Token.mintedBy` names it), beside `expiresAt` and `tokenExpiresAt`; the platform's FE-46/47/5 plan's Task 2 |
+| **Written 2026-10-03, F5b's sitting 1** (on 7100, `manifest-af`'s window; `manifest-app-79`) | **FE-55** | A CWL app asking no attribute validates, builds and releases, then its deploy to trying-out is `500 INTERNAL` (an unhandled `SpEntityError`): ask `validateSpec` to refuse it as `SPEC_INVALID` at `auth.attributes`, and `deploy` to refuse it typed | **Not carried: Rich's word.** Told to `manifest-af` for the platform's queue |
 | **How the two sessions keep in step** | — | Each platform sitting's close-out lists what it changed in the contract; `@manifest/contract` stays buildable at every commit; Rich relays | **Close-out note, Rich relays** |
 
 **Ordered by what it costs the person, most first.** Timing notes say where a sitting is about to be built past
@@ -1723,6 +1724,34 @@ the platform; additive, no spec action; **placed in the platform's FE-46/47/5 pl
 - **When it lands:** the round keeps the newest commit's `sensitiveSinceApproved` rather than adding up `sensitiveDiff`
   (`round.ts`'s `d.sensitive`; `round-state.ts`'s `sensitiveOf`), and `kindWords` reads it: **m104 closes.**
 - **What we do meanwhile:** the union, as today; m104 stays open.
+
+### FE-55 — A CWL app asking no attribute validates, builds and releases, then its deploy is `500 INTERNAL`
+
+*Found 2026-10-03, ~20:39 PDT, by F5b's sitting 1 (`manifest-app-79`), measuring M2 on 7100 in `manifest-af`'s window
+(manifest at `90bca1e`, contract 1.6.0), on `f5b-measure-1`.*
+
+- **Screen and moment:** none of ours draws it yet; it is met by a change whose lead writes `auth: { provider: cwl,
+  attributes: [] }` (an app that "signs people in, but needs nothing about them"), then **[Put this version on
+  trying-out]** (moment 9; the round's own sandbox deploy was not measured). The person is told *"We couldn't…"* with a reference, for a
+  version every earlier check said was fine.
+- **What we would call:** `createCommit` (its `spec`), `validateSpec`, `startBuild`, `createRelease`, then `deploy` to
+  staging.
+- **What is missing** ✓ (the walk's answers; 7100's log, request `0833aceb-9609-473b-8885-6648e6a31c5a`): **the
+  refusal comes too late, untyped.** `createCommit` (dry run and real) and `validateSpec` answer `valid: true`, no
+  error, not sensitive; the build succeeds; the release is made; **`deploy` answers `500 INTERNAL`** (*"the control plane
+  failed to handle this request"*): an unhandled `SpEntityError` (*"auth.attributes is empty — an SP registered with no
+  attribute list receives every attribute the IdP holds, so Manifest refuses to write the row (§9)"*) from
+  `deriveSpEntity` ← `registerServiceProvider` ← `releases/release.js:328`. Both registration drafts already refuse it
+  by code (`409 LAUNCH_NOT_CWL`, *"…asks for no attribute…"*), so the rule exists; only the manifest's validation and the
+  deploy's error path lack it.
+- **Why it matters:** a refusal must say what is still true and what to do (C3, every refusal). A `500` is a problem
+  with a reference, which our page reports as the platform's fault; the lead cannot learn from it what to fix, where a
+  `422 SPEC_INVALID` with a path (`auth.attributes`) would let it fix the manifest in the same round.
+- **Asked** (not yet carried: Rich's word): `validateSpec` (and so `createCommit`'s `spec`) refuses `auth.provider: cwl`
+  with no attribute as `SPEC_INVALID` at `auth.attributes`, as §9 already rules; and `deploy` maps `SpEntityError` to a
+  typed refusal rather than `INTERNAL`, for a release made before the rule.
+- **What we do meanwhile:** nothing of ours writes such a manifest; the lead's knowledge pack (the blueprint's) says
+  attributes are listed. Recorded, not worked around.
 
 ## Not a gap: decisions that are Rich's
 

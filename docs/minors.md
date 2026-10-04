@@ -228,6 +228,13 @@ request in the moment between listening and the hook reads a working run that no
 listen and have a refused listen undo nothing it marked (impossible: the marks are the live server's rows). Review Focus 3's
 restart test changes with it; `check-together.ts` (which never listens) calls them as it calls `keeper.start()`.
 
+**From F5b's sitting 1, the measurements on 7100** (`manifest-app-79`, 2026-10-03, evening; the plan's dated entry).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m134 | F5b sitting 1, M2 (Task 2's **(S1: M2)**) | *Going live*'s steps read an app that stopped signing people in as *drafted, not sent*, not *"Not needed: it doesn't sign anyone in."*: `signsNobodyIn` requires `records.iamRegistration === null`, but an app that signed people in, drafted, then stopped keeps its drafts. **Measured on 7100:** `auth.provider: none` on trying-out, production's registration a `draft`, the `iam-registration` item `met`. The key is the item `met` while production's registration is not `active` (a CWL app's item is met only once production's is `active`). Test-first: that row, both registrations `not-needed`; red today. | `packages/web/src/screens/going-live/steps.ts` (`signsNobodyIn`). | S | faculty-visible |
+| m135 | F5b sitting 1, M7 | **The change planner invents an app it cannot see.** On an app with no `docs/plan.md` (made through the API, as the walk's was), asked only *"Stop asking UBC for the "sn" attribute…"*, the plan offered described grades, a staff dashboard and a section code, with two questions about them, and the lead then built part of it (`auth/staff.js`, `config/staff.json`, `server.js` rewritten). A faculty member's app has the plan our page agreed, so this is reached only by an app made elsewhere (an administrator's, a console's). Say what we cannot see rather than describe it, or start the plan from the tree. | `packages/server/src/agents/change.ts` (its prompt), `api/plan.ts`. | M | faculty-visible (rare) |
+
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
 ## Already fixed
