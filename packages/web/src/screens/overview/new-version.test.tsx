@@ -621,8 +621,8 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
   })
 })
 
-describe('minors m99 (Rich, 22:55 PDT: “Drop the press’s line after launch”)', () => {
-  it('the version on trying-out is named once, by the facts: never the press’s “goes to” line', async () => {
+describe('minors m99 (Rich, 23:31 PDT: “Line only while the press works”)', () => {
+  it('offered: the version on trying-out is named once, by the facts, never the press’s “goes to” line', async () => {
     draw(stage(SELF_SERVE))
     expect(await screen.findByText(FACTS)).toBeTruthy()
     expect(screen.getByRole('button', { name: PRESS })).toBeTruthy()
@@ -631,7 +631,7 @@ describe('minors m99 (Rich, 22:55 PDT: “Drop the press’s line after launch�
     expect(shown().split('The version from today, 9:00am').length - 1).toBe(1)
   })
 
-  it('while it works: its stations, and still no “goes to” line', async () => {
+  it('while it works, the facts held: the press’s line names the version going, once', async () => {
     draw(stage(SELF_SERVE, { deploy: never }))
     const pressed = await screen.findByRole('button', { name: PRESS })
     await act(async () => {
@@ -642,6 +642,33 @@ describe('minors m99 (Rich, 22:55 PDT: “Drop the press’s line after launch�
         name: words.overview.newVersion.stationsLabel,
       }),
     ).toBeTruthy()
+    expect(shown()).toContain(
+      'The version from today, 9:00am goes to reading-responses.manifest.internal. Your trying-out address stays as it is.',
+    )
+    expect(shown().split('The version from today, 9:00am').length - 1).toBe(1)
+  })
+
+  it('trying-out changed under the button: the facts name the new one, and no “goes to” line', async () => {
+    const NEWER: Schemas['Release'] = {
+      ...fixtures.RELEASE,
+      id: '88888888-8888-4888-8888-888888888883',
+      createdAt: '2026-10-03T18:00:00.000Z',
+    }
+    const answers = [SELF_SERVE, { ...SELF_SERVE, candidateReleaseId: NEWER.id }]
+    draw(
+      stage(() => (answers.length > 1 ? answers.shift()! : answers[0]!), {
+        getRelease: (id) =>
+          Promise.resolve(id === NEWER.id ? NEWER : id === NEW.id ? NEW : OLD),
+      }),
+    )
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    expect(await screen.findByText(words.overview.newVersion.changed)).toBeTruthy()
+    await screen.findByText(
+      'The version from today, 11:00am is on your trying-out address. Your students have the version from 18 September, 3:12pm.',
+    )
     expect(shown()).not.toContain('goes to')
   })
 })

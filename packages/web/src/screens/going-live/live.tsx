@@ -495,12 +495,13 @@ export function LetStudentsIn({
   }
 
   /**
-   * "The version from 18 September goes to <address>. Your trying-out address stays as it is." A
-   * first launch's alone: after it, the panel's facts already name the version (minors m99, Rich,
-   * 2026-10-03, 22:55 PDT: "Drop the press's line after launch").
+   * "The version from 18 September goes to <address>. Your trying-out address stays as it is." After a
+   * launch, only while the press works (`working`): offered, or changed under the button, the panel's
+   * facts already name the version, and while it works they are held (minors m99, Rich, 2026-10-03,
+   * 23:31 PDT: "Line only while the press works").
    */
-  const goes = (when: string | null) => {
-    if (afterLaunch) return null
+  const goes = (when: string | null, working = false) => {
+    if (afterLaunch && !working) return null
     const [before, after] = l.goes(when)
     return (
       <p className="body-lead">
@@ -559,7 +560,7 @@ export function LetStudentsIn({
       ) : null}
       {phase.at === 'putting' ? (
         <>
-          {goes(phase.sent.when)}
+          {goes(phase.sent.when, true)}
           <StateChip state="working" label={t.working} />
           <Stations instance={phase.instance} name={stations} />
           <p className="body-lead">{t.real}</p>
@@ -568,7 +569,7 @@ export function LetStudentsIn({
       ) : null}
       {phase.at === 'unsure' ? (
         <>
-          {goes(phase.sent.when)}
+          {goes(phase.sent.when, true)}
           {/* Stations only while we still read them: motion means a machine is moving. */}
           {phase.gaveUp ? null : <Stations instance={phase.instance} name={stations} />}
           <p className="body-lead" role="status">
