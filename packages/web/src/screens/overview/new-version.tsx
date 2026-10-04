@@ -9,6 +9,7 @@ import { CLOCK_IDS, rowsOf } from '../going-live/checklist.js'
 import { LetStudentsIn, whenOf } from '../going-live/live.js'
 import { RowView } from '../going-live/row.js'
 import { SignOff, signOffRow, type Decided } from '../going-live/sign-off.js'
+import type { Trouble } from '../trouble.js'
 import { asServed } from '../your-apps/model.js'
 
 const nv = words.overview.newVersion
@@ -26,6 +27,8 @@ type Reading = {
   students: string | null
   /** Re-escalated: the candidate's sign-off, as F5b reads it; null when nobody has decided. */
   decided: Decided
+  /** Why the sign-off could not be read, when it could not (m11: said with a reference). */
+  unread: Trouble | null
 }
 
 /**
@@ -89,25 +92,30 @@ export function NewVersion({
         return null
       }
     }
-    const decision = async (releaseId: string): Promise<Decided> => {
+    const decision = async (
+      releaseId: string,
+    ): Promise<{ decided: Decided; unread: Trouble | null }> => {
       try {
-        return await platform.getApproval(releaseId)
+        return { decided: await platform.getApproval(releaseId), unread: null }
       } catch (error) {
         const refusal = refusalOf(error)
         if (refusal.kind === 'signed-out') throw error
-        return refusal.kind === 'refused' && refusal.status === 404 ? null : 'unread'
+        if (refusal.kind === 'refused' && refusal.status === 404)
+          return { decided: null, unread: null }
+        return { decided: 'unread', unread: refusal }
       }
     }
     const read = async (): Promise<Reading> => {
       const readiness = await platform.getLaunchReadiness(project.id)
       const candidate = readiness.candidateReleaseId
-      const [trying, students, decided] = await Promise.all([
+      const [trying, students, sign] = await Promise.all([
         candidate === null ? null : day(candidate),
         served === null ? null : day(served),
         // Undecided or refused alike: what the sign-off says (the review's I2).
         approvalUnmet(readiness) && candidate !== null ? decision(candidate) : null,
       ])
-      return { readiness, trying, students, decided }
+      const { decided, unread } = sign ?? { decided: null, unread: null }
+      return { readiness, trying, students, decided, unread }
     }
     read().then(
       (value) => {
@@ -189,6 +197,7 @@ export function NewVersion({
       <SignOff
         row={signOffRow(approval, true, reading.decided, timeZone, now())}
         decided={reading.decided}
+        unread={reading.unread}
         candidate={candidate}
         platform={platform}
         ours={ours}

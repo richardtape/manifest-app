@@ -2,7 +2,7 @@
 import { ManifestApiError, type Schemas } from '@manifest/contract'
 import { fixtures } from '@manifest/mock'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { words } from '../../words.js'
@@ -319,6 +319,43 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     expect(
       await screen.findByText("UBC's Privacy Office approves its privacy assessment."),
     ).toBeTruthy()
+  })
+
+  it('a sign-off that cannot be read: we can’t tell, with a reference reported once as getApproval (m11, as Going live)', async () => {
+    const reports: Record<string, unknown>[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url === '/api/problems')
+          reports.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+        return new Response(null, { status: 204 })
+      }),
+    )
+    try {
+      const UNREAD = {
+        ...SELF_SERVE,
+        ready: false,
+        reescalated: false,
+        items: item(SELF_SERVE, 'admin-approval', { state: 'unmet', since: null }),
+      }
+      draw(stage(UNREAD, { getApproval: () => Promise.reject(refused(500, 'INTERNAL')) }))
+      expect(await screen.findByText(words.goingLive.rows.approval.cantTell)).toBeTruthy()
+      const reference = /quote ([0-9A-F]{4}-[0-9A-F]{4})\./.exec(
+        document.body.textContent ?? '',
+      )?.[1]
+      expect(reference).toBeDefined()
+      await waitFor(() =>
+        expect(reports).toEqual([
+          expect.objectContaining({
+            reference,
+            code: 'INTERNAL',
+            operation: 'getApproval',
+          }),
+        ]),
+      )
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('a sign-off refused: its reason, and Talk it through; never an undecided ask (the review’s I2)', async () => {
