@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { machineryIn } from '../../../web/src/screens/machinery.js'
 import { ModelError } from '../model/client.js'
 import { scripted } from '../model/scripted.js'
-import { CHANGE_PROMPT, writeChange, type ChangeInput } from './change.js'
+import {
+  CHANGE_PROMPT,
+  NOT_WRITTEN_DOWN,
+  writeChange,
+  type ChangeInput,
+} from './change.js'
 import { HONEST_WHO_GETS_IN, planMarkdown, ROWS, type Plan } from './plan.js'
 
 /**
@@ -104,6 +109,65 @@ describe('writeChange', () => {
     })
     expect(change.changed).toEqual([...ROWS])
     expect(model.calls[0]!.messages[1]!.content).toContain('Someone wrote this by hand.')
+  })
+
+  it('minors m135: with no plan written down, it is told we cannot see the app, to write only what the change makes true and our words for the rest; a part left in them is never marked', async () => {
+    // F5b sitting 1's M7: an app made through the API, asked only to stop asking UBC for "sn",
+    // came back as grades and a staff dashboard, and the lead built part of it.
+    const asked = ['Stop asking UBC for their last name: nothing in the app uses it.']
+    const answer = {
+      studentsSee: NOT_WRITTEN_DOWN,
+      youSee: NOT_WRITTEN_DOWN,
+      itKeeps: 'We no longer ask UBC for their last name.',
+      whoGetsIn: HONEST_WHO_GETS_IN,
+      ai: NOT_WRITTEN_DOWN,
+      assumed: [],
+      onlyYouKnow: [],
+      title: 'Last name',
+    }
+    const model = scripted({ change: [answer] })
+    const change = await writeChange(model, {
+      ...INPUT,
+      current: null,
+      currentText: '',
+      settled: [],
+      asked,
+    })
+    const user = model.calls[0]!.messages[1]!.content
+    expect(user).toMatch(/we cannot see what it does/i)
+    expect(user).toMatch(/only what this change makes true/i)
+    expect(user).toContain(`write exactly this, and nothing else: ${NOT_WRITTEN_DOWN}`)
+    expect(user).toMatch(/never guess/i)
+    expect(user).not.toMatch(/write every part from what they asked for/i)
+    expect(change.changed).toEqual(['itKeeps', 'whoGetsIn'])
+    expect(machineryIn(NOT_WRITTEN_DOWN)).toEqual([])
+  })
+
+  it('minors m135: a part it left so with a straight apostrophe or other spacing is ours word for word, and never marked', async () => {
+    const loose = `  ${NOT_WRITTEN_DOWN.replace('’', "'").replace(': ', ':  ')} `
+    const model = scripted({
+      change: [{ ...ANSWER, studentsSee: loose, onlyYouKnow: [], title: 'Last name' }],
+    })
+    const change = await writeChange(model, {
+      ...INPUT,
+      current: null,
+      currentText: '',
+      settled: [],
+    })
+    expect(change.studentsSee).toBe(NOT_WRITTEN_DOWN)
+    expect(change.changed).not.toContain('studentsSee')
+    expect(change.changed).toContain('youSee')
+  })
+
+  it('a hand-written file is never read as nothing written down: every part is marked, even our words', async () => {
+    const model = scripted({ change: [{ ...ANSWER, studentsSee: NOT_WRITTEN_DOWN }] })
+    const change = await writeChange(model, {
+      ...INPUT,
+      current: null,
+      currentText: '# Our app\n\nSomeone wrote this by hand.',
+    })
+    expect(change.changed).toEqual([...ROWS])
+    expect(model.calls[0]!.messages[1]!.content).not.toContain(NOT_WRITTEN_DOWN)
   })
 
   it('a correction carries the change so far and their sentence; the marks are still against the agreement', async () => {

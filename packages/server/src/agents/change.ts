@@ -37,6 +37,13 @@ export const CHANGE_PROMPT = [
   'Never use technical words: say what people see and do.',
 ].join('\n')
 
+/**
+ * MINORS m135 (F5b sitting 1's M7): a part of an app with no plan written down that the change does
+ * not touch. Ours (Rich's *"approve, change on sight"*): we cannot see what it does from here, so
+ * we say so rather than describe an app we would be guessing at, and build only the change.
+ */
+export const NOT_WRITTEN_DOWN = 'We don’t know this part yet: it was never written down.'
+
 export interface ChangeInput {
   /** The agreement as it stands, read back from docs/plan.md; null when it no longer reads back. */
   current: Plan | null
@@ -97,12 +104,13 @@ export async function writeChange(
   model: Model,
   input: ChangeInput,
 ): Promise<Plan & { title: string }> {
+  const unwritten = input.current === null && input.currentText.trim() === ''
   const parts = [
-    input.current === null
-      ? input.currentText.trim() === ''
-        ? 'There is no plan written down yet: write every part from what they asked for.'
-        : `The plan we agreed, as it is written now (it no longer reads as our plan, so write every part from it):\n${input.currentText}`
-      : `The plan we agreed:\n${partsOf(input.current)}`,
+    unwritten
+      ? `There is no plan written down for this app, so we cannot see what it does. Write only what this change makes true, in the parts it touches. In every other part, write exactly this, and nothing else: ${NOT_WRITTEN_DOWN} Never guess what the app does, and ask nothing about it beyond this change.`
+      : input.current === null
+        ? `The plan we agreed, as it is written now (it no longer reads as our plan, so write every part from it):\n${input.currentText}`
+        : `The plan we agreed:\n${partsOf(input.current)}`,
     input.settled.length === 0
       ? ''
       : `Settled, never to be asked again:\n${input.settled
@@ -136,10 +144,20 @@ export async function writeChange(
     title: answer.title.trim(),
     whoGetsIn: honestWhoGetsIn(answer.whoGetsIn),
   }
-  // Ours to mark, against the agreement: a file that no longer reads back has every part new.
-  const changed = input.current === null ? [...ROWS] : changedRows(plan, input.current)
+  // m135: a part it left as we don't know, spacing and apostrophes aside, reads in our words exactly.
+  if (unwritten)
+    for (const key of ROWS) if (notWrittenDown(plan[key])) plan[key] = NOT_WRITTEN_DOWN
+  // Ours to mark, against the agreement: a file that no longer reads back has every part new; with
+  // none written down, every part but those we said we don't know (m135).
+  const changed =
+    input.current !== null
+      ? changedRows(plan, input.current)
+      : ROWS.filter((key) => !unwritten || plan[key] !== NOT_WRITTEN_DOWN)
   return { ...plan, changed }
 }
+
+const notWrittenDown = (text: string) =>
+  text.replace(/\s+/g, ' ').trim().replace(/'/g, '’') === NOT_WRITTEN_DOWN
 
 type Read = ReturnType<typeof readPlanMarkdown>
 
