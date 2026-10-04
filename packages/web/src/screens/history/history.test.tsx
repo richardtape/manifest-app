@@ -123,6 +123,27 @@ describe('the history page', () => {
     expect(page.indexOf(gap)).toBeLessThan(page.indexOf('8:00am'))
   })
 
+  it('the review of m73 (M8): a gap inside one minute is never "between 9:00am and 9:00am"', async () => {
+    const answer = {
+      from: '2026-09-18T16:00:00.000Z',
+      gaps: [{ from: '2026-09-29T16:00:05.000Z', to: '2026-09-29T16:00:40.000Z' }],
+      lines: [
+        line('b', '2026-09-29T20:00:00.000Z'),
+        line('a', '2026-09-29T15:00:00.000Z'),
+      ],
+    }
+    render(
+      <History ours={oursWith(async () => answer)} project={project} timeZone={TZ} />,
+    )
+    await screen.findByRole('heading', { level: 1, name: h.title })
+    const page = document.body.textContent ?? ''
+    expect(page).toContain(h.moment('9:00am on 29 September'))
+    expect(page).toContain(
+      "We weren't watching for a moment, around 9:00am on 29 September.",
+    )
+    expect(page).not.toContain('and 9:00am')
+  })
+
   it('minors m73: a gap across their days keeps its days, and each day its heading', async () => {
     const answer = {
       from: '2026-09-18T16:00:00.000Z',

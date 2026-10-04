@@ -693,6 +693,8 @@ export const words = {
       title: 'Everything that happened', // ✓
       from: (day: string) => `From ${day}.`, // ✓
       gap: (from: string, to: string) => `We weren't watching between ${from} and ${to}.`, // ✓
+      /** Ours (the review of m73, M8): a gap inside one minute, never "between 9:00am and 9:00am". */
+      moment: (when: string) => `We weren't watching for a moment, around ${when}.`,
       cantReach: "We can't reach Manifest just now. Nothing of yours has changed.", // ✓ (the design)
       retry: 'Try again', // ours
       empty: 'Nothing has happened yet.', // ours

@@ -55,14 +55,13 @@ function piecesOf(history: Read, timeZone: string | undefined): Piece[] {
  * 9:00am and 11:30am"*), never *"between 29 September and 29 September"*; across days, its days.
  */
 function gapWords(from: string, to: string, timeZone: string | undefined): string {
+  const h = words.keeping.history
   const day = dayWords(from, timeZone)
   const until = dayWords(to, timeZone)
-  return day === until
-    ? words.keeping.history.gap(
-        `${day}, ${clockWords(from, timeZone)}`,
-        clockWords(to, timeZone),
-      )
-    : words.keeping.history.gap(day, until)
+  if (day !== until) return h.gap(day, until)
+  const [start, end] = [clockWords(from, timeZone), clockWords(to, timeZone)]
+  // The review's M8: inside one minute, a moment, never "between 9:00am and 9:00am".
+  return start === end ? h.moment(`${start} on ${day}`) : h.gap(`${day}, ${start}`, end)
 }
 
 /**
