@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 import { ManifestApiError, type Schemas } from '@manifest/contract'
 import { fixtures } from '@manifest/mock'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
@@ -265,6 +273,34 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     },
   )
 
+  it('minors m98: re-escalated, its sign-off row is drawn in Going live’s list, and says nothing its chip says (no lone “you”)', async () => {
+    draw(stage(REESCALATED))
+    const name = await screen.findByText(words.goingLive.rows.approval.name)
+    const row = name.closest('li')!
+    expect(row.parentElement?.tagName).toBe('UL')
+    expect(within(row).getByText(words.goingLive.state.attention)).toBeTruthy()
+    expect(
+      within(row).queryByText(words.goingLive.owners.you, { exact: true }),
+    ).toBeNull()
+  })
+
+  it('minors m98: asked, the row still names who has it (a wait on someone else)', async () => {
+    draw(
+      stage({
+        ...REESCALATED,
+        items: item(REESCALATED, 'admin-approval', {
+          state: 'unmet',
+          since: '2026-10-02T17:00:00.000Z',
+        }),
+      }),
+    )
+    const row = (await screen.findByText(words.goingLive.rows.approval.asked)).closest(
+      'li',
+    )!
+    expect(row.parentElement?.tagName).toBe('UL')
+    expect(within(row).getByText(words.goingLive.owners.admin)).toBeTruthy()
+  })
+
   it('re-escalated and already asked: waiting on a Manifest administrator, no ask again', async () => {
     draw(
       stage({
@@ -290,6 +326,11 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
       ),
     ).toBeTruthy()
     expect(screen.getByText(words.goingLive.rows.scans.name)).toBeTruthy()
+    // m98: its rows in Going live's list too.
+    expect(
+      screen.getByText(words.goingLive.rows.scans.name).closest('li')!.parentElement
+        ?.tagName,
+    ).toBe('UL')
     expect(screen.queryByRole('link', { name: 'Going live' })).toBeNull()
     expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
     expect(machineryIn(shown())).toEqual([])

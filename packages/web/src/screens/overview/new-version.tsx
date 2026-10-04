@@ -5,7 +5,7 @@ import type { Platform } from '../../platform/api.js'
 import { refusalOf } from '../../platform/refusal.js'
 import { words } from '../../words.js'
 import { kindWords } from '../building/kind.js'
-import { CLOCK_IDS, rowsOf } from '../going-live/checklist.js'
+import { CLOCK_IDS, rowsOf, type Row } from '../going-live/checklist.js'
 import { LetStudentsIn, whenOf } from '../going-live/live.js'
 import { RowView } from '../going-live/row.js'
 import { SignOff, signOffRow, type Decided } from '../going-live/sign-off.js'
@@ -13,6 +13,14 @@ import type { Trouble } from '../trouble.js'
 import { asServed } from '../your-apps/model.js'
 
 const nv = words.overview.newVersion
+const o = words.goingLive.owners
+
+/**
+ * MINORS m98: a row drawn here, one alone, says nothing its chip says: *"Needs you"* already names
+ * them, so its owner line (*"you"*) goes. An owner of a wait on someone else stays.
+ */
+const alone = (row: Row): Row =>
+  row.state === 'attention' && row.owner === o.you ? { ...row, owner: '' } : row
 const k = words.building.kind
 
 /** The sign-off is what holds it: unmet, whether re-escalated, undecided or refused. */
@@ -194,17 +202,20 @@ export function NewVersion({
             : kindWords(readiness.sensitiveFields)}
         </p>
       ) : null}
-      <SignOff
-        row={signOffRow(approval, true, reading.decided, timeZone, now())}
-        decided={reading.decided}
-        unread={reading.unread}
-        candidate={candidate}
-        platform={platform}
-        ours={ours}
-        project={project}
-        expire={expire}
-        onAsked={readAgain}
-      />
+      {/* m98: in Going live's own list, as its rows are there. */}
+      <ul className="going-live__rows">
+        <SignOff
+          row={alone(signOffRow(approval, true, reading.decided, timeZone, now()))}
+          decided={reading.decided}
+          unread={reading.unread}
+          candidate={candidate}
+          platform={platform}
+          ours={ours}
+          project={project}
+          expire={expire}
+          onAsked={readAgain}
+        />
+      </ul>
     </>
   ) : (
     <>
@@ -214,11 +225,13 @@ export function NewVersion({
           {nv.clocks[i.id]}
         </p>
       ))}
-      {rowsOf(readiness, { hostname: production.hostname, timeZone, now: now() })
-        .filter((row) => row.state !== 'steady' && !row.apart)
-        .map((row) => (
-          <RowView key={row.id} row={{ ...row, action: null }} />
-        ))}
+      <ul className="going-live__rows">
+        {rowsOf(readiness, { hostname: production.hostname, timeZone, now: now() })
+          .filter((row) => row.state !== 'steady' && !row.apart)
+          .map((row) => (
+            <RowView key={row.id} row={alone({ ...row, action: null })} />
+          ))}
+      </ul>
     </>
   )
   return (
