@@ -636,11 +636,12 @@ describe('the state frame carries the round (Review Focus 5)', () => {
   })
 })
 
-describe('a restart (Review Focus 3)', () => {
-  it('a server built over a store marks its working rounds interrupted before it can listen', async () => {
+describe('a restart (Review Focus 3, as minors m133 changed it)', () => {
+  it('a server built over a store marks its working rounds interrupted once it holds its port, before listen answers', async () => {
     const s = setUp()
     const conversation = await building(s)
-    expect(s.booted()).toBe(1)
+    // Built and never listening, as every server of these tests is: it marked nothing of its own.
+    expect(s.booted()).toBe(0)
     const again = buildServer(
       {
         mode: 'edge',
@@ -657,6 +658,9 @@ describe('a restart (Review Focus 3)', () => {
       { store: s.store },
     )
     cleanups.push(() => again.close())
+    await again.ready()
+    expect(roundOf(s.store, conversation.id)?.status).toBe('working')
+    await again.listen({ host: '127.0.0.1', port: 0 })
     expect(roundOf(s.store, conversation.id)?.status).toBe('interrupted')
   })
 })

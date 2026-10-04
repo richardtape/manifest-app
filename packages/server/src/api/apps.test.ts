@@ -995,16 +995,18 @@ describe('a restart (Review Focus 5)', () => {
     })
     await s.app.close()
     const again = setUp(s.file)
-    return again.store.getConversation(waiting.id, ALICE.id)?.state
+    const built = again.store.getConversation(waiting.id, ALICE.id)?.state
+    await again.app.listen({ host: '127.0.0.1', port: 0 })
+    return [built, again.store.getConversation(waiting.id, ALICE.id)?.state]
   }
 
-  it('a server started over a store with a change waiting and nothing holding its app begins it before it can listen', async () => {
+  it('a server started over a store with a change waiting and nothing holding its app begins it once it holds its port (minors m133)', async () => {
     // No token survives a restart: it moves to planning, and waits for the page's.
-    expect(await restartedWith('built', 'done')).toBe('planning')
+    expect(await restartedWith('built', 'done')).toEqual(['waiting', 'planning'])
   })
 
   it('with its app still held, the change keeps waiting', async () => {
-    expect(await restartedWith('plan-ready')).toBe('waiting')
+    expect(await restartedWith('plan-ready')).toEqual(['waiting', 'waiting'])
   })
 })
 

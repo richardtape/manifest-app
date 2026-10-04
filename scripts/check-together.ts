@@ -290,6 +290,7 @@ const keeper = createKeeper({
 })
 const app = buildServer(config, () => undefined, { store, hub, keeper })
 // Asked in-process, never listening: the keeper starts here, as a server's does when it listens (m70).
+// Its store is new, so a restart's marks (m133, made then too) have nothing to mark.
 keeper.start()
 
 /** One person's request, with their session and, for a change, our Origin. */

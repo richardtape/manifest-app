@@ -4,9 +4,10 @@ import { createMockServer, fixtures } from '@manifest/mock'
 import type { FastifyInstance } from 'fastify'
 import { afterEach, describe, expect, it } from 'vitest'
 import { buildServer, type WebHandler } from './app.js'
+import type { Rounds } from './build/round.js'
 import { readConfig, type Config } from './config.js'
 import { idleKeeper, type Keeper } from './keeping/keeper.js'
-import { openStore } from './store/db.js'
+import { openStore, type Store } from './store/db.js'
 
 /**
  * OUR SERVER, DRIVEN OVER REAL HTTP. Not Fastify's `inject`: it enters Fastify's router
@@ -209,6 +210,122 @@ describe('the keeper: started only by a server that holds its port (minors m70)'
     const port = Number(new URL(first.base).port)
     await expect(app.listen({ host: '127.0.0.1', port })).rejects.toThrow(/EADDRINUSE/)
     expect(said).toEqual([])
+  })
+})
+
+/** Rounds that only record what a restart asks of them (minors m133). */
+function bootRounds(said: string[]): Rounds {
+  return {
+    start: () => undefined,
+    carryOn: () => undefined,
+    withoutToken: (conversation) =>
+      void said.push(`without a token: ${conversation.title}`),
+    message: () => undefined,
+    answer: () => 'unknown',
+    stop: () => undefined,
+    interruptedOnBoot: () => void said.push('marked'),
+  }
+}
+
+/** A store as the live server keeps it: a change waiting, its round stopped, on an app nobody holds. */
+function storeWithOneWaiting(): Store {
+  const store = openStore(':memory:')
+  const alice = {
+    id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    displayName: 'Alice',
+    email: 'a@example.test',
+  }
+  store.rememberPerson(alice)
+  const waiting = store.createChange(
+    alice.id,
+    '22222222-2222-4222-8222-222222222222',
+    'Waiting',
+    'A word count.',
+  )
+  store.saveRun({
+    id: `run-${waiting.id}`,
+    conversationId: waiting.id,
+    round: 1,
+    step: 'pages',
+    moves: 0,
+    tries: {},
+    status: 'stopped',
+    sessionIds: [],
+    model: null,
+    last: null,
+    sameRefusal: null,
+    detail: null,
+  })
+  return store
+}
+
+describe('a restart\'s marks: made only by a server that holds its port (minors m133, Rich\'s "Fix it")', () => {
+  it('not when built, nor when ready; once it listens, before listen answers and before the keeper starts', async () => {
+    const said: string[] = []
+    const keeper: Keeper = { ...idleKeeper, start: () => void said.push('keeper') }
+    const store = storeWithOneWaiting()
+    const app = buildServer(mock('http://127.0.0.1:9'), () => undefined, {
+      store,
+      keeper,
+      rounds: () => bootRounds(said),
+    })
+    closers.push(async () => {
+      await app.close()
+      store.close()
+    })
+    await app.ready()
+    expect(said).toEqual([])
+    await app.listen({ host: '127.0.0.1', port: 0 })
+    // The rounds a restart left marked, then the waiting change started (with no token, so
+    // `withoutToken`), then the keeper: all before `listen` answers, so before any request.
+    expect(said).toEqual(['marked', 'without a token: Waiting', 'keeper'])
+  })
+
+  it('a second server refused its port (an idle watcher of §7) marks nothing and starts nothing', async () => {
+    const first = await serve(mock('http://127.0.0.1:9'))
+    const said: string[] = []
+    const store = storeWithOneWaiting()
+    const app = buildServer(mock('http://127.0.0.1:9'), () => undefined, {
+      store,
+      rounds: () => bootRounds(said),
+    })
+    closers.push(async () => {
+      await app.close()
+      store.close()
+    })
+    const port = Number(new URL(first.base).port)
+    await expect(app.listen({ host: '127.0.0.1', port })).rejects.toThrow(/EADDRINUSE/)
+    expect(said).toEqual([])
+  })
+
+  it('a mark that fails is said on the console, and the keeper still starts', async () => {
+    const failed = new Error('the store could not be read')
+    const said: unknown[] = []
+    const keeper: Keeper = { ...idleKeeper, start: () => void said.push('keeper') }
+    const error = console.error
+    console.error = (...args: unknown[]) => void said.push(...args)
+    const store = openStore(':memory:')
+    const app = buildServer(mock('http://127.0.0.1:9'), () => undefined, {
+      store,
+      keeper,
+      rounds: () => ({
+        ...bootRounds([]),
+        interruptedOnBoot: () => {
+          throw failed
+        },
+      }),
+    })
+    closers.push(async () => {
+      await app.close()
+      store.close()
+    })
+    try {
+      await app.listen({ host: '127.0.0.1', port: 0 })
+    } finally {
+      console.error = error
+    }
+    expect(said).toEqual([failed, 'keeper'])
+    expect(app.server.listening).toBe(true)
   })
 })
 

@@ -204,11 +204,6 @@ export function buildServer(
     now: () => new Date(),
     begin: beginPiece({ store, tokens, rounds, planning }),
   })
-  // A RESTART (Review Focus 3): a round that was working, or waiting on a question, lost its
-  // key and its token with the last process. Marked before this server can listen. Then every
-  // app with a conversation waiting, and none holding it, starts its next (Review Focus 5).
-  rounds.interruptedOnBoot()
-  line.onBoot()
   // F6b DECISION 5: SOMEONE TAKEN OFF AN APP has their work here ended, as Stop ends it, recorded
   // `removed`: theirs waiting first, so a round's stop never lets one of theirs start; their
   // conversations' tokens dropped and their token ids forgotten.
@@ -227,11 +222,23 @@ export function buildServer(
     }
     store.forgetMintedOf(projectId, personId)
   })
-  // F6 (D4): every kept watch token's stream opened, once this server holds its port (minors
-  // m70: an idle watcher refused 7105 never starts one, nor resends what the live one is sending);
-  // closed with the server. A harness that never listens starts its own.
+  // ONCE THIS SERVER HOLDS ITS PORT, and only then (minors m70 and m133, Rich's "Fix it"): an idle
+  // watcher refused 7105 marks none of the live server's rounds, starts none of its line, and opens
+  // no stream. Before any request is read: Fastify (5.12.3) calls this hook in the same turn as
+  // `listen` resolves, and what it does before the keeper is synchronous. A harness that never
+  // listens does its own. Each part said, never lost: Fastify's own log of a hook's failure is off
+  // here (the review).
   app.addHook('onListen', async () => {
-    // Said, never lost: Fastify's own log of a hook's failure is off here (the review).
+    // A RESTART (Review Focus 3): a round that was working, or waiting on a question, lost its key
+    // and its token with the last process. Then every app with a conversation waiting, and none
+    // holding it, starts its next (Review Focus 5).
+    try {
+      rounds.interruptedOnBoot()
+      line.onBoot()
+    } catch (error) {
+      console.error(error)
+    }
+    // F6 (D4): every kept watch token's stream opened; closed with the server.
     try {
       keeper.start()
     } catch (error) {
