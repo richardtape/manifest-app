@@ -34,5 +34,8 @@ we know it; m62 no longer applies; overnight, mock mode, the same note's *Part t
 adopted** (2026-10-03, `manifest-app-5a`, `e8072e2`, at Rich's yes to question 10 and his words: an administrator who is not a
 member named in *what happened* and the people emails, with their reason; store version 8; the same note's *Part four*).
 **The adoption is complete.** m129 built in Rich's words (`937f99f`, and the band's m132); m130 filed as **FE-53**, with FE-5
-after the faculty-ready plan; m131 closes with it. **A fourth minors round** the same day (`minors.md`'s dated entry). **F5b
+after the faculty-ready plan; m131 closes with it. **A fourth minors round** the same day (`minors.md`'s dated entry), and **a fifth** that evening (`manifest-app-f6`, its
+dated entry): Rich's words of 14:42 PDT built (m69/m76 *"A different email"*, a first build's its own; m109, m119; m123
+*"Re-ask once"*), the four he left to us (m107, m112, m114, m117), and m11, m12, m70; **m104 asked of the platform as FE-54**
+(its FE-46/47/5 plan, Task 2b; open until it lands); FE-53 widened by `tokenMintedBy`. **F5b
 sitting 1** is pre-authorised by Rich, after the platform's faculty-ready sitting 7, at `manifest-94`'s word that 7100 is free.
