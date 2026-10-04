@@ -6,7 +6,8 @@ and thirty at his overnight *"Its pick, no decisions"* (2026-10-03; m77 found al
 sitting under the same words the same morning (m122 closed with it), and fifteen in a fourth round that afternoon (m129 and m120
 at his words, m132 found and fixed), and twelve in a fifth that evening (five at his words of 14:42 PDT, four he left to us,
 three more of ours), and seven in a sixth (m133 and his rulings of 20:07 and 20:21 PDT among them; m16 and half of m67
-accepted as they are): see* Already fixed *and its dated entries.*
+accepted as they are), and eight in a seventh (m134, m136 and m135 first; m99 at his ruling of 23:31 PDT; m45 accepted as it
+is): see* Already fixed *and its dated entries.*
 
 **How to read it.** Each minor has an ID (`m1`, `m2`…) for this page only. **From** names the plan and the dated entry
 it was recorded in: F2 is [`plans/2026-09-27-f2-describing-it.md`](./plans/2026-09-27-f2-describing-it.md), F3
@@ -35,7 +36,6 @@ checked by reading the code it names, and the check is in the cell.
 | m24 | F4 sitting 7, M5 (ledger 713) | The line is the app's, but its words and link are the person's: *"…which is waiting for you"*, and a link to another member's conversation that answers `404`. | `packages/server/src/api/line-state.ts:86-96` carries no owner; `screens/change/waiting.tsx:96-107`. | L | faculty-visible |
 | m25 | F2, *After F2: the deferred Minors*, item 1 (ledger 194) | The FE-20 honesty check reads only *Who gets in*: a class-only promise in another part, or in *Things we assumed*, passes. **Rich deferred it** until the class-limited sign-in lands (FE-20). | `packages/server/src/agents/plan.ts:127` and `agents/change.ts:134` rewrite `whoGetsIn` alone. | L | faculty-visible |
 | m36 | F5 sitting 2, review (ledger 39) | The stall's forced cost read comes before the gateway's spend settles (within 60 s), so the line shows the old figure until *Carry on*. | `round.ts:446`. | S | robustness |
-| m45 | F5 sitting 4, review (ledger 188) | The Overview reads the checklist only while the draft serves something, so a stale lookup of a launched app with nothing on its draft never hears the launch until a reload. | `overview/overview.tsx:59`; `your-apps/model.ts:126-131` (`beforeLaunch`). | S | robustness |
 | m54 | F3 sitting 7, review (ledger 209) | Their words read after *Checking it answers*, then a `done` with no new commit, builds the same commit again: a second sandbox instance, about 30 s. F4's *Changes* commit narrowed it to an answer, or a plan that no longer reads back. | `build/round.ts:1259-1260` goes back to the pages; `backToPages` (`:1019-1035`) clears the build; `build()` starts one on the same base (`:1127-1135`). | M | robustness |
 | m55 | F3 sitting 7, review (ledger 210) | A deploy cut by its 120-s deadline, or a restart at the draft, deploys the release again; one `listInstances` would adopt the instance. | `round.ts:1184-1186`: `instanceId` is still null, so *Carry on* deploys. | M | robustness |
 | m56 | F4 sitting 7, M8 (ledger 716) | A conversation `agreed` with no run holds its app with no way out: `/stop` and `/build` refuse `agreed`. Pre-F3 rows, or a crash in the same tick. | `api/line-state.ts:26` (`agreed` holds); `api/build.ts:124` (`/build`: `building` only) and `:207-218` (`/stop`'s states). | M | robustness |
@@ -111,7 +111,6 @@ green; nothing it found costs the demo).
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m73 | `manifest-app-verify`'s walk | A gap inside one day reads *"We weren't watching between 29 September and 29 September."*, and the day's heading repeats after the gap. Only a reconnect whose replay holds none of what we have makes a gap, so a fresh app won't show one. | `packages/web/src/screens/keeping/history.tsx:33` passes dates alone (`dayWords`) for both ends. m65 (the gap's position) is a different defect. | S | faculty-visible |
 
 **From F6's whole-branch review** (sitting 7's unattended half, `manifest-app-s7`, 2026-10-02; the plan's entry *Sitting
 7, part one*, its *Minors*). Each was read in the code at `d3600be`; none was fixed (the review's two Important were).
@@ -164,17 +163,13 @@ six Important and one Minor re-graded Important fixed test-first in `3912ff3`, t
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m99 | The walk | Self-serve, the panel names the version on trying-out twice: its facts (*"The version from today, 7:29pm is on your trying-out address…"*) and the press's own *"The version from today, 7:29pm goes to <address>…"*. Say the facts' first sentence only when no press is offered, or drop the press's. | `new-version.tsx`; `going-live/live.tsx` (`goes`). | S | faculty-visible |
 
 **From F6b sitting 4's whole-sitting review** (`manifest-app-30`, 2026-10-02, a fresh reviewer over `86c2156..6efc46e`; its
 three Important and four minors re-graded Important fixed test-first in `3c31dd0`, these seven here).
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m103 | The review's M9 (second half) | Undated, the facts say *"A newer version… Your students have an earlier one."*, assuming the order. | `words.ts` (`overview.newVersion.facts`). | S | faculty-visible |
 | m104 | The review's M10 | **[Leave it out]**'s own commit removes the attribute, so the new conversation says it *"needs a Manifest administrator's look… because it changes who it learns about"* while the readiness will be self-serve. Decision 8 allows over-saying; every [Leave it out] does it. **Rich, 2026-10-03, ~14:48 PDT: ask the platform (FE-54, (a)); open until it lands** (the platform's FE-46/47/5 plan, Task 2b). | `api/sensitive.ts`'s union; the platform's `sensitiveDiff` names a removal too. | S | faculty-visible |
-| m105 | The review's M11 | Test gaps: no Overview-level test of the held press across the Overview's re-read; the failed-deploy test has no incident ([What went wrong] after launch unasserted). | `new-version.test.tsx`, `students.test.tsx`. | S | tests-only |
-| m106 | The review's M12 | Focus is lost when **[Leave it out]** becomes *"Starting that change…"*, and not restored on a failure. | `packages/web/src/screens/building/needs.tsx`, `building.tsx`. | S | accessibility |
 
 **From F6b sitting 5** (`manifest-app-ba`, 2026-10-02): its walk's m107, and the whole-sitting review's minors (a fresh
 reviewer over `7a85693..f14a877`; its two Important and two minors re-graded Important fixed test-first in `4c44f2a`).
@@ -206,15 +201,21 @@ decision.
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m134 | F5b sitting 1, M2 (Task 2's **(S1: M2)**) | *Going live*'s steps read an app that stopped signing people in as *drafted, not sent*, not *"Not needed: it doesn't sign anyone in."*: `signsNobodyIn` requires `records.iamRegistration === null`, but an app that signed people in, drafted, then stopped keeps its drafts. **Measured on 7100:** `auth.provider: none` on trying-out, production's registration a `draft`, the `iam-registration` item `met`. The key is the item `met` while production's registration is not `active` (a CWL app's item is met only once production's is `active`). Test-first: that row, both registrations `not-needed`; red today. | `packages/web/src/screens/going-live/steps.ts` (`signsNobodyIn`). | S | faculty-visible |
-| m135 | F5b sitting 1, M7 | **The change planner invents an app it cannot see.** On an app with no `docs/plan.md` (made through the API, as the walk's was), asked only *"Stop asking UBC for the "sn" attribute…"*, the plan offered described grades, a staff dashboard and a section code, with two questions about them, and the lead then built part of it (`auth/staff.js`, `config/staff.json`, `server.js` rewritten). A faculty member's app has the plan our page agreed, so this is reached only by an app made elsewhere (an administrator's, a console's). Say what we cannot see rather than describe it, or start the plan from the tree. | `packages/server/src/agents/change.ts` (its prompt), `api/plan.ts`. | M | faculty-visible (rare) |
 
 **From the sixth round's review** (`manifest-app-c1`, 2026-10-03, a fresh read-only reviewer over the round's first six
 commits; its other findings fixed in the same round, below).
 
 | ID | From | The minor | Where it is today | Size | Affects |
 |---|---|---|---|---|---|
-| m136 | The sixth round's review, Minor 4 | After a landed press, *Waiting to reach your students* reads again only when the students' address moves or a press asks, and the Overview reads nothing when shown again: a version put on trying-out later (another tab, a colleague) shows only on a new visit. And when the landed moment gives way to a later version (m101), nothing is said to a screen reader (`changed` says its own with `role="status"`). | `packages/web/src/screens/overview/new-version.tsx` (the reading's effect), `overview.tsx`; `going-live/live.tsx` (the give-way). | S | accessibility |
+
+**From the seventh round's review** (`manifest-app-cf`, 2026-10-03, a fresh read-only reviewer over `6bbbede..d096a5d`; its
+I1 and four of its minors fixed the same round, below).
+
+| ID | From | The minor | Where it is today | Size | Affects |
+|---|---|---|---|---|---|
+| m137 | The seventh round's review, M4 | *Waiting to reach your students* reads its checklist again when the page is shown again (m136), but the students' version (`served`) is the Overview's `production`, which is not read again then: a colleague who let the students have it meanwhile leaves the panel saying *"Your students have the version from <old>"*, with a press that would send the same version again, until a new visit. Read the live address in the panel's own reading (it unmounts nothing). | `packages/web/src/screens/overview/new-version.tsx` (`served`, the reading's effect). | S | faculty-visible |
+| m138 | The seventh round's review, M5 | A reading taken while a press works (they leave, as *"You can leave: it keeps going"* invites, and come back) may name a version a colleague put on trying-out meanwhile; it is kept as the landing's `named` (m101's review), so the landed moment never gives way to it on that visit. No worse than before m136. Record what the readings named when the press started (a reading's sequence number). | `packages/web/src/screens/going-live/live.tsx` (`naming`, `land`, the give-way effect). | S | faculty-visible |
+| m139 | The seventh round's review, M6 | A quiet re-read that fails only in part loses good facts: a momentary `getRelease` refusal turns dated facts into m103's undated words; a momentary `getApproval` refusal replaces a good sign-off row with *"We can't tell"* and files a report. m17's rule (a quiet read keeps a good page) covers only a whole read that fails. Going live may share it. | `packages/web/src/screens/overview/new-version.tsx` (`day`, `decision`); `going-live/going-live.tsx` (`read`). | S | robustness |
 
 **Not here:** the focus ring at 375 on the folded rail (ORIENTATION's *Open for Rich*). It is being looked at on its own.
 
@@ -330,6 +331,14 @@ commits; its other findings fixed in the same round, below).
 | **m41**: F5 sitting 5, review M5 (ledger 241) | Five more minutes counted in ticks a hidden tab stretches; overlapping reads | `d41b8e6` (`readFor`, by the clock) |
 | **m101**: F6b sitting 3's review, M7 | The landed moment lost to a quiet read that failed, and kept over a later version | `0bb0c8b` (m17's rule for the Overview; M4's give-way after a launch), `d4a6ef2` (the review: never to an older reading's); its rest is m136 |
 | **m98**: F6b sitting 4's walk, 375 | The re-escalated panel's sign-off row outside any list, its *"you"* alone under the sentence | `8b83978` (Going live's list; an owner line that repeats its chip dropped), the walk at 375 |
+| **m134**: F5b sitting 1, M2 (Task 2's **(S1: M2)**) | An app that signed people in, drafted, then stopped read *drafted, not sent*, never *"Not needed: it doesn't sign anyone in."* | `f191d2b` (no registration in force, never none on file) |
+| **m136**: the sixth round's review, Minor 4 | *Waiting to reach your students* read nothing when the page was shown again, and its give-way said nothing to a screen reader | `25f045e` (a shown-again read; the facts' live region), `c1a0705` (the review: said only when a landed moment gives way; no gap of its own) |
+| **m135**: F5b sitting 1, M7 | The change planner described an app it could not see, and the lead built part of it | `91793a6` (*"We don't know this part yet: it was never written down."*, ours), `155696d` (the review: who gets in too; kept on the next change) |
+| **m99**: F6b sitting 4's walk (Rich, 23:31 PDT: *"Line only while the press works"*; at 22:55, on a wrong premise, *"Drop the press's line after launch"*) | Self-serve, the panel named the version on trying-out twice | `94350b3`, superseded in shape by `bd696e3` (the line only while the press works, where the facts are held) |
+| **m73**: `manifest-app-verify`'s walk | A gap inside one day read *"between 29 September and 29 September"*, and the day's heading repeated after it | `f66eb11` (its times, the day once), `25bef8d` (the review: inside one minute, a moment) |
+| **m106**: F6b sitting 4's review, M12 | The focus fell to the page when **[Leave it out]** became *"Starting that change…"*, and stayed there after a refusal | `6803954` |
+| **m103**: F6b sitting 4's review, M9 (second half) | Undated, the facts said which version was newer | `72bcd99` (*"a different version"*, ours) |
+| **m105**: F6b sitting 4's review, M11 | No Overview-level test of the held press across the Overview's re-read; [What went wrong] after a launch unasserted | `d096a5d` |
 
 ### 2026-10-02 — m1–m4, m14, m19 and m63 fixed at Rich's word (`manifest-app-minors`, overnight, mock mode only)
 
@@ -903,6 +912,93 @@ Vitest of ours left running. Our server on 7105 stays in mock mode.
 - **The lists before stand**: Rich's (m7, m8, m25, m59, m75, m88–m91), the platform's (m64) and the larger (m20–m24, m54–m61,
   m68, m97, m106).
 
+### 2026-10-03 — a seventh round: m134, m136 and m135; m99 at Rich's ruling; m73, m106, m103, m105 (`manifest-app-cf`, mock mode only)
+
+**Who asked:** `manifest-af` (the platform's coordinator), row 1 of ORIENTATION's next-job table, at ~22:20 PDT: m134 first,
+then m136 and m135, then any open minor needing no ruling and no 7100; Rich's rulings through its question tool. **The
+platform's HOLD** (the UBC AI Gateway's sitting 2, its Docker tier) **held every Vitest of ours from the start to 23:05 PDT**:
+the tests and the fixes were written meanwhile, and at its FREE the new tests ran red against the committed code (the sources
+set aside by pathspec, `red.sh` in the session's scratchpad), then green. One commit per minor on `main`, each test-first;
+negative controls each red where predicted, restored by hash (`controls*.py`, the same scratchpad).
+
+**Rich's rulings, as relayed** (each recorded by `manifest-af` in manifest's decisions file):
+- **22:55 PDT:** m99 *"Drop the press's line after launch"*; m45 *"Accept it"*. m135's words noted under his *"approve, change
+  on sight"*.
+- **23:31 PDT:** m99 **re-asked**, its 22:55 premise wrong (*"the facts stay whole"*: they are held while a press holds the
+  panel; found by this round's review, M2): *"Line only while the press works"*: the *"goes to"* line kept only while the press
+  works or is unsure, dropped from the offer and from a version changed under the button. **It supersedes `94350b3`'s shape**
+  (`bd696e3`).
+
+**Fixed** (each commit names its minor; *Already fixed*, above, has the rows):
+- **m134** (`f191d2b`), **m136** (`25f045e`, the review's `c1a0705`), **m135** (`91793a6`, the review's `155696d`), **m99**
+  (`94350b3`, then `bd696e3` at the 23:31 ruling), **m73** (`f66eb11`, the review's `25bef8d`), **m106** (`6803954`), **m103**
+  (`72bcd99`), **m105** (`d096a5d`, tests only).
+- **Accepted as it is:** m45 (the section above *No longer applies*).
+
+**Decided, routine** (the option chosen; the options rejected; what changing course costs):
+- **m134's key**: no production registration **in force** (none; or neither `active` nor ever registered, `registeredAt`
+  null) beside the item met, and the step's own record none or a draft (sitting 2's rule kept). Read from the platform's
+  `readiness.ts`: `iamItem` meets a CWL app's item only once production's is `active`, and `liveRegistrationItem` only while
+  `registeredAt` is set (`expired` clears it), so a real registration reads as signing nobody in neither before a launch nor
+  after one. **Rejected:** the minor's literal *"not `active`"* (a launched app's change with UBC keeps the item met, and the
+  Preview's trying-out line reads `stepOf('staging')` after a launch).
+- **m136**: the panel's own shown-again read, quiet (a reading lost keeps the panel); the facts' live region always on the
+  page, **filled only when a press's ending gives way to a later version** (`LetStudentsIn`'s `onHold(hold, gaveWay)`), the
+  facts drawn beside it otherwise. No new words: the facts say what changed. **Rejected:** the Overview's other reads on shown
+  again (a whole re-read could unmount a press under way, *Start it for your students*'s; `/api/since` counts a visit, F6
+  Decision 7): the students' side is **m137**. **Rejected:** the facts always in the region (the review's M1: stale facts said
+  beside the press's own *changed*).
+- **m135**: say what we cannot see (the minor's first option). With no `docs/plan.md`, the planner writes only what the change
+  makes true, and every other part, who gets in included unless the change is about who can sign in, as **"We don't know this
+  part yet: it was never written down."** (ours), held exactly (spacing, apostrophe) and never marked; a plan holding those
+  words keeps them on the next change, told they are parts we cannot see. **Rejected:** starting the plan from the tree (the
+  app's code read into the planner: tokens and a reader of its own, for a path only an app made elsewhere reaches). Changing
+  course costs a prompt; parts committed in our words read so until a change makes them true.
+- **m73**: the design's own sentence with times (*"between 29 September, 9:00am and 11:30am"*), a moment inside one minute
+  (*"We weren't watching for a moment, around 9:00am on 29 September."*, ours), and a day's lines that a gap parts under its
+  one heading. **m106**: the sign-off's pattern (a `DetailCard` moving the focus; `NeedsCard` takes its actions row's ref).
+  **m103**: ours, *"A different version…"*, *"…a different one."*, and, neither dated, *"Your trying-out address has a different
+  version from the one your students have."* **m105**: the two gaps it names, each red with its guard taken out.
+
+**The review** (a fresh read-only reviewer over `6bbbede..d096a5d`, running nothing): **no Critical**; no C3 slip; nothing of
+Rich's taken. Fixed after it, test-first, each with a control: **I1** (m135: on an app with no plan the planner still wrote *Who
+gets in*, marked it, and the lead was told a sign-in it would ask the sign-in specialist to build: `155696d`); **M1** (the
+facts' region spoke at every letting go: `c1a0705`); **M3** (the empty region a second gap under the title while held, 40 px,
+28 before m136: `c1a0705`, also found by the walk); **M7** (m135's protections only for the first change: `155696d`); **M8** (a
+gap inside one minute: `25bef8d`). **M2** went to Rich (m99's premise: his 23:31 ruling). **M4, M5, M6 filed as m137, m138,
+m139.** Its declined list held nothing of ours to act on (each existed before, or is Rich's).
+
+**Controls.** Every new test red against `6bbbede`, but m105's two and three guards (m134's registration in force, m73's days
+across midnight, m136's panel no longer drawn), green there by design and each red under its own control. Two tests fixed before
+their red counted: a `findBy…` inside `act` (ORIENTATION §7). Controls, each red where predicted and restored by hash: eleven
+for the round's commits, six for the review's fixes, two for the 23:31 ruling.
+
+**The walk** (mock mode, `walk-seventh.ts` in the session's scratchpad on `scripts/walk/`; the panel staged by `page.rewrite`:
+mock-app launched, production on an older release, self-serve, Instructor One its owner): at 1280 and 375 the facts name the
+version once, no *"goes to"* line offered, the region empty before a press, the page fits, one gap under the title; after a
+press lands, the region still there and empty, **one gap under the title (28 px, as before m136; 40 px before `c1a0705`)**; the
+history's same-day gap in times under one heading. 20/21, its twenty-first the shell's watch-token mint, refused by the walk
+(as the sixth round's).
+
+**The acceptance**, in mock mode, on the dev database as it was, against our mock as it ran: at `d096a5d`, `check-seeing.sh`
+8/8, `check-going-live.sh` 8/8, `check-slice.sh` 8/8, `check-describing.sh` 18/18, `check-building.sh` 12/12,
+`check-together.sh` 10 + 13, `check-keeping.sh` 8 + 12; **after the review's fixes** (from `25bef8d`; `bd696e3` touches only
+the page's press line), the same seven, the same counts.
+
+**The gates:** at `d096a5d`, `pnpm test` **2922 tests, 109 files, twice**; **at `bd696e3`, 2928, twice** (2902 at `6bbbede`: 26
+new), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, all clean; no Vitest of ours left running. Our server on 7105 stays
+in mock mode.
+
+**Ours, for Rich:** m135's sentence, m103's undated words, m73's moment (above).
+
+**Skipped, and why:**
+- **m104** waits for FE-54; **m130, m131** for FE-53; **m111** and **m92** for 7100.
+- **m97**: our server must keep former members' names (the platform's `member.added` carries only `memberId`): a store change,
+  larger. **m36**: ruled (*"m36's lag stays"*). **m128**: at Rich's review of `close-out.sh`.
+- **m137–m139** (new, S, no ruling): the next round's.
+- **The lists before stand**: Rich's (m7, m8, m25, m59, m75, m88–m91), the platform's (m64) and the larger (m20–m24, m54–m61,
+  m68, m97).
+
 ## Accepted as they are, by Rich
 
 - **m16** (F5 sitting 4, review, ledger 181): *two millisecond races in the sign-off row*, a decision landing between the
@@ -912,6 +1008,12 @@ Vitest of ours left running. Our server on 7105 stays in mock mode.
 - **m67**, its other half (F6's whole-branch review, M4): *the first hand-over of an older app makes each long-stale waiting
   conversation on it one email*. **Rich, 20:07 PDT: "Accept it"**: no `kept_at` column, no store change. Its first half (the
   scan at start) he chose at 20:21 (*Already fixed*).
+
+- **m45** (F5 sitting 4, review, ledger 188): *the Overview reads the checklist only while the draft serves something*
+  (`overview/overview.tsx:90`, `your-apps/model.ts`'s `beforeLaunch`), so a stale lookup (`launchedAt` null; the App reads the
+  project once per slug) of an app launched elsewhere while its draft serves nothing never hears the launch until a reload.
+  **Rich, 2026-10-03, 22:55 PDT: "Accept it"** (through `manifest-af`; manifest's decisions file): F5 Decision 3's rule
+  stands; any reload hears it.
 
 ## No longer applies
 
