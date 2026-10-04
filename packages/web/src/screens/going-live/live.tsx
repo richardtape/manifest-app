@@ -74,7 +74,8 @@ type Phase =
       instance: Schemas['InstanceSummary'] | null
       gaveUp: boolean
     }
-  | { at: 'landed'; sent: Sent }
+  /** `named`: the version the page's reading named as it landed (m101's review). */
+  | { at: 'landed'; sent: Sent; named?: string | null }
   | {
       at: 'failed'
       sent: Sent
@@ -163,6 +164,9 @@ export function LetStudentsIn({
   const [pressedOnce, setPressedOnce] = useState(false)
   const poll = useRef<ReturnType<typeof setInterval>>(undefined)
   const live = useRef(true)
+  // The version the page's reading names now, for a landing to keep (m101's review).
+  const naming = useRef<string | null>(null)
+  naming.current = candidate?.releaseId ?? null
 
   useEffect(() => {
     live.current = true
@@ -188,6 +192,8 @@ export function LetStudentsIn({
   // reading is a new `candidate`, so this runs once per reading, never on the ending itself.
   // MINORS m101: and after a launch, a landed press gives way to a later version the next reading
   // names on trying-out, ready or not: its panel then says what that one needs (the Overview's).
+  // Never to the one a reading older than the press named (its review: one that failed to follow
+  // a version changed under the button): this runs at every drawing, not once per reading.
   useEffect(() => {
     const next = ready ? (candidate?.releaseId ?? null) : null
     const later = candidate?.releaseId ?? null
@@ -195,7 +201,11 @@ export function LetStudentsIn({
       ((p.at === 'failed' || (p.at === 'unsure' && p.gaveUp)) &&
         next !== null &&
         next !== p.sent.releaseId) ||
-      (afterLaunch && p.at === 'landed' && later !== null && later !== p.sent.releaseId)
+      (afterLaunch &&
+        p.at === 'landed' &&
+        later !== null &&
+        later !== p.sent.releaseId &&
+        later !== (p.named ?? null))
         ? { at: 'offer' }
         : p,
     )
@@ -308,7 +318,7 @@ export function LetStudentsIn({
   /** IT IS LIVE: the moment the product is for. */
   const land = (sent: Sent) => {
     if (!live.current) return
-    setPhase({ at: 'landed', sent })
+    setPhase({ at: 'landed', sent, named: naming.current })
     onLanded()
   }
 

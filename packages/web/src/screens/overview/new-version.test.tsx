@@ -568,6 +568,65 @@ describe('minors m101: after a launch, the landed moment gives way to a later ve
     await act(async () => undefined)
   }
 
+  it('a reading older than the press names its own candidate: the moment stays (the review)', async () => {
+    // Trying-out changed under the button (NEWER), and the reading that should have followed failed,
+    // so the panel still names NEW; the second press sends NEWER, and it lands.
+    const answers: (Schemas['LaunchReadiness'] | Error)[] = [
+      SELF_SERVE,
+      { ...SELF_SERVE, candidateReleaseId: NEWER.id },
+      refused(500, 'INTERNAL'),
+      { ...SELF_SERVE, candidateReleaseId: NEWER.id },
+    ]
+    const s = stage(
+      () => {
+        const next = answers.length > 1 ? answers.shift()! : answers[0]!
+        if (next instanceof Error) throw next
+        return next
+      },
+      {
+        getRelease: (id) =>
+          Promise.resolve(id === NEWER.id ? NEWER : id === NEW.id ? NEW : OLD),
+        deploy: (_environmentId, releaseId) =>
+          Promise.resolve({
+            ...fixtures.INSTANCE,
+            id: '99999999-9999-4999-8999-999999999992',
+            releaseId,
+            state: 'healthy',
+          } as Schemas['Instance']),
+      },
+    )
+    const view = draw(s)
+    const first = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(first)
+    })
+    await screen.findByRole('status')
+    const again = screen.getByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(again)
+    })
+    const landed = 'Your students have the version from today, 11:00am.'
+    expect(await screen.findByText(landed)).toBeTruthy()
+    // The Overview draws the panel again (its quiet read): the reading still names NEW.
+    view.rerender(
+      <NewVersion
+        platform={s.platform}
+        ours={s.ours}
+        project={PROJECT}
+        production={PRODUCTION}
+        role="owner"
+        arrived={false}
+        expire={() => undefined}
+        now={() => NOW}
+        timeZone={TZ}
+        onChanged={() => undefined}
+      />,
+    )
+    await act(async () => undefined)
+    expect(screen.getByText(landed)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
+  })
+
   it('the reading after it names the version that landed: the moment stays', async () => {
     await landedThenRead({ ...SELF_SERVE, baselineReleaseId: NEW.id })
     expect(screen.getByText(LANDED)).toBeTruthy()
