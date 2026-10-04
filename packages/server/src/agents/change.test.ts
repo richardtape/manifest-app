@@ -119,7 +119,7 @@ describe('writeChange', () => {
       studentsSee: NOT_WRITTEN_DOWN,
       youSee: NOT_WRITTEN_DOWN,
       itKeeps: 'We no longer ask UBC for their last name.',
-      whoGetsIn: HONEST_WHO_GETS_IN,
+      whoGetsIn: NOT_WRITTEN_DOWN,
       ai: NOT_WRITTEN_DOWN,
       assumed: [],
       onlyYouKnow: [],
@@ -139,7 +139,9 @@ describe('writeChange', () => {
     expect(user).toContain(`write exactly this, and nothing else: ${NOT_WRITTEN_DOWN}`)
     expect(user).toMatch(/never guess/i)
     expect(user).not.toMatch(/write every part from what they asked for/i)
-    expect(change.changed).toEqual(['itKeeps', 'whoGetsIn'])
+    // The review's I1: who gets in too, or the lead is told a sign-in it would build from.
+    expect(user).toMatch(/who gets in only when this change is about who can sign in/i)
+    expect(change.changed).toEqual(['itKeeps'])
     expect(machineryIn(NOT_WRITTEN_DOWN)).toEqual([])
   })
 
@@ -157,6 +159,45 @@ describe('writeChange', () => {
     expect(change.studentsSee).toBe(NOT_WRITTEN_DOWN)
     expect(change.changed).not.toContain('studentsSee')
     expect(change.changed).toContain('youSee')
+  })
+
+  it('the review of m135 (M7): a plan already holding our words keeps them as ours, never guessed at, and never marks a copy of them', async () => {
+    const current: Plan = {
+      ...CURRENT,
+      studentsSee: NOT_WRITTEN_DOWN,
+      youSee: NOT_WRITTEN_DOWN,
+      whoGetsIn: NOT_WRITTEN_DOWN,
+      ai: NOT_WRITTEN_DOWN,
+      assumed: [],
+      onlyYouKnow: [],
+    }
+    const model = scripted({
+      change: [
+        {
+          ...current,
+          studentsSee: NOT_WRITTEN_DOWN.replace('’', "'"),
+          itKeeps: `${current.itKeeps} And when each was last changed.`,
+          title: 'When it changed',
+        },
+      ],
+    })
+    const change = await writeChange(model, {
+      ...INPUT,
+      current,
+      currentText: planMarkdown('Reading responses', current, {}),
+      settled: [],
+    })
+    expect(change.studentsSee).toBe(NOT_WRITTEN_DOWN)
+    expect(change.changed).toEqual(['itKeeps'])
+    const user = model.calls[0]!.messages[1]!.content
+    expect(user).toContain(`Parts that say "${NOT_WRITTEN_DOWN}" are parts we cannot see`)
+    expect(user).toMatch(/never guess what the app does/i)
+  })
+
+  it('a plan with none of our words is not told about them', async () => {
+    const model = scripted({ change: [ANSWER] })
+    await writeChange(model, INPUT)
+    expect(model.calls[0]!.messages[1]!.content).not.toContain(NOT_WRITTEN_DOWN)
   })
 
   it('a hand-written file is never read as nothing written down: every part is marked, even our words', async () => {

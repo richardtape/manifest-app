@@ -105,12 +105,18 @@ export async function writeChange(
   input: ChangeInput,
 ): Promise<Plan & { title: string }> {
   const unwritten = input.current === null && input.currentText.trim() === ''
+  // The review of m135 (M7): a plan agreed on such an app holds our words, and the next change keeps them.
+  const unseen =
+    input.current !== null && ROWS.some((key) => input.current![key] === NOT_WRITTEN_DOWN)
   const parts = [
     unwritten
-      ? `There is no plan written down for this app, so we cannot see what it does. Write only what this change makes true, in the parts it touches. In every other part, write exactly this, and nothing else: ${NOT_WRITTEN_DOWN} Never guess what the app does, and ask nothing about it beyond this change.`
+      ? `There is no plan written down for this app, so we cannot see what it does. Write only what this change makes true, in the parts it touches. In every other part, write exactly this, and nothing else: ${NOT_WRITTEN_DOWN} Say who gets in only when this change is about who can sign in. Never guess what the app does, and ask nothing about it beyond this change.`
       : input.current === null
         ? `The plan we agreed, as it is written now (it no longer reads as our plan, so write every part from it):\n${input.currentText}`
         : `The plan we agreed:\n${partsOf(input.current)}`,
+    unseen
+      ? `Parts that say "${NOT_WRITTEN_DOWN}" are parts we cannot see: keep them exactly so, who gets in included, unless this change makes them true. Never guess what the app does.`
+      : '',
     input.settled.length === 0
       ? ''
       : `Settled, never to be asked again:\n${input.settled
@@ -144,9 +150,9 @@ export async function writeChange(
     title: answer.title.trim(),
     whoGetsIn: honestWhoGetsIn(answer.whoGetsIn),
   }
-  // m135: a part it left as we don't know, spacing and apostrophes aside, reads in our words exactly.
-  if (unwritten)
-    for (const key of ROWS) if (notWrittenDown(plan[key])) plan[key] = NOT_WRITTEN_DOWN
+  // m135: a part it left as we don't know, spacing and apostrophes aside, reads in our words exactly
+  // (and so is never marked against a plan that held them: the review's M7).
+  for (const key of ROWS) if (notWrittenDown(plan[key])) plan[key] = NOT_WRITTEN_DOWN
   // Ours to mark, against the agreement: a file that no longer reads back has every part new; with
   // none written down, every part but those we said we don't know (m135).
   const changed =
