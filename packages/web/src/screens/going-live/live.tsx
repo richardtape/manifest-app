@@ -61,7 +61,8 @@ type Sent = { releaseId: string; when: string | null }
 const HOLD = new Set(['reading', 'putting', 'unsure', 'landed', 'failed'])
 
 type Phase =
-  | { at: 'offer' }
+  /** `gaveWay`: an ending gave way to a later version (M4, m101): the page says what it now names. */
+  | { at: 'offer'; gaveWay?: true }
   /** RELEASE_NOT_STAGED: trying-out's version changed; the new one named, asked again. */
   | { at: 'changed'; sent: Sent }
   /** The press's own reads, before anything is sent. */
@@ -143,9 +144,10 @@ export function LetStudentsIn({
   timeZone: string | undefined
   /**
    * Told whether the page must keep this card whatever it reads (a press under way, or its end),
-   * or may draw it only as its offer (the final review's I1 and I2).
+   * or may draw it only as its offer (the final review's I1 and I2); and, as it lets go, whether an
+   * ending gave way to a later version (the review of m136: the Overview says that one's facts).
    */
-  onHold: (hold: boolean) => void
+  onHold: (hold: boolean, gaveWay: boolean) => void
   /** The gate refused it: the page reads the checklist again, and shows what changed. */
   onGate: () => void
   /**
@@ -176,7 +178,10 @@ export function LetStudentsIn({
     }
   }, [])
 
-  useEffect(() => onHold(HOLD.has(phase.at)), [phase.at, onHold])
+  useEffect(
+    () => onHold(HOLD.has(phase.at), phase.at === 'offer' && phase.gaveWay === true),
+    [phase.at, onHold],
+  )
 
   // HEARD LAUNCHED WHILE UNSURE, OR AFTER A START THAT NEVER ANSWERED (the final review's M3): it
   // is live, and the card says so, never "we couldn't see how it ended" beside it.
@@ -206,7 +211,7 @@ export function LetStudentsIn({
         later !== null &&
         later !== p.sent.releaseId &&
         later !== (p.named ?? null))
-        ? { at: 'offer' }
+        ? { at: 'offer', gaveWay: true }
         : p,
     )
   }, [candidate, ready])

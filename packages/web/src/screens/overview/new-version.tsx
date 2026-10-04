@@ -152,7 +152,13 @@ export function NewVersion({
     document.addEventListener('visibilitychange', shown)
     return () => document.removeEventListener('visibilitychange', shown)
   }, [readAgain])
-  const onHold = useCallback((hold: boolean) => setHeld(hold), [])
+  // The review of m136 (M1): an ending gave way to a later version, so its facts are said; any other
+  // letting go (a version changed under the button, a refusal, the second sign-in) says its own.
+  const [gaveWay, setGaveWay] = useState(false)
+  const onHold = useCallback((hold: boolean, gave: boolean) => {
+    setHeld(hold)
+    setGaveWay(gave)
+  }, [])
   // The gate said it is not ready: nothing to press, and nothing said of what stands, until the
   // checklist is read again (minors m102): the old reading is the one the gate just refused.
   const onGate = useCallback(() => {
@@ -243,18 +249,19 @@ export function NewVersion({
       </ul>
     </>
   )
+  const facts = <p className="body-lead">{nv.facts(reading.trying, reading.students)}</p>
   return (
     <section className="overview__new-version" aria-labelledby={heading}>
       <h2 className="heading" id={heading}>
         {nv.title}
       </h2>
-      {/* m136: the facts' region stays while a press holds the panel, empty, so a landed moment
-          giving way to a later version (m101) is said to a screen reader, as `changed` says its own. */}
-      <div role="status">
-        {held ? null : (
-          <p className="body-lead">{nv.facts(reading.trying, reading.students)}</p>
-        )}
+      {/* m136: the facts' region is always on the page, empty, so a landed moment giving way to a
+          later version (m101) is said to a screen reader by the facts drawn into it; else they are
+          drawn beside it, and the press's own words speak for it (the review's M1). */}
+      <div className="overview__new-version-facts" role="status">
+        {held || !gaveWay ? null : facts}
       </div>
+      {held || gaveWay ? null : facts}
       {what}
     </section>
   )

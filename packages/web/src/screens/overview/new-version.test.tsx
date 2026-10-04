@@ -832,6 +832,41 @@ describe('minors m101: after a launch, the landed moment gives way to a later ve
   })
 })
 
+describe('the review of m136 (M1): the facts are said only when a landed moment gives way', () => {
+  /** The version put on trying-out under the button, from today at 11:00am. */
+  const NEWER: Schemas['Release'] = {
+    ...fixtures.RELEASE,
+    id: '88888888-8888-4888-8888-888888888883',
+    createdAt: '2026-10-03T18:00:00.000Z',
+  }
+  const region = () => document.querySelector('.overview__new-version-facts')!
+
+  it('not yet pressed: the facts on the page, and nothing in the region', async () => {
+    draw(stage(SELF_SERVE))
+    expect(await screen.findByText(FACTS)).toBeTruthy()
+    expect(region().getAttribute('role')).toBe('status')
+    expect(region().textContent).toBe('')
+  })
+
+  it('trying-out changed under the button: the press says so, and the old facts are never said again with it', async () => {
+    const answers = [SELF_SERVE, { ...SELF_SERVE, candidateReleaseId: NEWER.id }]
+    const s = stage(() => (answers.length > 1 ? answers.shift()! : answers[0]!), {
+      getRelease: (id) =>
+        Promise.resolve(id === NEWER.id ? NEWER : id === NEW.id ? NEW : OLD),
+    })
+    draw(s)
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    expect(await screen.findByText(words.overview.newVersion.changed)).toBeTruthy()
+    await screen.findByText(
+      'The version from today, 11:00am is on your trying-out address. Your students have the version from 18 September, 3:12pm.',
+    )
+    expect(region().textContent).toBe('')
+  })
+})
+
 describe('minors m136: shown again, the panel reads again', () => {
   /** The version a colleague put on trying-out while they were away, from today at 11:00am. */
   const NEWER: Schemas['Release'] = {

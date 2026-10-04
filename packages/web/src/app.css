@@ -967,6 +967,10 @@
 .overview__new-version > .body-lead {
   margin: 0;
 }
+/* m136: the facts' live region is always on the page and mostly empty; empty, it takes no gap of its own. */
+.overview__new-version-facts:empty {
+  margin-top: calc(-1 * var(--space-3));
+}
 .overview__students-message {
   display: flex;
   flex-direction: column;
