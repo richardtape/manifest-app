@@ -60,6 +60,8 @@ const vite = await createVite({
 })
 
 try {
+  // An address, never `localhost`: Fastify then runs the onListen hook (a restart's marks, m133)
+  // in the same turn as listening, before any request; with a name it looks up the others first.
   await app.listen({ host: '127.0.0.1', port: config.port })
 } catch (error) {
   console.error(

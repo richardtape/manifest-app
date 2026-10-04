@@ -214,7 +214,7 @@ describe('the keeper: started only by a server that holds its port (minors m70)'
 })
 
 /** Rounds that only record what a restart asks of them (minors m133). */
-function bootRounds(said: string[]): Rounds {
+function bootRounds(said: unknown[]): Rounds {
   return {
     start: () => undefined,
     carryOn: () => undefined,
@@ -298,18 +298,18 @@ describe('a restart\'s marks: made only by a server that holds its port (minors 
     expect(said).toEqual([])
   })
 
-  it('a mark that fails is said on the console, and the keeper still starts', async () => {
+  it('a mark that fails is said on the console, and the line and the keeper still start (the review)', async () => {
     const failed = new Error('the store could not be read')
     const said: unknown[] = []
     const keeper: Keeper = { ...idleKeeper, start: () => void said.push('keeper') }
     const error = console.error
     console.error = (...args: unknown[]) => void said.push(...args)
-    const store = openStore(':memory:')
+    const store = storeWithOneWaiting()
     const app = buildServer(mock('http://127.0.0.1:9'), () => undefined, {
       store,
       keeper,
       rounds: () => ({
-        ...bootRounds([]),
+        ...bootRounds(said),
         interruptedOnBoot: () => {
           throw failed
         },
@@ -324,7 +324,7 @@ describe('a restart\'s marks: made only by a server that holds its port (minors 
     } finally {
       console.error = error
     }
-    expect(said).toEqual([failed, 'keeper'])
+    expect(said).toEqual([failed, 'without a token: Waiting', 'keeper'])
     expect(app.server.listening).toBe(true)
   })
 })

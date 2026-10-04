@@ -234,6 +234,10 @@ export function buildServer(
     // holding it, starts its next (Review Focus 5).
     try {
       rounds.interruptedOnBoot()
+    } catch (error) {
+      console.error(error)
+    }
+    try {
       line.onBoot()
     } catch (error) {
       console.error(error)
