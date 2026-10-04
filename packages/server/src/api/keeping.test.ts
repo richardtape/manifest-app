@@ -45,6 +45,7 @@ function fakeKeeper(did: string[]) {
     start: () => undefined,
     stop: () => undefined,
     forget: (projectId) => void did.push(`forget ${projectId}`),
+    deleting: (projectId) => void did.push(`deleting ${projectId}`),
     workEnded: () => undefined,
     onRemoved: () => undefined,
     left: (projectId, personId) => {
@@ -990,7 +991,7 @@ describe('GET /api/apps/:projectId/history (design §2: Everything)', () => {
 describe('DELETE /api/apps/:projectId (Decision 11: a deleted draft forgotten)', () => {
   const url = (projectId = PROJECT) => `/api/apps/${projectId}`
 
-  it('an owner: 204; a round working on any of its conversations stopped first, then the keeper forgets it', async () => {
+  it('an owner: 204; whoever it stops told first (m69: before the Stop saves their round stopped), each round working on it stopped, then the keeper forgets it', async () => {
     const t = setUp()
     keep(t, PROJECT, [memberOf(ALICE), memberOf(BOB)])
     const working = t.store.setState(changeBy(t, BOB.id, PROJECT, 'Bob’s').id, 'building')
@@ -1002,8 +1003,9 @@ describe('DELETE /api/apps/:projectId (Decision 11: a deleted draft forgotten)',
     )
     const response = await t.ask('DELETE', url())
     expect(response.statusCode).toBe(204)
+    expect(t.did[0]).toBe(`deleting ${PROJECT}`)
     expect(t.did.slice(-1)).toEqual([`forget ${PROJECT}`])
-    expect(t.did.slice(0, -1).sort()).toEqual(
+    expect(t.did.slice(1, -1).sort()).toEqual(
       [`stop ${paused.id}`, `stop ${working.id}`].sort(),
     )
     expect(t.did).not.toContain(`stop ${elsewhere.id}`)

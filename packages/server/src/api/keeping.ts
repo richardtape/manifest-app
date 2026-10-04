@@ -283,6 +283,8 @@ export function registerKeeping(
       const { projectId } = request.params
       if (!ID.test(projectId) || roleOf(projectId, who.person.id) !== 'owner')
         return refuse(reply, 404, 'NOT_FOUND')
+      // m69: whoever's round it stops is told first, while their runs still say they were working.
+      keeper.deleting(projectId)
       for (const conversation of store.conversationsOn(projectId))
         if (conversation.state === 'building' || conversation.state === 'paused')
           rounds.stop(conversation)

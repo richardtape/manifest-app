@@ -1344,6 +1344,7 @@ describe('your work is waiting (Decision 14)', () => {
       async (first, subject, opening) => {
         const t = await waiting('building', 'needs-you', { change: !first })
         t.keeper.workEnded(t.conversation)
+        t.w.reads.set(TOKEN_A, appOf(P1, { state: 'archived' }))
         t.open()[0]!.handlers.event(event(5, 'project.archived'))
         await aMinute()
         expect(told(t)).toEqual([{ to: 'alice@example.test', subject }])
@@ -1356,8 +1357,9 @@ describe('your work is waiting (Decision 14)', () => {
       },
     )
 
-    it('the switch-off heard before the work ended: the same', async () => {
+    it('the switch-off heard before the work ended, our token refused a read after it (as the platform does): the same, from the event alone', async () => {
       const t = await waiting('building', 'needs-you', { change: true })
+      t.w.reads.set(TOKEN_A, 401)
       t.open()[0]!.handlers.event(event(5, 'project.archived'))
       await settle()
       t.keeper.workEnded(t.conversation)
@@ -1372,6 +1374,23 @@ describe('your work is waiting (Decision 14)', () => {
       t.open()[0]!.handlers.event(event(5, 'project.archived'))
       t.open()[0]!.handlers.event(event(6, 'project.restored'))
       await settle()
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(t.sent.map(({ subject }) => subject)).toEqual([
+        'Reading responses: we need you',
+      ])
+    })
+
+    it('switched off once, its switch back on never heard, then read afresh as on: we need you, never a stale switch-off (the review)', async () => {
+      const t = await waiting('building', 'needs-you', { change: true })
+      t.w.reads.set(TOKEN_A, appOf(P1, { state: 'archived' }))
+      t.open()[0]!.handlers.event(event(5, 'project.archived'))
+      await settle()
+      // Its watch refused at the switch-off; the restore falls outside the next replay (FE-7).
+      t.refuse(t.open()[0]!)
+      t.later(10 * 60_000)
+      t.w.reads.set(TOKEN_B, appOf(P1))
+      expect(await t.keeper.hand(P1, handed(TOKEN_B, ID_B), ALICE)).toBe('kept')
       t.keeper.workEnded(t.conversation)
       await aMinute()
       expect(t.sent.map(({ subject }) => subject)).toEqual([
@@ -1408,6 +1427,105 @@ describe('your work is waiting (Decision 14)', () => {
       t.keeper.workEnded(t.conversation)
       await aMinute()
       expect(t.sent).toHaveLength(1)
+    })
+
+    it('deleted through our own route, which stops its rounds first: told the same, once (the review)', async () => {
+      const t = await waiting('building', 'working', { person: BOB, change: true })
+      t.working.add(t.conversation.id)
+      t.keeper.deleting(P1)
+      // The route's Stop: the run saved stopped at once, its work still in flight.
+      t.store.saveRun({ ...runOf(t.conversation.id, 'stopped') })
+      t.keeper.forget(P1)
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'bob@example.test', subject: 'Reading responses: your change stopped' },
+      ])
+    })
+
+    it('held, carried on, then deleted within the minute: one email, never two (the review)', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.workEnded(t.conversation)
+      t.store.saveRun(runOf(t.conversation.id, 'working'))
+      t.working.add(t.conversation.id)
+      t.keeper.forget(P1)
+      await aMinute()
+      expect(told(t)).toEqual([
+        { to: 'alice@example.test', subject: 'Reading responses: building it stopped' },
+      ])
+    })
+
+    it('held, carried on and built, then switched off within the minute: nothing more (the review)', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.workEnded(t.conversation)
+      t.store.saveRun(runOf(t.conversation.id, 'done'))
+      t.w.reads.set(TOKEN_A, appOf(P1, { state: 'archived' }))
+      t.open()[0]!.handlers.event(event(5, 'project.archived'))
+      await aMinute()
+      expect(t.sent).toEqual([])
+    })
+
+    it('someone who left by their own word, the platform’s event heard before our own leave: nothing (the review)', async () => {
+      const t = await waiting('building', 'stopped', { person: BOB })
+      t.store.saveRun({
+        ...runOf(t.conversation.id, 'stopped'),
+        detail: { ...NO_DETAIL, stopped: { by: BOB, why: 'removed' } },
+      })
+      t.w.members.set(P1, [member(ALICE)])
+      t.open()[0]!.handlers.event(
+        event(5, 'member.removed', { memberId: BOB, userId: BOB }),
+      )
+      await settle()
+      expect(t.keeper.left(P1, BOB)).toBe(false)
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      // The owners are told someone left (as ever); they are told nothing of their own.
+      expect(t.sent.filter(({ to }) => to === 'bob@example.test')).toEqual([])
+      expect(told(t)).toEqual([
+        {
+          to: 'alice@example.test',
+          subject: 'Reading responses: Bob Helper was taken off it',
+        },
+      ])
+    })
+
+    it('the platform’s event naming nobody, heard before our own leave: our leave alone says it was theirs (the review)', async () => {
+      const t = await waiting('building', 'stopped', { person: BOB })
+      t.store.saveRun({
+        ...runOf(t.conversation.id, 'stopped'),
+        detail: { ...NO_DETAIL, stopped: { by: BOB, why: 'removed' } },
+      })
+      t.w.members.set(P1, [member(ALICE)])
+      t.open()[0]!.handlers.event(event(5, 'member.removed', { memberId: BOB }))
+      await settle()
+      expect(t.keeper.left(P1, BOB)).toBe(false)
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(t.sent.filter(({ to }) => to === 'bob@example.test')).toEqual([])
+    })
+
+    it('their own leave never reached us (the page swallows its failure): the event alone says they left (the review)', async () => {
+      const t = await waiting('building', 'stopped', { person: BOB })
+      t.store.saveRun({
+        ...runOf(t.conversation.id, 'stopped'),
+        detail: { ...NO_DETAIL, stopped: { by: BOB, why: 'removed' } },
+      })
+      t.w.members.set(P1, [member(ALICE)])
+      t.open()[0]!.handlers.event(
+        event(5, 'member.removed', { memberId: BOB, userId: BOB }),
+      )
+      await settle()
+      t.keeper.workEnded(t.conversation)
+      await aMinute()
+      expect(t.sent.filter(({ to }) => to === 'bob@example.test')).toEqual([])
+    })
+
+    it('work that ends after the keeper stopped holds nothing, and no timer outlives it (the review)', async () => {
+      const t = await waiting('building', 'needs-you')
+      t.keeper.stop()
+      t.keeper.workEnded(t.conversation)
+      expect(vi.getTimerCount()).toBe(0)
+      await aMinute()
+      expect(t.sent).toEqual([])
     })
 
     it('deleted while nothing works on it: nobody told', async () => {

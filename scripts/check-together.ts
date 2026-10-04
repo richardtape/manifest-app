@@ -615,6 +615,8 @@ try {
 
   // 11. Nobody taken off is emailed anything, in the whole run: theirs here were changes set aside,
   //     never a round under way (one that was is told why it stopped: m69, m76, the keeper's tests).
+  //     A round's email is held a minute (m76), longer than this check waits: it sees only what is
+  //     sent at once, so it holds no round's email to anyone, either way.
   const all = await mailSettled(3)
   const toRemoved = all.filter((m) =>
     m.To.some((t) => t.Address === SAM.email || t.Address === DAN.email),
