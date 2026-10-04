@@ -1,7 +1,7 @@
 import type { Schemas } from '@manifest/contract'
 import type { SinceLine } from '@manifest-app/server/progress'
 import { Button, StateChip, type FactTone, type State } from '@manifest-app/ui'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Ours } from '../../ours/api.js'
 import type { Platform } from '../../platform/api.js'
 import { refusalOf, refusedLine } from '../../platform/refusal.js'
@@ -244,15 +244,25 @@ export function Overview({
     // Switched off or back on: a switched-off app's needs are its questions alone (the review's M1).
   }, [ours, project.id, project.state, attempt, keepingAttempt])
 
+  // MINORS m101 (m17's rule, as Going live's): a quiet read that fails keeps a good page as it
+  // stands, and with it whatever its panels hold (*Waiting to reach your students*' landed moment);
+  // its line for us, and nothing reported. The trouble is said on a read they asked for.
+  const quiet = useRef(false)
+  const standing = useRef(false)
+  standing.current = loaded.state === 'ready'
   useEffect(() => {
     let live = true
+    const quietly = quiet.current
+    quiet.current = false
     read(platform, ours, project, now(), timeZone).then(
       (seen) => live && setLoaded({ state: 'ready', seen }),
       (error: unknown) => {
         if (!live) return
         const refusal = refusalOf(error)
         if (refusal.kind === 'signed-out') expire()
-        else setLoaded({ state: 'trouble', trouble: refusal })
+        else if (quietly && standing.current) {
+          if (refusal.kind === 'refused') console.warn(refusedLine(refusal))
+        } else setLoaded({ state: 'trouble', trouble: refusal })
       },
     )
     return () => {
@@ -266,7 +276,10 @@ export function Overview({
     setAttempt((n) => n + 1)
   }, [])
   // F6b Task 10: the students have a new version: read again, quietly, the page left standing.
-  const readQuietly = useCallback(() => setAttempt((n) => n + 1), [])
+  const readQuietly = useCallback(() => {
+    quiet.current = true
+    setAttempt((n) => n + 1)
+  }, [])
 
   const slug = encodeURIComponent(project.slug)
   const audience = audienceWords(project.audience)

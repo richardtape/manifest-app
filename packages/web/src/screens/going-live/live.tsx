@@ -186,12 +186,16 @@ export function LetStudentsIn({
   // M4: AFTER A START THAT NEVER ANSWERED (or one we stopped watching), THE OFFER COMES BACK when
   // the page's next reading (shown again: Decision 16) has another version ready to go. Each
   // reading is a new `candidate`, so this runs once per reading, never on the ending itself.
+  // MINORS m101: and after a launch, a landed press gives way to a later version the next reading
+  // names on trying-out, ready or not: its panel then says what that one needs (the Overview's).
   useEffect(() => {
     const next = ready ? (candidate?.releaseId ?? null) : null
+    const later = candidate?.releaseId ?? null
     setPhase((p) =>
-      (p.at === 'failed' || (p.at === 'unsure' && p.gaveUp)) &&
-      next !== null &&
-      next !== p.sent.releaseId
+      ((p.at === 'failed' || (p.at === 'unsure' && p.gaveUp)) &&
+        next !== null &&
+        next !== p.sent.releaseId) ||
+      (afterLaunch && p.at === 'landed' && later !== null && later !== p.sent.releaseId)
         ? { at: 'offer' }
         : p,
     )

@@ -886,3 +886,58 @@ describe('F6 Task 11: end of term on the Overview (moment 20, design §5)', () =
     expect(window.location.pathname + window.location.search).toBe(`/apps/${SLUG}`)
   })
 })
+
+describe('minors m101: the landed moment on Waiting to reach your students outlasts a quiet read that fails', () => {
+  it('pressed and landed, then the Overview’s read again fails: the page stands, the moment with it, and nothing is said of the read', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    let failing = false
+    const s = stage(
+      {
+        launchedAt: LAUNCHED,
+        readiness: {
+          ...fixtures.SELF_SERVE_READINESS,
+          candidateReleaseId: fixtures.RELEASE.id,
+        },
+        records: ALL_DONE,
+        production: {
+          ...fixtures.INSTANCE,
+          id: '99999999-9999-4999-8999-999999999991',
+          releaseId: '88888888-8888-4888-8888-888888888881',
+        },
+      },
+      { listEnvironments: () => (failing ? refused(500, 'INTERNAL') : undefined) },
+    )
+    s.platform.listMembers = () =>
+      Promise.resolve([
+        {
+          userId: fixtures.ME.id,
+          role: 'owner',
+          displayName: fixtures.ME.displayName,
+          email: fixtures.ME.email,
+        } as Schemas['Member'],
+      ])
+    s.platform.deploy = (environmentId, releaseId) =>
+      Promise.resolve({
+        ...fixtures.INSTANCE,
+        id: '99999999-9999-4999-8999-999999999992',
+        environmentId,
+        releaseId,
+        state: 'healthy',
+      })
+    await open(`/apps/${SLUG}`, s)
+    await ready()
+    const button = await screen.findByRole('button', {
+      name: words.overview.newVersion.button,
+    })
+    failing = true
+    await press(button)
+    const LANDED = /^Your students have the version from /
+    expect(await screen.findByText(LANDED)).toBeTruthy()
+    await waitFor(() => expect(s.called('listEnvironments').length).toBeGreaterThan(1))
+    await act(async () => undefined)
+    expect(screen.getByRole('heading', { level: 1, name: PROJECT.name })).toBeTruthy()
+    expect(screen.getByText(LANDED)).toBeTruthy()
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+})

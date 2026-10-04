@@ -515,3 +515,77 @@ describe('Waiting to reach your students (F6b Task 10)', () => {
     expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
   })
 })
+
+describe('minors m101: after a launch, the landed moment gives way to a later version', () => {
+  /** The version a colleague put on trying-out meanwhile, from today at 11:00am in Vancouver. */
+  const NEWER: Schemas['Release'] = {
+    ...fixtures.RELEASE,
+    id: '88888888-8888-4888-8888-888888888883',
+    createdAt: '2026-10-03T18:00:00.000Z',
+  }
+  const LANDED = 'Your students have the version from today, 9:00am.'
+
+  /** Pressed and landed; then the Overview reads its addresses again, the students on NEW. */
+  async function landedThenRead(after: Schemas['LaunchReadiness']) {
+    let readiness = SELF_SERVE
+    const s = stage(() => readiness, {
+      getRelease: (id) =>
+        Promise.resolve(id === NEWER.id ? NEWER : id === NEW.id ? NEW : OLD),
+      deploy: (_environmentId, releaseId) =>
+        Promise.resolve({
+          ...fixtures.INSTANCE,
+          id: '99999999-9999-4999-8999-999999999992',
+          releaseId,
+          state: 'healthy',
+        } as Schemas['Instance']),
+    })
+    const view = draw(s)
+    const pressed = await screen.findByRole('button', { name: PRESS })
+    await act(async () => {
+      fireEvent.click(pressed)
+    })
+    expect(await screen.findByText(LANDED)).toBeTruthy()
+    readiness = after
+    const reads = s.calls.length
+    view.rerender(
+      <NewVersion
+        platform={s.platform}
+        ours={s.ours}
+        project={PROJECT}
+        production={{
+          ...PRODUCTION,
+          instance: { ...PRODUCTION.instance!, releaseId: NEW.id },
+        }}
+        role="owner"
+        arrived={false}
+        expire={() => undefined}
+        now={() => NOW}
+        timeZone={TZ}
+        onChanged={() => undefined}
+      />,
+    )
+    await waitFor(() => expect(s.calls.length).toBeGreaterThan(reads))
+    await act(async () => undefined)
+  }
+
+  it('the reading after it names the version that landed: the moment stays', async () => {
+    await landedThenRead({ ...SELF_SERVE, baselineReleaseId: NEW.id })
+    expect(screen.getByText(LANDED)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: PRESS })).toBeNull()
+  })
+
+  it('it names a later one on trying-out: that one’s facts, and the press again', async () => {
+    await landedThenRead({
+      ...SELF_SERVE,
+      candidateReleaseId: NEWER.id,
+      baselineReleaseId: NEW.id,
+    })
+    expect(
+      await screen.findByText(
+        'The version from today, 11:00am is on your trying-out address. Your students have the version from today, 9:00am.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText(LANDED)).toBeNull()
+    expect(screen.getByRole('button', { name: PRESS })).toBeTruthy()
+  })
+})
