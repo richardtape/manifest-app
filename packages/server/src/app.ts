@@ -230,7 +230,14 @@ export function buildServer(
   // F6 (D4): every kept watch token's stream opened, once this server holds its port (minors
   // m70: an idle watcher refused 7105 never starts one, nor resends what the live one is sending);
   // closed with the server. A harness that never listens starts its own.
-  app.addHook('onListen', async () => keeper.start())
+  app.addHook('onListen', async () => {
+    // Said, never lost: Fastify's own log of a hook's failure is off here (the review).
+    try {
+      keeper.start()
+    } catch (error) {
+      console.error(error)
+    }
+  })
   app.addHook('onClose', async () => keeper.stop())
   registerKeeping(app, { config, store, keeper, hub, rounds })
   registerIntake(app, { config, store, work, intakeModel, intakeKeys })

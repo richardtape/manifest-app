@@ -164,6 +164,35 @@ describe('the keeper: started only by a server that holds its port (minors m70)'
     expect(said).toEqual(['start', 'stop'])
   })
 
+  it('a keeper that fails to start is said on the console, and the server still serves (the review)', async () => {
+    const failed = new Error('the keeper could not start')
+    const keeper: Keeper = {
+      ...idleKeeper,
+      start: () => {
+        throw failed
+      },
+    }
+    const said: unknown[] = []
+    const error = console.error
+    console.error = (...args: unknown[]) => void said.push(...args)
+    const store = openStore(':memory:')
+    const app = buildServer(mock('http://127.0.0.1:9'), () => undefined, {
+      store,
+      keeper,
+    })
+    closers.push(async () => {
+      await app.close()
+      store.close()
+    })
+    try {
+      await app.listen({ host: '127.0.0.1', port: 0 })
+    } finally {
+      console.error = error
+    }
+    expect(said).toContain(failed)
+    expect(app.server.listening).toBe(true)
+  })
+
   it('a second server refused its port (an idle watcher of §7) never starts one', async () => {
     const first = await serve(mock('http://127.0.0.1:9'))
     const said: string[] = []
